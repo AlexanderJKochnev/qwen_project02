@@ -28,16 +28,26 @@ async def parse_rawdata_task(ctx, name_id: int):
     if not job_id:
         job_id = str(uuid.uuid4())
 
+    # Initialize task_log_id to None to ensure it's always defined
+    task_log_id = None
+    
     # Create session for logging the task start
-    async with AsyncSessionLocal() as session:
-        # Создаём запись о старте в TaskLog
-        task_log_id = await TaskLogService.add_with_session(
-            task_name="parse_rawdata_task",
-            job_id=job_id,
-            name_id=name_id,
-            session=session
-        )
-        await session.commit()
+    try:
+        async with AsyncSessionLocal() as session:
+            # Создаём запись о старте в TaskLog
+            task_log_id = await TaskLogService.add_with_session(
+                task_name="parse_rawdata_task",
+                job_id=job_id,
+                name_id=name_id,
+                session=session
+            )
+            await session.commit()
+    except Exception as e:
+        # If we can't create the initial task log, we still need to report the error
+        print(f"Failed to create initial task log: {e}")
+        # Continue with task execution even if logging failed
+        pass
+    
     await smooth_delay()
 
     try:
@@ -54,38 +64,42 @@ async def parse_rawdata_task(ctx, name_id: int):
                     await session.rollback()
                     raise RuntimeError("Failed to fill rawdata")
 
-                # Update task log on success
-                async with AsyncSessionLocal() as log_session:
-                    await TaskLogService.update_with_session(
-                        task_log_id, 'success', None, session=log_session
-                    )
-                    await log_session.commit()
+                # Update task log on success if task_log_id is available
+                if task_log_id:
+                    async with AsyncSessionLocal() as log_session:
+                        await TaskLogService.update_with_session(
+                            task_log_id, 'success', None, session=log_session
+                        )
+                        await log_session.commit()
 
     except HTTPError as e:
-        # Update task log on failure
-        async with AsyncSessionLocal() as log_session:
-            await TaskLogService.update_with_session(
-                task_log_id, 'failed', str(e.response.status_code), session=log_session
-            )
-            await log_session.commit()
+        # Update task log on failure if task_log_id is available
+        if task_log_id:
+            async with AsyncSessionLocal() as log_session:
+                await TaskLogService.update_with_session(
+                    task_log_id, 'failed', str(e.response.status_code), session=log_session
+                )
+                await log_session.commit()
         await send_error_notification(str(e.response.status_code))
         os._exit(1)
     except RuntimeError as e:
-        # Update task log on failure
-        async with AsyncSessionLocal() as log_session:
-            await TaskLogService.update_with_session(
-                task_log_id, 'failed', str(e), session=log_session
-            )
-            await log_session.commit()
+        # Update task log on failure if task_log_id is available
+        if task_log_id:
+            async with AsyncSessionLocal() as log_session:
+                await TaskLogService.update_with_session(
+                    task_log_id, 'failed', str(e), session=log_session
+                )
+                await log_session.commit()
         await send_error_notification(str(e))
         os._exit(1)
     except Exception as e:
-        # Update task log on failure
-        async with AsyncSessionLocal() as log_session:
-            await TaskLogService.update_with_session(
-                task_log_id, 'failed', str(e), session=log_session
-            )
-            await log_session.commit()
+        # Update task log on failure if task_log_id is available
+        if task_log_id:
+            async with AsyncSessionLocal() as log_session:
+                await TaskLogService.update_with_session(
+                    task_log_id, 'failed', str(e), session=log_session
+                )
+                await log_session.commit()
         await send_error_notification(str(e))
         os._exit(1)
 

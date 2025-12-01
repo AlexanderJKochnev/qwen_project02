@@ -1,43 +1,66 @@
 ```
-# Compiled and build artifacts
-*.pyc
+# Python
 __pycache__/
-*.o
-*.obj
-
-# Dependencies
-.venv/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
 venv/
-node_modules/
-
-# Logs and temp files
-*.log
-*.tmp
-*.swp
-
-# Environment
-.env
-.env.local
-*.env.*
-
-# Editors
-.vscode/
-.idea/
-
-# Test and coverage
-.pytest_cache/
+.venv/
+.ENV
+.venv.bak/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
 .coverage
-coverage/
-htmlcov/
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+*.pot
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.hypothesis/
 
-# System files
+# Arq specific
+arq.log
+
+# General
 .DS_Store
 Thumbs.db
+.editorconfig
+.idea/
+.vscode/
+*.swp
+*.swo
+tmp/
+temp/
+*.tmp
+*.temp
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Icon?
+Thumbs.db
+.travis.yml
+appveyor.yml
+.gitattributes
+.gitignore
+*.git
+*.gitignore
+*.env
+*.env.*
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 ```
-
-# databases and upload files
-TODO.md
-migration_volume/
-mongodb_data/
-pg_data/
-upload_volume/
