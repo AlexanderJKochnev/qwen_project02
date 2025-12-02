@@ -1,6 +1,7 @@
 # app/support/parser/model.py
 from datetime import datetime, timezone
-from typing import List, Optional
+import json
+from typing import List, Optional, Dict, Any
 
 from sqlalchemy import ForeignKey, String, Text, UniqueConstraint, Integer, DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -88,6 +89,19 @@ class Rawdata(Base, BaseAt):
 
     def __str__(self):
         return str(self.name_id) or ""
+    
+    @property
+    def parsed_data_dict(self) -> Optional[Dict[str, Any]]:
+        """Return parsed_data as a dictionary, parsing from JSON string if needed."""
+        if self.parsed_data is None:
+            return None
+        try:
+            if isinstance(self.parsed_data, str):
+                return json.loads(self.parsed_data)
+            return self.parsed_data
+        except (json.JSONDecodeError, TypeError):
+            # If parsing fails, return the original value
+            return self.parsed_data
 
 
 class Image(Base, BaseAt, ImageMixin):

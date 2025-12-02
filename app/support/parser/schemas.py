@@ -1,6 +1,8 @@
 # app/support/parser/schemas.py
 from typing import Optional, Any
+import json
 
+from pydantic import field_serializer
 from app.core.schemas.base import (CreateResponse, DateSchema,
                                    BaseModel, PkSchema)
 # from app.core.schemas.image_mixin import ImageUrlMixin
@@ -178,19 +180,40 @@ class RawdataUpdate(BaseModel):
     body_html: Optional[str] = None
     name_id: Optional[int] = None
     status_id: Optional[int] = 1
-    parsed_data: Optional[dict[str, Any]] = None
+    parsed_data: Optional[str] = None
 
 
 class RawdataRead(RawdataCreate, PkSchema, DateSchema):
-    pass
-    parsed_data: Optional[dict[str, Any]] = None
+    parsed_data: Optional[str] = None  # Store as string in schema since it's stored as string in DB
+    
+    @field_serializer('parsed_data')
+    def serialize_parsed_data(self, value: Optional[str]) -> Optional[dict[str, Any]]:
+        """Convert parsed_data from JSON string to dict during serialization."""
+        if value is None:
+            return None
+        try:
+            return json.loads(value)
+        except (json.JSONDecodeError, TypeError):
+            # If parsing fails, return the original value
+            return value
 
 
 class RawdataReadRelation(PkSchema, DateSchema):
     body_html: Optional[str]
     name: NameRead
     status: StatusRead
-    parsed_data: Optional[dict[str, Any]] = None
+    parsed_data: Optional[str] = None  # Store as string in schema since it's stored as string in DB
+    
+    @field_serializer('parsed_data')
+    def serialize_parsed_data(self, value: Optional[str]) -> Optional[dict[str, Any]]:
+        """Convert parsed_data from JSON string to dict during serialization."""
+        if value is None:
+            return None
+        try:
+            return json.loads(value)
+        except (json.JSONDecodeError, TypeError):
+            # If parsing fails, return the original value
+            return value
 
 
 class ImageCreate(BaseModel):
