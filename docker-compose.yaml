@@ -178,7 +178,7 @@ services:
       POSTGRES_HOST: ${POSTGRES_HOST}
       BASE_URL: ${BASE_URL}
       PYTHONPATH: /app         # ← путь к корню пакета
-    command: arq app.rawdata_arq_worker.RawdataWorkerSettings --burst
+    command: arq app.rawdata_arq_worker.RawdataWorkerSettings
     depends_on:
       wine_host:
         condition: service_healthy

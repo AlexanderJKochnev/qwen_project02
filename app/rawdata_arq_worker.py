@@ -144,3 +144,4 @@ class RawdataWorkerSettings:
     on_shutdown = on_shutdown_handle
     on_job_end = on_job_post_run_handle
     max_tries = settings.ARQ_MAX_TRIES  # 3 попытки, потом — не повторять
+    burst = True  # Stop worker when queue is empty

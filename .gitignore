@@ -1,21 +1,11 @@
 ```
-# Compiled and build artifacts
-*.pyc
-__pycache__/
-*.o
-*.obj
-*.so
-*.a
-*.dll
-*.exe
-*.out
-
 # Dependencies
 .venv/
 venv/
-.env
-.env.local
-*.env.*
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
 
 # Logs and temp files
 *.log
@@ -23,64 +13,32 @@ venv/
 *.swp
 *.swo
 
-# Editors
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Distribution / packaging
-dist/
-build/
-*.tar.gz
-*.zip
-*.gz
-*.tar
-*.tgz
-*.bz2
-*.xz
-*.7z
-*.rar
-*.zst
-*.lz4
-*.lzh
-*.cab
-*.arj
-*.rpm
-*.deb
-*.Z
-*.lz
-*.lzo
-
-# Testing
-.coverage
-htmlcov/
-coverage/
-
 # Environment
 .env
 .env.local
-.env.*
+*.env.*
 
-# Python
-*.pyc
-__pycache__/
-.pytest_cache/
+# Editors
+.vscode/
+.idea/
+
+# Build artifacts
+dist/
+build/
+*.so
+*.o
+*.obj
+*.out
+
+# Coverage
+.coverage
+coverage/
+htmlcov/
+
+# MyPy
 .mypy_cache/
-*.py[co]
-*$py.class
-*$pycache$/
-**/__pycache__/
-**/*.py[co]
+.pytest_cache/
 
-# System
-.DS_Store
-Thumbs.db
-
-TODO.md
-migration_volume/
-mongodb_data/
-pg_data/
-upload_volume/
-
+# Docker
+.dockerenv
 ```
