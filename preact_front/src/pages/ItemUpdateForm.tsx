@@ -8,9 +8,8 @@ import { ItemRead } from '../types/item';
 import { useNotification } from '../hooks/useNotification';
 
 export const ItemUpdateForm = () => {
-  const { path } = useLocation();
+  const { path, route } = useLocation();
   const id = parseInt(path.split('/')[3]);
-  const { route } = useLocation();
   const { showNotification } = useNotification();
   
   const { data, loading: loadingItem, error: errorItem } = useApi<ItemRead>(

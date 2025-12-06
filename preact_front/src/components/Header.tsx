@@ -6,7 +6,7 @@ import { Link } from './Link';
 export const Header = () => {
   const [currentLang, setCurrentLang] = useState('en');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { url } = useLocation();
+  const { url = '' } = useLocation();
 
   const languages = [
     { code: 'en', name: 'EN' },

@@ -3,12 +3,12 @@ import { h } from 'preact';
 import { useLocation } from 'preact-iso';
 
 export const Link = ({ href, children, className, class: classProp, onClick, ...props }: { href: string; children: any; className?: string; class?: string; onClick?: () => void; [key: string]: any }) => {
-  const router = useLocation();
+  const { route } = useLocation();
   
   const handleClick = (e: MouseEvent) => {
     e.preventDefault();
     if (onClick) onClick();
-    router.route(href);
+    route(href);
   };
 
   return (
