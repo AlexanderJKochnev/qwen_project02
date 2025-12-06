@@ -50,7 +50,6 @@ export function App() {
         <Header />
         <main className="flex-grow p-0">
           <div className="w-full">
-            <Router>
               <Route path="/" component={isAuthenticated ? HomeRedirect : Home} />
               <Route path="/items" component={ItemListView} />
               <Route path="/items/:id" component={ItemDetailView} />
@@ -64,7 +63,6 @@ export function App() {
               <Route path="/handbooks/:type/edit/:id" component={HandbookUpdateForm} />
 
               <Route default component={NotFound} />
-            </Router>
           </div>
         </main>
       </div>
