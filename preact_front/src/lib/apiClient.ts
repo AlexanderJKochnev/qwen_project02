@@ -10,6 +10,7 @@ export const getCurrentLanguage = () => localStorage.getItem('language') || 'en'
 export const getAuthToken = () => localStorage.getItem('auth_token');
 export const setAuthToken = (token: string) => localStorage.setItem('auth_token', token);
 export const clearAuthToken = () => localStorage.removeItem('auth_token');
+export const removeAuthToken = clearAuthToken; // Alias for clearAuthToken
 
 export async function apiClient<T>(
   endpoint: string,
