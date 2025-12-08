@@ -6,7 +6,7 @@ from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.gzip import GZipMiddleware
 from app.auth.routers import auth_router, user_router
-from app.core.config.database.db_async import engine, get_db  # noqa: F401
+from app.core.config.database.db_async import engine, get_db, init_db_extensions  # noqa: F401
 from app.mongodb.config import get_mongodb, MongoDB  # close_mongo_connection, connect_to_mongo
 from app.mongodb.router import router as MongoRouter
 from app.preact.create.router import CreateRouter
@@ -115,7 +115,7 @@ async def health_check(mongodb_instance: MongoDB = Depends(get_mongodb)):
 
 @app.on_event("startup")
 async def startup_event():
-    pass
+    await init_db_extensions()
 
 
 @app.on_event("shutdown")
