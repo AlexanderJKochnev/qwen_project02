@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import CheckConstraint, Column, ForeignKey, Integer, UniqueConstraint
+from sqlalchemy import CheckConstraint, Column, ForeignKey, Integer, UniqueConstraint, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import DECIMAL
 
@@ -44,7 +44,23 @@ class Lang:
 class Drink(Base, BaseAt, Lang):
     __table_args__ = (CheckConstraint('alc >= 0 AND alc <= 100.00', name='alc_range_check'),
                       CheckConstraint('sugar >= 0 AND sugar <= 100.00', name='sugar_range_check'),
-                      UniqueConstraint('title', 'subtitle', name='uq_title_subtitle_unique'),)
+                      UniqueConstraint('title', 'subtitle', name='uq_title_subtitle_unique'),
+                      Index('drink_trigram_idx',
+                            'title', 'title_ru', 'title_fr',
+                            'subtitle', 'subtitle_ru', 'subtitle_fr',
+                            'description', 'description_ru', 'description_fr',
+                            'recommendation', 'recommendation_ru', 'recommendation_fr',
+                            'madeof', 'madeof_ru', 'madeof_fr',
+                            'age',
+                            postgresql_using='gin',
+                            postgresql_ops={
+                                'title': 'gin_trgm_ops', 'title_ru': 'gin_trgm_ops', 'title_fr': 'gin_trgm_ops',
+                                'subtitle': 'gin_trgm_ops', 'subtitle_ru': 'gin_trgm_ops', 'subtitle_fr': 'gin_trgm_ops',
+                                'description': 'gin_trgm_ops', 'description_ru': 'gin_trgm_ops', 'description_fr': 'gin_trgm_ops',
+                                'recommendation': 'gin_trgm_ops', 'recommendation_ru': 'gin_trgm_ops', 'recommendation_fr': 'gin_trgm_ops',
+                                'madeof': 'gin_trgm_ops', 'madeof_ru': 'gin_trgm_ops', 'madeof_fr': 'gin_trgm_ops',
+                                'age': 'gin_trgm_ops'
+                            }))
     lazy = settings.LAZY
     cascade = settings.CASCADE
     single_name = 'drink'
