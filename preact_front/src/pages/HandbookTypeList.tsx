@@ -4,6 +4,8 @@ import { useLocation } from 'preact-iso';
 import { Link } from '../components/Link';
 import { useApi } from '../hooks/useApi';
 import { useLanguage } from '../contexts/LanguageContext';
+import { deleteItem } from '../lib/apiClient';
+import { useNotification } from '../hooks/useNotification';
 
 export const HandbookTypeList = () => {
   const { path } = useLocation();
@@ -12,8 +14,11 @@ export const HandbookTypeList = () => {
   // Looking for pattern: ['handbooks', 'type'] -> type is at index 1
   const type = pathSegments.length >= 2 && pathSegments[0] === 'handbooks' ? pathSegments[1] : undefined;
   const [search, setSearch] = useState('');
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<any>(null);
   
   const { language } = useLanguage();
+  const { showNotification } = useNotification();
   
   // Determine the endpoint based on the handbook type
   const getEndpoint = (type: string) => {
@@ -62,6 +67,26 @@ export const HandbookTypeList = () => {
       'superfoods': 'Superfoods',
     };
     return names[type] || type.charAt(0).toUpperCase() + type.slice(1) + 's';
+  };
+
+  const handleDeleteClick = (item: any) => {
+    setItemToDelete(item);
+    setShowConfirmDialog(true);
+  };
+
+  const handleDelete = async () => {
+    if (!itemToDelete) return;
+    
+    const deleteEndpoint = `/delete/${type}/${itemToDelete.id}`;
+    const success = await deleteItem(deleteEndpoint);
+    if (success) {
+      showNotification('Item deleted successfully', 'success');
+      refetch(); // Refresh the data
+    } else {
+      showNotification('Failed to delete item', 'error');
+    }
+    setShowConfirmDialog(false);
+    setItemToDelete(null);
   };
 
   // Filter data based on search
@@ -131,16 +156,21 @@ export const HandbookTypeList = () => {
               <tr key={item.id}>
                 <td>{item.id}</td>
                 <td>
-                  {item.name}
+                  <Link href={`/handbooks/${type}/${item.id}`} variant="link">
+                    {item.name}
+                  </Link>
                 </td>
                 <td>
                   <div className="flex gap-2">
-                    <Link href={`/handbooks/${type}/${item.id}`} variant="link">
-                      View
-                    </Link>
-                    <Link href={`/handbooks/${type}/edit/${item.id}`} variant="link">
+                    <Link href={`/handbooks/${type}/edit/${item.id}`} variant="warning">
                       Edit
                     </Link>
+                    <button
+                      className="btn btn-error"
+                      onClick={() => handleDeleteClick(item)}
+                    >
+                      Delete
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -152,6 +182,30 @@ export const HandbookTypeList = () => {
       {filteredData.length === 0 && (
         <div className="text-center py-8">
           <p>No {getReadableName(type).toLowerCase()} found.</p>
+        </div>
+      )}
+
+      {/* Confirmation Dialog */}
+      {showConfirmDialog && (
+        <div className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg">Confirm Delete</h3>
+            <p className="py-4">Are you sure you want to delete this {itemToDelete ? getReadableName(type).slice(0, -1).toLowerCase() : ''}?</p>
+            <div className="modal-action">
+              <button
+                className="btn btn-error"
+                onClick={handleDelete}
+              >
+                Yes, Delete
+              </button>
+              <button
+                className="btn"
+                onClick={() => setShowConfirmDialog(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
