@@ -29,7 +29,7 @@ interface ItemDetailResponse {
 }
 
 export const ItemDetailView = () => {
-  const { url } = useLocation();
+  const { url, route } = useLocation();
   // Extract ID from URL path - expecting format like /items/123
   const pathParts = url.split('/');
   const idParam = pathParts[pathParts.length - 1]; // Get the last part of the path
@@ -59,7 +59,7 @@ export const ItemDetailView = () => {
     const success = await deleteItem(`/delete/items/${id}`);
     if (success) {
       showNotification('Item deleted successfully', 'success');
-      window.location.href = '/items';
+      route('/items');
     } else {
       showNotification('Failed to delete item', 'error');
     }
@@ -126,7 +126,7 @@ export const ItemDetailView = () => {
           </button>
           <button
             className="btn btn-primary"
-            onClick={() => window.history.back()}
+            onClick={() => route('/items')}
           >
             Back
           </button>
