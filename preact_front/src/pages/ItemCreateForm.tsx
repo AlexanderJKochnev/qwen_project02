@@ -174,8 +174,8 @@ export const ItemCreateForm = ({ path }: { path?: string }) => {
             <div className="card-body">
               <h2 className="card-title">Basic Information</h2>
               <div className="space-y-4">
-                <div>
-                  <label className="label">
+                <div className="flex items-center space-x-4">
+                  <label className="label w-1/3">
                     <span className="label-text">Volume (ml)</span>
                   </label>
                   <input
@@ -183,13 +183,13 @@ export const ItemCreateForm = ({ path }: { path?: string }) => {
                     name="vol"
                     value={formData.vol}
                     onInput={handleChange}
-                    className="input input-bordered w-full"
+                    className="input input-bordered w-2/3"
                     required
                   />
                 </div>
 
-                <div>
-                  <label className="label">
+                <div className="flex items-center space-x-4">
+                  <label className="label w-1/3">
                     <span className="label-text">Price (€)</span>
                   </label>
                   <input
@@ -197,13 +197,13 @@ export const ItemCreateForm = ({ path }: { path?: string }) => {
                     name="price"
                     value={formData.price}
                     onInput={handleChange}
-                    className="input input-bordered w-full"
+                    className="input input-bordered w-2/3"
                     required
                   />
                 </div>
 
-                <div>
-                  <label className="label">
+                <div className="flex items-center space-x-4">
+                  <label className="label w-1/3">
                     <span className="label-text">Count</span>
                   </label>
                   <input
@@ -211,13 +211,13 @@ export const ItemCreateForm = ({ path }: { path?: string }) => {
                     name="count"
                     value={formData.count}
                     onInput={handleChange}
-                    className="input input-bordered w-full"
+                    className="input input-bordered w-2/3"
                     required
                   />
                 </div>
 
-                <div>
-                  <label className="label">
+                <div className="flex items-center space-x-4">
+                  <label className="label w-1/3">
                     <span className="label-text">Image ID</span>
                   </label>
                   <input
@@ -225,20 +225,20 @@ export const ItemCreateForm = ({ path }: { path?: string }) => {
                     name="image_id"
                     value={formData.image_id}
                     onInput={handleChange}
-                    className="input input-bordered w-full"
+                    className="input input-bordered w-2/3"
                     placeholder="MongoDB image ID"
                   />
                 </div>
 
-                <div>
-                  <label className="label">
+                <div className="flex items-center space-x-4">
+                  <label className="label w-1/3">
                     <span className="label-text">Category</span>
                   </label>
                   <select
                     name="category"
                     value={formData.category}
                     onChange={handleChange as any}
-                    className="select select-bordered w-full"
+                    className="select select-bordered w-2/3"
                     required
                   >
                     <option value="">Select a category</option>
@@ -250,15 +250,15 @@ export const ItemCreateForm = ({ path }: { path?: string }) => {
                   </select>
                 </div>
 
-                <div>
-                  <label className="label">
+                <div className="flex items-center space-x-4">
+                  <label className="label w-1/3">
                     <span className="label-text">Country</span>
                   </label>
                   <select
                     name="country"
                     value={formData.country}
                     onChange={handleChange as any}
-                    className="select select-bordered w-full"
+                    className="select select-bordered w-2/3"
                     required
                   >
                     <option value="">Select a country</option>
@@ -270,15 +270,15 @@ export const ItemCreateForm = ({ path }: { path?: string }) => {
                   </select>
                 </div>
 
-                <div>
-                  <label className="label">
+                <div className="flex items-center space-x-4">
+                  <label className="label w-1/3">
                     <span className="label-text">Region</span>
                   </label>
                   <select
                     name="region"
                     value={formData.region}
                     onChange={handleChange as any}
-                    className="select select-bordered w-full"
+                    className="select select-bordered w-2/3"
                   >
                     <option value="">Select a region (optional)</option>
                     {handbooks.regions.map(region => (
@@ -289,8 +289,8 @@ export const ItemCreateForm = ({ path }: { path?: string }) => {
                   </select>
                 </div>
 
-                <div>
-                  <label className="label">
+                <div className="flex items-center space-x-4">
+                  <label className="label w-1/3">
                     <span className="label-text">Alcohol (%)</span>
                   </label>
                   <input
@@ -298,13 +298,13 @@ export const ItemCreateForm = ({ path }: { path?: string }) => {
                     name="alc"
                     value={formData.alc}
                     onInput={handleChange}
-                    className="input input-bordered w-full"
+                    className="input input-bordered w-2/3"
                     placeholder="e.g., 13%"
                   />
                 </div>
 
-                <div>
-                  <label className="label">
+                <div className="flex items-center space-x-4">
+                  <label className="label w-1/3">
                     <span className="label-text">Sugar (%)</span>
                   </label>
                   <input
@@ -312,13 +312,13 @@ export const ItemCreateForm = ({ path }: { path?: string }) => {
                     name="sugar"
                     value={formData.sugar}
                     onInput={handleChange}
-                    className="input input-bordered w-full"
+                    className="input input-bordered w-2/3"
                     placeholder="e.g., 5%"
                   />
                 </div>
 
-                <div>
-                  <label className="label">
+                <div className="flex items-center space-x-4">
+                  <label className="label w-1/3">
                     <span className="label-text">Age</span>
                   </label>
                   <input
@@ -326,49 +326,53 @@ export const ItemCreateForm = ({ path }: { path?: string }) => {
                     name="age"
                     value={formData.age}
                     onInput={handleChange}
-                    className="input input-bordered w-full"
+                    className="input input-bordered w-2/3"
                     placeholder="e.g., 2019"
                   />
                 </div>
 
                 <div>
-                  <label className="label">
+                  <label className="label w-1/3 inline-block">
                     <span className="label-text">Pairing</span>
                   </label>
-                  <select
-                    name="pairing"
-                    multiple
-                    value={formData.pairing}
-                    onChange={handleChange as any}
-                    className="select select-bordered w-full h-24"
-                  >
-                    {handbooks.foods.map(food => (
-                      <option key={food.id} value={food.id}>
-                        {food.name || food.name_en || food.name_ru || food.name_fr}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-sm text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple options</p>
+                  <div className="w-2/3 inline-block">
+                    <select
+                      name="pairing"
+                      multiple
+                      value={formData.pairing}
+                      onChange={handleChange as any}
+                      className="select select-bordered w-full h-24"
+                    >
+                      {handbooks.foods.map(food => (
+                        <option key={food.id} value={food.id}>
+                          {food.name || food.name_en || food.name_ru || food.name_fr}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-sm text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple options</p>
+                  </div>
                 </div>
 
                 <div>
-                  <label className="label">
+                  <label className="label w-1/3 inline-block">
                     <span className="label-text">Varietal</span>
                   </label>
-                  <select
-                    name="varietal"
-                    multiple
-                    value={formData.varietal}
-                    onChange={handleChange as any}
-                    className="select select-bordered w-full h-24"
-                  >
-                    {handbooks.varietals.map(varietal => (
-                      <option key={varietal.id} value={varietal.id}>
-                        {varietal.name || varietal.name_en || varietal.name_ru || varietal.name_fr}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-sm text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple options</p>
+                  <div className="w-2/3 inline-block">
+                    <select
+                      name="varietal"
+                      multiple
+                      value={formData.varietal}
+                      onChange={handleChange as any}
+                      className="select select-bordered w-full h-24"
+                    >
+                      {handbooks.varietals.map(varietal => (
+                        <option key={varietal.id} value={varietal.id}>
+                          {varietal.name || varietal.name_en || varietal.name_ru || varietal.name_fr}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-sm text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple options</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -379,8 +383,8 @@ export const ItemCreateForm = ({ path }: { path?: string }) => {
             <div className="card-body">
               <h2 className="card-title">English Fields</h2>
               <div className="space-y-4">
-                <div>
-                  <label className="label">
+                <div className="flex items-center space-x-4">
+                  <label className="label w-1/3">
                     <span className="label-text">Title</span>
                   </label>
                   <input
@@ -388,12 +392,12 @@ export const ItemCreateForm = ({ path }: { path?: string }) => {
                     name="en.title"
                     value={formData.en.title}
                     onInput={handleChange}
-                    className="input input-bordered w-full"
+                    className="input input-bordered w-2/3"
                   />
                 </div>
 
-                <div>
-                  <label className="label">
+                <div className="flex items-center space-x-4">
+                  <label className="label w-1/3">
                     <span className="label-text">Subtitle</span>
                   </label>
                   <input
@@ -401,38 +405,38 @@ export const ItemCreateForm = ({ path }: { path?: string }) => {
                     name="en.subtitle"
                     value={formData.en.subtitle}
                     onInput={handleChange}
-                    className="input input-bordered w-full"
+                    className="input input-bordered w-2/3"
                   />
                 </div>
 
-                <div>
-                  <label className="label">
+                <div className="flex items-center space-x-4">
+                  <label className="label w-1/3">
                     <span className="label-text">Description</span>
                   </label>
                   <textarea
                     name="en.description"
                     value={formData.en.description}
                     onInput={handleChange}
-                    className="textarea textarea-bordered w-full"
+                    className="textarea textarea-bordered w-2/3"
                     rows={3}
                   />
                 </div>
 
-                <div>
-                  <label className="label">
+                <div className="flex items-center space-x-4">
+                  <label className="label w-1/3">
                     <span className="label-text">Recommendation</span>
                   </label>
                   <textarea
                     name="en.recommendation"
                     value={formData.en.recommendation}
                     onInput={handleChange}
-                    className="textarea textarea-bordered w-full"
+                    className="textarea textarea-bordered w-2/3"
                     rows={3}
                   />
                 </div>
 
-                <div>
-                  <label className="label">
+                <div className="flex items-center space-x-4">
+                  <label className="label w-1/3">
                     <span className="label-text">Made Of</span>
                   </label>
                   <input
@@ -440,21 +444,21 @@ export const ItemCreateForm = ({ path }: { path?: string }) => {
                     name="en.madeof"
                     value={formData.en.madeof}
                     onInput={handleChange}
-                    className="input input-bordered w-full"
+                    className="input input-bordered w-2/3"
                   />
                 </div>
 
-                <div className="form-control">
-                  <label className="label cursor-pointer">
+                <div className="flex items-center space-x-4">
+                  <label className="label w-1/3">
                     <span className="label-text">Sparkling</span>
-                    <input
-                      type="checkbox"
-                      name="en.sparkling"
-                      checked={formData.en.sparkling}
-                      onChange={handleChange as any}
-                      className="checkbox checkbox-primary"
-                    />
                   </label>
+                  <input
+                    type="checkbox"
+                    name="en.sparkling"
+                    checked={formData.en.sparkling}
+                    onChange={handleChange as any}
+                    className="checkbox checkbox-primary"
+                  />
                 </div>
               </div>
             </div>
@@ -465,8 +469,8 @@ export const ItemCreateForm = ({ path }: { path?: string }) => {
             <div className="card-body">
               <h2 className="card-title">Russian Fields</h2>
               <div className="space-y-4">
-                <div>
-                  <label className="label">
+                <div className="flex items-center space-x-4">
+                  <label className="label w-1/3">
                     <span className="label-text">Title</span>
                   </label>
                   <input
@@ -474,12 +478,12 @@ export const ItemCreateForm = ({ path }: { path?: string }) => {
                     name="ru.title"
                     value={formData.ru.title}
                     onInput={handleChange}
-                    className="input input-bordered w-full"
+                    className="input input-bordered w-2/3"
                   />
                 </div>
 
-                <div>
-                  <label className="label">
+                <div className="flex items-center space-x-4">
+                  <label className="label w-1/3">
                     <span className="label-text">Subtitle</span>
                   </label>
                   <input
@@ -487,38 +491,38 @@ export const ItemCreateForm = ({ path }: { path?: string }) => {
                     name="ru.subtitle"
                     value={formData.ru.subtitle}
                     onInput={handleChange}
-                    className="input input-bordered w-full"
+                    className="input input-bordered w-2/3"
                   />
                 </div>
 
-                <div>
-                  <label className="label">
+                <div className="flex items-center space-x-4">
+                  <label className="label w-1/3">
                     <span className="label-text">Description</span>
                   </label>
                   <textarea
                     name="ru.description"
                     value={formData.ru.description}
                     onInput={handleChange}
-                    className="textarea textarea-bordered w-full"
+                    className="textarea textarea-bordered w-2/3"
                     rows={3}
                   />
                 </div>
 
-                <div>
-                  <label className="label">
+                <div className="flex items-center space-x-4">
+                  <label className="label w-1/3">
                     <span className="label-text">Recommendation</span>
                   </label>
                   <textarea
                     name="ru.recommendation"
                     value={formData.ru.recommendation}
                     onInput={handleChange}
-                    className="textarea textarea-bordered w-full"
+                    className="textarea textarea-bordered w-2/3"
                     rows={3}
                   />
                 </div>
 
-                <div>
-                  <label className="label">
+                <div className="flex items-center space-x-4">
+                  <label className="label w-1/3">
                     <span className="label-text">Made Of</span>
                   </label>
                   <input
@@ -526,21 +530,21 @@ export const ItemCreateForm = ({ path }: { path?: string }) => {
                     name="ru.madeof"
                     value={formData.ru.madeof}
                     onInput={handleChange}
-                    className="input input-bordered w-full"
+                    className="input input-bordered w-2/3"
                   />
                 </div>
 
-                <div className="form-control">
-                  <label className="label cursor-pointer">
+                <div className="flex items-center space-x-4">
+                  <label className="label w-1/3">
                     <span className="label-text">Sparkling</span>
-                    <input
-                      type="checkbox"
-                      name="ru.sparkling"
-                      checked={formData.ru.sparkling}
-                      onChange={handleChange as any}
-                      className="checkbox checkbox-primary"
-                    />
                   </label>
+                  <input
+                    type="checkbox"
+                    name="ru.sparkling"
+                    checked={formData.ru.sparkling}
+                    onChange={handleChange as any}
+                    className="checkbox checkbox-primary"
+                  />
                 </div>
               </div>
             </div>
@@ -551,8 +555,8 @@ export const ItemCreateForm = ({ path }: { path?: string }) => {
             <div className="card-body">
               <h2 className="card-title">French Fields</h2>
               <div className="space-y-4">
-                <div>
-                  <label className="label">
+                <div className="flex items-center space-x-4">
+                  <label className="label w-1/3">
                     <span className="label-text">Title</span>
                   </label>
                   <input
@@ -560,12 +564,12 @@ export const ItemCreateForm = ({ path }: { path?: string }) => {
                     name="fr.title"
                     value={formData.fr.title}
                     onInput={handleChange}
-                    className="input input-bordered w-full"
+                    className="input input-bordered w-2/3"
                   />
                 </div>
 
-                <div>
-                  <label className="label">
+                <div className="flex items-center space-x-4">
+                  <label className="label w-1/3">
                     <span className="label-text">Subtitle</span>
                   </label>
                   <input
@@ -573,38 +577,38 @@ export const ItemCreateForm = ({ path }: { path?: string }) => {
                     name="fr.subtitle"
                     value={formData.fr.subtitle}
                     onInput={handleChange}
-                    className="input input-bordered w-full"
+                    className="input input-bordered w-2/3"
                   />
                 </div>
 
-                <div>
-                  <label className="label">
+                <div className="flex items-center space-x-4">
+                  <label className="label w-1/3">
                     <span className="label-text">Description</span>
                   </label>
                   <textarea
                     name="fr.description"
                     value={formData.fr.description}
                     onInput={handleChange}
-                    className="textarea textarea-bordered w-full"
+                    className="textarea textarea-bordered w-2/3"
                     rows={3}
                   />
                 </div>
 
-                <div>
-                  <label className="label">
+                <div className="flex items-center space-x-4">
+                  <label className="label w-1/3">
                     <span className="label-text">Recommendation</span>
                   </label>
                   <textarea
                     name="fr.recommendation"
                     value={formData.fr.recommendation}
                     onInput={handleChange}
-                    className="textarea textarea-bordered w-full"
+                    className="textarea textarea-bordered w-2/3"
                     rows={3}
                   />
                 </div>
 
-                <div>
-                  <label className="label">
+                <div className="flex items-center space-x-4">
+                  <label className="label w-1/3">
                     <span className="label-text">Made Of</span>
                   </label>
                   <input
@@ -612,21 +616,21 @@ export const ItemCreateForm = ({ path }: { path?: string }) => {
                     name="fr.madeof"
                     value={formData.fr.madeof}
                     onInput={handleChange}
-                    className="input input-bordered w-full"
+                    className="input input-bordered w-2/3"
                   />
                 </div>
 
-                <div className="form-control">
-                  <label className="label cursor-pointer">
+                <div className="flex items-center space-x-4">
+                  <label className="label w-1/3">
                     <span className="label-text">Sparkling</span>
-                    <input
-                      type="checkbox"
-                      name="fr.sparkling"
-                      checked={formData.fr.sparkling}
-                      onChange={handleChange as any}
-                      className="checkbox checkbox-primary"
-                    />
                   </label>
+                  <input
+                    type="checkbox"
+                    name="fr.sparkling"
+                    checked={formData.fr.sparkling}
+                    onChange={handleChange as any}
+                    className="checkbox checkbox-primary"
+                  />
                 </div>
               </div>
             </div>
