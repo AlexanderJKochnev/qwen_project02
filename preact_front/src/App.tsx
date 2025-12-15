@@ -30,7 +30,7 @@ function HomeRedirect() {
 
 export function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [sidebarVisible, setSidebarVisible] = useState(false);
+  const [sidebarVisible, setSidebarVisible] = useState(true);
 
   useEffect(() => {
     const token = getAuthToken();
