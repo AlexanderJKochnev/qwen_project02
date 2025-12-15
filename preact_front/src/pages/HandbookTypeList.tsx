@@ -102,6 +102,16 @@ export const HandbookTypeList = () => {
     );
   }) || [];
 
+  // Sort filtered data by name in ascending order, considering the current language
+  const sortedFilteredData = [...filteredData].sort((a, b) => {
+    const nameA = (a.name || '').toString().toLowerCase();
+    const nameB = (b.name || '').toString().toLowerCase();
+    
+    if (nameA < nameB) return -1;
+    if (nameA > nameB) return 1;
+    return 0;
+  });
+
   if (loading) {
     return (
       <div className="flex-center h-64">
@@ -152,7 +162,7 @@ export const HandbookTypeList = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredData.map(item => (
+            {sortedFilteredData.map(item => (
               <tr key={item.id}>
                 <td>{item.id}</td>
                 <td>
@@ -179,7 +189,7 @@ export const HandbookTypeList = () => {
         </table>
       </div>
 
-      {filteredData.length === 0 && (
+      {sortedFilteredData.length === 0 && (
         <div className="text-center py-8">
           <p>No {getReadableName(type).toLowerCase()} found.</p>
         </div>
