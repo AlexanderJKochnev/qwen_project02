@@ -7,6 +7,21 @@ dist/
 build/
 target/
 
+# Logs
+*.log
+
+# Environment variables
+.env
+.env.local
+*.env.*
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.tmp
+
 # Python
 __pycache__/
 *.pyc
@@ -16,49 +31,33 @@ __pycache__/
 env/
 venv/
 .venv/
-.ENV
-.env
-.env.local
-.env.*
-.envrc
-
-# Logs
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
 *.log
+.ipynb_checkpoints
+.pytest_cache/
+.mypy_cache/
+.hypothesis/
+
+# Node.js
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
-# Coverage reports
+node_modules/
+dist/
+build/
+.nyc_output
 coverage/
 *.lcov
-*.profdata
-*.coverage
-
-# Temporary files
-*.tmp
-*.temp
-*.swp
-*~
-.DS_Store
-Thumbs.db
-
-# IDE specific
-.vscode/
-.idea/
-*.iml
-*.iws
-*.sublime-workspace
-*.swm
-
-# Environment specific
-.env
-.env.local
-.env.*
-.envrc
-
-# OS generated
-.DS_Store
-Thumbs.db
-ehthumbs.db
-Icon?
+.next/
+out/
+.nuxt/
+public/dist/
 ```

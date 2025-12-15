@@ -31,6 +31,7 @@ function HomeRedirect() {
 export function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [sidebarVisible, setSidebarVisible] = useState(true);
+  const location = useLocation(); // Get location outside of useEffect
 
   useEffect(() => {
     const token = getAuthToken();
@@ -38,6 +39,15 @@ export function App() {
       setIsAuthenticated(true);
     }
   }, []);
+
+  // Ensure sidebar stays visible after route changes
+  useEffect(() => {
+    // When route changes, ensure sidebar remains visible
+    // This prevents the sidebar from closing automatically during navigation
+    if (!sidebarVisible) {
+      setSidebarVisible(true);
+    }
+  }, [location.url]); // This will run when the route changes
 
   if (!isAuthenticated) {
     return (
