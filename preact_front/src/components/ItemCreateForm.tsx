@@ -67,12 +67,33 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
           apiClient<any[]>(`/handbooks/foods/all`)
         ]);
         
+        // Sort each handbook alphabetically by the visible field
+        const getVisibleName = (item: any) => {
+          return item.name || item.name_en || item.name_ru || item.name_fr || '';
+        };
+
+        const sortedSubcategories = [...subcategories].sort((a, b) => 
+          getVisibleName(a).localeCompare(getVisibleName(b))
+        );
+        const sortedSweetness = [...sweetness].sort((a, b) => 
+          getVisibleName(a).localeCompare(getVisibleName(b))
+        );
+        const sortedSubregions = [...subregions].sort((a, b) => 
+          getVisibleName(a).localeCompare(getVisibleName(b))
+        );
+        const sortedVarietals = [...varietals].sort((a, b) => 
+          getVisibleName(a).localeCompare(getVisibleName(b))
+        );
+        const sortedFoods = [...foods].sort((a, b) => 
+          getVisibleName(a).localeCompare(getVisibleName(b))
+        );
+        
         setHandbooks({
-          subcategories,
-          sweetness,
-          subregions,
-          varietals,
-          foods
+          subcategories: sortedSubcategories,
+          sweetness: sortedSweetness,
+          subregions: sortedSubregions,
+          varietals: sortedVarietals,
+          foods: sortedFoods
         });
       } catch (err) {
         console.error('Failed to load handbook data', err);
