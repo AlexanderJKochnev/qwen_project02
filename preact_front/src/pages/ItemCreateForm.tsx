@@ -2,13 +2,15 @@
 import { h, useState, useEffect } from 'preact/hooks';
 import { apiClient } from '../lib/apiClient';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useLocation } from 'preact-iso';
 
 interface ItemCreateFormProps {
-  onClose: () => void;
-  onCreated: () => void;
+  onClose?: () => void;
+  onCreated?: () => void;
 }
 
 export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
+  const { route } = useLocation();
   const [formData, setFormData] = useState({
     title: '',
     title_ru: '',
@@ -148,9 +150,16 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
         body: multipartFormData,
         // Don't set Content-Type header, let browser set it with boundary
       }, false); // Don't include language for multipart form data
-
-      onCreated();
-      onClose();
+      
+      if (onCreated) {
+        onCreated();
+      }
+      
+      if (onClose) {
+        onClose();
+      } else {
+        route('/items'); // Navigate to items list if no onClose callback provided
+      }
     } catch (error) {
       console.error('Error creating item:', error);
       alert(`Error creating item: ${error.message}`);
@@ -605,7 +614,13 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
           <div className="flex justify-end gap-4 mt-6">
             <button
               type="button"
-              onClick={onClose}
+              onClick={() => {
+                if (onClose) {
+                  onClose();
+                } else {
+                  route('/items'); // Navigate to items list if no onClose callback provided
+                }
+              }}
               className="btn btn-ghost"
               disabled={loading}
             >
