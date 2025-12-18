@@ -110,6 +110,67 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
     }
   };
 
+  const handleVarietalChange = (id: number, checked: boolean) => {
+    setFormData(prev => {
+      const currentVarietals = [...prev.varietals];
+      const existingIndex = currentVarietals.findIndex(v => v.startsWith(`${id}:`));
+      
+      if (checked) {
+        if (existingIndex === -1) {
+          currentVarietals.push(`${id}:100`);
+        }
+      } else {
+        if (existingIndex !== -1) {
+          currentVarietals.splice(existingIndex, 1);
+        }
+      }
+      
+      return {
+        ...prev,
+        varietals: currentVarietals
+      };
+    });
+  };
+
+  const handleVarietalPercentageChange = (id: number, percentage: string) => {
+    setFormData(prev => {
+      const currentVarietals = [...prev.varietals];
+      const existingIndex = currentVarietals.findIndex(v => v.startsWith(`${id}:`));
+      
+      if (existingIndex !== -1) {
+        currentVarietals[existingIndex] = `${id}:${percentage}`;
+      }
+      
+      return {
+        ...prev,
+        varietals: currentVarietals
+      };
+    });
+  };
+
+  const handleFoodChange = (id: number, checked: boolean) => {
+    setFormData(prev => {
+      const currentFoods = [...prev.foods];
+      const idStr = String(id);
+      const existingIndex = currentFoods.indexOf(idStr);
+      
+      if (checked) {
+        if (existingIndex === -1) {
+          currentFoods.push(idStr);
+        }
+      } else {
+        if (existingIndex !== -1) {
+          currentFoods.splice(existingIndex, 1);
+        }
+      }
+      
+      return {
+        ...prev,
+        foods: currentFoods
+      };
+    });
+  };
+
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
     setLoading(true);
@@ -561,42 +622,62 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
                 
                 <div>
                   <label className="label">
-                    <span className="label-text">Varietals (with percentages)</span>
+                    <span className="label-text">Varietals</span>
                   </label>
-                  <select
-                    name="varietals"
-                    multiple
-                    value={formData.varietals}
-                    onChange={handleChange as any}
-                    className="select select-bordered w-full h-32"
-                  >
-                    {handbooks.varietals.map(varietal => (
-                      <option key={varietal.id} value={`${varietal.id}:100`}>
-                        {varietal.name || varietal.name_en || varietal.name_ru || varietal.name_fr} (100%)
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-sm text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple options. Format: ID:Percentage</p>
+                  <div className="border border-gray-300 rounded-lg p-2 max-h-40 overflow-y-auto">
+                    {handbooks.varietals.map((varietal, index) => {
+                      const isSelected = formData.varietals.some(v => v.startsWith(`${varietal.id}:`));
+                      const percentage = isSelected ? formData.varietals.find(v => v.startsWith(`${varietal.id}:`))?.split(':')[1] || '100' : '100';
+                      
+                      return (
+                        <div key={varietal.id} className="flex items-center mb-2">
+                          <input
+                            type="checkbox"
+                            id={`varietal-${varietal.id}`}
+                            checked={isSelected}
+                            onChange={(e) => handleVarietalChange(varietal.id, e.currentTarget.checked)}
+                            className="checkbox checkbox-primary mr-2"
+                          />
+                          <label htmlFor={`varietal-${varietal.id}`} className="flex-1">
+                            {varietal.name || varietal.name_en || varietal.name_ru || varietal.name_fr}
+                          </label>
+                          {isSelected && (
+                            <input
+                              type="number"
+                              value={percentage}
+                              onChange={(e) => handleVarietalPercentageChange(varietal.id, e.currentTarget.value)}
+                              className="input input-bordered input-sm w-20 ml-2"
+                              min="0"
+                              max="100"
+                              step="0.1"
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
                 
                 <div>
                   <label className="label">
                     <span className="label-text">Foods</span>
                   </label>
-                  <select
-                    name="foods"
-                    multiple
-                    value={formData.foods}
-                    onChange={handleChange as any}
-                    className="select select-bordered w-full h-32"
-                  >
+                  <div className="border border-gray-300 rounded-lg p-2 max-h-40 overflow-y-auto">
                     {handbooks.foods.map(food => (
-                      <option key={food.id} value={food.id}>
-                        {food.name || food.name_en || food.name_ru || food.name_fr}
-                      </option>
+                      <div key={food.id} className="flex items-center mb-2">
+                        <input
+                          type="checkbox"
+                          id={`food-${food.id}`}
+                          checked={formData.foods.includes(String(food.id))}
+                          onChange={(e) => handleFoodChange(food.id, e.currentTarget.checked)}
+                          className="checkbox checkbox-primary mr-2"
+                        />
+                        <label htmlFor={`food-${food.id}`}>
+                          {food.name || food.name_en || food.name_ru || food.name_fr}
+                        </label>
+                      </div>
                     ))}
-                  </select>
-                  <p className="text-sm text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple options</p>
+                  </div>
                 </div>
               </div>
             </div>
