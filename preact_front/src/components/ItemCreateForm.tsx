@@ -563,40 +563,78 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
                   <label className="label">
                     <span className="label-text">Varietals (with percentages)</span>
                   </label>
-                  <select
-                    name="varietals"
-                    multiple
-                    value={formData.varietals}
-                    onChange={handleChange as any}
-                    className="select select-bordered w-full h-32"
-                  >
-                    {handbooks.varietals.map(varietal => (
-                      <option key={varietal.id} value={`${varietal.id}:100`}>
-                        {varietal.name || varietal.name_en || varietal.name_ru || varietal.name_fr} (100%)
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-sm text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple options. Format: ID:Percentage</p>
+                  <div className="border rounded-lg p-2 max-h-60 overflow-y-auto">
+                    {handbooks.varietals.map(varietal => {
+                      const isSelected = formData.varietals.some(v => v.startsWith(`${varietal.id}:`));
+                      return (
+                        <label key={varietal.id} className="flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(e) => {
+                              if (e.currentTarget.checked) {
+                                // Add with default 100% if not already present
+                                if (!isSelected) {
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    varietals: [...prev.varietals, `${varietal.id}:100`]
+                                  }));
+                                }
+                              } else {
+                                // Remove the varietal
+                                setFormData(prev => ({
+                                  ...prev,
+                                  varietals: prev.varietals.filter(v => !v.startsWith(`${varietal.id}:`))
+                                }));
+                              }
+                            }}
+                            className="checkbox checkbox-primary mr-2"
+                          />
+                          <span>{varietal.name || varietal.name_en || varietal.name_ru || varietal.name_fr} (100%)</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                  <p className="text-sm text-gray-500 mt-1">Select multiple options by clicking checkboxes</p>
                 </div>
                 
                 <div>
                   <label className="label">
                     <span className="label-text">Foods</span>
                   </label>
-                  <select
-                    name="foods"
-                    multiple
-                    value={formData.foods}
-                    onChange={handleChange as any}
-                    className="select select-bordered w-full h-32"
-                  >
-                    {handbooks.foods.map(food => (
-                      <option key={food.id} value={food.id}>
-                        {food.name || food.name_en || food.name_ru || food.name_fr}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-sm text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple options</p>
+                  <div className="border rounded-lg p-2 max-h-60 overflow-y-auto">
+                    {handbooks.foods.map(food => {
+                      const isSelected = formData.foods.includes(food.id.toString());
+                      return (
+                        <label key={food.id} className="flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(e) => {
+                              if (e.currentTarget.checked) {
+                                // Add if not already present
+                                if (!isSelected) {
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    foods: [...prev.foods, food.id.toString()]
+                                  }));
+                                }
+                              } else {
+                                // Remove the food
+                                setFormData(prev => ({
+                                  ...prev,
+                                  foods: prev.foods.filter(f => f !== food.id.toString())
+                                }));
+                              }
+                            }}
+                            className="checkbox checkbox-primary mr-2"
+                          />
+                          <span>{food.name || food.name_en || food.name_ru || food.name_fr}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                  <p className="text-sm text-gray-500 mt-1">Select multiple options by clicking checkboxes</p>
                 </div>
               </div>
             </div>
