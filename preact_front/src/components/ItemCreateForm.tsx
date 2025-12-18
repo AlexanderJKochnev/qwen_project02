@@ -39,6 +39,7 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
   });
   
   const [loading, setLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [handbooks, setHandbooks] = useState({
     subcategories: [],
     sweetness: [],
@@ -86,6 +87,15 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
     const target = e.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
     const { name, value, type } = target;
 
+    // Clear field error when user modifies the field
+    if (name && fieldErrors[name]) {
+      setFieldErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+
     if (type === 'file') {
       const fileInput = target as HTMLInputElement;
       if (fileInput.files && fileInput.files[0]) {
@@ -131,9 +141,9 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
         varietals: formData.varietals.map(v => {
           // Assuming varietals format is "id:percentage" - need to parse it
           const [id, percentage] = v.split(':');
-          return [parseInt(id), parseFloat(percentage)];
-        }).filter(v => !isNaN(v[0]) && !isNaN(v[1])),
-        foods: formData.foods.map(f => parseInt(f)).filter(f => !isNaN(f))
+          return { id: parseInt(id), percentage: parseFloat(percentage) };
+        }).filter(v => !isNaN(v.id) && !isNaN(v.percentage)),
+        foods: formData.foods.map(f => ({ id: parseInt(f) })).filter(f => !isNaN(f.id))
       };
       
       multipartFormData.append('data', JSON.stringify(dataToSend));
@@ -143,17 +153,40 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
         multipartFormData.append('file', formData.file);
       }
 
-      await apiClient('/items/create_item_drink', {
+      const response = await apiClient('/items/create_item_drink', {
         method: 'POST',
         body: multipartFormData,
         // Don't set Content-Type header, let browser set it with boundary
       }, false); // Don't include language for multipart form data
       
+      if (response && response.id) {
+        // Navigate to ItemDetailView using the returned item ID
+        window.location.hash = `#/items/${response.id}`;
+      }
+      
       onCreated();
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating item:', error);
-      alert(`Error creating item: ${error.message}`);
+      
+      // Check if it's a validation error from FastAPI
+      if (error.status === 422 && error.data && Array.isArray(error.data.detail)) {
+        const errors: Record<string, string> = {};
+        
+        error.data.detail.forEach((err: any) => {
+          if (err.loc && Array.isArray(err.loc)) {
+            // Get the field name from the error location
+            const fieldName = err.loc[err.loc.length - 1];
+            errors[fieldName] = err.msg || 'Validation error';
+          }
+        });
+        
+        setFieldErrors(errors);
+        alert(`Validation errors occurred. Please check highlighted fields.`);
+      } else {
+        setFieldErrors({});
+        alert(`Error creating item: ${error.message || error}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -199,9 +232,12 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
                     name="title"
                     value={formData.title}
                     onInput={handleChange}
-                    className="input input-bordered w-full"
+                    className={`input input-bordered w-full ${fieldErrors.title ? 'input-error' : ''}`}
                     required
                   />
+                  {fieldErrors.title && (
+                    <p className="text-red-500 text-sm mt-1">{fieldErrors.title}</p>
+                  )}
                 </div>
                 
                 <div>
@@ -213,8 +249,11 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
                     name="title_ru"
                     value={formData.title_ru}
                     onInput={handleChange}
-                    className="input input-bordered w-full"
+                    className={`input input-bordered w-full ${fieldErrors.title_ru ? 'input-error' : ''}`}
                   />
+                  {fieldErrors.title_ru && (
+                    <p className="text-red-500 text-sm mt-1">{fieldErrors.title_ru}</p>
+                  )}
                 </div>
                 
                 <div>
@@ -325,7 +364,7 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
                     name="subcategory_id"
                     value={formData.subcategory_id}
                     onChange={handleChange as any}
-                    className="select select-bordered w-full"
+                    className={`select select-bordered w-full ${fieldErrors.subcategory_id ? 'select-error' : ''}`}
                     required
                   >
                     <option value="">Select a subcategory</option>
@@ -335,6 +374,9 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
                       </option>
                     ))}
                   </select>
+                  {fieldErrors.subcategory_id && (
+                    <p className="text-red-500 text-sm mt-1">{fieldErrors.subcategory_id}</p>
+                  )}
                 </div>
                 
                 <div>
@@ -345,7 +387,7 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
                     name="sweetness_id"
                     value={formData.sweetness_id}
                     onChange={handleChange as any}
-                    className="select select-bordered w-full"
+                    className={`select select-bordered w-full ${fieldErrors.sweetness_id ? 'select-error' : ''}`}
                   >
                     <option value="">Select sweetness</option>
                     {handbooks.sweetness.map(sweet => (
@@ -354,6 +396,9 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
                       </option>
                     ))}
                   </select>
+                  {fieldErrors.sweetness_id && (
+                    <p className="text-red-500 text-sm mt-1">{fieldErrors.sweetness_id}</p>
+                  )}
                 </div>
                 
                 <div>
@@ -364,7 +409,7 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
                     name="subregion_id"
                     value={formData.subregion_id}
                     onChange={handleChange as any}
-                    className="select select-bordered w-full"
+                    className={`select select-bordered w-full ${fieldErrors.subregion_id ? 'select-error' : ''}`}
                     required
                   >
                     <option value="">Select a subregion</option>
@@ -374,6 +419,9 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
                       </option>
                     ))}
                   </select>
+                  {fieldErrors.subregion_id && (
+                    <p className="text-red-500 text-sm mt-1">{fieldErrors.subregion_id}</p>
+                  )}
                 </div>
                 
                 <div>
@@ -385,11 +433,14 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
                     name="alc"
                     value={formData.alc}
                     onInput={handleChange}
-                    className="input input-bordered w-full"
+                    className={`input input-bordered w-full ${fieldErrors.alc ? 'input-error' : ''}`}
                     step="0.01"
                     min="0"
                     max="100"
                   />
+                  {fieldErrors.alc && (
+                    <p className="text-red-500 text-sm mt-1">{fieldErrors.alc}</p>
+                  )}
                 </div>
                 
                 <div>
@@ -401,11 +452,14 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
                     name="sugar"
                     value={formData.sugar}
                     onInput={handleChange}
-                    className="input input-bordered w-full"
+                    className={`input input-bordered w-full ${fieldErrors.sugar ? 'input-error' : ''}`}
                     step="0.01"
                     min="0"
                     max="100"
                   />
+                  {fieldErrors.sugar && (
+                    <p className="text-red-500 text-sm mt-1">{fieldErrors.sugar}</p>
+                  )}
                 </div>
                 
                 <div>
