@@ -318,8 +318,14 @@ class ItemService(Service):
             result, created = DrinkService.create(drink, DrinkRepository, Drink, AsyncSession)
             print(f'dinrk=={result=}====={created=}======')
 
-            data_dict["drink_id"] = result.id
-            item = ItemCreate(**data_dict)
+            # Определяем поля, которые принадлежат модели Item
+            item_fields = {'vol', 'price', 'count', 'drink_id', 'image_id', 'image_path'}
+            
+            # Оставляем только поля, которые принадлежат модели Item
+            item_data_dict = {k: v for k, v in data_dict.items() if k in item_fields}
+            item_data_dict["drink_id"] = result.id
+            
+            item = ItemCreate(**item_data_dict)
             item_instance, new = await cls.get_or_create(item, ItemRepository, Item, session)
             return item_instance, new
         except Exception as e:
