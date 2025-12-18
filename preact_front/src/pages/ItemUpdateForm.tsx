@@ -30,8 +30,14 @@ export const ItemUpdateForm = () => {
   
   const { language } = useLanguage();
   
-  const { data, loading: loadingItem, error: errorItem } = useApi<ItemRead>(
+  const { data: viewData, loading: loadingItem, error: errorItem } = useApi<ItemRead>(
     `/items_view/detail/${language}/${id}`,
+    'GET'
+  );
+  
+  // Get the raw item data to access drink_id
+  const { data: itemData } = useApi<any>(
+    `/items/${id}`,
     'GET'
   );
   
@@ -106,57 +112,57 @@ export const ItemUpdateForm = () => {
 
   // Load initial data when item is loaded
   useEffect(() => {
-    if (data) {
+    if (viewData) {
       setFormData({
-        vol: data.vol || 0,
-        price: data.price || 0,
-        count: data.count || 0,
-        image_id: data.image_id || '',
-        category: data.category || '',
-        country: data.country || '',
-        region: data.region || '',
+        vol: viewData.vol || 0,
+        price: viewData.price || 0,
+        count: viewData.count || 0,
+        image_id: viewData.image_id || '',
+        category: viewData.category || '',
+        country: viewData.country || '',
+        region: viewData.region || '',
         en: {
-          title: data.en?.title || '',
-          subtitle: data.en?.subtitle || '',
-          description: data.en?.description || '',
-          recommendation: data.en?.recommendation || '',
-          madeof: data.en?.madeof || '',
-          alc: data.en?.alc || '',
-          sugar: data.en?.sugar || '',
-          age: data.en?.age || '',
-          sparkling: data.en?.sparkling || false,
-          pairing: data.en?.pairing || [],
-          varietal: data.en?.varietal || []
+          title: viewData.en?.title || '',
+          subtitle: viewData.en?.subtitle || '',
+          description: viewData.en?.description || '',
+          recommendation: viewData.en?.recommendation || '',
+          madeof: viewData.en?.madeof || '',
+          alc: viewData.en?.alc || '',
+          sugar: viewData.en?.sugar || '',
+          age: viewData.en?.age || '',
+          sparkling: viewData.en?.sparkling || false,
+          pairing: viewData.en?.pairing || [],
+          varietal: viewData.en?.varietal || []
         },
         ru: {
-          title: data.ru?.title || '',
-          subtitle: data.ru?.subtitle || '',
-          description: data.ru?.description || '',
-          recommendation: data.ru?.recommendation || '',
-          madeof: data.ru?.madeof || '',
-          alc: data.ru?.alc || '',
-          sugar: data.ru?.sugar || '',
-          age: data.ru?.age || '',
-          sparkling: data.ru?.sparkling || false,
-          pairing: data.ru?.pairing || [],
-          varietal: data.ru?.varietal || []
+          title: viewData.ru?.title || '',
+          subtitle: viewData.ru?.subtitle || '',
+          description: viewData.ru?.description || '',
+          recommendation: viewData.ru?.recommendation || '',
+          madeof: viewData.ru?.madeof || '',
+          alc: viewData.ru?.alc || '',
+          sugar: viewData.ru?.sugar || '',
+          age: viewData.ru?.age || '',
+          sparkling: viewData.ru?.sparkling || false,
+          pairing: viewData.ru?.pairing || [],
+          varietal: viewData.ru?.varietal || []
         },
         fr: {
-          title: data.fr?.title || '',
-          subtitle: data.fr?.subtitle || '',
-          description: data.fr?.description || '',
-          recommendation: data.fr?.recommendation || '',
-          madeof: data.fr?.madeof || '',
-          alc: data.fr?.alc || '',
-          sugar: data.fr?.sugar || '',
-          age: data.fr?.age || '',
-          sparkling: data.fr?.sparkling || false,
-          pairing: data.fr?.pairing || [],
-          varietal: data.fr?.varietal || []
+          title: viewData.fr?.title || '',
+          subtitle: viewData.fr?.subtitle || '',
+          description: viewData.fr?.description || '',
+          recommendation: viewData.fr?.recommendation || '',
+          madeof: viewData.fr?.madeof || '',
+          alc: viewData.fr?.alc || '',
+          sugar: viewData.fr?.sugar || '',
+          age: viewData.fr?.age || '',
+          sparkling: viewData.fr?.sparkling || false,
+          pairing: viewData.fr?.pairing || [],
+          varietal: viewData.fr?.varietal || []
         }
       });
     }
-  }, [data]);
+  }, [viewData]);
 
   const handleChange = (e: Event) => {
     const target = e.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
@@ -201,10 +207,55 @@ export const ItemUpdateForm = () => {
     setLoading(true);
     
     try {
+      // Extract drink-related fields from formData
+      const { en, ru, fr, category, country, ...itemFields } = formData;
+      
+      // Update Item fields
+      const itemUpdateData = {
+        vol: itemFields.vol,
+        price: itemFields.price,
+        count: itemFields.count,
+        image_id: itemFields.image_id,
+        // Note: drink_id, category, and country are not updated here as they're part of the Drink model
+      };
+      
       await apiClient(`/items/${id}`, {
-        method: 'PUT',
-        body: formData
+        method: 'PATCH',
+        body: itemUpdateData
       });
+      
+      // Update Drink fields if we have drink_id available
+      if (data && data.drink && data.drink.id) {
+        const drinkUpdateData = {
+          title: en.title,
+          title_ru: en.title_ru || en.title,
+          title_fr: en.title_fr || en.title,
+          subtitle: en.subtitle,
+          subtitle_ru: en.subtitle_ru || en.subtitle,
+          subtitle_fr: en.subtitle_fr || en.subtitle,
+          description: en.description,
+          description_ru: en.description_ru || en.description,
+          description_fr: en.description_fr || en.description,
+          recommendation: en.recommendation,
+          recommendation_ru: en.recommendation_ru || en.recommendation,
+          recommendation_fr: en.recommendation_fr || en.recommendation,
+          madeof: en.madeof,
+          madeof_ru: en.madeof_ru || en.madeof,
+          madeof_fr: en.madeof_fr || en.madeof,
+          alc: en.alc,
+          sugar: en.sugar,
+          age: en.age,
+          subcategory_id: itemFields.category, // This should be from the form
+          subregion_id: itemFields.region,     // This should be from the form
+          sweetness_id: itemFields.sweetness_id, // This might need to be handled differently
+        };
+        
+        await apiClient(`/drinks/${data.drink.id}`, {
+          method: 'PATCH',
+          body: drinkUpdateData
+        });
+      }
+      
       showNotification('Item updated successfully', 'success');
       route(`/items/${id}`);
     } catch (error) {
