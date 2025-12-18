@@ -143,7 +143,10 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
           const [id, percentage] = v.split(':');
           return { id: parseInt(id), percentage: parseFloat(percentage) };
         }).filter(v => !isNaN(v.id) && !isNaN(v.percentage)),
-        foods: formData.foods.map(f => ({ id: parseInt(f) })).filter(f => !isNaN(f.id))
+        foods: formData.foods.map(f => {
+          const id = parseInt(f);
+          return isNaN(id) ? null : { id };
+        }).filter((f): f is { id: number } => f !== null)
       };
       
       multipartFormData.append('data', JSON.stringify(dataToSend));
