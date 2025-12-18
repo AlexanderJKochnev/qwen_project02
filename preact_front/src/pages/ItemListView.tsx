@@ -43,7 +43,7 @@ export const ItemListView = () => {
 
   const handleDeleteConfirm = async () => {
     if (itemToDelete !== null) {
-      const success = await deleteItem(`/delete/items/${itemToDelete}`);
+      const success = await deleteItem(`/items/${itemToDelete}`);
       if (success) {
         showNotification('Item deleted successfully', 'success');
         refetch(); // Refresh the list

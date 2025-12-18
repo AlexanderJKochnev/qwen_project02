@@ -1,86 +1,85 @@
 ```
 # Dependencies
 node_modules/
-.pnpm-store/
-.npm/
-.yarn/
-.cache/
 
-# Build outputs
+# Build artifacts
 dist/
 build/
-.out/
-.bundle/
-
-# TypeScript/JavaScript
 *.js.map
 *.tsbuildinfo
-.next/
-.nuxt/
-.un~*
 
-# IDE
+# Environment
+.env
+.env.local
+*.env.*
+
+# Editors
 .vscode/
 .idea/
-*.swp
-*.swo
 
+# Logs
+*.log
+
+# Python (if present)
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
 
-# Coverage
-.coverage
-.coverage.*
-htmlcov/
-.coverage.xml
-.pytest_cache/
-
-# Environment
-# .env
-# .env.local
-# .env.*
-.venv/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
+# Temporary files
 *.tmp
+*.swp
+*~
 
 # OS
 .DS_Store
 Thumbs.db
 
-TODO.md
-migration_volume
-mongodb_data
-pg_data
-pg_dump
-upload_volume
+# Coverage
+coverage/
+htmlcov/
+.coverage
+
+# MyPy
+.mypy_cache/
+
+# Pytest
+.pytest_cache/
+
+# Pre-commit
+.pre-commit-config.yaml.swp
+
+# Preact/Vite specific
+.vite/
+.svelte-kit/
+
+# General build outputs
+target/
+.gradle/
+.npm/
+.yarn/
+
+# Compressed files
+*.zip
+*.gz
+*.tar
+*.tgz
+*.bz2
+*.xz
+*.7z
+*.rar
+*.zst
+*.lz4
+*.lzh
+*.cab
+*.arj
+*.rpm
+*.deb
+*.Z
+*.lz
+*.lzo
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.tar.zst
+```

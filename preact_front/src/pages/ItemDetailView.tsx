@@ -56,7 +56,7 @@ export const ItemDetailView = () => {
   );
 
   const handleDelete = async () => {
-    const success = await deleteItem(`/delete/items/${id}`);
+    const success = await deleteItem(`/items/${id}`);
     if (success) {
       showNotification('Item deleted successfully', 'success');
       route('/items');
