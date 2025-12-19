@@ -36,6 +36,23 @@ function ItemCreateFormWrapper() {
   return <ItemCreateForm onClose={handleClose} onCreated={handleCreated} />;
 }
 
+// Wrapper component for ItemUpdateForm to handle routing
+function ItemUpdateFormWrapper() {
+  const { route } = useLocation();
+
+  const handleClose = () => {
+    route('/items');
+  };
+
+  const handleUpdated = () => {
+    // Optionally can add notification or other logic here
+    // For now just navigate back to items list
+    route('/items');
+  };
+
+  return <ItemUpdateForm onClose={handleClose} onUpdated={handleUpdated} />;
+}
+
 function HomeRedirect() {
   const { route } = useLocation();
 
@@ -94,7 +111,7 @@ export function App() {
               <Route path="/" component={isAuthenticated ? HomeRedirect : Home} />
 
               <Route path="/items/create" component={ItemCreateFormWrapper} />
-              <Route path="/items/edit/:id" component={ItemUpdateForm} />
+              <Route path="/items/edit/:id" component={ItemUpdateFormWrapper} />
               <Route path="/items/:id" component={ItemDetailView} />
               <Route path="/items" component={ItemListView} />
               <Route path="/handbooks" component={HandbookList} />
