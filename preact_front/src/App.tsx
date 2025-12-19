@@ -19,6 +19,23 @@ import { Home } from './pages/Home';
 import { NotFound } from './pages/_404';
 import './styles/tailwind-to-css.css';
 
+// Wrapper component for ItemCreateForm to handle routing
+function ItemCreateFormWrapper() {
+  const { route } = useLocation();
+  
+  const handleClose = () => {
+    route('/items');
+  };
+  
+  const handleCreated = () => {
+    // Optionally can add notification or other logic here
+    // For now just navigate back to items list
+    route('/items');
+  };
+
+  return <ItemCreateForm onClose={handleClose} onCreated={handleCreated} />;
+}
+
 function HomeRedirect() {
   const { route } = useLocation();
 
@@ -76,7 +93,7 @@ export function App() {
             <Router>
               <Route path="/" component={isAuthenticated ? HomeRedirect : Home} />
 
-              <Route path="/items/create" component={ItemCreateForm} />
+              <Route path="/items/create" component={ItemCreateFormWrapper} />
               <Route path="/items/edit/:id" component={ItemUpdateForm} />
               <Route path="/items/:id" component={ItemDetailView} />
               <Route path="/items" component={ItemListView} />
