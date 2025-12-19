@@ -1051,7 +1051,10 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
           <div className="flex justify-end gap-4 mt-6">
             <button
               type="button"
-              onClick={onClose}
+              onClick={(e) => {
+                e.preventDefault();
+                onClose();
+              }}
               className="btn btn-ghost"
               disabled={loading}
             >
