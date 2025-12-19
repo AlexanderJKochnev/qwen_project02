@@ -5,7 +5,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 
 interface ItemCreateFormProps {
   onClose: () => void;
-  onCreated: () => void;
+  onCreated?: () => void;
 }
 
 export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
@@ -144,7 +144,9 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
         // Don't set Content-Type header, let browser set it with boundary
       }, false); // Don't include language for multipart form data
 
-      onCreated();
+      if (onCreated) {
+        onCreated();
+      }
       onClose();
     } catch (error) {
       console.error('Error creating item:', error);
