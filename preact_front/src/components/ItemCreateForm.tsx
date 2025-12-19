@@ -94,14 +94,6 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
           file: fileInput.files[0]
         }));
       }
-    } else if (type === 'select-multiple') {
-      const select = target as HTMLSelectElement;
-      const selectedValues = Array.from(select.selectedOptions).map(option => option.value);
-      
-      setFormData(prev => ({
-        ...prev,
-        [name]: selectedValues
-      }));
     } else {
       setFormData(prev => ({
         ...prev,
@@ -129,11 +121,14 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
         subregion_id: parseInt(formData.subregion_id),
         sweetness_id: formData.sweetness_id ? parseInt(formData.sweetness_id) : null,
         varietals: formData.varietals.map(v => {
-          // Assuming varietals format is "id:percentage" - need to parse it
+          // Parse the "id:percentage" format and return in required format {id: id}
           const [id, percentage] = v.split(':');
-          return [parseInt(id), parseFloat(percentage)];
-        }).filter(v => !isNaN(v[0]) && !isNaN(v[1])),
-        foods: formData.foods.map(f => parseInt(f)).filter(f => !isNaN(f))
+          return { id: parseInt(id) };
+        }).filter(v => !isNaN(v.id)),
+        foods: formData.foods.map(f => {
+          const id = parseInt(f);
+          return isNaN(id) ? null : { id };
+        }).filter((f): f is { id: number } => f !== null)
       };
       
       multipartFormData.append('data', JSON.stringify(dataToSend));
@@ -561,42 +556,108 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
                 
                 <div>
                   <label className="label">
-                    <span className="label-text">Varietals (with percentages)</span>
+                    <span className="label-text">Varietals</span>
                   </label>
-                  <select
-                    name="varietals"
-                    multiple
-                    value={formData.varietals}
-                    onChange={handleChange as any}
-                    className="select select-bordered w-full h-32"
-                  >
-                    {handbooks.varietals.map(varietal => (
-                      <option key={varietal.id} value={`${varietal.id}:100`}>
-                        {varietal.name || varietal.name_en || varietal.name_ru || varietal.name_fr} (100%)
-                      </option>
+                  <div className="border rounded-lg p-2 max-h-40 overflow-y-auto">
+                    {handbooks.varietals.map((varietal, index) => (
+                      <div key={varietal.id} className="flex items-center mb-2">
+                        <input
+                          type="checkbox"
+                          id={`varietal-${varietal.id}`}
+                          checked={formData.varietals.some(v => v.startsWith(`${varietal.id}:`))}
+                          onChange={(e) => {
+                            const isChecked = (e.target as HTMLInputElement).checked;
+                            let newVarietals = [...formData.varietals];
+                            
+                            if (isChecked) {
+                              // Add with default 100% if not already present
+                              if (!newVarietals.some(v => v.startsWith(`${varietal.id}:`))) {
+                                newVarietals.push(`${varietal.id}:100`);
+                              }
+                            } else {
+                              // Remove the varietal
+                              newVarietals = newVarietals.filter(v => !v.startsWith(`${varietal.id}:`));
+                            }
+                            
+                            setFormData(prev => ({
+                              ...prev,
+                              varietals: newVarietals
+                            }));
+                          }}
+                          className="mr-2"
+                        />
+                        <label htmlFor={`varietal-${varietal.id}`} className="flex-1 cursor-pointer">
+                          {varietal.name || varietal.name_en || varietal.name_ru || varietal.name_fr}
+                        </label>
+                        {formData.varietals.some(v => v.startsWith(`${varietal.id}:`)) && (
+                          <div className="ml-2">
+                            <input
+                              type="number"
+                              min="0"
+                              max="100"
+                              step="0.1"
+                              placeholder="%" 
+                              value={
+                                formData.varietals.find(v => v.startsWith(`${varietal.id}:`))
+                                  ? formData.varietals.find(v => v.startsWith(`${varietal.id}:`)).split(':')[1]
+                                  : '100'
+                              }
+                              onChange={(e) => {
+                                const percentage = (e.target as HTMLInputElement).value;
+                                const newVarietals = formData.varietals.map(v => 
+                                  v.startsWith(`${varietal.id}:`) ? `${varietal.id}:${percentage}` : v
+                                );
+                                
+                                setFormData(prev => ({
+                                  ...prev,
+                                  varietals: newVarietals
+                                }));
+                              }}
+                              className="input input-bordered w-20"
+                            />
+                          </div>
+                        )}
+                      </div>
                     ))}
-                  </select>
-                  <p className="text-sm text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple options. Format: ID:Percentage</p>
+                  </div>
                 </div>
                 
                 <div>
                   <label className="label">
                     <span className="label-text">Foods</span>
                   </label>
-                  <select
-                    name="foods"
-                    multiple
-                    value={formData.foods}
-                    onChange={handleChange as any}
-                    className="select select-bordered w-full h-32"
-                  >
+                  <div className="border rounded-lg p-2 max-h-40 overflow-y-auto">
                     {handbooks.foods.map(food => (
-                      <option key={food.id} value={food.id}>
-                        {food.name || food.name_en || food.name_ru || food.name_fr}
-                      </option>
+                      <div key={food.id} className="flex items-center mb-2">
+                        <input
+                          type="checkbox"
+                          id={`food-${food.id}`}
+                          checked={formData.foods.includes(food.id.toString())}
+                          onChange={(e) => {
+                            const isChecked = (e.target as HTMLInputElement).checked;
+                            let newFoods = [...formData.foods];
+                            
+                            if (isChecked) {
+                              if (!newFoods.includes(food.id.toString())) {
+                                newFoods.push(food.id.toString());
+                              }
+                            } else {
+                              newFoods = newFoods.filter(f => f !== food.id.toString());
+                            }
+                            
+                            setFormData(prev => ({
+                              ...prev,
+                              foods: newFoods
+                            }));
+                          }}
+                          className="mr-2"
+                        />
+                        <label htmlFor={`food-${food.id}`} className="cursor-pointer">
+                          {food.name || food.name_en || food.name_ru || food.name_fr}
+                        </label>
+                      </div>
                     ))}
-                  </select>
-                  <p className="text-sm text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple options</p>
+                  </div>
                 </div>
               </div>
             </div>

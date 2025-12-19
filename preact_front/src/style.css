@@ -350,6 +350,21 @@ body {
   background-color: #f3f4f6;
 }
 
+/* Checkbox container styles */
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.checkbox-container input[type="checkbox"] {
+  margin-right: 0.5rem;
+}
+
+.checkbox-container label {
+  cursor: pointer;
+}
+
 /* Card/grid styles for ListView */
 .card-grid {
   display: grid;

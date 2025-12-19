@@ -1,86 +1,77 @@
 ```
 # Dependencies
 node_modules/
-.pnpm-store/
-.npm/
-.yarn/
-.cache/
 
 # Build outputs
 dist/
 build/
-.out/
-.bundle/
-
-# TypeScript/JavaScript
 *.js.map
-*.tsbuildinfo
-.next/
-.nuxt/
-.un~*
 
-# IDE
+# Environment
+.env
+.env.local
+*.env.*
+
+# Editors
 .vscode/
 .idea/
 *.swp
 *.swo
 
+# Logs
+*.log
+
+# Temp files
+*.tmp
+
+# Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-*.py[cod]
-*$py.class
+
+# Compiled
+*.o
+*.obj
+*.a
+*.lib
 *.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+*.dll
+*.exe
+*.out
 
 # Coverage
-.coverage
-.coverage.*
+coverage/
 htmlcov/
-.coverage.xml
+.coverage
+
+# Cache
+.mypy_cache/
 .pytest_cache/
+.nyc_output/
+coverage/lcov-report/
 
-# Environment
-# .env
-# .env.local
-# .env.*
-.venv/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*.tmp
-
-# OS
+# System
 .DS_Store
 Thumbs.db
 
-TODO.md
-migration_volume
-mongodb_data
-pg_data
-pg_dump
-upload_volume
+# Archives
+*.zip
+*.gz
+*.tar
+*.tgz
+*.bz2
+*.xz
+*.7z
+*.rar
+*.zst
+*.lz4
+*.lzh
+*.cab
+*.arj
+*.rpm
+*.deb
+*.Z
+*.lz
+*.lzo
+```
