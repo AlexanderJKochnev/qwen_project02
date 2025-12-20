@@ -165,6 +165,8 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
           method: 'GET'
         });
         
+        console.log('Item data loaded for ID:', id, data);
+        
         // Create arrays of checked items from the loaded data
         const checkedVarietals = data.varietals || [];
         const checkedFoodIds = new Set((data.foods || []).map(f => f.id.toString()));
@@ -233,7 +235,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
     if (handbooks.varietals.length > 0 && handbooks.foods.length > 0) {
       loadItemData();
     }
-  }, [id, handbooks]);
+  }, [id, handbooks.varietals, handbooks.foods]); // Added specific dependencies instead of whole handbooks object
 
   const handleChange = (e: Event) => {
     const target = e.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
@@ -340,6 +342,8 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
         drink_id: formData.drink_id // Include drink_id for update
       };
 
+      console.log('Sending data to update:', JSON.stringify(dataToSend));
+      
       // Only include image_path and image_id if no file is being uploaded
       if (!formData.file) {
         delete dataToSend.image_path;

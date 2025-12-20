@@ -1,59 +1,74 @@
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
+```
+# Dependencies
+node_modules/
+.pnpm-store/
+.yarn/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
 dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+build/
+coverage/
+.nyc_output/
+.eslintcache
 
-# Coverage
-.coverage
-.coverage.*
-htmlcov/
-.coverage.xml
-.pytest_cache/
+# Logs
+*.log
+*.log.*
 
-# Environment
-# .env
-# .env.local
-# .env.*
-.venv/
-venv/
-ENV/
-env.bak/
-venv.bak/
+# Environment variables
+.env
+.env.local
+.env.*
+!.env.example
 
-# IDE
+# IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
-*.tmp
-
-# OS
+*~
 .DS_Store
 Thumbs.db
 
-TODO.md
-migration_volume
-mongodb_data
-pg_data
-pg_dump
-upload_volume
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git/modules/
+git-submodule/
+.git/info/exclude
+.pytest_cache/
+.mypy_cache/
+.hypothesis/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# TypeScript
+*.tsbuildinfo
+*.js.map
+*.jsx.map
+*.ts.map
+
+# Preact/Vite specific
+.vite/
+```
