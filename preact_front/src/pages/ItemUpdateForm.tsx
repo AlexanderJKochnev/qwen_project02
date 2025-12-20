@@ -178,7 +178,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
         
         // Combine: checked first, then unchecked sorted alphabetically by name
         const allVarietalsWithNames = [
-          ...checkedVarietals.map(v => ({ id: v.id, percentage: v.percentage, name: handbooks.varietals.find(v => v.id === v.id)?.name || v.name_en || v.name_ru || v.name_fr || '' })),
+          ...checkedVarietals.map(v => ({ id: v.id, percentage: v.percentage, name: handbooks.varietals.find(hv => hv.id === v.id)?.name || v.name_en || v.name_ru || v.name_fr || '' })),
           ...uncheckedVarietals.map(v => {
             const [varId] = v.split(':');
             const varIntId = parseInt(varId);
@@ -214,7 +214,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
         const allFoodsWithNames = [
           ...(data.foods || []).map(f => ({ 
             id: f.id, 
-            name: handbooks.foods.find(f => f.id === f.id)?.name || f.name_en || f.name_ru || f.name_fr || ''
+            name: handbooks.foods.find(hf => hf.id === f.id)?.name || f.name_en || f.name_ru || f.name_fr || ''
           })),
           ...uncheckedFoods.map(f => ({ 
             id: f.id, 
@@ -959,7 +959,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                             type="checkbox"
                             id={`varietal-${varietal.id}`}
                             name={`varietal-${varietal.id}`}
-                            checked={true}
+                            checked={formData.varietals.some(v => v.startsWith(`${varietal.id}:`))}
                             onChange={handleChange as any}
                             className="mr-2"
                           />
@@ -1020,7 +1020,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                             type="checkbox"
                             id={`food-${food.id}`}
                             name={`food-${food.id}`}
-                            checked={true}
+                            checked={formData.foods.includes(food.id.toString())}
                             onChange={handleChange as any}
                             className="mr-2"
                           />
