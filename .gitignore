@@ -1,33 +1,36 @@
+```
 # Dependencies
 node_modules/
+.pnpm-store/
+.npm/
+.yarn/
+.bun/
 
 # Build outputs
 dist/
 build/
-target/
+.out/
+.bundle/
 
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-env/
-venv/
-.venv/
-.venv*/
-.python-version
-*.so
+# Cache directories
+.cache/
+.node_cache/
+.nyc_output/
+coverage/
+htmlcov/
+.mypy_cache/
+.pytest_cache/
+.nuxt/
+.next/
+.vercel/
 
-# Logs
-*.log
-
-# Environment variables
+# Environment
 .env
 .env.local
 .env.*
+!.env.example
 
-# IDE
+# Editors
 .vscode/
 .idea/
 *.swp
@@ -38,17 +41,41 @@ venv/
 .DS_Store
 Thumbs.db
 
-# Testing
-.coverage
-coverage/
-htmlcov/
-.pytest_cache/
-.mypy_cache/
+# Logs
+*.log
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# JavaScript/TypeScript
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Compiled files
+*.exe
+*.dll
+*.so
+*.dylib
+*.class
+*.jar
+*.war
+*.ear
+*.o
+*.obj
+*.a
+*.lib
+*.out
 
 # Archives
 *.zip
-*.gz
 *.tar
+*.gz
 *.tgz
 *.bz2
 *.xz
@@ -68,3 +95,9 @@ htmlcov/
 *.tar.bz2
 *.tar.xz
 *.tar.zst
+
+# Testing
+coverage/
+.nyc_output/
+.jest/
+```
