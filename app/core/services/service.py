@@ -13,14 +13,7 @@ from app.core.utils.alchemy_utils import get_models
 from app.core.utils.common_utils import flatten_dict_with_localized_fields
 from app.core.utils.pydantic_utils import make_paginated_response
 from app.service_registry import register_service
-# Import translation functionality with error handling
-try:
-    from app.core.utils.translation.model_mixin import translate_model_instance
-except Exception:
-    # If translation functionality fails to import, create a mock function
-    async def translate_model_instance(model_instance, db_session=None):
-        """Mock translation function that does nothing"""
-        pass
+from app.core.utils.translation.model_mixin import translate_model_instance
 
 joint = '. '
 
