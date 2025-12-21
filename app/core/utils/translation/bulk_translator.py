@@ -10,7 +10,7 @@ sys.path.insert(0, '/workspace')
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
-from app.core.config.db_config import settings
+from app.core.config.database.db_config import settings_db as settings
 from .translator import translation_service
 
 
@@ -18,7 +18,7 @@ async def run_bulk_translation(force_update: bool = False):
     """Run bulk translation for all models in the database."""
     
     # Create database engine and session
-    DATABASE_URL = settings.DATABASE_URL
+    DATABASE_URL = settings.database_url
     engine = create_async_engine(DATABASE_URL)
     async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     

@@ -4,42 +4,36 @@
 __pycache__/
 *.o
 *.obj
+*.so
+*.dylib
+*.dll
 
 # Dependencies
 .venv/
 venv/
-node_modules/
+.env
+.env.local
+*.env.*
 
 # Logs and temp files
 *.log
 *.tmp
 *.swp
+*.swo
 
-# Environment
-.env
-.env.local
-*.env.*
-
-# Editors
-.vscode/
-.idea/
-
-# Coverage
+# Coverage reports
 .coverage
 coverage/
 htmlcov/
 
-# Python cache
-.mypy_cache/
-.pytest_cache/
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
 
-# Build directories
+# Distribution / packaging
 dist/
 build/
-target/
-.gradle/
-
-# System files
-.DS_Store
-Thumbs.db
+*.egg-info/
 ```
