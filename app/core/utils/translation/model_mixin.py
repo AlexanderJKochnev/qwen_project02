@@ -1,7 +1,27 @@
 """Model mixin for automatic translation during save operations."""
 
 from sqlalchemy.orm import Session
-from .translator import translation_service, HAS_PYMORPHY2
+
+# Import translation service with error handling
+try:
+    from .translator import translation_service, HAS_PYMORPHY2
+except Exception:
+    # If translation service fails to initialize, create a mock object
+    class MockTranslationService:
+        def __init__(self):
+            self.morph = None
+            self.translation_dictionaries = {
+                'country': {},
+                'region': {},
+                'subregion': {},
+                'category': {},
+                'subcategory': {},
+                'food': {},
+                'varietal': {},
+            }
+    
+    translation_service = MockTranslationService()
+    HAS_PYMORPHY2 = False
 
 
 class TranslatableMixin:

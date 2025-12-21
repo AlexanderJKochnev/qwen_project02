@@ -23,7 +23,11 @@ class TranslationService:
         """Initialize the translation service."""
         # Initialize morph analyzer for Russian if available
         if HAS_PYMORPHY2:
-            self.morph = pymorphy2.MorphAnalyzer()
+            try:
+                self.morph = pymorphy2.MorphAnalyzer(lang='ru')
+            except Exception:
+                # If MorphAnalyzer fails to initialize due to compatibility issues
+                self.morph = None
         else:
             self.morph = None
         
@@ -370,5 +374,31 @@ class TranslationService:
         return results
 
 
-# Global instance of the translation service
-translation_service = TranslationService()
+# Global instance of the translation service with error handling
+try:
+    translation_service = TranslationService()
+except Exception:
+    # If TranslationService fails to initialize, create a mock object
+    class MockTranslationService:
+        def __init__(self):
+            self.morph = None
+            self.translation_dictionaries = {
+                'country': {},
+                'region': {},
+                'subregion': {},
+                'category': {},
+                'subcategory': {},
+                'food': {},
+                'varietal': {},
+            }
+        
+        async def translate_single_record(self, db_session, record, force_update=False):
+            return False
+            
+        async def translate_model_records(self, db_session, model_class, force_update=False):
+            return 0
+            
+        async def translate_all_models(self, db_session, force_update=False):
+            return {}
+    
+    translation_service = MockTranslationService()
