@@ -244,7 +244,7 @@ export const HandbookUpdateForm = () => {
                   value={formData.name_fr}
                   onInput={handleChange}
                   className="input input-bordered w-full"
-                  placeholder="Name in French"
+                  placeholder="Nom en Francais"
                 />
               </div>
 
@@ -286,7 +286,7 @@ export const HandbookUpdateForm = () => {
                   onInput={handleChange}
                   className="textarea textarea-bordered w-full"
                   rows={3}
-                  placeholder="Description in French"
+                  placeholder="Description en Francais"
                 />
               </div>
 

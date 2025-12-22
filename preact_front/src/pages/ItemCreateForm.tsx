@@ -219,6 +219,7 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
                     value={formData.title}
                     onInput={handleChange}
                     className="input input-bordered w-full"
+                    placeholder="Title"
                     required
                   />
                 </div>
@@ -232,6 +233,7 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
                     value={formData.title_ru}
                     onInput={handleChange}
                     className="input input-bordered w-full"
+                    placeholder="Заголовок на Русском"
                   />
                 </div>
 
@@ -245,6 +247,7 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
                     value={formData.title_fr}
                     onInput={handleChange}
                     className="input input-bordered w-full"
+                    placeholder="Titre en Francais"
                   />
                 </div>
 
@@ -258,6 +261,7 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
                     value={formData.subtitle}
                     onInput={handleChange}
                     className="input input-bordered w-full"
+                    placeholder="Subtitle"
                   />
                 </div>
 
@@ -272,6 +276,7 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
                     value={formData.subtitle_ru}
                     onInput={handleChange}
                     className="input input-bordered w-full"
+                    placeholder="Подзаголовок на Русском"
                   />
                 </div>
 
@@ -286,6 +291,7 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
                     value={formData.subtitle_fr}
                     onInput={handleChange}
                     className="input input-bordered w-full"
+                    placeholder="Sous-titre en Francais"
                   />
                 </div>
 
@@ -299,6 +305,7 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
                     value={formData.vol}
                     onInput={handleChange}
                     className="input input-bordered w-full"
+                    placeholder="Volume"
                     step="0.01"
                   />
                 </div>
@@ -313,6 +320,7 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
                     value={formData.price}
                     onInput={handleChange}
                     className="input input-bordered w-full"
+                    placeholder="Price"
                     step="0.01"
                   />
                 </div>
@@ -422,6 +430,7 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
                     value={formData.alc}
                     onInput={handleChange}
                     className="input input-bordered w-full"
+                    placeholder="Alcohol (%)"
                     step="0.01"
                     min="0"
                     max="100"
@@ -438,6 +447,7 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
                     value={formData.sugar}
                     onInput={handleChange}
                     className="input input-bordered w-full"
+                    placeholder="Sugar (%)"
                     step="0.01"
                     min="0"
                     max="100"
@@ -454,6 +464,7 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
                     value={formData.age}
                     onInput={handleChange}
                     className="input input-bordered w-full"
+                    placeholder="Age"
                   />
                 </div>
               </div>
@@ -474,6 +485,7 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
                     value={formData.description}
                     onInput={handleChange}
                     className="textarea textarea-bordered w-full"
+                    placeholder="Description"
                     rows={3}
                   />
                 </div>
@@ -487,6 +499,7 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
                     value={formData.description_ru}
                     onInput={handleChange}
                     className="textarea textarea-bordered w-full"
+                    placeholder="Описание на Русском"
                     rows={3}
                   />
                 </div>
@@ -500,6 +513,7 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
                     value={formData.description_fr}
                     onInput={handleChange}
                     className="textarea textarea-bordered w-full"
+                    placeholder="Description en Francais"
                     rows={3}
                   />
                 </div>
@@ -521,6 +535,7 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
                     value={formData.recommendation}
                     onInput={handleChange}
                     className="textarea textarea-bordered w-full"
+                    placeholder="Recommendation"
                     rows={3}
                   />
                 </div>
@@ -534,6 +549,7 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
                     value={formData.recommendation_ru}
                     onInput={handleChange}
                     className="textarea textarea-bordered w-full"
+                    placeholder="Рекомендация на Русском"
                     rows={3}
                   />
                 </div>
@@ -547,6 +563,7 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
                     value={formData.recommendation_fr}
                     onInput={handleChange}
                     className="textarea textarea-bordered w-full"
+                    placeholder="Recommandation en Francais"
                     rows={3}
                   />
                 </div>
@@ -560,6 +577,7 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
                     value={formData.madeof}
                     onInput={handleChange}
                     className="textarea textarea-bordered w-full"
+                    placeholder="Made Of"
                     rows={3}
                   />
                 </div>
@@ -573,6 +591,7 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
                     value={formData.madeof_ru}
                     onInput={handleChange}
                     className="textarea textarea-bordered w-full"
+                    placeholder="Состав на Русском"
                     rows={3}
                   />
                 </div>
@@ -586,6 +605,7 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
                     value={formData.madeof_fr}
                     onInput={handleChange}
                     className="textarea textarea-bordered w-full"
+                    placeholder="Composition en Francais"
                     rows={3}
                   />
                 </div>

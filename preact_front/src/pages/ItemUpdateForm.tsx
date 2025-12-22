@@ -512,6 +512,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                     value={formData.title}
                     onInput={handleChange}
                     className="input input-bordered w-full"
+                    placeholder="Title"
                     required
                   />
                 </div>
@@ -525,6 +526,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                     value={formData.title_ru}
                     onInput={handleChange}
                     className="input input-bordered w-full"
+                    placeholder="Заголовок на Русском"
                   />
                 </div>
 
@@ -538,6 +540,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                     value={formData.title_fr}
                     onInput={handleChange}
                     className="input input-bordered w-full"
+                    placeholder="Titre en Francais"
                   />
                 </div>
 
@@ -551,6 +554,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                     value={formData.subtitle}
                     onInput={handleChange}
                     className="input input-bordered w-full"
+                    placeholder="Subtitle"
                   />
                 </div>
 
