@@ -1,43 +1,27 @@
-```gitignore
-# Environment
+```
+# Docker and build artifacts
+*.dockerignore
+.dockerenv
+Dockerfile.*
+
+# Temporary and cache files
+*.tmp
+*.temp
+*.cache
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Environment files
 .env
 .env.local
-*.env.*
+.env.*
+!env.example
+!env.sample
 
-# Logs and temp files
-*.log
-*.tmp
-*.swp
-
-# Editors
-.vscode/
-.idea/
-
-# Docker and compose
-.docker/
-*.dockerignore
-!docker-compose.prod.yaml
-!nginx.Dockerfile
-
-# Build artifacts
-dist/
-build/
-target/
-*.o
-*.obj
-*.exe
-*.dll
-*.so
-*.a
-*.out
-
-# Dependencies
-node_modules/
-venv/
-.venv/
-__pycache__/
-*.pyc
-.pytest_cache/
-.mypy_cache/
-.gradle/
+# OS generated files
+.DS_Store
+Thumbs.db
 ```
