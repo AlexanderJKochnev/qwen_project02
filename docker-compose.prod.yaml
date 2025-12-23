@@ -1,0 +1,188 @@
+version: '3.8'
+
+services:
+  # PostgreSQL database
+  wine_host:
+    # --- LOGGING SETTINGS ---
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"   # Maximum log file size: 10 MB
+        max-file: "3"     # Number of log files to keep: 3
+    # -----------------------------
+    restart: unless-stopped
+    container_name: ${POSTGRES_HOST}
+    image: postgres:alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    expose:
+      - "${POSTGRES_PORT}"
+    volumes:
+      - ./pg_data:/var/lib/postgresql/data
+      - ./pg_dump:/tmp
+
+    healthcheck:
+      test: |
+        sh -c 'pg_isready -h localhost -p ${POSTGRES_PORT} -U ${POSTGRES_USER} -d ${POSTGRES_DB}'
+      # minimal configuration to avoid issues with role root doesn't exist
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+      start_interval: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.125'
+          memory: 256M
+
+  # MongoDB
+  mongo:
+    # --- LOGGING SETTINGS ---
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"   # Maximum log file size: 10 MB
+        max-file: "3"     # Number of log files to keep: 3
+    # -----------------------------
+    image: mongo:4.4.20
+    container_name: ${MONGODB_CONTAINER_NAME}
+    hostname: ${MONGO_HOSTNAME}
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+      MONGO_INITDB_DATABASE: admin
+    expose:
+      - "${MONGO_INN_PORT}"
+    # ports:
+    #   - "${MONGO_OUT_PORT}:${MONGO_INN_PORT}"
+    volumes:
+      - ./mongodb_data:/data/db
+      - ./mongo/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    command: >
+      mongod
+      --bind_ip_all
+      --wiredTigerCacheSizeGB 0.25
+      --storageEngine wiredTiger
+      --journalCommitInterval 500
+      --syncdelay 300
+      --nojournal
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo localhost:${MONGO_INN_PORT}/admin --quiet --username admin --password admin
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Redis for ARQ
+  redis:
+    image: redis:7-alpine
+    container_name: redis_queue
+    restart: unless-stopped
+    expose:
+      - "6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.125'
+          memory: 128M
+
+  # FastAPI application
+  app:
+    # --- LOGGING SETTINGS ---
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"   # Maximum log file size: 10 MB
+        max-file: "3"     # Number of log files to keep: 3
+    # -----------------------------
+    container_name: app
+    build: .
+    restart: unless-stopped
+    # Use production command without --reload for better performance
+    command: uvicorn app.main:app --host 0.0.0.0 --port ${API_PORT} --workers 4
+    depends_on:
+      wine_host:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    expose:
+      - "${API_PORT}"
+    environment:
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      WEB_PORT: ${API_PORT}
+      WEB_HOST: 0.0.0.0
+      BASE_URL: ${BASE_URL}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    volumes:
+      - ./templates:/app/templates
+      - ./migration_volume:/app/app/migration/versions
+      - ./upload_volume:/app/upload_volume
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Nginx reverse proxy serving both frontend and backend
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx.Dockerfile
+    container_name: nginx_proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"   # HTTP
+      - "443:443" # HTTPS
+    volumes:
+      # Mount SSL certificates directory
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - app
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+volumes:
+  migration_volume: # alembic migrations
+  pg_data: # postgresql data
+  pg_dump: # postgres dump/restore
+  mongodb_data:
+  upload_volume:
+  redis_data:
