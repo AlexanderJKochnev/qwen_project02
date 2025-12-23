@@ -26,8 +26,8 @@ services:
     healthcheck:
       test: |
         sh -c 'pg_isready -h localhost -p ${POSTGRES_PORT} -U ${POSTGRES_USER} -d ${POSTGRES_DB}'
-      # minimal configuration to avoid issues with role root doesn't exist
-      interval: 10s
+      # минимальная конфигурация для того что бы не было проблем с role root doesnnot exists
+      interval: 10s # 1m30s
       timeout: 10s
       retries: 5
       start_period: 40s
@@ -88,7 +88,7 @@ services:
           cpus: '0.5'
           memory: 512M
 
-  # Redis for ARQ
+  # Redis for ARQ workers
   redis:
     image: redis:7-alpine
     container_name: redis_queue

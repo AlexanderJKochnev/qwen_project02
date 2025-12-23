@@ -1,25 +1,21 @@
 ```
-# Docker and build artifacts
-*.dockerignore
-.dockerenv
-Dockerfile.*
+# Environment
+.env
+.env.local
+*.env.*
 
-# Temporary and cache files
-*.tmp
-*.temp
-*.cache
-*.swp
-*.swo
+# Docker
+.dockerenv
+!docker-compose.prod.yaml
 
 # Logs
 *.log
 
-# Environment files
-.env
-.env.local
-.env.*
-!env.example
-!env.sample
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
 
 # OS generated files
 .DS_Store
