@@ -1,0 +1,245 @@
+# Production version with nginx reverse proxy
+version: '3.8'
+
+services:
+  wine_host: # this is the name of the service and name of the host (POSTGRES_HOST)
+    # --- НАСТРОЙКИ ЛОГИРОВАНИЯ ---
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"   # Максимальный размер файла лога: 10 МБ
+        max-file: "3"     # Количество хранимых файлов ротации: 3
+    # -----------------------------
+    restart: unless-stopped
+    container_name: ${POSTGRES_HOST}
+    image: postgres:alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    expose:
+      - "${POSTGRES_PORT}"
+    volumes:
+      - ./pg_data:/var/lib/postgresql/data
+      - ./pg_dump:/tmp
+
+    healthcheck:
+      test: |
+        sh -c 'pg_isready -h localhost -p ${POSTGRES_PORT} -U ${POSTGRES_USER} -d ${POSTGRES_DB}'
+      # минимальная конфигурация для того что бы не было проблем с role root doesnnot exists
+      interval: 10s # 1m30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+      start_interval: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.125'
+          memory: 256M
+  
+  adminer:
+    # --- НАСТРОЙКИ ЛОГИРОВАНИЯ ---
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"   # Максимальный размер файла лога: 10 МБ
+        max-file: "3"     # Количество хранимых файлов ротации: 3
+    # -----------------------------
+    container_name: pg_admin
+    image: adminer:4.8.1
+    restart: unless-stopped
+    environment:
+      - ADMINER_PLUGINS=tables-filter enum-option enum-types
+      - ADMINER_DESIGN=nette
+    depends_on:
+      - wine_host
+    expose:
+      - "8080"
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.12'
+          memory: 256M
+  
+  app:
+    # --- НАСТРОЙКИ ЛОГИРОВАНИЯ ---
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"   # Максимальный размер файла лога: 10 МБ
+        max-file: "3"     # Количество хранимых файлов ротации: 3
+    # -----------------------------
+    container_name: app
+    build: .
+    restart: unless-stopped
+    command: uvicorn app.main:app --host 0.0.0.0 --port ${API_PORT}
+    depends_on:
+      wine_host:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    expose:
+      - "${API_PORT}"
+    environment:
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      WEB_PORT: ${API_PORT}
+      WEB_HOST: ${API_HOST}
+      BASE_URL: ${BASE_URL}
+    volumes:
+      - ./templates:/app/templates
+      - ./migration_volume:/app/app/migration/versions
+      - ./upload_volume:/app/upload_volume
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+  
+  mongo:
+    # --- НАСТРОЙКИ ЛОГИРОВАНИЯ ---
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"   # Максимальный размер файла лога: 10 МБ
+        max-file: "3"     # Количество хранимых файлов ротации: 3
+    # -----------------------------
+    image: mongo:4.4.20
+    container_name: ${MONGODB_CONTAINER_NAME}
+    hostname: ${MONGO_HOSTNAME}
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+      MONGO_INITDB_DATABASE: admin
+    expose:
+      - "${MONGO_INN_PORT}"
+    # ports:
+    #   - "${MONGO_OUT_PORT}:${MONGO_INN_PORT}"
+    volumes:
+      - ./mongodb_data:/data/db
+      - ./mongo/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    command: >
+      mongod
+      --bind_ip_all
+      --wiredTigerCacheSizeGB 0.25
+      --storageEngine wiredTiger
+      --journalCommitInterval 500
+      --syncdelay 300
+      --nojournal
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo localhost:${MONGO_INN_PORT}/admin --quiet --username admin --password admin
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+  
+  mongo-express:
+    # --- НАСТРОЙКИ ЛОГИРОВАНИЯ ---
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"   # Максимальный размер файла лога: 10 МБ
+        max-file: "3"     # Количество хранимых файлов ротации: 3
+    # -----------------------------
+    image: mongo-express
+    container_name: ${MONGO_EXPRESS_CONTAINER_NAME}
+    restart: unless-stopped
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${ME_CONFIG_MONGODB_ADMINUSERNAME}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${ME_CONFIG_MONGODB_ADMINPASSWORD}
+      ME_CONFIG_MONGODB_SERVER: ${ME_CONFIG_MONGODB_SERVER}
+      ME_CONFIG_BASICAUTH_USERNAME: ${ME_CONFIG_BASICAUTH_USERNAME}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${ME_CONFIG_BASICAUTH_PASSWORD}
+    expose:
+      - "8081"
+    depends_on:
+      wine_host:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8081" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 512M
+        reservations:
+          cpus: '0.250'
+          memory: 256M
+
+  preact_front:
+    # Production build of Preact app
+    build:
+      context: ./preact_front
+      target: production  # Using the production stage from the multi-stage Dockerfile
+    container_name: preact_front
+    restart: unless-stopped
+    expose:
+      - "80"
+    depends_on:
+      wine_host:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.125'
+          memory: 128M
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - app
+      - preact_front
+      - adminer
+      - mongo-express
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.125'
+          memory: 128M
+
+volumes:
+  migration_volume: # alembic migrations
+  pg_data: # postgresql data
+  pg_dump: # postgres dump/restore
+  mongodb_data:
+  upload_volume:
