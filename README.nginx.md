@@ -24,7 +24,7 @@ This document describes how to set up and run the production version of the appl
 ## 2. Service Access URLs
 
 ### HTTP Access (port 80):
-- **Preact Frontend**: `http://83.167.126.4/`
+- **Main Site**: `http://83.167.126.4/` (redirects to HTTPS)
 - **FastAPI API**: `http://83.167.126.4/api`
 - **Auth Routes**: `http://83.167.126.4/auth`
 - **Users Routes**: `http://83.167.126.4/users`
