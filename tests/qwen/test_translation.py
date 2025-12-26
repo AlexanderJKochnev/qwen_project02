@@ -21,12 +21,18 @@ async def test_translation():
     test_data = {
         'name': 'Eagle',
         'name_fr': None,
+        'name_cn': None,
+        'name_es': None,
         'name_ru': None,
         'description': 'A beautiful bird',
         'description_fr': None,
+        'description_cn': None,
+        'description_es': None,
         'description_ru': 'Прекрасная птица',
         'title': 'Golden Eagle',
         'title_fr': None,
+        'title_cn': None,
+        'title_es': None,
         'title_ru': None,
         'other_field': 'Some other value'
     }

@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     IDETAIL_VIEW: str = "name, description"
     ILIST_VIEW: str = "name"
     # языки
-    LANGS: str = "en, ru, fr"
+    LANGS: str = "en, ru, fr, es"
     # язык по умолчанию
     DEFAULT_LANG: str = "en"
     #  справочники

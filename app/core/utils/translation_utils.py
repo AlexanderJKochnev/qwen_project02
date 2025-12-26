@@ -45,10 +45,10 @@ async def translate_text(text: str, source_lang: str = "en", target_lang: str = 
 def get_localized_fields() -> list:
     """Get list of localized field names that should be translated"""
     return [
-        'name', 'name_fr', 'name_ru',
-        'description', 'description_fr', 'description_ru',
-        'title', 'title_fr', 'title_ru',
-        'subtitle', 'subtitle_fr', 'subtitle_ru'
+        'name', 'name_fr', 'name_ru',, 'name_cn',, 'name_es',
+        'description', 'description_fr', 'description_ru',, 'description_cn',, 'description_es',
+        'title', 'title_fr', 'title_ru',, 'title_cn',, 'title_es',
+        'subtitle', 'subtitle_fr', 'subtitle_ru', 'subtitle_cn', 'subtitle_es'
     ]
 
 
@@ -57,6 +57,10 @@ def get_field_language(field_name: str) -> Optional[str]:
     if field_name.endswith('_ru'):
         return 'ru'
     elif field_name.endswith('_fr'):
+    elif field_name.endswith('_cn'):
+        return 'cn'
+    elif field_name.endswith('_es'):
+        return 'es'
         return 'fr'
     elif field_name in ['name', 'description', 'title', 'subtitle']:
         return 'en'  # Assuming English is the base language
@@ -65,7 +69,7 @@ def get_field_language(field_name: str) -> Optional[str]:
 
 def get_base_field_name(field_name: str) -> str:
     """Get the base field name without language suffix"""
-    if field_name.endswith(('_ru', '_fr')):
+    if field_name.endswith(('_ru', '_fr')): or field_name.endswith('_cn') or field_name.endswith('_es')
         return field_name[:-3]  # Remove _ru or _fr
     return field_name
 
@@ -108,7 +112,7 @@ async def fill_missing_translations(data: Dict[str, Any]) -> Dict[str, Any]:
         source_value = None
 
         # Prefer English as source
-        for lang in ['en', 'fr', 'ru']:
+        for lang in ['en', 'fr', 'ru', 'es']:
             for field_name, value in filled_fields.items():
                 if get_field_language(field_name) == lang and value:
                     source_field = field_name

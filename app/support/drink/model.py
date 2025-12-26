@@ -24,22 +24,32 @@ class Lang:
     title: Mapped[str_null_false]
     title_ru: Mapped[str_null_true]
     title_fr: Mapped[str_null_true]
+    title_cn: Mapped[str_null_true]
+    title_es: Mapped[str_null_true]
 
     subtitle: Mapped[str_null_true]
     subtitle_ru: Mapped[str_null_true]
     subtitle_fr: Mapped[str_null_true]
+    subtitle_cn: Mapped[str_null_true]
+    subtitle_es: Mapped[str_null_true]
 
     description: Mapped[descr]
     description_ru: Mapped[descr]
     description_fr: Mapped[descr]
+    description_cn: Mapped[descr]
+    description_es: Mapped[descr]
 
     recommendation: Mapped[descr]
     recommendation_ru: Mapped[descr]
     recommendation_fr: Mapped[descr]
+    recommendation_cn: Mapped[descr]
+    recommendation_es: Mapped[descr]
 
     madeof: Mapped[descr]
     madeof_ru: Mapped[descr]
     madeof_fr: Mapped[descr]
+    madeof_cn: Mapped[descr]
+    madeof_es: Mapped[descr]
 
 
 class Drink(Base, BaseAt, Lang):
@@ -118,18 +128,28 @@ create_gin_index_sql = DDL("""
             (coalesce(title, '') || ' ' ||
              coalesce(title_ru, '') || ' ' ||
              coalesce(title_fr, '') || ' ' ||
+             coalesce(title_cn, '') || ' ' ||
+             coalesce(title_es, '') || ' ' ||
              coalesce(subtitle, '') || ' ' ||
              coalesce(subtitle_ru, '') || ' ' ||
              coalesce(subtitle_fr, '') || ' ' ||
+             coalesce(subtitle_cn, '') || ' ' ||
+             coalesce(subtitle_es, '') || ' ' ||
              coalesce(description, '') || ' ' ||
              coalesce(description_ru, '') || ' ' ||
              coalesce(description_fr, '') || ' ' ||
+             coalesce(description_cn, '') || ' ' ||
+             coalesce(description_es, '') || ' ' ||
              coalesce(recommendation, '') || ' ' ||
              coalesce(recommendation_ru, '') || ' ' ||
              coalesce(recommendation_fr, '') || ' ' ||
+             coalesce(recommendation_cn, '') || ' ' ||
+             coalesce(recommendation_es, '') || ' ' ||
              coalesce(madeof, '') || ' ' ||
              coalesce(madeof_ru, '') || ' ' ||
-             coalesce(madeof_fr, ''))
+             coalesce(madeof_fr, '') || ' ' ||
+             coalesce(madeof_cn, '') || ' ' ||
+             coalesce(madeof_es, ''))
             gin_trgm_ops
         );
     """)

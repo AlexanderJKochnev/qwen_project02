@@ -19,7 +19,7 @@ const LanguageContext = createContext<LanguageContextType>({
   language: 'en',
   setLanguage: () => {},
   t: (key: string) => key,
-  availableLanguages: ['en', 'ru', 'fr'],
+  availableLanguages: ['en', 'ru', 'fr', 'es'],
 });
 
 // Translation dictionary
@@ -353,7 +353,7 @@ export const LanguageProvider = ({ children }: { children: VNode }) => {
           // Fallback to default languages if API call fails
           const defaultLang = 'en';
           const browserLang = navigator.language.split('-')[0];
-          const langs = ['en', 'ru', 'fr']; // Default fallback
+          const langs = ['en', 'ru', 'fr', 'es']; // Default fallback
           setAvailableLanguages(langs);
           const preferredLang = langs.includes(browserLang) ? browserLang : defaultLang;
           setLanguage(preferredLang);
@@ -364,7 +364,7 @@ export const LanguageProvider = ({ children }: { children: VNode }) => {
         const defaultLang = 'en';
         const browserLang = navigator.language.split('-')[0];
         // Use the same defaults as in the project config
-        const langs = ['en', 'ru', 'fr']; // This should match the backend settings
+        const langs = ['en', 'ru', 'fr', 'es']; // This should match the backend settings
         setAvailableLanguages(langs);
         const preferredLang = langs.includes(browserLang) ? browserLang : defaultLang;
         setLanguage(preferredLang);
