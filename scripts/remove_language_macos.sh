@@ -123,5 +123,136 @@ else
     echo "Warning: preact_front/src/types/drink.ts not found"
 fi
 
+# 9. Update preact_front/src/pages/HandbookCreateForm.tsx
+if [ -f preact_front/src/pages/HandbookCreateForm.tsx ]; then
+    # Remove language fields from formData initialization
+    sed -i '' "/name_$LANG_CODE: '',/d" preact_front/src/pages/HandbookCreateForm.tsx
+    sed -i '' "/description_$LANG_CODE: '',/d" preact_front/src/pages/HandbookCreateForm.tsx
+    
+    # Remove input fields for the language
+    sed -i '' "/Name (${LANG_CODE^^})/d" preact_front/src/pages/HandbookCreateForm.tsx
+    sed -i '' "/name=\"$LANG_CODE\"/d" preact_front/src/pages/HandbookCreateForm.tsx
+    sed -i '' "/placeholder=\"Name (${LANG_CODE^^})\"/d" preact_front/src/pages/HandbookCreateForm.tsx
+    sed -i '' "/value={formData.name_$LANG_CODE}/d" preact_front/src/pages/HandbookCreateForm.tsx
+    
+    sed -i '' "/Description (${LANG_CODE^^})/d" preact_front/src/pages/HandbookCreateForm.tsx
+    sed -i '' "/name=\"description_$LANG_CODE\"/d" preact_front/src/pages/HandbookCreateForm.tsx
+    sed -i '' "/placeholder=\"Description (${LANG_CODE^^})\"/d" preact_front/src/pages/HandbookCreateForm.tsx
+    sed -i '' "/value={formData.description_$LANG_CODE}/d" preact_front/src/pages/HandbookCreateForm.tsx
+    echo "Updated preact_front/src/pages/HandbookCreateForm.tsx"
+else
+    echo "Warning: preact_front/src/pages/HandbookCreateForm.tsx not found"
+fi
+
+# 10. Update preact_front/src/pages/HandbookUpdateForm.tsx
+if [ -f preact_front/src/pages/HandbookUpdateForm.tsx ]; then
+    # Remove language fields from formData initialization
+    sed -i '' "/name_$LANG_CODE: '',/d" preact_front/src/pages/HandbookUpdateForm.tsx
+    sed -i '' "/description_$LANG_CODE: '',/d" preact_front/src/pages/HandbookUpdateForm.tsx
+    
+    # Remove language fields from useEffect data loading
+    sed -i '' "/name_$LANG_CODE: data.name_$LANG_CODE || '',/d" preact_front/src/pages/HandbookUpdateForm.tsx
+    sed -i '' "/description_$LANG_CODE: data.description_$LANG_CODE || '',/d" preact_front/src/pages/HandbookUpdateForm.tsx
+    
+    # Remove input fields for the language
+    sed -i '' "/Name (${LANG_CODE^^})/d" preact_front/src/pages/HandbookUpdateForm.tsx
+    sed -i '' "/name=\"$LANG_CODE\"/d" preact_front/src/pages/HandbookUpdateForm.tsx
+    sed -i '' "/placeholder=\"Name (${LANG_CODE^^})\"/d" preact_front/src/pages/HandbookUpdateForm.tsx
+    sed -i '' "/value={formData.name_$LANG_CODE}/d" preact_front/src/pages/HandbookUpdateForm.tsx
+    
+    sed -i '' "/Description (${LANG_CODE^^})/d" preact_front/src/pages/HandbookUpdateForm.tsx
+    sed -i '' "/name=\"description_$LANG_CODE\"/d" preact_front/src/pages/HandbookUpdateForm.tsx
+    sed -i '' "/placeholder=\"Description (${LANG_CODE^^})\"/d" preact_front/src/pages/HandbookUpdateForm.tsx
+    sed -i '' "/value={formData.description_$LANG_CODE}/d" preact_front/src/pages/HandbookUpdateForm.tsx
+    echo "Updated preact_front/src/pages/HandbookUpdateForm.tsx"
+else
+    echo "Warning: preact_front/src/pages/HandbookUpdateForm.tsx not found"
+fi
+
+# 11. Update preact_front/src/pages/ItemCreateForm.tsx
+if [ -f preact_front/src/pages/ItemCreateForm.tsx ]; then
+    # Remove language fields from formData initialization
+    sed -i '' "/title_$LANG_CODE: '',/d" preact_front/src/pages/ItemCreateForm.tsx
+    sed -i '' "/subtitle_$LANG_CODE: '',/d" preact_front/src/pages/ItemCreateForm.tsx
+    sed -i '' "/description_$LANG_CODE: '',/d" preact_front/src/pages/ItemCreateForm.tsx
+    sed -i '' "/recommendation_$LANG_CODE: '',/d" preact_front/src/pages/ItemCreateForm.tsx
+    sed -i '' "/madeof_$LANG_CODE: '',/d" preact_front/src/pages/ItemCreateForm.tsx
+    
+    # Remove input fields for the language
+    sed -i '' "/Title (${LANG_CODE^^})/d" preact_front/src/pages/ItemCreateForm.tsx
+    sed -i '' "/name=\"title_$LANG_CODE\"/d" preact_front/src/pages/ItemCreateForm.tsx
+    sed -i '' "/placeholder=\"Title (${LANG_CODE^^})\"/d" preact_front/src/pages/ItemCreateForm.tsx
+    sed -i '' "/value={formData.title_$LANG_CODE}/d" preact_front/src/pages/ItemCreateForm.tsx
+    
+    sed -i '' "/Subtitle (${LANG_CODE^^})/d" preact_front/src/pages/ItemCreateForm.tsx
+    sed -i '' "/name=\"subtitle_$LANG_CODE\"/d" preact_front/src/pages/ItemCreateForm.tsx
+    sed -i '' "/placeholder=\"Subtitle (${LANG_CODE^^})\"/d" preact_front/src/pages/ItemCreateForm.tsx
+    sed -i '' "/value={formData.subtitle_$LANG_CODE}/d" preact_front/src/pages/ItemCreateForm.tsx
+    
+    sed -i '' "/Description (${LANG_CODE^^})/d" preact_front/src/pages/ItemCreateForm.tsx
+    sed -i '' "/name=\"description_$LANG_CODE\"/d" preact_front/src/pages/ItemCreateForm.tsx
+    sed -i '' "/placeholder=\"Description (${LANG_CODE^^})\"/d" preact_front/src/pages/ItemCreateForm.tsx
+    sed -i '' "/value={formData.description_$LANG_CODE}/d" preact_front/src/pages/ItemCreateForm.tsx
+    
+    sed -i '' "/Recommendation (${LANG_CODE^^})/d" preact_front/src/pages/ItemCreateForm.tsx
+    sed -i '' "/name=\"recommendation_$LANG_CODE\"/d" preact_front/src/pages/ItemCreateForm.tsx
+    sed -i '' "/placeholder=\"Recommendation (${LANG_CODE^^})\"/d" preact_front/src/pages/ItemCreateForm.tsx
+    sed -i '' "/value={formData.recommendation_$LANG_CODE}/d" preact_front/src/pages/ItemCreateForm.tsx
+    
+    sed -i '' "/Made Of (${LANG_CODE^^})/d" preact_front/src/pages/ItemCreateForm.tsx
+    sed -i '' "/name=\"madeof_$LANG_CODE\"/d" preact_front/src/pages/ItemCreateForm.tsx
+    sed -i '' "/placeholder=\"Made Of (${LANG_CODE^^})\"/d" preact_front/src/pages/ItemCreateForm.tsx
+    sed -i '' "/value={formData.madeof_$LANG_CODE}/d" preact_front/src/pages/ItemCreateForm.tsx
+    echo "Updated preact_front/src/pages/ItemCreateForm.tsx"
+else
+    echo "Warning: preact_front/src/pages/ItemCreateForm.tsx not found"
+fi
+
+# 12. Update preact_front/src/pages/ItemUpdateForm.tsx
+if [ -f preact_front/src/pages/ItemUpdateForm.tsx ]; then
+    # Remove language fields from formData initialization
+    sed -i '' "/title_$LANG_CODE: '',/d" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i '' "/subtitle_$LANG_CODE: '',/d" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i '' "/description_$LANG_CODE: '',/d" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i '' "/recommendation_$LANG_CODE: '',/d" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i '' "/madeof_$LANG_CODE: '',/d" preact_front/src/pages/ItemUpdateForm.tsx
+    
+    # Remove language fields from useEffect data loading
+    sed -i '' "/title_$LANG_CODE: data.title_$LANG_CODE || null || '',/d" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i '' "/subtitle_$LANG_CODE: data.subtitle_$LANG_CODE || null || '',/d" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i '' "/description_$LANG_CODE: data.description_$LANG_CODE || null || '',/d" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i '' "/recommendation_$LANG_CODE: data.recommendation_$LANG_CODE || null || '',/d" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i '' "/madeof_$LANG_CODE: data.madeof_$LANG_CODE || null || '',/d" preact_front/src/pages/ItemUpdateForm.tsx
+    
+    # Remove input fields for the language
+    sed -i '' "/Title (${LANG_CODE^^})/d" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i '' "/name=\"title_$LANG_CODE\"/d" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i '' "/placeholder=\"Title (${LANG_CODE^^})\"/d" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i '' "/value={formData.title_$LANG_CODE}/d" preact_front/src/pages/ItemUpdateForm.tsx
+    
+    sed -i '' "/Subtitle (${LANG_CODE^^})/d" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i '' "/name=\"subtitle_$LANG_CODE\"/d" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i '' "/placeholder=\"Subtitle (${LANG_CODE^^})\"/d" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i '' "/value={formData.subtitle_$LANG_CODE}/d" preact_front/src/pages/ItemUpdateForm.tsx
+    
+    sed -i '' "/Description (${LANG_CODE^^})/d" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i '' "/name=\"description_$LANG_CODE\"/d" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i '' "/placeholder=\"Description (${LANG_CODE^^})\"/d" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i '' "/value={formData.description_$LANG_CODE}/d" preact_front/src/pages/ItemUpdateForm.tsx
+    
+    sed -i '' "/Recommendation (${LANG_CODE^^})/d" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i '' "/name=\"recommendation_$LANG_CODE\"/d" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i '' "/placeholder=\"Recommendation (${LANG_CODE^^})\"/d" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i '' "/value={formData.recommendation_$LANG_CODE}/d" preact_front/src/pages/ItemUpdateForm.tsx
+    
+    sed -i '' "/Made Of (${LANG_CODE^^})/d" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i '' "/name=\"madeof_$LANG_CODE\"/d" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i '' "/placeholder=\"Made Of (${LANG_CODE^^})\"/d" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i '' "/value={formData.madeof_$LANG_CODE}/d" preact_front/src/pages/ItemUpdateForm.tsx
+    echo "Updated preact_front/src/pages/ItemUpdateForm.tsx"
+else
+    echo "Warning: preact_front/src/pages/ItemUpdateForm.tsx not found"
+fi
+
 echo "Language $LANG_CODE has been removed from the codebase!"
 echo "Remember to run database migrations and recreate trigram indexes if needed."

@@ -22,4 +22,6 @@ export interface DrinkReadFlat extends BaseRead {
   en: LangFields;
   ru: LangFields;
   fr: LangFields;
+  es: LangFields;
+  de: LangFields;
 }

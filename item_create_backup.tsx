@@ -1,71 +1,21 @@
-// src/pages/ItemUpdateForm.tsx
+// src/components/ItemCreateForm.tsx
 import { h, useState, useEffect } from 'preact/hooks';
-import { useLocation } from 'preact-iso';
 import { apiClient } from '../lib/apiClient';
 import { useLanguage } from '../contexts/LanguageContext';
-import { IMAGE_BASE_URL } from '../config/api';
 
-interface ItemUpdateFormProps {
+interface ItemCreateFormProps {
   onClose: () => void;
-  onUpdated?: () => void;
+  onCreated?: () => void;
 }
 
-export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
-  const { url } = useLocation();
-  // Extract ID from URL path - expecting format like /items/edit/123
-  const pathParts = url.split('/');
-  const idParam = pathParts[pathParts.length - 1]; // Get the last part of the path
-  const id = parseInt(idParam);
-
-  // Check if ID is valid
-  if (isNaN(id)) {
-    return (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        zIndex: 1500,
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center'
-      }}>
-        <div style={{
-          backgroundColor: 'white',
-          padding: '20px',
-          borderRadius: '8px',
-          maxWidth: '800px',
-          width: '90%',
-          maxHeight: '90vh',
-          overflowY: 'auto'
-        }}>
-          <h2>Invalid Item ID: {idParam}</h2>
-          <button
-            onClick={onClose}
-            className="btn btn-ghost"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    );
-  }
-  
+export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
   const [formData, setFormData] = useState({
     title: '',
     title_ru: '',
     title_fr: '',
-    title_es: '',
-    title_de: '',
     subtitle: '',
     subtitle_ru: '',
     subtitle_fr: '',
-    subtitle_es: '',
-    title_es: '',
-    subtitle_de: '',
-    title_de: '',
     subcategory_id: '',
     sweetness_id: '',
     subregion_id: '',
@@ -75,34 +25,20 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
     description: '',
     description_ru: '',
     description_fr: '',
-    description_es: '',
-    description_de: '',
     recommendation: '',
     recommendation_ru: '',
     recommendation_fr: '',
-    recommendation_es: '',
-    recommendation_de: '',
     madeof: '',
     madeof_ru: '',
     madeof_fr: '',
-    madeof_es: '',
-    madeof_de: '',
     vol: '',
     price: '',
-    varietals: [] as string[], // Format: "id:percentage"
+    varietals: [] as string[],
     foods: [] as string[],
-    file: null as File | null,
-    drink_id: 0,
-    id: 0,
-    image_id: '',
-    image_path: '',
-    count: 0
+    file: null as File | null
   });
 
-  const [drinkAction, setDrinkAction] = useState<'update' | 'create'>('update');
   const [loading, setLoading] = useState(false);
-  const [loadingData, setLoadingData] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [handbooks, setHandbooks] = useState({
     subcategories: [],
     sweetness: [],
@@ -161,105 +97,11 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
         });
       } catch (err) {
         console.error('Failed to load handbook data', err);
-        setError('Failed to load handbook data');
       }
     };
 
     loadHandbooks();
   }, [language]);
-
-  // Load initial data for update
-  useEffect(() => {
-    const loadItemData = async () => {
-      try {
-        setLoadingData(true);
-        const data = await apiClient<any>(`/preact/${id}`, {
-          method: 'GET'
-        });
-        
-        console.log('Item data loaded for ID:', id, data);
-        console.log('data.varietals:', data.varietals);
-        // Create arrays of checked items from the loaded data
-        const checkedVarietals = data.varietals || [];
-        const checkedFoodIds = new Set((data.foods || []).map(f => f.id.toString()));
-        
-        // Only store the checked varietals in formData (with their percentages)
-        const sortedVarietals = [...checkedVarietals]
-          .sort((a, b) => {
-            // Sort checked items alphabetically by name
-            const aName = handbooks.varietals.find(hv => hv.id === a.id)?.name || a.name_en || a.name_ru || a.name_fr || '';
-            const bName = handbooks.varietals.find(hv => hv.id === b.id)?.name || b.name_en || b.name_ru || b.name_fr || '';
-            return aName.localeCompare(bName);
-          })
-          .map(v => `${v.id}:${v.percentage}`);
-        
-        // Only store the checked foods in formData
-        const sortedFoods = [...(data.foods || [])]
-          .sort((a, b) => {
-            // Sort checked items alphabetically by name
-            const aName = handbooks.foods.find(hf => hf.id === a.id)?.name || a.name_en || a.name_ru || a.name_fr || '';
-            const bName = handbooks.foods.find(hf => hf.id === b.id)?.name || b.name_en || b.name_ru || b.name_fr || '';
-            return aName.localeCompare(bName);
-          })
-          .map(f => f.id.toString());
-
-        setFormData({
-          title: data.title || '',
-          title_ru: data.title_ru || '',
-          title_fr: data.title_fr || null || '',
-          title_es: data.title_es || null || '',
-          title_de: data.title_de || null || '',
-          subtitle: data.subtitle || '',
-          subtitle_ru: data.subtitle_ru || '',
-          subtitle_fr: data.subtitle_fr || null || '',
-          subtitle_es: data.subtitle_es || null || '',
-          title_es: data.title_es || null || '',
-          subtitle_de: data.subtitle_de || null || '',
-          title_de: data.title_de || null || '',
-          subcategory_id: data.subcategory_id ? data.subcategory_id.toString() : '',
-          sweetness_id: data.sweetness_id ? data.sweetness_id.toString() : '',
-          subregion_id: data.subregion_id ? data.subregion_id.toString() : '',
-          alc: data.alc ? data.alc.toString() : '',
-          sugar: data.sugar ? data.sugar.toString() : '',
-          age: data.age || '',
-          description: data.description || '',
-          description_ru: data.description_ru || '',
-          description_fr: data.description_fr || null || '',
-          description_es: data.description_es || null || '',
-          description_de: data.description_de || null || '',
-          recommendation: data.recommendation || '',
-          recommendation_ru: data.recommendation_ru || '',
-          recommendation_fr: data.recommendation_fr || null || '',
-          recommendation_es: data.recommendation_es || null || '',
-          recommendation_de: data.recommendation_de || null || '',
-          madeof: data.madeof || '',
-          madeof_ru: data.madeof_ru || '',
-          madeof_fr: data.madeof_fr || null || '',
-          madeof_es: data.madeof_es || null || '',
-          madeof_de: data.madeof_de || null || '',
-          vol: data.vol ? data.vol.toString() : '',
-          price: data.price ? data.price.toString() : '',
-          varietals: sortedVarietals,
-          foods: sortedFoods,
-          file: null,
-          drink_id: data.drink_id || 0,
-          image_id: data.image_id || '',
-          image_path: data.image_path || '',
-          count: data.count || 0,
-          id: id || 0
-        });
-      } catch (err) {
-        console.error('Failed to load item data', err);
-        setError('Failed to load item data: ' + err.message);
-      } finally {
-        setLoadingData(false);
-      }
-    };
-
-    if (handbooks.varietals.length > 0 && handbooks.foods.length > 0) {
-      loadItemData();
-    }
-  }, [id, handbooks.varietals, handbooks.foods]); // Added specific dependencies instead of whole handbooks object
 
   const handleChange = (e: Event) => {
     const target = e.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
@@ -273,66 +115,12 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
           file: fileInput.files[0]
         }));
       }
-    } else if (type === 'checkbox') {
-      const checkbox = target as HTMLInputElement;
-      const { name } = checkbox;
-      
-      if (name.startsWith('varietal-')) {
-        const varietalId = name.split('-')[1];
-        const isChecked = checkbox.checked;
-        
-        let newVarietals = [...formData.varietals];
-        
-        if (isChecked) {
-          // Add with default 100% if not already present
-          if (!newVarietals.some(v => v.startsWith(`${varietalId}:`))) {
-            newVarietals.push(`${varietalId}:100`);
-          }
-        } else {
-          // Remove the varietal
-          newVarietals = newVarietals.filter(v => !v.startsWith(`${varietalId}:`));
-        }
-        
-        setFormData(prev => ({
-          ...prev,
-          varietals: newVarietals
-        }));
-      } else if (name.startsWith('food-')) {
-        const foodId = name.split('-')[1];
-        const isChecked = checkbox.checked;
-        
-        let newFoods = [...formData.foods];
-        
-        if (isChecked) {
-          if (!newFoods.includes(foodId)) {
-            newFoods.push(foodId);
-          }
-        } else {
-          newFoods = newFoods.filter(f => f !== foodId);
-        }
-        
-        setFormData(prev => ({
-          ...prev,
-          foods: newFoods
-        }));
-      }
     } else {
       setFormData(prev => ({
         ...prev,
         [name]: value
       }));
     }
-  };
-
-  const handleVarietalPercentageChange = (varietalId: string, percentage: string) => {
-    const newVarietals = formData.varietals.map(v =>
-      v.startsWith(`${varietalId}:`) ? `${varietalId}:${percentage}` : v
-    );
-    
-    setFormData(prev => ({
-      ...prev,
-      varietals: newVarietals
-    }));
   };
 
   const handleSubmit = async (e: Event) => {
@@ -354,26 +142,15 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
         subregion_id: parseInt(formData.subregion_id),
         sweetness_id: formData.sweetness_id ? parseInt(formData.sweetness_id) : null,
         varietals: formData.varietals.map(v => {
-          // Parse the "id:percentage" format and return in required format {id: id, percentage: percentage}
+          // Parse the "id:percentage" format and return in required format {id: id}
           const [id, percentage] = v.split(':');
           return { id: parseInt(id), percentage: parseFloat(percentage) };
         }).filter(v => !isNaN(v.id) && !isNaN(v.percentage)),
         foods: formData.foods.map(f => {
           const id = parseInt(f);
           return isNaN(id) ? null : { id };
-        }).filter((f): f is { id: number } => f !== null),
-        drink_action: drinkAction, // Add the drink action
-        drink_id: formData.drink_id, // Include drink_id for update
-        id: formData.id // Include Item id for update
+        }).filter((f): f is { id: number } => f !== null)
       };
-
-      console.log('Sending data to update:', JSON.stringify(dataToSend));
-
-      // Only include image_path and image_id if no file is being uploaded
-      if (!formData.file) {
-        delete dataToSend.image_path;
-        delete dataToSend.image_id;
-      }
 
       multipartFormData.append('data', JSON.stringify(dataToSend));
 
@@ -382,90 +159,23 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
         multipartFormData.append('file', formData.file);
       }
 
-      await apiClient(`/items/update_item_drink/${id}`, {
+      await apiClient('/items/create_item_drink', {
         method: 'POST',
         body: multipartFormData,
         // Don't set Content-Type header, let browser set it with boundary
       }, false); // Don't include language for multipart form data
 
-      if (onUpdated) {
-        onUpdated();
+      if (onCreated) {
+        onCreated();
       }
       onClose();
     } catch (error) {
-      console.error('Error updating item:', error);
-      alert(`Error updating item: ${error.message}`);
+      console.error('Error creating item:', error);
+      alert(`Error creating item: ${error.message}`);
     } finally {
       setLoading(false);
     }
   };
-
-  if (loadingData) {
-    return (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        zIndex: 1500,
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center'
-      }}>
-        <div style={{
-          backgroundColor: 'white',
-          padding: '20px',
-          borderRadius: '8px',
-          maxWidth: '800px',
-          width: '90%',
-          maxHeight: '90vh',
-          overflowY: 'auto'
-        }}>
-          <div className="flex justify-center items-center">
-            <span className="loading loading-spinner loading-lg"></span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        zIndex: 1500,
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center'
-      }}>
-        <div style={{
-          backgroundColor: 'white',
-          padding: '20px',
-          borderRadius: '8px',
-          maxWidth: '800px',
-          width: '90%',
-          maxHeight: '90vh',
-          overflowY: 'auto'
-        }}>
-          <h2>Error</h2>
-          <p>{error}</p>
-          <button
-            onClick={onClose}
-            className="btn btn-ghost"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div style={{
@@ -489,34 +199,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
         maxHeight: '90vh',
         overflowY: 'auto'
       }}>
-        <h2>Update Item</h2>
-
-        {/* Drink Action Radio Buttons */}
-        <div className="mb-4 p-4 border rounded-lg">
-          <h3 className="font-bold mb-2">Drink Action</h3>
-          <div className="flex items-center space-x-4">
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="drinkAction"
-                checked={drinkAction === 'update'}
-                onChange={() => setDrinkAction('update')}
-                className="mr-2"
-              />
-              <span>Update existing drink</span>
-            </label>
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="drinkAction"
-                checked={drinkAction === 'create'}
-                onChange={() => setDrinkAction('create')}
-                className="mr-2"
-              />
-              <span>Save existing drink and create new</span>
-            </label>
-          </div>
-        </div>
+        <h2>Create New Item</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -556,29 +239,11 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
 
                 <div>
                   <label className="label">
-                    <span className="label-text">Title (FR)
-                    // Title (ES)
-                    // Title (DE)</span>
+                    <span className="label-text">Title (FR)</span>
                   </label>
                   <input
                     type="text"
                     name="title_fr"
-                  <input
-                    type="text"
-                    name="title_es"
-                    value={formData.title_es}
-                    onInput={handleChange}
-                    className="input input-bordered w-full"
-                    placeholder="Title (ES)"
-                  />
-                  <input
-                    type="text"
-                    name="title_de"
-                    value={formData.title_de}
-                    onInput={handleChange}
-                    className="input input-bordered w-full"
-                    placeholder="Title (DE)"
-                  />
                     value={formData.title_fr}
                     onInput={handleChange}
                     className="input input-bordered w-full"
@@ -607,40 +272,26 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                   <input
                     type="text"
                     name="subtitle_ru"
+                    lang="ru"
                     value={formData.subtitle_ru}
                     onInput={handleChange}
                     className="input input-bordered w-full"
+                    placeholder="Подзаголовок на Русском"
                   />
                 </div>
 
                 <div>
                   <label className="label">
-                    <span className="label-text">Subtitle (FR)
-                    // Subtitle (ES)
-                    // Subtitle (DE)</span>
+                    <span className="label-text">Subtitle (FR)</span>
                   </label>
                   <input
                     type="text"
                     name="subtitle_fr"
-                <input
-                  type="text"
-                  name="subtitle_es"
-                  value={formData.subtitle_es}
-                  onInput={handleChange}
-                  className="input input-bordered w-full"
-                  placeholder="Subtitle (ES)"
-                />
-                <input
-                  type="text"
-                  name="subtitle_de"
-                  value={formData.subtitle_de}
-                  onInput={handleChange}
-                  className="input input-bordered w-full"
-                  placeholder="Subtitle (DE)"
-                />
+                    inputmode="latin"
                     value={formData.subtitle_fr}
                     onInput={handleChange}
                     className="input input-bordered w-full"
+                    placeholder="Sous-titre en Francais"
                   />
                 </div>
 
@@ -654,6 +305,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                     value={formData.vol}
                     onInput={handleChange}
                     className="input input-bordered w-full"
+                    placeholder="Volume"
                     step="0.01"
                   />
                 </div>
@@ -668,6 +320,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                     value={formData.price}
                     onInput={handleChange}
                     className="input input-bordered w-full"
+                    placeholder="Price"
                     step="0.01"
                   />
                 </div>
@@ -684,23 +337,6 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                     accept="image/*"
                   />
                 </div>
-
-                {/* Display current image if available */}
-                {formData.image_path && !formData.file && (
-                  <div>
-                    <label className="label">
-                      <span className="label-text">Current Image</span>
-                    </label>
-                    <span className="half-life">
-                    <img
-                      src={`${IMAGE_BASE_URL}/mongodb/thumbnails/${formData.image_id}`}
-                      alt="Current item" 
-                      className="max-w-xs max-h-48 object-contain border rounded"
-                    />
-                    </span>
-                  </div>
-                )}
-
                 {/* Display selected file preview */}
                 {formData.file && (
                   <div>
@@ -708,11 +344,11 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                       <span className="label-text">Selected Image Preview</span>
                     </label>
                     <span className="half-life">
-                    <img
-                      src={URL.createObjectURL(formData.file)} 
-                      alt="Selected item" 
+                     <img
+                      src={URL.createObjectURL(formData.file)}
+                      alt="Selected item"
                       className="max-w-xs max-h-48 object-contain border rounded"
-                    />
+                      />
                     </span>
                   </div>
                 )}
@@ -794,6 +430,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                     value={formData.alc}
                     onInput={handleChange}
                     className="input input-bordered w-full"
+                    placeholder="Alcohol (%)"
                     step="0.01"
                     min="0"
                     max="100"
@@ -810,6 +447,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                     value={formData.sugar}
                     onInput={handleChange}
                     className="input input-bordered w-full"
+                    placeholder="Sugar (%)"
                     step="0.01"
                     min="0"
                     max="100"
@@ -826,6 +464,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                     value={formData.age}
                     onInput={handleChange}
                     className="input input-bordered w-full"
+                    placeholder="Age"
                   />
                 </div>
               </div>
@@ -846,6 +485,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                     value={formData.description}
                     onInput={handleChange}
                     className="textarea textarea-bordered w-full"
+                    placeholder="Description"
                     rows={3}
                   />
                 </div>
@@ -859,37 +499,21 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                     value={formData.description_ru}
                     onInput={handleChange}
                     className="textarea textarea-bordered w-full"
+                    placeholder="Описание на Русском"
                     rows={3}
                   />
                 </div>
 
                 <div>
                   <label className="label">
-                    <span className="label-text">Description (FR)
-                  // Description (ES)
-                  // Description (DE)</span>
+                    <span className="label-text">Description (FR)</span>
                   </label>
                   <textarea
                     name="description_fr"
-                <textarea
-                  name="description_es"
-                  value={formData.description_es}
-                  onInput={handleChange}
-                  className="textarea textarea-bordered w-full"
-                  placeholder="Description (ES)"
-                  rows={3}
-                />
-                <textarea
-                  name="description_de"
-                  value={formData.description_de}
-                  onInput={handleChange}
-                  className="textarea textarea-bordered w-full"
-                  placeholder="Description (DE)"
-                  rows={3}
-                />
                     value={formData.description_fr}
                     onInput={handleChange}
                     className="textarea textarea-bordered w-full"
+                    placeholder="Description en Francais"
                     rows={3}
                   />
                 </div>
@@ -911,6 +535,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                     value={formData.recommendation}
                     onInput={handleChange}
                     className="textarea textarea-bordered w-full"
+                    placeholder="Recommendation"
                     rows={3}
                   />
                 </div>
@@ -924,37 +549,21 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                     value={formData.recommendation_ru}
                     onInput={handleChange}
                     className="textarea textarea-bordered w-full"
+                    placeholder="Рекомендация на Русском"
                     rows={3}
                   />
                 </div>
 
                 <div>
                   <label className="label">
-                    <span className="label-text">Recommendation (FR)
-                // Recommendation (ES)
-                // Recommendation (DE)</span>
+                    <span className="label-text">Recommendation (FR)</span>
                   </label>
                   <textarea
                     name="recommendation_fr"
-                <textarea
-                  name="recommendation_es"
-                  value={formData.recommendation_es}
-                  onInput={handleChange}
-                  className="textarea textarea-bordered w-full"
-                  placeholder="Recommendation (ES)"
-                  rows={3}
-                />
-                <textarea
-                  name="recommendation_de"
-                  value={formData.recommendation_de}
-                  onInput={handleChange}
-                  className="textarea textarea-bordered w-full"
-                  placeholder="Recommendation (DE)"
-                  rows={3}
-                />
                     value={formData.recommendation_fr}
                     onInput={handleChange}
                     className="textarea textarea-bordered w-full"
+                    placeholder="Recommandation en Francais"
                     rows={3}
                   />
                 </div>
@@ -968,6 +577,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                     value={formData.madeof}
                     onInput={handleChange}
                     className="textarea textarea-bordered w-full"
+                    placeholder="Made Of"
                     rows={3}
                   />
                 </div>
@@ -981,37 +591,21 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                     value={formData.madeof_ru}
                     onInput={handleChange}
                     className="textarea textarea-bordered w-full"
+                    placeholder="Состав на Русском"
                     rows={3}
                   />
                 </div>
 
                 <div>
                   <label className="label">
-                    <span className="label-text">Made Of (FR)
-                // Made Of (ES)
-                // Made Of (DE)</span>
+                    <span className="label-text">Made Of (FR)</span>
                   </label>
                   <textarea
                     name="madeof_fr"
-                <textarea
-                  name="madeof_es"
-                  value={formData.madeof_es}
-                  onInput={handleChange}
-                  className="textarea textarea-bordered w-full"
-                  placeholder="Made Of (ES)"
-                  rows={3}
-                />
-                <textarea
-                  name="madeof_de"
-                  value={formData.madeof_de}
-                  onInput={handleChange}
-                  className="textarea textarea-bordered w-full"
-                  placeholder="Made Of (DE)"
-                  rows={3}
-                />
                     value={formData.madeof_fr}
                     onInput={handleChange}
                     className="textarea textarea-bordered w-full"
+                    placeholder="Composition en Francais"
                     rows={3}
                   />
                 </div>
@@ -1025,56 +619,66 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
               <details> <summary>Varietals</summary>
                 <div className="card-body">
                   <div className="border rounded-lg p-2 max-h-40 overflow-y-auto">
-                    {/* Render all varietals with proper sorting: checked first, then alphabetical */}
-                    {[...handbooks.varietals]
-                      .sort((a, b) => {
-                        // First priority: checked items first
-                        const aIsChecked = formData.varietals.some(v => v.startsWith(`${a.id}:`));
-                        const bIsChecked = formData.varietals.some(v => v.startsWith(`${b.id}:`));
+                    {handbooks.varietals.map((varietal, index) => (
+                      <div key={varietal.id} className="flex items-center mb-2">
+                        <input
+                          type="checkbox"
+                          id={`varietal-${varietal.id}`}
+                          checked={formData.varietals.some(v => v.startsWith(`${varietal.id}:`))}
+                          onChange={(e) => {
+                            const isChecked = (e.target as HTMLInputElement).checked;
+                            let newVarietals = [...formData.varietals];
 
-                        if (aIsChecked && !bIsChecked) return -1;
-                        if (!aIsChecked && bIsChecked) return 1;
+                            if (isChecked) {
+                              // Add with default 100% if not already present
+                              if (!newVarietals.some(v => v.startsWith(`${varietal.id}:`))) {
+                                newVarietals.push(`${varietal.id}:100`);
+                              }
+                            } else {
+                              // Remove the varietal
+                              newVarietals = newVarietals.filter(v => !v.startsWith(`${varietal.id}:`));
+                            }
 
-                        // Second priority: alphabetical by name
-                        const aName = a.name || a.name_en || a.name_ru || a.name_fr || "";
-                        const bName = b.name || b.name_en || b.name_ru || b.name_fr || "";
-                        return aName.localeCompare(bName);
-                      })
-                      .map(varietal => {
-                        const varietalData = formData.varietals.find(v => v.startsWith(`${varietal.id}:`));
-                        const isChecked = !!varietalData;
-                        const percentage = isChecked ? varietalData.split(':')[1] : '100';
-
-                        return (
-                          <div key={varietal.id} className="flex items-center mb-2">
+                            setFormData(prev => ({
+                              ...prev,
+                              varietals: newVarietals
+                            }));
+                          }}
+                          className="mr-2"
+                        />
+                        <label htmlFor={`varietal-${varietal.id}`} className="flex-1 cursor-pointer">
+                          {varietal.name || varietal.name_en || varietal.name_ru || varietal.name_fr}
+                        </label>
+                        {formData.varietals.some(v => v.startsWith(`${varietal.id}:`)) && (
+                          <div className="ml-2">
                             <input
-                              type="checkbox"
-                              id={`varietal-${varietal.id}`}
-                              name={`varietal-${varietal.id}`}
-                              checked={isChecked}
-                              onChange={handleChange as any}
-                              className="mr-2"
+                              type="number"
+                              min="0"
+                              max="100"
+                              step="0.1"
+                              placeholder="%"
+                              value={
+                                formData.varietals.find(v => v.startsWith(`${varietal.id}:`))
+                                  ? formData.varietals.find(v => v.startsWith(`${varietal.id}:`)).split(':')[1]
+                                  : '100'
+                              }
+                              onChange={(e) => {
+                                const percentage = (e.target as HTMLInputElement).value;
+                                const newVarietals = formData.varietals.map(v =>
+                                  v.startsWith(`${varietal.id}:`) ? `${varietal.id}:${percentage}` : v
+                                );
+
+                                setFormData(prev => ({
+                                  ...prev,
+                                  varietals: newVarietals
+                                }));
+                              }}
+                              className="input input-bordered w-20"
                             />
-                            <label htmlFor={`varietal-${varietal.id}`} className="flex-1 cursor-pointer">
-                              {varietal.name || varietal.name_en || varietal.name_ru || varietal.name_fr}
-                            </label>
-                            {isChecked && (
-                              <div className="ml-2">
-                                <input
-                                  type="number"
-                                  min="0"
-                                  max="100"
-                                  step="0.1"
-                                  placeholder="%"
-                                  value={percentage}
-                                  onChange={(e) => handleVarietalPercentageChange(varietal.id.toString(), (e.target as HTMLInputElement).value)}
-                                  className="input input-bordered w-20"
-                                />
-                              </div>
-                            )}
                           </div>
-                        );
-                      })}
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
                 </details>
@@ -1083,40 +687,36 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
             <div className="card bg-base-100 shadow">
               <details><summary> Foods </summary>
                   <div className="border rounded-lg p-2 max-h-40 overflow-y-auto">
-                    {/* Render all foods with proper sorting: checked first, then alphabetical */}
-                    {[...handbooks.foods]
-                      .sort((a, b) => {
-                        // First priority: checked items first
-                        const aIsChecked = formData.foods.includes(a.id.toString());
-                        const bIsChecked = formData.foods.includes(b.id.toString());
+                    {handbooks.foods.map(food => (
+                      <div key={food.id} className="flex items-center mb-2">
+                        <input
+                          type="checkbox"
+                          id={`food-${food.id}`}
+                          checked={formData.foods.includes(food.id.toString())}
+                          onChange={(e) => {
+                            const isChecked = (e.target as HTMLInputElement).checked;
+                            let newFoods = [...formData.foods];
 
-                        if (aIsChecked && !bIsChecked) return -1;
-                        if (!aIsChecked && bIsChecked) return 1;
+                            if (isChecked) {
+                              if (!newFoods.includes(food.id.toString())) {
+                                newFoods.push(food.id.toString());
+                              }
+                            } else {
+                              newFoods = newFoods.filter(f => f !== food.id.toString());
+                            }
 
-                        // Second priority: alphabetical by name
-                        const aName = a.name || a.name_en || a.name_ru || a.name_fr || "";
-                        const bName = b.name || b.name_en || b.name_ru || b.name_fr || "";
-                        return aName.localeCompare(bName);
-                      })
-                      .map(food => {
-                        const isChecked = formData.foods.includes(food.id.toString());
-
-                        return (
-                          <div key={food.id} className="flex items-center mb-2">
-                            <input
-                              type="checkbox"
-                              id={`food-${food.id}`}
-                              name={`food-${food.id}`}
-                              checked={isChecked}
-                              onChange={handleChange as any}
-                              className="mr-2"
-                            />
-                            <label htmlFor={`food-${food.id}`} className="cursor-pointer">
-                              {food.name || food.name_en || food.name_ru || food.name_fr}
-                            </label>
-                          </div>
-                        );
-                      })}
+                            setFormData(prev => ({
+                              ...prev,
+                              foods: newFoods
+                            }));
+                          }}
+                          className="mr-2"
+                        />
+                        <label htmlFor={`food-${food.id}`} className="cursor-pointer">
+                          {food.name || food.name_en || food.name_ru || food.name_fr}
+                        </label>
+                      </div>
+                    ))}
                   </div>
                   </details>
                 </div>
@@ -1136,7 +736,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
               className={`btn btn-primary ${loading ? 'loading' : ''}`}
               disabled={loading}
             >
-              {loading ? 'Updating...' : 'Update Item'}
+              {loading ? 'Creating...' : 'Create Item'}
             </button>
           </div>
         </form>

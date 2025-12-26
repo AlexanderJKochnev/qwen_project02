@@ -66,7 +66,7 @@ if [ -f app/support/drink/model.py ]; then
     sed -i "s/\(coalesce(subtitle_fr, '') || ' ' ||\)/\1 coalesce(subtitle_${LANG_CODE}, '') || ' ' || /" app/support/drink/model.py
     sed -i "s/\(coalesce(description_fr, '') || ' ' ||\)/\1 coalesce(description_${LANG_CODE}, '') || ' ' || /" app/support/drink/model.py
     sed -i "s/\(coalesce(recommendation_fr, '') || ' ' ||\)/\1 coalesce(recommendation_${LANG_CODE}, '') || ' ' || /" app/support/drink/model.py
-    sed -i "s/\(coalesce(madeof_fr, '')))/\1 || ' ' || coalesce(madeof_${LANG_CODE}, ''))/" app/support/drink/model.py
+    sed -i "s/coalesce(madeof_fr, ''))/coalesce(madeof_fr, '') || ' ' || coalesce(madeof_${LANG_CODE}, ''))/" app/support/drink/model.py
     
     echo "Updated app/support/drink/model.py"
 else
@@ -155,6 +155,256 @@ if [ -f preact_front/src/types/drink.ts ]; then
     echo "Updated preact_front/src/types/drink.ts"
 else
     echo "Warning: preact_front/src/types/drink.ts not found"
+fi
+
+# 9. Update preact_front/src/pages/HandbookCreateForm.tsx
+if [ -f preact_front/src/pages/HandbookCreateForm.tsx ]; then
+    # Add language fields to formData initialization
+    sed -i "s/name_fr: '',/name_fr: '',\\
+    name_$LANG_CODE: '',/" preact_front/src/pages/HandbookCreateForm.tsx
+    sed -i "s/description_fr: '',/description_fr: '',\\
+    description_$LANG_CODE: '',/" preact_front/src/pages/HandbookCreateForm.tsx
+    
+    # Add input fields for the new language
+    sed -i "s/Name (French)/Name (French)\\
+                \\/\\/ Name (${LANG_CODE^^})/" preact_front/src/pages/HandbookCreateForm.tsx
+    sed -i "/name=\"name_fr\"/a\\
+                <input\\
+                  type=\"text\"\\
+                  name=\"name_$LANG_CODE\"\\
+                  value={formData.name_$LANG_CODE}\\
+                  onInput={handleChange}\\
+                  className=\"input input-bordered w-full\"\\
+                  placeholder=\"Name (${LANG_CODE^^})\"\\
+                \\/>" preact_front/src/pages/HandbookCreateForm.tsx
+    
+    sed -i "s/Description (French)/Description (French)\\
+                \\/\\/ Description (${LANG_CODE^^})/" preact_front/src/pages/HandbookCreateForm.tsx
+    sed -i "/name=\"description_fr\"/a\\
+                <textarea\\
+                  name=\"description_$LANG_CODE\"\\
+                  value={formData.description_$LANG_CODE}\\
+                  onInput={handleChange}\\
+                  className=\"textarea textarea-bordered w-full\"\\
+                  rows={3}\\
+                  placeholder=\"Description (${LANG_CODE^^})\"\\
+                \\/>" preact_front/src/pages/HandbookCreateForm.tsx
+    echo "Updated preact_front/src/pages/HandbookCreateForm.tsx"
+else
+    echo "Warning: preact_front/src/pages/HandbookCreateForm.tsx not found"
+fi
+
+# 10. Update preact_front/src/pages/HandbookUpdateForm.tsx
+if [ -f preact_front/src/pages/HandbookUpdateForm.tsx ]; then
+    # Add language fields to formData initialization
+    sed -i "s/name_fr: '',/name_fr: '',\\
+    name_$LANG_CODE: '',/" preact_front/src/pages/HandbookUpdateForm.tsx
+    sed -i "s/description_fr: '',/description_fr: '',\\
+    description_$LANG_CODE: '',/" preact_front/src/pages/HandbookUpdateForm.tsx
+    
+    # Add language fields to useEffect data loading
+    sed -i "s/name_fr || '',/name_fr || '',\\
+        name_$LANG_CODE: data.name_$LANG_CODE || '',/" preact_front/src/pages/HandbookUpdateForm.tsx
+    sed -i "s/description_fr || '',/description_fr || '',\\
+        description_$LANG_CODE: data.description_$LANG_CODE || '',/" preact_front/src/pages/HandbookUpdateForm.tsx
+    
+    # Add input fields for the new language
+    sed -i "s/Name (French)/Name (French)\\
+                \\/\\/ Name (${LANG_CODE^^})/" preact_front/src/pages/HandbookUpdateForm.tsx
+    sed -i "/name=\"name_fr\"/a\\
+                <input\\
+                  type=\"text\"\\
+                  name=\"name_$LANG_CODE\"\\
+                  value={formData.name_$LANG_CODE}\\
+                  onInput={handleChange}\\
+                  className=\"input input-bordered w-full\"\\
+                  placeholder=\"Name (${LANG_CODE^^})\"\\
+                \\/>" preact_front/src/pages/HandbookUpdateForm.tsx
+    
+    sed -i "s/Description (French)/Description (French)\\
+                \\/\\/ Description (${LANG_CODE^^})/" preact_front/src/pages/HandbookUpdateForm.tsx
+    sed -i "/name=\"description_fr\"/a\\
+                <textarea\\
+                  name=\"description_$LANG_CODE\"\\
+                  value={formData.description_$LANG_CODE}\\
+                  onInput={handleChange}\\
+                  className=\"textarea textarea-bordered w-full\"\\
+                  rows={3}\\
+                  placeholder=\"Description (${LANG_CODE^^})\"\\
+                \\/>" preact_front/src/pages/HandbookUpdateForm.tsx
+    echo "Updated preact_front/src/pages/HandbookUpdateForm.tsx"
+else
+    echo "Warning: preact_front/src/pages/HandbookUpdateForm.tsx not found"
+fi
+
+# 11. Update preact_front/src/pages/ItemCreateForm.tsx
+if [ -f preact_front/src/pages/ItemCreateForm.tsx ]; then
+    # Add language fields to formData initialization
+    sed -i "s/title_fr: '',/title_fr: '',\\
+    title_$LANG_CODE: '',/" preact_front/src/pages/ItemCreateForm.tsx
+    sed -i "s/subtitle_fr: '',/subtitle_fr: '',\\
+    subtitle_$LANG_CODE: '',/" preact_front/src/pages/ItemCreateForm.tsx
+    sed -i "s/description_fr: '',/description_fr: '',\\
+    description_$LANG_CODE: '',/" preact_front/src/pages/ItemCreateForm.tsx
+    sed -i "s/recommendation_fr: '',/recommendation_fr: '',\\
+    recommendation_$LANG_CODE: '',/" preact_front/src/pages/ItemCreateForm.tsx
+    sed -i "s/madeof_fr: '',/madeof_fr: '',\\
+    madeof_$LANG_CODE: '',/" preact_front/src/pages/ItemCreateForm.tsx
+    
+    # Add input fields for the new language
+    sed -i "s/Title (FR)/Title (FR)\\
+                    \\/\\/ Title (${LANG_CODE^^})/" preact_front/src/pages/ItemCreateForm.tsx
+    sed -i "/name=\"title_fr\"/a\\
+                  <input\\
+                    type=\"text\"\\
+                    name=\"title_$LANG_CODE\"\\
+                    value={formData.title_$LANG_CODE}\\
+                    onInput={handleChange}\\
+                    className=\"input input-bordered w-full\"\\
+                    placeholder=\"Title (${LANG_CODE^^})\"\\
+                  \\/>" preact_front/src/pages/ItemCreateForm.tsx
+    
+    sed -i "s/Subtitle (FR)/Subtitle (FR)\\
+                    \\/\\/ Subtitle (${LANG_CODE^^})/" preact_front/src/pages/ItemCreateForm.tsx
+    sed -i "/name=\"subtitle_fr\"/a\\
+                <input\\
+                  type=\"text\"\\
+                  name=\"subtitle_$LANG_CODE\"\\
+                  value={formData.subtitle_$LANG_CODE}\\
+                  onInput={handleChange}\\
+                  className=\"input input-bordered w-full\"\\
+                  placeholder=\"Subtitle (${LANG_CODE^^})\"\\
+                \\/>" preact_front/src/pages/ItemCreateForm.tsx
+    
+    sed -i "s/Description (FR)/Description (FR)\\
+                  \\/\\/ Description (${LANG_CODE^^})/" preact_front/src/pages/ItemCreateForm.tsx
+    sed -i "/name=\"description_fr\"/a\\
+                <textarea\\
+                  name=\"description_$LANG_CODE\"\\
+                  value={formData.description_$LANG_CODE}\\
+                  onInput={handleChange}\\
+                  className=\"textarea textarea-bordered w-full\"\\
+                  placeholder=\"Description (${LANG_CODE^^})\"\\
+                  rows={3}\\
+                \\/>" preact_front/src/pages/ItemCreateForm.tsx
+    
+    sed -i "s/Recommendation (FR)/Recommendation (FR)\\
+                \\/\\/ Recommendation (${LANG_CODE^^})/" preact_front/src/pages/ItemCreateForm.tsx
+    sed -i "/name=\"recommendation_fr\"/a\\
+                <textarea\\
+                  name=\"recommendation_$LANG_CODE\"\\
+                  value={formData.recommendation_$LANG_CODE}\\
+                  onInput={handleChange}\\
+                  className=\"textarea textarea-bordered w-full\"\\
+                  placeholder=\"Recommendation (${LANG_CODE^^})\"\\
+                  rows={3}\\
+                \\/>" preact_front/src/pages/ItemCreateForm.tsx
+    
+    sed -i "s/Made Of (FR)/Made Of (FR)\\
+                \\/\\/ Made Of (${LANG_CODE^^})/" preact_front/src/pages/ItemCreateForm.tsx
+    sed -i "/name=\"madeof_fr\"/a\\
+                <textarea\\
+                  name=\"madeof_$LANG_CODE\"\\
+                  value={formData.madeof_$LANG_CODE}\\
+                  onInput={handleChange}\\
+                  className=\"textarea textarea-bordered w-full\"\\
+                  placeholder=\"Made Of (${LANG_CODE^^})\"\\
+                  rows={3}\\
+                \\/>" preact_front/src/pages/ItemCreateForm.tsx
+    echo "Updated preact_front/src/pages/ItemCreateForm.tsx"
+else
+    echo "Warning: preact_front/src/pages/ItemCreateForm.tsx not found"
+fi
+
+# 12. Update preact_front/src/pages/ItemUpdateForm.tsx
+if [ -f preact_front/src/pages/ItemUpdateForm.tsx ]; then
+    # Add language fields to formData initialization
+    sed -i "s/title_fr: '',/title_fr: '',\\
+    title_$LANG_CODE: '',/" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i "s/subtitle_fr: '',/subtitle_fr: '',\\
+    subtitle_$LANG_CODE: '',/" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i "s/description_fr: '',/description_fr: '',\\
+    description_$LANG_CODE: '',/" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i "s/recommendation_fr: '',/recommendation_fr: '',\\
+    recommendation_$LANG_CODE: '',/" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i "s/madeof_fr: '',/madeof_fr: '',\\
+    madeof_$LANG_CODE: '',/" preact_front/src/pages/ItemUpdateForm.tsx
+    
+    # Add language fields to useEffect data loading
+    sed -i "s/title_fr || null || '',/title_fr || null || '',\\
+          title_$LANG_CODE: data.title_$LANG_CODE || null || '',/" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i "s/subtitle_fr || null || '',/subtitle_fr || null || '',\\
+          subtitle_$LANG_CODE: data.subtitle_$LANG_CODE || null || '',/" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i "s/description_fr || null || '',/description_fr || null || '',\\
+          description_$LANG_CODE: data.description_$LANG_CODE || null || '',/" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i "s/recommendation_fr || null || '',/recommendation_fr || null || '',\\
+          recommendation_$LANG_CODE: data.recommendation_$LANG_CODE || null || '',/" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i "s/madeof_fr || null || '',/madeof_fr || null || '',\\
+          madeof_$LANG_CODE: data.madeof_$LANG_CODE || null || '',/" preact_front/src/pages/ItemUpdateForm.tsx
+    
+    # Add input fields for the new language
+    sed -i "s/Title (FR)/Title (FR)\\
+                    \\/\\/ Title (${LANG_CODE^^})/" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i "/name=\"title_fr\"/a\\
+                  <input\\
+                    type=\"text\"\\
+                    name=\"title_$LANG_CODE\"\\
+                    value={formData.title_$LANG_CODE}\\
+                    onInput={handleChange}\\
+                    className=\"input input-bordered w-full\"\\
+                    placeholder=\"Title (${LANG_CODE^^})\"\\
+                  \\/>" preact_front/src/pages/ItemUpdateForm.tsx
+    
+    sed -i "s/Subtitle (FR)/Subtitle (FR)\\
+                    \\/\\/ Subtitle (${LANG_CODE^^})/" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i "/name=\"subtitle_fr\"/a\\
+                <input\\
+                  type=\"text\"\\
+                  name=\"subtitle_$LANG_CODE\"\\
+                  value={formData.subtitle_$LANG_CODE}\\
+                  onInput={handleChange}\\
+                  className=\"input input-bordered w-full\"\\
+                  placeholder=\"Subtitle (${LANG_CODE^^})\"\\
+                \\/>" preact_front/src/pages/ItemUpdateForm.tsx
+    
+    sed -i "s/Description (FR)/Description (FR)\\
+                  \\/\\/ Description (${LANG_CODE^^})/" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i "/name=\"description_fr\"/a\\
+                <textarea\\
+                  name=\"description_$LANG_CODE\"\\
+                  value={formData.description_$LANG_CODE}\\
+                  onInput={handleChange}\\
+                  className=\"textarea textarea-bordered w-full\"\\
+                  placeholder=\"Description (${LANG_CODE^^})\"\\
+                  rows={3}\\
+                \\/>" preact_front/src/pages/ItemUpdateForm.tsx
+    
+    sed -i "s/Recommendation (FR)/Recommendation (FR)\\
+                \\/\\/ Recommendation (${LANG_CODE^^})/" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i "/name=\"recommendation_fr\"/a\\
+                <textarea\\
+                  name=\"recommendation_$LANG_CODE\"\\
+                  value={formData.recommendation_$LANG_CODE}\\
+                  onInput={handleChange}\\
+                  className=\"textarea textarea-bordered w-full\"\\
+                  placeholder=\"Recommendation (${LANG_CODE^^})\"\\
+                  rows={3}\\
+                \\/>" preact_front/src/pages/ItemUpdateForm.tsx
+    
+    sed -i "s/Made Of (FR)/Made Of (FR)\\
+                \\/\\/ Made Of (${LANG_CODE^^})/" preact_front/src/pages/ItemUpdateForm.tsx
+    sed -i "/name=\"madeof_fr\"/a\\
+                <textarea\\
+                  name=\"madeof_$LANG_CODE\"\\
+                  value={formData.madeof_$LANG_CODE}\\
+                  onInput={handleChange}\\
+                  className=\"textarea textarea-bordered w-full\"\\
+                  placeholder=\"Made Of (${LANG_CODE^^})\"\\
+                  rows={3}\\
+                \\/>" preact_front/src/pages/ItemUpdateForm.tsx
+    echo "Updated preact_front/src/pages/ItemUpdateForm.tsx"
+else
+    echo "Warning: preact_front/src/pages/ItemUpdateForm.tsx not found"
 fi
 
 echo "Language $LANG_CODE has been added to the codebase!"

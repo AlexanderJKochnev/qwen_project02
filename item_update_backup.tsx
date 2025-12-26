@@ -57,15 +57,9 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
     title: '',
     title_ru: '',
     title_fr: '',
-    title_es: '',
-    title_de: '',
     subtitle: '',
     subtitle_ru: '',
     subtitle_fr: '',
-    subtitle_es: '',
-    title_es: '',
-    subtitle_de: '',
-    title_de: '',
     subcategory_id: '',
     sweetness_id: '',
     subregion_id: '',
@@ -75,18 +69,12 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
     description: '',
     description_ru: '',
     description_fr: '',
-    description_es: '',
-    description_de: '',
     recommendation: '',
     recommendation_ru: '',
     recommendation_fr: '',
-    recommendation_es: '',
-    recommendation_de: '',
     madeof: '',
     madeof_ru: '',
     madeof_fr: '',
-    madeof_es: '',
-    madeof_de: '',
     vol: '',
     price: '',
     varietals: [] as string[], // Format: "id:percentage"
@@ -207,15 +195,9 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
           title: data.title || '',
           title_ru: data.title_ru || '',
           title_fr: data.title_fr || null || '',
-          title_es: data.title_es || null || '',
-          title_de: data.title_de || null || '',
           subtitle: data.subtitle || '',
           subtitle_ru: data.subtitle_ru || '',
           subtitle_fr: data.subtitle_fr || null || '',
-          subtitle_es: data.subtitle_es || null || '',
-          title_es: data.title_es || null || '',
-          subtitle_de: data.subtitle_de || null || '',
-          title_de: data.title_de || null || '',
           subcategory_id: data.subcategory_id ? data.subcategory_id.toString() : '',
           sweetness_id: data.sweetness_id ? data.sweetness_id.toString() : '',
           subregion_id: data.subregion_id ? data.subregion_id.toString() : '',
@@ -225,18 +207,12 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
           description: data.description || '',
           description_ru: data.description_ru || '',
           description_fr: data.description_fr || null || '',
-          description_es: data.description_es || null || '',
-          description_de: data.description_de || null || '',
           recommendation: data.recommendation || '',
           recommendation_ru: data.recommendation_ru || '',
           recommendation_fr: data.recommendation_fr || null || '',
-          recommendation_es: data.recommendation_es || null || '',
-          recommendation_de: data.recommendation_de || null || '',
           madeof: data.madeof || '',
           madeof_ru: data.madeof_ru || '',
           madeof_fr: data.madeof_fr || null || '',
-          madeof_es: data.madeof_es || null || '',
-          madeof_de: data.madeof_de || null || '',
           vol: data.vol ? data.vol.toString() : '',
           price: data.price ? data.price.toString() : '',
           varietals: sortedVarietals,
@@ -556,29 +532,11 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
 
                 <div>
                   <label className="label">
-                    <span className="label-text">Title (FR)
-                    // Title (ES)
-                    // Title (DE)</span>
+                    <span className="label-text">Title (FR)</span>
                   </label>
                   <input
                     type="text"
                     name="title_fr"
-                  <input
-                    type="text"
-                    name="title_es"
-                    value={formData.title_es}
-                    onInput={handleChange}
-                    className="input input-bordered w-full"
-                    placeholder="Title (ES)"
-                  />
-                  <input
-                    type="text"
-                    name="title_de"
-                    value={formData.title_de}
-                    onInput={handleChange}
-                    className="input input-bordered w-full"
-                    placeholder="Title (DE)"
-                  />
                     value={formData.title_fr}
                     onInput={handleChange}
                     className="input input-bordered w-full"
@@ -615,29 +573,11 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
 
                 <div>
                   <label className="label">
-                    <span className="label-text">Subtitle (FR)
-                    // Subtitle (ES)
-                    // Subtitle (DE)</span>
+                    <span className="label-text">Subtitle (FR)</span>
                   </label>
                   <input
                     type="text"
                     name="subtitle_fr"
-                <input
-                  type="text"
-                  name="subtitle_es"
-                  value={formData.subtitle_es}
-                  onInput={handleChange}
-                  className="input input-bordered w-full"
-                  placeholder="Subtitle (ES)"
-                />
-                <input
-                  type="text"
-                  name="subtitle_de"
-                  value={formData.subtitle_de}
-                  onInput={handleChange}
-                  className="input input-bordered w-full"
-                  placeholder="Subtitle (DE)"
-                />
                     value={formData.subtitle_fr}
                     onInput={handleChange}
                     className="input input-bordered w-full"
@@ -865,28 +805,10 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
 
                 <div>
                   <label className="label">
-                    <span className="label-text">Description (FR)
-                  // Description (ES)
-                  // Description (DE)</span>
+                    <span className="label-text">Description (FR)</span>
                   </label>
                   <textarea
                     name="description_fr"
-                <textarea
-                  name="description_es"
-                  value={formData.description_es}
-                  onInput={handleChange}
-                  className="textarea textarea-bordered w-full"
-                  placeholder="Description (ES)"
-                  rows={3}
-                />
-                <textarea
-                  name="description_de"
-                  value={formData.description_de}
-                  onInput={handleChange}
-                  className="textarea textarea-bordered w-full"
-                  placeholder="Description (DE)"
-                  rows={3}
-                />
                     value={formData.description_fr}
                     onInput={handleChange}
                     className="textarea textarea-bordered w-full"
@@ -930,28 +852,10 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
 
                 <div>
                   <label className="label">
-                    <span className="label-text">Recommendation (FR)
-                // Recommendation (ES)
-                // Recommendation (DE)</span>
+                    <span className="label-text">Recommendation (FR)</span>
                   </label>
                   <textarea
                     name="recommendation_fr"
-                <textarea
-                  name="recommendation_es"
-                  value={formData.recommendation_es}
-                  onInput={handleChange}
-                  className="textarea textarea-bordered w-full"
-                  placeholder="Recommendation (ES)"
-                  rows={3}
-                />
-                <textarea
-                  name="recommendation_de"
-                  value={formData.recommendation_de}
-                  onInput={handleChange}
-                  className="textarea textarea-bordered w-full"
-                  placeholder="Recommendation (DE)"
-                  rows={3}
-                />
                     value={formData.recommendation_fr}
                     onInput={handleChange}
                     className="textarea textarea-bordered w-full"
@@ -987,28 +891,10 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
 
                 <div>
                   <label className="label">
-                    <span className="label-text">Made Of (FR)
-                // Made Of (ES)
-                // Made Of (DE)</span>
+                    <span className="label-text">Made Of (FR)</span>
                   </label>
                   <textarea
                     name="madeof_fr"
-                <textarea
-                  name="madeof_es"
-                  value={formData.madeof_es}
-                  onInput={handleChange}
-                  className="textarea textarea-bordered w-full"
-                  placeholder="Made Of (ES)"
-                  rows={3}
-                />
-                <textarea
-                  name="madeof_de"
-                  value={formData.madeof_de}
-                  onInput={handleChange}
-                  className="textarea textarea-bordered w-full"
-                  placeholder="Made Of (DE)"
-                  rows={3}
-                />
                     value={formData.madeof_fr}
                     onInput={handleChange}
                     className="textarea textarea-bordered w-full"

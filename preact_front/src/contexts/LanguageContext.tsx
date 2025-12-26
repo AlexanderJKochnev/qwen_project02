@@ -5,6 +5,8 @@ import { API_BASE_URL } from '../config/api';
 
 // Define the supported languages as a dynamic type
 export type Language = string;
+// Add translations for es here if needed
+// Add translations for de here if needed
 
 // Define the context type
 interface LanguageContextType {
@@ -19,7 +21,7 @@ const LanguageContext = createContext<LanguageContextType>({
   language: 'en',
   setLanguage: () => {},
   t: (key: string) => key,
-  availableLanguages: ['en', 'ru', 'fr'],
+  availableLanguages: ['en', 'ru', 'fr', 'de'],
 });
 
 // Translation dictionary
@@ -335,7 +337,7 @@ export const LanguageProvider = ({ children }: { children: VNode }) => {
         }); // Using the proper API endpoint
         if (response.ok) {
           const data = await response.json();
-          const langs = data.languages || ['en', 'ru', 'fr'];
+          const langs = data.languages || ['en', 'ru', 'fr', 'de'];
           setAvailableLanguages(langs);
           
           // Check for saved language preference in localStorage
@@ -353,7 +355,7 @@ export const LanguageProvider = ({ children }: { children: VNode }) => {
           // Fallback to default languages if API call fails
           const defaultLang = 'en';
           const browserLang = navigator.language.split('-')[0];
-          const langs = ['en', 'ru', 'fr']; // Default fallback
+          const langs = ['en', 'ru', 'fr', 'de']; // Default fallback
           setAvailableLanguages(langs);
           const preferredLang = langs.includes(browserLang) ? browserLang : defaultLang;
           setLanguage(preferredLang);
@@ -364,7 +366,7 @@ export const LanguageProvider = ({ children }: { children: VNode }) => {
         const defaultLang = 'en';
         const browserLang = navigator.language.split('-')[0];
         // Use the same defaults as in the project config
-        const langs = ['en', 'ru', 'fr']; // This should match the backend settings
+        const langs = ['en', 'ru', 'fr', 'de']; // This should match the backend settings
         setAvailableLanguages(langs);
         const preferredLang = langs.includes(browserLang) ? browserLang : defaultLang;
         setLanguage(preferredLang);

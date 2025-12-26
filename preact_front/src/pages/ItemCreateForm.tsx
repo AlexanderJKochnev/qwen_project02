@@ -13,9 +13,15 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
     title: '',
     title_ru: '',
     title_fr: '',
+    title_es: '',
+    title_de: '',
     subtitle: '',
     subtitle_ru: '',
     subtitle_fr: '',
+    subtitle_es: '',
+    title_es: '',
+    subtitle_de: '',
+    title_de: '',
     subcategory_id: '',
     sweetness_id: '',
     subregion_id: '',
@@ -25,12 +31,18 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
     description: '',
     description_ru: '',
     description_fr: '',
+    description_es: '',
+    description_de: '',
     recommendation: '',
     recommendation_ru: '',
     recommendation_fr: '',
+    recommendation_es: '',
+    recommendation_de: '',
     madeof: '',
     madeof_ru: '',
     madeof_fr: '',
+    madeof_es: '',
+    madeof_de: '',
     vol: '',
     price: '',
     varietals: [] as string[],
@@ -239,11 +251,29 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
 
                 <div>
                   <label className="label">
-                    <span className="label-text">Title (FR)</span>
+                    <span className="label-text">Title (FR)
+                    // Title (ES)
+                    // Title (DE)</span>
                   </label>
                   <input
                     type="text"
                     name="title_fr"
+                  <input
+                    type="text"
+                    name="title_es"
+                    value={formData.title_es}
+                    onInput={handleChange}
+                    className="input input-bordered w-full"
+                    placeholder="Title (ES)"
+                  />
+                  <input
+                    type="text"
+                    name="title_de"
+                    value={formData.title_de}
+                    onInput={handleChange}
+                    className="input input-bordered w-full"
+                    placeholder="Title (DE)"
+                  />
                     value={formData.title_fr}
                     onInput={handleChange}
                     className="input input-bordered w-full"
@@ -282,11 +312,29 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
 
                 <div>
                   <label className="label">
-                    <span className="label-text">Subtitle (FR)</span>
+                    <span className="label-text">Subtitle (FR)
+                    // Subtitle (ES)
+                    // Subtitle (DE)</span>
                   </label>
                   <input
                     type="text"
                     name="subtitle_fr"
+                <input
+                  type="text"
+                  name="subtitle_es"
+                  value={formData.subtitle_es}
+                  onInput={handleChange}
+                  className="input input-bordered w-full"
+                  placeholder="Subtitle (ES)"
+                />
+                <input
+                  type="text"
+                  name="subtitle_de"
+                  value={formData.subtitle_de}
+                  onInput={handleChange}
+                  className="input input-bordered w-full"
+                  placeholder="Subtitle (DE)"
+                />
                     inputmode="latin"
                     value={formData.subtitle_fr}
                     onInput={handleChange}
@@ -506,10 +554,28 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
 
                 <div>
                   <label className="label">
-                    <span className="label-text">Description (FR)</span>
+                    <span className="label-text">Description (FR)
+                  // Description (ES)
+                  // Description (DE)</span>
                   </label>
                   <textarea
                     name="description_fr"
+                <textarea
+                  name="description_es"
+                  value={formData.description_es}
+                  onInput={handleChange}
+                  className="textarea textarea-bordered w-full"
+                  placeholder="Description (ES)"
+                  rows={3}
+                />
+                <textarea
+                  name="description_de"
+                  value={formData.description_de}
+                  onInput={handleChange}
+                  className="textarea textarea-bordered w-full"
+                  placeholder="Description (DE)"
+                  rows={3}
+                />
                     value={formData.description_fr}
                     onInput={handleChange}
                     className="textarea textarea-bordered w-full"
@@ -556,10 +622,28 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
 
                 <div>
                   <label className="label">
-                    <span className="label-text">Recommendation (FR)</span>
+                    <span className="label-text">Recommendation (FR)
+                // Recommendation (ES)
+                // Recommendation (DE)</span>
                   </label>
                   <textarea
                     name="recommendation_fr"
+                <textarea
+                  name="recommendation_es"
+                  value={formData.recommendation_es}
+                  onInput={handleChange}
+                  className="textarea textarea-bordered w-full"
+                  placeholder="Recommendation (ES)"
+                  rows={3}
+                />
+                <textarea
+                  name="recommendation_de"
+                  value={formData.recommendation_de}
+                  onInput={handleChange}
+                  className="textarea textarea-bordered w-full"
+                  placeholder="Recommendation (DE)"
+                  rows={3}
+                />
                     value={formData.recommendation_fr}
                     onInput={handleChange}
                     className="textarea textarea-bordered w-full"
@@ -598,10 +682,28 @@ export const ItemCreateForm = ({ onClose, onCreated }: ItemCreateFormProps) => {
 
                 <div>
                   <label className="label">
-                    <span className="label-text">Made Of (FR)</span>
+                    <span className="label-text">Made Of (FR)
+                // Made Of (ES)
+                // Made Of (DE)</span>
                   </label>
                   <textarea
                     name="madeof_fr"
+                <textarea
+                  name="madeof_es"
+                  value={formData.madeof_es}
+                  onInput={handleChange}
+                  className="textarea textarea-bordered w-full"
+                  placeholder="Made Of (ES)"
+                  rows={3}
+                />
+                <textarea
+                  name="madeof_de"
+                  value={formData.madeof_de}
+                  onInput={handleChange}
+                  className="textarea textarea-bordered w-full"
+                  placeholder="Made Of (DE)"
+                  rows={3}
+                />
                     value={formData.madeof_fr}
                     onInput={handleChange}
                     className="textarea textarea-bordered w-full"

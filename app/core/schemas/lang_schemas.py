@@ -86,3 +86,55 @@ class DetailViewFr(DetailView):
     @property
     def display_description(self) -> str:
         return self.description_fr or self.description or self.description_ru or ""
+
+class ListViewDE(ListView):
+    @computed_field(description='DE',  # Это будет подписью/лейблом (human readable)
+                    title='Отображаемое имя'  # Это для swagger (machine readable)
+                    )
+    @property
+    def display_name(self) -> str:
+        \"\"\"Возвращает первое непустое значение из name, name_ru, name_fr и других языков\"\"\"
+        return self.name_de or self.name or self.name_ru or self.name_fr or ""
+
+
+class DetailViewDE(DetailView):
+    @computed_field(description='DE',  # Это будет подписью/лейблом (human readable)
+                    title='Отображаемое имя'  # Это для swagger (machine readable)
+                    )
+    @property
+    def display_name(self) -> str:
+        \"\"\"Возвращает первое непустое значение из name, name_ru, name_fr и других языков\"\"\"
+        return self.name_de or self.name or self.name_ru or self.name_fr or ""
+
+    @computed_field(description='DE',  # Это будет подписью/лейблом (human readable)
+                    title='Отображаемое имя'  # Это для swagger (machine readable)
+                    )
+    @property
+    def display_description(self) -> str:
+        return self.description_de or self.description or self.description_ru or self.description_fr or ""
+
+class ListViewES(ListView):
+    @computed_field(description='ES',  # Это будет подписью/лейблом (human readable)
+                    title='Отображаемое имя'  # Это для swagger (machine readable)
+                    )
+    @property
+    def display_name(self) -> str:
+        \"\"\"Возвращает первое непустое значение из name, name_ru, name_fr и других языков\"\"\"
+        return self.name_es or self.name or self.name_ru or self.name_fr or ""
+
+
+class DetailViewES(DetailView):
+    @computed_field(description='ES',  # Это будет подписью/лейблом (human readable)
+                    title='Отображаемое имя'  # Это для swagger (machine readable)
+                    )
+    @property
+    def display_name(self) -> str:
+        \"\"\"Возвращает первое непустое значение из name, name_ru, name_fr и других языков\"\"\"
+        return self.name_es or self.name or self.name_ru or self.name_fr or ""
+
+    @computed_field(description='ES',  # Это будет подписью/лейблом (human readable)
+                    title='Отображаемое имя'  # Это для swagger (machine readable)
+                    )
+    @property
+    def display_description(self) -> str:
+        return self.description_es or self.description or self.description_ru or self.description_fr or ""

@@ -73,9 +73,13 @@ export const HandbookCreateForm = (props: HandbookCreateFormProps) => {
     name: '',
     name_ru: '',
     name_fr: '',
+    name_es: '',
+    name_de: '',
     description: '',
     description_ru: '',
     description_fr: '',
+    description_es: '',
+    description_de: '',
     country_id: undefined,
     category_id: undefined,
     region_id: undefined,
@@ -182,11 +186,29 @@ export const HandbookCreateForm = (props: HandbookCreateFormProps) => {
               
               <div>
                 <label className="label">
-                  <span className="label-text">Name (French)</span>
+                  <span className="label-text">Name (French)
+                // Name (ES)
+                // Name (DE)</span>
                 </label>
                 <input
                   type="text"
                   name="name_fr"
+                <input
+                  type="text"
+                  name="name_es"
+                  value={formData.name_es}
+                  onInput={handleChange}
+                  className="input input-bordered w-full"
+                  placeholder="Name (ES)"
+                />
+                <input
+                  type="text"
+                  name="name_de"
+                  value={formData.name_de}
+                  onInput={handleChange}
+                  className="input input-bordered w-full"
+                  placeholder="Name (DE)"
+                />
                   value={formData.name_fr}
                   onInput={handleChange}
                   className="input input-bordered w-full"
@@ -224,10 +246,28 @@ export const HandbookCreateForm = (props: HandbookCreateFormProps) => {
               
               <div>
                 <label className="label">
-                  <span className="label-text">Description (French)</span>
+                  <span className="label-text">Description (French)
+                // Description (ES)
+                // Description (DE)</span>
                 </label>
                 <textarea
                   name="description_fr"
+                <textarea
+                  name="description_es"
+                  value={formData.description_es}
+                  onInput={handleChange}
+                  className="textarea textarea-bordered w-full"
+                  rows={3}
+                  placeholder="Description (ES)"
+                />
+                <textarea
+                  name="description_de"
+                  value={formData.description_de}
+                  onInput={handleChange}
+                  className="textarea textarea-bordered w-full"
+                  rows={3}
+                  placeholder="Description (DE)"
+                />
                   value={formData.description_fr}
                   onInput={handleChange}
                   className="textarea textarea-bordered w-full"
