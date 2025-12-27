@@ -90,13 +90,31 @@ class RawdataRepository(Repository):
                 fts_column = model.fts_english
         ts_query = func.to_tsquery(language, search_str)
         search_condition = fts_column.op('@@')(ts_query)
-        stmt = select(model).where(search_condition).order_by(model.id)
-        stmt = stmt.offset(skip).limit(limit)
+        
+        # Optimized query - only apply relationship loading for Rawdata model
+        if model == Rawdata:
+            stmt = select(model).where(search_condition).options(
+                selectinload(Rawdata.name)
+                .options(selectinload(Name.status),
+                         selectinload(Name.code)
+                         .selectinload(Code.status)),
+                joinedload(Rawdata.status)  # Свой статус - как в закомментированном get_query
+            ).order_by(model.id)
+        else:
+            stmt = select(model).where(search_condition).order_by(model.id)
+        
+        # Count query
         count_stmt = select(count(model.id)).where(search_condition)
-        total_count_result = await session.execute(count_stmt)
-        total_count = total_count_result.scalar() or 0
+        
+        # Execute count query
+        count_result = await session.execute(count_stmt)
+        total_count = count_result.scalar() or 0
+        
         if total_count == 0:
             return [], total_count
+        
+        # Apply pagination to the main query
+        stmt = stmt.offset(skip).limit(limit)
         result_result = await session.execute(stmt)
         result = result_result.scalars().all()
         return result, total_count
