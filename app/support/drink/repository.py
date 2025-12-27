@@ -43,43 +43,153 @@ class DrinkRepository(Repository):
                                    limit: int = None,
                                    category_enum: str = None,
                                    country_enum: str = None) -> Optional[List[ModelType]]:
-        """ Поиск по всем заданным текстовым полям основной таблицы
-            Gроверить и удалить НЕ ИСПОЛЬЗХУЕТСЯ
-        """
+        """ Поиск по всем заданным текстовым полям основной таблицы """
         try:
-            if category_enum:   # ищем в subcategory->category
-                Drink.subcategory
-            # ищем category_id:
-            dlimit = limit * 2 if limit else limit
-            if skip and limit:
-                dskip = skip if skip == 0 else skip - limit
-            else:
-                dskip = None
-            drinks, count = await DrinkRepository.search_in_main_table(search_str, Drink, session,
-                                                                       skip=dskip, limit=dlimit,
-                                                                       category_enum=category_enum,
-                                                                       country_enum=country_enum)
-            if count == 0:
-                records = []
-                total = 0
-            else:
-                conditions = [a.id for a in drinks]
-                query = cls.get_query(model).where(model.drink_id.in_(conditions))
-                # получаем общее количество записей удовлетворяющих условию
-                count = select(func.count()).select_from(model).where(model.drink_id.in_(conditions))
-                result = await session.execute(count)
-                total = result.scalar()
-                # Добавляем пагинацию если указано
-                if limit is not None:
-                    query = query.limit(limit)
-                if skip is not None:
-                    query = query.offset(skip)
-                result = await session.execute(query)
-                records = result.scalars().all()
-            return (records if records else [], total)
+            query = cls.get_query(model)
+            
+            # Apply category filter if provided
+            if category_enum:
+                from app.support.subcategory.model import Subcategory
+                from app.support.category.model import Category
+                from app.core.utils.alchemy_utils import create_enum_conditions
+                category_cond = create_enum_conditions(Category, category_enum)
+                query = (query
+                         .join(Drink.subcategory)
+                         .join(Subcategory.category).where(category_cond))
+            
+            # Apply country filter if provided
+            if country_enum:
+                from app.support.country.model import Country
+                from app.support.region.model import Region
+                from app.support.subregion.model import Subregion
+                from app.core.utils.alchemy_utils import create_enum_conditions
+                country_cond = create_enum_conditions(Country, country_enum)
+                query = (query.join(Drink.subregion)
+                         .join(Subregion.region)
+                         .join(Region.country).where(country_cond))
+            
+            # Apply search filter if provided
+            if search_str:
+                from app.core.utils.alchemy_utils import create_search_conditions2
+                search_cond = create_search_conditions2(Drink, search_str)
+                query = query.where(search_cond)
+            
+            # Get total count
+            count_query = select(func.count()).select_from(query.subquery())
+            count_result = await session.execute(count_query)
+            total = count_result.scalar()
+            
+            if total == 0:
+                return [], 0
+            
+            # Apply pagination
+            if skip is not None:
+                query = query.offset(skip)
+            if limit is not None:
+                query = query.limit(limit)
+            
+            result = await session.execute(query)
+            records = result.scalars().all()
+            
+            return records, total
         except Exception as e:
             logger.error(f'ошибка search_in_main_table: {e}')
             print(f'search_in_main_table.error: {e}')
+
+
+    @classmethod
+    async def search_by_trigram_index(cls, search_str: str, model: ModelType, session: AsyncSession,
+                                      skip: int = None, limit: int = None,
+                                      category_enum: str = None,
+                                      country_enum: str = None):
+        """Поиск элементов с использованием триграммного индекса"""
+        from sqlalchemy.types import String
+        
+        if search_str is None or search_str.strip() == '':
+            # Если search_str пустой, возвращаем все записи с пагинацией
+            query = cls.get_query(model)
+            
+            # Apply category filter if provided
+            if category_enum:
+                from app.support.subcategory.model import Subcategory
+                from app.support.category.model import Category
+                from app.core.utils.alchemy_utils import create_enum_conditions
+                category_cond = create_enum_conditions(Category, category_enum)
+                query = (query
+                         .join(Drink.subcategory)
+                         .join(Subcategory.category).where(category_cond))
+            
+            # Apply country filter if provided
+            if country_enum:
+                from app.support.country.model import Country
+                from app.support.region.model import Region
+                from app.support.subregion.model import Subregion
+                from app.core.utils.alchemy_utils import create_enum_conditions
+                country_cond = create_enum_conditions(Country, country_enum)
+                query = (query.join(Drink.subregion)
+                         .join(Subregion.region)
+                         .join(Region.country).where(country_cond))
+            
+            # Get total count
+            count_query = select(func.count()).select_from(query.subquery())
+            count_result = await session.execute(count_query)
+            total = count_result.scalar()
+            
+            # Apply pagination
+            if skip is not None:
+                query = query.offset(skip)
+            if limit is not None:
+                query = query.limit(limit)
+            
+            result = await session.execute(query)
+            records = result.scalars().all()
+            
+            return records, total
+
+        # Создаем строку для поиска с использованием триграммного индекса
+        # Используем ту же логику, что и в индексе drink_trigram_idx_combined
+        search_expr = get_drink_search_expression(Drink)
+
+        query = cls.get_query(model).where(
+            search_expr.cast(String).ilike(f'%{search_str}%')
+        )
+        
+        # Apply category filter if provided
+        if category_enum:
+            from app.support.subcategory.model import Subcategory
+            from app.support.category.model import Category
+            from app.core.utils.alchemy_utils import create_enum_conditions
+            category_cond = create_enum_conditions(Category, category_enum)
+            query = (query
+                     .join(Drink.subcategory)
+                     .join(Subcategory.category).where(category_cond))
+        
+        # Apply country filter if provided
+        if country_enum:
+            from app.support.country.model import Country
+            from app.support.region.model import Region
+            from app.support.subregion.model import Subregion
+            from app.core.utils.alchemy_utils import create_enum_conditions
+            country_cond = create_enum_conditions(Country, country_enum)
+            query = (query.join(Drink.subregion)
+                     .join(Subregion.region)
+                     .join(Region.country).where(country_cond))
+        
+        # Get total count
+        count_query = select(func.count()).select_from(query.subquery())
+        count_result = await session.execute(count_query)
+        total = count_result.scalar()
+
+        # Apply pagination
+        if skip is not None:
+            query = query.offset(skip)
+        if limit is not None:
+            query = query.limit(limit)
+
+        result = await session.execute(query)
+        records = result.scalars().all()
+
+        return records, total
 
 
 def get_drink_search_expression(cls):

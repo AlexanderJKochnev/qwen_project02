@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.types import String
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.support.drink.model import Drink, DrinkFood, DrinkVarietal
-from app.support.drink.repository import DrinkRepository  # , get_drink_search_expression
+from app.support.drink.repository import DrinkRepository, get_drink_search_expression
 from app.support.item.model import Item
 from app.support.country.model import Country
 from app.support.region.model import Region
@@ -310,7 +310,26 @@ class ItemRepository(Repository):
             # Если нет подходящих полей для поиска, возвращаем пустой результат
             return [], 0
 
-        # Формируем запрос с JOIN на Drink
+        # First, get matching drink IDs to avoid loading all related data during search
+        drink_search_query = select(Drink.id).where(search_condition)
+        
+        if skip is not None:
+            drink_search_query = drink_search_query.offset(skip)
+        if limit is not None:
+            drink_search_query = drink_search_query.limit(limit)
+        
+        result = await session.execute(drink_search_query)
+        matching_drink_ids = [row[0] for row in result.fetchall()]
+        
+        if not matching_drink_ids:
+            return [], 0
+
+        # Count total matching records
+        count_query = select(func.count(Item.id)).join(Item.drink).where(Drink.id.in_(matching_drink_ids))
+        count_result = await session.execute(count_query)
+        total = count_result.scalar()
+
+        # Now get the actual items with their related data
         query = select(Item).options(
             selectinload(Item.drink).options(
                 selectinload(Drink.subregion).options(
@@ -321,14 +340,10 @@ class ItemRepository(Repository):
                 selectinload(Drink.subcategory).selectinload(Subcategory.category),
                 selectinload(Drink.sweetness)
             )
-        ).join(Item.drink).where(search_condition)
+        ).join(Item.drink).where(Drink.id.in_(matching_drink_ids))
+        
         query = query.order_by(Item.id.asc())
-        # Получаем общее количество записей
-        count_query = select(func.count(Item.id)).join(Item.drink).where(search_condition)
-        count_result = await session.execute(count_query)
-        total = count_result.scalar()
-
-        # Добавляем пагинацию
+        
         if skip is not None:
             query = query.offset(skip)
         if limit is not None:
@@ -365,8 +380,28 @@ class ItemRepository(Repository):
         # Используем ту же логику, что и в индексе drink_trigram_idx_combined
         search_expr = get_drink_search_expression(Drink)
 
-        # Формируем запрос с использованием триграммного поиска
-        # Используем оператор % который работает с индексом gin_trgm_ops
+        # First, get matching drink IDs to avoid loading all related data during search
+        drink_search_query = select(Drink.id).where(
+            search_expr.cast(String).ilike(f'%{search_str}%')
+        )
+        
+        if skip is not None:
+            drink_search_query = drink_search_query.offset(skip)
+        if limit is not None:
+            drink_search_query = drink_search_query.limit(limit)
+        
+        result = await session.execute(drink_search_query)
+        matching_drink_ids = [row[0] for row in result.fetchall()]
+        
+        if not matching_drink_ids:
+            return [], 0
+
+        # Count total matching records
+        count_query = select(func.count(Item.id)).join(Item.drink).where(Drink.id.in_(matching_drink_ids))
+        count_result = await session.execute(count_query)
+        total = count_result.scalar()
+
+        # Now get the actual items with their related data
         query = select(Item).options(
             selectinload(Item.drink).options(
                 selectinload(Drink.subregion).options(
@@ -377,16 +412,10 @@ class ItemRepository(Repository):
                 selectinload(Drink.subcategory).selectinload(Subcategory.category),
                 selectinload(Drink.sweetness)
             )
-        ).join(Item.drink).where(
-            search_expr.cast(String).ilike(f'%{search_str}%')
-        )
-        count_query = select(func.count(Item.id)).join(Item.drink).where(
-            search_expr.cast(String).ilike(f'%{search_str}%')
-        )  # .params(search_str=search_str)
-        count_result = await session.execute(count_query)
-        total = count_result.scalar()
-
-        # Добавляем пагинацию
+        ).join(Item.drink).where(Drink.id.in_(matching_drink_ids))
+        
+        query = query.order_by(Item.id.asc())
+        
         if skip is not None:
             query = query.offset(skip)
         if limit is not None:
@@ -412,31 +441,4 @@ class ItemRepository(Repository):
         return flat_items, total
 
 
-def get_drink_search_expression(cls):
-    """
-        для поиска по триграммному индексу с использованием литералов
-    """
 
-    # Определяем литералы для пустой строки и пробела
-    EMPTY_STRING = literal_column("''")
-    SPACE = literal_column("' '")
-
-    return (func.coalesce(cls.title, EMPTY_STRING) + SPACE + func.coalesce(
-        cls.title_ru, EMPTY_STRING
-    ) + SPACE + func.coalesce(cls.title_fr, EMPTY_STRING) + SPACE + func.coalesce(
-        cls.subtitle, EMPTY_STRING
-    ) + SPACE + func.coalesce(
-        cls.subtitle_ru, EMPTY_STRING
-    ) + SPACE + func.coalesce(cls.subtitle_fr, EMPTY_STRING) + SPACE + func.coalesce(
-        cls.description, EMPTY_STRING
-    ) + SPACE + func.coalesce(
-        cls.description_ru, EMPTY_STRING
-    ) + SPACE + func.coalesce(cls.description_fr, EMPTY_STRING) + SPACE + func.coalesce(
-        cls.recommendation, EMPTY_STRING
-    ) + SPACE + func.coalesce(
-        cls.recommendation_ru, EMPTY_STRING
-    ) + SPACE + func.coalesce(cls.recommendation_fr, EMPTY_STRING) + SPACE + func.coalesce(
-        cls.madeof, EMPTY_STRING
-    ) + SPACE + func.coalesce(
-        cls.madeof_ru, EMPTY_STRING
-    ) + SPACE + func.coalesce(cls.madeof_fr, EMPTY_STRING))
