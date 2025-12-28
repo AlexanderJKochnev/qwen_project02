@@ -1,59 +1,58 @@
-__pycache__/
+```
+# Compiled and build artifacts
 *.pyc
-*.pyo
-*.pyd
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
+__pycache__/
+*.o
+*.obj
 dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+build/
+target/
 
-# Coverage
-.coverage
-.coverage.*
-htmlcov/
-.coverage.xml
-.pytest_cache/
-
-# Environment
-# .env
-# .env.local
-# .env.*
-.venv/
+# Dependencies
+node_modules/
 venv/
-ENV/
-env.bak/
-venv.bak/
+.venv/
+.env
+.env.local
+.env.*
 
-# IDE
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+
+# Editors
 .vscode/
 .idea/
-*.swp
-*.swo
-*.tmp
 
-# OS
+# Python specific
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+*.so
+.coverage
+htmlcov/
+.coverage.*
+.pytest_cache/
+.mypy_cache/
+
+# Node.js specific
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+node_modules/
+dist/
+build/
+
+# General build outputs
+*.min.js
+*.min.css
+bundle.js
+*.bundle.js
+
+# OS generated files
 .DS_Store
 Thumbs.db
-
-TODO.md
-migration_volume
-mongodb_data
-pg_data
-pg_dump
-upload_volume
+```

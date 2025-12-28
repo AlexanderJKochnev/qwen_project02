@@ -7,6 +7,7 @@ import { ItemImage } from '../components/ItemImage';
 import { deleteItem } from '../lib/apiClient';
 import { useNotification } from '../hooks/useNotification';
 import { useLanguage } from '../contexts/LanguageContext';
+import { IMAGE_BASE_URL } from '../config/api';
 
 // Define the expected response type from backend according to requirements
 interface ItemDetailResponse {
@@ -35,6 +36,8 @@ export const ItemDetailView = () => {
   const idParam = pathParts[pathParts.length - 1]; // Get the last part of the path
   const id = parseInt(idParam);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showEnlargedImage, setShowEnlargedImage] = useState(false);
+  const [enlargedImageUrl, setEnlargedImageUrl] = useState('');
   const { showNotification } = useNotification();
   
   // Check if ID is valid
@@ -64,6 +67,18 @@ export const ItemDetailView = () => {
       showNotification('Failed to delete item', 'error');
     }
     setShowConfirmDialog(false);
+  };
+
+  const handleShowEnlargedImage = () => {
+    if (data && data.image_id) {
+      const imageUrl = `${IMAGE_BASE_URL}/mongodb/images/${data.image_id}`;
+      setEnlargedImageUrl(imageUrl);
+      setShowEnlargedImage(true);
+    }
+  };
+
+  const handleCloseEnlargedImage = () => {
+    setShowEnlargedImage(false);
   };
 
   if (loading) {
@@ -135,7 +150,11 @@ export const ItemDetailView = () => {
 
       <div className="detail-content-layout">
         <div className="fixed-block">
-          <figure>
+          <figure 
+            onMouseEnter={handleShowEnlargedImage}
+            onClick={handleShowEnlargedImage}
+            style={{ cursor: 'pointer' }}
+          >
              <ItemImage image_id={data.image_id} size="large" />
           </figure>
         </div>
@@ -211,6 +230,60 @@ export const ItemDetailView = () => {
           })}
         </div>
       </div>
+
+      {/* Enlarged Image Popup */}
+      {showEnlargedImage && (
+        <div 
+          className="modal modal-open" 
+          onClick={handleCloseEnlargedImage}
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            zIndex: 1000
+          }}
+        >
+          <div 
+            className="modal-box p-0"
+            style={{
+              margin: 0,
+              maxWidth: 'none',
+              width: '85vw',
+              height: '85vh',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: 'transparent',
+              border: 'thin solid #ccc'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={enlargedImageUrl}
+              alt="Enlarged view"
+              style={{
+                maxWidth: '85vw',
+                maxHeight: '85vh',
+                objectFit: 'contain'
+              }}
+              onLoad={() => {
+                // Image loaded successfully
+              }}
+              onError={(e) => {
+                console.error('Error loading enlarged image:', e);
+              }}
+            />
+            <button
+              className="btn btn-circle btn-sm absolute top-2 right-2 bg-white text-black"
+              onClick={handleCloseEnlargedImage}
+              aria-label="Close"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Confirmation Dialog */}
       {showConfirmDialog && (
