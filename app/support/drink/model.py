@@ -22,24 +22,44 @@ if TYPE_CHECKING:
 class Lang:
     __abstract__ = True
     title: Mapped[str_null_false]
+# /workspace/app/support/drink/model.py ru start 0010
     title_ru: Mapped[str_null_true]
+# /workspace/app/support/drink/model.py ru end 0010
+# /workspace/app/support/drink/model.py fr start 0010
     title_fr: Mapped[str_null_true]
+# /workspace/app/support/drink/model.py fr end 0010
 
     subtitle: Mapped[str_null_true]
+# /workspace/app/support/drink/model.py ru start 0009
     subtitle_ru: Mapped[str_null_true]
+# /workspace/app/support/drink/model.py ru end 0009
+# /workspace/app/support/drink/model.py fr start 0009
     subtitle_fr: Mapped[str_null_true]
+# /workspace/app/support/drink/model.py fr end 0009
 
     description: Mapped[descr]
+# /workspace/app/support/drink/model.py ru start 0008
     description_ru: Mapped[descr]
+# /workspace/app/support/drink/model.py ru end 0008
+# /workspace/app/support/drink/model.py fr start 0008
     description_fr: Mapped[descr]
+# /workspace/app/support/drink/model.py fr end 0008
 
     recommendation: Mapped[descr]
+# /workspace/app/support/drink/model.py ru start 0007
     recommendation_ru: Mapped[descr]
+# /workspace/app/support/drink/model.py ru end 0007
+# /workspace/app/support/drink/model.py fr start 0007
     recommendation_fr: Mapped[descr]
+# /workspace/app/support/drink/model.py fr end 0007
 
     madeof: Mapped[descr]
+# /workspace/app/support/drink/model.py ru start 0006
     madeof_ru: Mapped[descr]
+# /workspace/app/support/drink/model.py ru end 0006
+# /workspace/app/support/drink/model.py fr start 0006
     madeof_fr: Mapped[descr]
+# /workspace/app/support/drink/model.py fr end 0006
 
 
 class Drink(Base, BaseAt, Lang):
@@ -116,20 +136,40 @@ create_gin_index_sql = DDL("""
     CREATE INDEX drink_trigram_idx_combined ON drinks
         USING gin (
             (coalesce(title, '') || ' ' ||
+# /workspace/app/support/drink/model.py ru start 0005
              coalesce(title_ru, '') || ' ' ||
+# /workspace/app/support/drink/model.py ru end 0005
+# /workspace/app/support/drink/model.py fr start 0005
              coalesce(title_fr, '') || ' ' ||
+# /workspace/app/support/drink/model.py fr end 0005
              coalesce(subtitle, '') || ' ' ||
+# /workspace/app/support/drink/model.py ru start 0004
              coalesce(subtitle_ru, '') || ' ' ||
+# /workspace/app/support/drink/model.py ru end 0004
+# /workspace/app/support/drink/model.py fr start 0004
              coalesce(subtitle_fr, '') || ' ' ||
+# /workspace/app/support/drink/model.py fr end 0004
              coalesce(description, '') || ' ' ||
+# /workspace/app/support/drink/model.py ru start 0003
              coalesce(description_ru, '') || ' ' ||
+# /workspace/app/support/drink/model.py ru end 0003
+# /workspace/app/support/drink/model.py fr start 0003
              coalesce(description_fr, '') || ' ' ||
+# /workspace/app/support/drink/model.py fr end 0003
              coalesce(recommendation, '') || ' ' ||
+# /workspace/app/support/drink/model.py ru start 0002
              coalesce(recommendation_ru, '') || ' ' ||
+# /workspace/app/support/drink/model.py ru end 0002
+# /workspace/app/support/drink/model.py fr start 0002
              coalesce(recommendation_fr, '') || ' ' ||
+# /workspace/app/support/drink/model.py fr end 0002
              coalesce(madeof, '') || ' ' ||
+# /workspace/app/support/drink/model.py ru start 0001
              coalesce(madeof_ru, '') || ' ' ||
+# /workspace/app/support/drink/model.py ru end 0001
+# /workspace/app/support/drink/model.py fr start 0001
              coalesce(madeof_fr, ''))
+# /workspace/app/support/drink/model.py fr end 0001
             gin_trgm_ops
         );
     """)

@@ -199,18 +199,38 @@ def get_drink_search_expression(cls):
         для поиска по триграммному индексу
 
     """
+# /workspace/app/support/drink/repository.py ru start 0005
     return (func.coalesce(cls.title, '') + ' ' + func.coalesce(cls.title_ru, '') + ' ' + func.coalesce(
+# /workspace/app/support/drink/repository.py ru end 0005
+# /workspace/app/support/drink/repository.py fr start 0005
             cls.title_fr, ''
+# /workspace/app/support/drink/repository.py fr end 0005
+# /workspace/app/support/drink/repository.py ru start 0004
             ) + ' ' + func.coalesce(cls.subtitle, '') + ' ' + func.coalesce(cls.subtitle_ru, '') + ' ' + func.coalesce(
+# /workspace/app/support/drink/repository.py ru end 0004
+# /workspace/app/support/drink/repository.py fr start 0004
             cls.subtitle_fr, ''
+# /workspace/app/support/drink/repository.py fr end 0004
             ) + ' ' + func.coalesce(cls.description, '') + ' ' + func.coalesce(
+# /workspace/app/support/drink/repository.py ru start 0003
             cls.description_ru, ''
+# /workspace/app/support/drink/repository.py ru end 0003
             ) + ' ' + func.coalesce(
+# /workspace/app/support/drink/repository.py fr start 0003
             cls.description_fr, ''
+# /workspace/app/support/drink/repository.py fr end 0003
             ) + ' ' + func.coalesce(cls.recommendation, '') + ' ' + func.coalesce(
+# /workspace/app/support/drink/repository.py ru start 0002
             cls.recommendation_ru, ''
+# /workspace/app/support/drink/repository.py ru end 0002
             ) + ' ' + func.coalesce(
+# /workspace/app/support/drink/repository.py fr start 0002
             cls.recommendation_fr, ''
+# /workspace/app/support/drink/repository.py fr end 0002
+# /workspace/app/support/drink/repository.py ru start 0001
             ) + ' ' + func.coalesce(cls.madeof, '') + ' ' + func.coalesce(cls.madeof_ru, '') + ' ' + func.coalesce(
+# /workspace/app/support/drink/repository.py ru end 0001
+# /workspace/app/support/drink/repository.py fr start 0001
             cls.madeof_fr, ''
+# /workspace/app/support/drink/repository.py fr end 0001
             ))

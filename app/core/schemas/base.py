@@ -74,29 +74,45 @@ class UniqueSchema(BaseModel):
 class DescriptionSchema(BaseModel):
     """ добавлять поля описаний на других языках """
     description: Optional[str] = None
+# /workspace/app/core/schemas/base.py ru start 0004
     description_ru: Optional[str] = None
+# /workspace/app/core/schemas/base.py ru end 0004
+# /workspace/app/core/schemas/base.py fr start 0004
     description_fr: Optional[str] = None
+# /workspace/app/core/schemas/base.py fr end 0004
 
 
 class DescriptionExcludeSchema(BaseModel):
     """ добавлять поля описаний на других языках """
     description: Optional[str] = Field(exclude=True)
+# /workspace/app/core/schemas/base.py ru start 0003
     description_ru: Optional[str] = Field(exclude=True)
+# /workspace/app/core/schemas/base.py ru end 0003
+# /workspace/app/core/schemas/base.py fr start 0003
     description_fr: Optional[str] = Field(exclude=True)
+# /workspace/app/core/schemas/base.py fr end 0003
 
 
 class NameSchema(BaseModel):
     """ добавлять поля на других языках """
     name: Optional[str] = None
+# /workspace/app/core/schemas/base.py ru start 0002
     name_ru: Optional[str] = None
+# /workspace/app/core/schemas/base.py ru end 0002
+# /workspace/app/core/schemas/base.py fr start 0002
     name_fr: Optional[str] = None
+# /workspace/app/core/schemas/base.py fr end 0002
 
 
 class NameExcludeSchema(BaseModel):
     """ добавлять поля на других языках """
     name: Optional[str] = Field(exclude=True)
+# /workspace/app/core/schemas/base.py ru start 0001
     name_ru: Optional[str] = Field(exclude=True)
+# /workspace/app/core/schemas/base.py ru end 0001
+# /workspace/app/core/schemas/base.py fr start 0001
     name_fr: Optional[str] = Field(exclude=True)
+# /workspace/app/core/schemas/base.py fr end 0001
 
 
 class LangSchema(NameSchema, DescriptionSchema):

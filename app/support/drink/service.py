@@ -49,7 +49,9 @@ class DrinkService(Service):
 
         try:
             subresult = model_to_dict(result)
+# /workspace/app/support/drink/service.py ru start 0001
             flatresult = flatten_dict(subresult, ['name', 'name_ru'])
+# /workspace/app/support/drink/service.py ru end 0001
             for key, val in subresult.items():
                 pass
                 # print(f'1.    {key}: {val}')

@@ -327,7 +327,9 @@ def flatten_dict(
         { "region": "Catalonia", "country": "Spain" }
 
     :param d: исходный словарь
+# /workspace/app/core/utils/common_utils.py ru start 0001
     :param priority_fields: приоритетные поля для извлечения значения (например, ['name', 'name_ru'])
+# /workspace/app/core/utils/common_utils.py ru end 0001
     :param seen: защита от циклов
     :param result: аккумулятор результата
     :param parent_key: имя ключа на предыдущем уровне (для отладки/логики)

@@ -204,8 +204,12 @@ class DrinkPreactUpdate:
 
 class DrinkPreactCreate:
     title: str
+# /workspace/app/support/item/schemas.py ru start 0010
     title_ru: Optional[str]
+# /workspace/app/support/item/schemas.py ru end 0010
+# /workspace/app/support/item/schemas.py fr start 0006
     title_fr: Optional[str]
+# /workspace/app/support/item/schemas.py fr end 0006
 
 
 class ItemListView(BaseModel):
@@ -214,9 +218,13 @@ class ItemListView(BaseModel):
     vol: Optional[float] = None  # Item.vol
     image_id: Optional[str] = None  # Item.image_id
 
+# /workspace/app/support/item/schemas.py ru start 0009
     title: str  # Item.drinks.title or Item.drinks.title_ru or Item.drinks.title_fr зависит от параметра lang в роуте
+# /workspace/app/support/item/schemas.py ru end 0009
     category: str  # Item.drink.subcategoory.category.name + Item.drink.subcategoory.name
+# /workspace/app/support/item/schemas.py ru start 0008
     country: str  # Country.name or country.name_ru, or country.name_fr зависит от параметра lang в роуте
+# /workspace/app/support/item/schemas.py ru end 0008
 
 
 class ItemDetailView(BaseModel):
@@ -228,9 +236,13 @@ class ItemDetailView(BaseModel):
     image_id: Optional[str] = None  # Item.image_id
 
     # поля зависящие от параметра lang в роуте
+# /workspace/app/support/item/schemas.py ru start 0007
     title: str  # Item.drink.title or Item.drinks.title_ru or Item.drinks.title_fr
+# /workspace/app/support/item/schemas.py ru end 0007
     subtitle: Optional[str] = None
+# /workspace/app/support/item/schemas.py ru start 0006
     country: str  # Country.name or country.name_ru, or country.name_fr зависит от параметра lang в роуте
+# /workspace/app/support/item/schemas.py ru end 0006
     category: Optional[str] = None  # Item.drink.subcategoory.category.name + Item.drink.subcategoory.name
     sweetness: Optional[str] = None  # Item.drink.sweetness.name (_ru, _fr)
     recommendation: Optional[str] = None   # Drink.recommendation (_ru, _fr)
@@ -256,24 +268,44 @@ class ItemDrinkPreactSchema(BaseModel, LangMixin, ImageUrlMixin):
     # перечисленные ниже поля из модели Drink
     title: str
     """
+# /workspace/app/support/item/schemas.py ru start 0005
     title_ru: Optional[str] = None
+# /workspace/app/support/item/schemas.py ru end 0005
+# /workspace/app/support/item/schemas.py fr start 0005
     title_fr: Optional[str] = None
+# /workspace/app/support/item/schemas.py fr end 0005
 
     subtitle: Optional[str] = None
+# /workspace/app/support/item/schemas.py ru start 0004
     subtitle_ru: Optional[str] = None
+# /workspace/app/support/item/schemas.py ru end 0004
+# /workspace/app/support/item/schemas.py fr start 0004
     subtitle_fr: Optional[str] = None
+# /workspace/app/support/item/schemas.py fr end 0004
 
     description: Optional[str] = None
+# /workspace/app/support/item/schemas.py ru start 0003
     description_ru: Optional[str] = None
+# /workspace/app/support/item/schemas.py ru end 0003
+# /workspace/app/support/item/schemas.py fr start 0003
     description_fr: Optional[str] = None
+# /workspace/app/support/item/schemas.py fr end 0003
 
     recommendation: Optional[str] = None
+# /workspace/app/support/item/schemas.py ru start 0002
     recommendation_ru: Optional[str] = None
+# /workspace/app/support/item/schemas.py ru end 0002
+# /workspace/app/support/item/schemas.py fr start 0002
     recommendation_fr: Optional[str] = None
+# /workspace/app/support/item/schemas.py fr end 0002
 
     madeof: Optional[str] = None
+# /workspace/app/support/item/schemas.py ru start 0001
     madeof_ru: Optional[str] = None
+# /workspace/app/support/item/schemas.py ru end 0001
+# /workspace/app/support/item/schemas.py fr start 0001
     madeof_fr: Optional[str] = None
+# /workspace/app/support/item/schemas.py fr end 0001
     """
     subcategory_id: int
     sweetness_id: Optional[int] = None

@@ -21,12 +21,16 @@ class RegionReadApiSchema(ReadApiSchema):
 
     @computed_field
     @property
+# /workspace/app/support/region/schemas.py ru start 0001
     def country_ru(self) -> str:
+# /workspace/app/support/region/schemas.py ru end 0001
         return self.__get_lang__('_ru')
 
     @computed_field
     @property
+# /workspace/app/support/region/schemas.py fr start 0001
     def country_fr(self) -> str:
+# /workspace/app/support/region/schemas.py fr end 0001
         return self.__get_lang__('_fr')
 
     @computed_field

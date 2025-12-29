@@ -17,24 +17,44 @@ from app.support.varietal.schemas import VarietalRead
 
 class LangMixin:
     title: Optional[str] = None
+# /workspace/app/support/drink/schemas.py ru start 0011
     title_ru: Optional[str] = None
+# /workspace/app/support/drink/schemas.py ru end 0011
+# /workspace/app/support/drink/schemas.py fr start 0010
     title_fr: Optional[str] = None
+# /workspace/app/support/drink/schemas.py fr end 0010
 
     subtitle: Optional[str] = None
+# /workspace/app/support/drink/schemas.py ru start 0010
     subtitle_ru: Optional[str] = None
+# /workspace/app/support/drink/schemas.py ru end 0010
+# /workspace/app/support/drink/schemas.py fr start 0009
     subtitle_fr: Optional[str] = None
+# /workspace/app/support/drink/schemas.py fr end 0009
 
     description: Optional[str] = None
+# /workspace/app/support/drink/schemas.py ru start 0009
     description_ru: Optional[str] = None
+# /workspace/app/support/drink/schemas.py ru end 0009
+# /workspace/app/support/drink/schemas.py fr start 0008
     description_fr: Optional[str] = None
+# /workspace/app/support/drink/schemas.py fr end 0008
 
     recommendation: Optional[str] = None
+# /workspace/app/support/drink/schemas.py ru start 0008
     recommendation_ru: Optional[str] = None
+# /workspace/app/support/drink/schemas.py ru end 0008
+# /workspace/app/support/drink/schemas.py fr start 0007
     recommendation_fr: Optional[str] = None
+# /workspace/app/support/drink/schemas.py fr end 0007
 
     madeof: Optional[str] = None
+# /workspace/app/support/drink/schemas.py ru start 0007
     madeof_ru: Optional[str] = None
+# /workspace/app/support/drink/schemas.py ru end 0007
+# /workspace/app/support/drink/schemas.py fr start 0006
     madeof_fr: Optional[str] = None
+# /workspace/app/support/drink/schemas.py fr end 0006
 
 
 class LangMixinExclude:
@@ -42,24 +62,44 @@ class LangMixinExclude:
         для вычисляемых столбцов
     """
     title: Optional[str] = Field(exclude=True)
+# /workspace/app/support/drink/schemas.py ru start 0006
     title_ru: Optional[str] = Field(exclude=True)
+# /workspace/app/support/drink/schemas.py ru end 0006
+# /workspace/app/support/drink/schemas.py fr start 0005
     title_fr: Optional[str] = Field(exclude=True)
+# /workspace/app/support/drink/schemas.py fr end 0005
 
     subtitle: Optional[str] = Field(exclude=True)
+# /workspace/app/support/drink/schemas.py ru start 0005
     subtitle_ru: Optional[str] = Field(exclude=True)
+# /workspace/app/support/drink/schemas.py ru end 0005
+# /workspace/app/support/drink/schemas.py fr start 0004
     subtitle_fr: Optional[str] = Field(exclude=True)
+# /workspace/app/support/drink/schemas.py fr end 0004
 
     description: Optional[str] = Field(exclude=True)
+# /workspace/app/support/drink/schemas.py ru start 0004
     description_ru: Optional[str] = Field(exclude=True)
+# /workspace/app/support/drink/schemas.py ru end 0004
+# /workspace/app/support/drink/schemas.py fr start 0003
     description_fr: Optional[str] = Field(exclude=True)
+# /workspace/app/support/drink/schemas.py fr end 0003
 
     recommendation: Optional[str] = Field(exclude=True)
+# /workspace/app/support/drink/schemas.py ru start 0003
     recommendation_ru: Optional[str] = Field(exclude=True)
+# /workspace/app/support/drink/schemas.py ru end 0003
+# /workspace/app/support/drink/schemas.py fr start 0002
     recommendation_fr: Optional[str] = Field(exclude=True)
+# /workspace/app/support/drink/schemas.py fr end 0002
 
     madeof: Optional[str] = Field(exclude=True)
+# /workspace/app/support/drink/schemas.py ru start 0002
     madeof_ru: Optional[str] = Field(exclude=True)
+# /workspace/app/support/drink/schemas.py ru end 0002
+# /workspace/app/support/drink/schemas.py fr start 0001
     madeof_fr: Optional[str] = Field(exclude=True)
+# /workspace/app/support/drink/schemas.py fr end 0001
 
 
 class CustomUpdSchema(LangMixin):
@@ -394,7 +434,9 @@ class CustomReadFlatSchema(LangMixinExclude):
     def _get_base_field_names(self) -> set[str]:
         """
         Автоматически определяет базовые языковые поля по наличию полей с суффиксом '_ru'.
+# /workspace/app/support/drink/schemas.py ru start 0001
         Например: если есть 'title_ru' → базовое поле 'title'.
+# /workspace/app/support/drink/schemas.py ru end 0001
         """
         field_names = self.model_fields.keys()
         base_fields = set()

@@ -27,12 +27,16 @@ class LangMixin(BaseModel):
 
     @computed_field
     @property
+# /workspace/app/core/schemas/api_mixin.py ru start 0001
     def name_ru(self) -> str:
+# /workspace/app/core/schemas/api_mixin.py ru end 0001
         return self.__get_lang__('_ru')
 
     @computed_field
     @property
+# /workspace/app/core/schemas/api_mixin.py fr start 0001
     def name_fr(self) -> str:
+# /workspace/app/core/schemas/api_mixin.py fr end 0001
         return self.__get_lang__('_fr')
 
     @computed_field

@@ -25,12 +25,16 @@ class SubcategoryReadApiSchema(ReadApiSchema):
 
     @computed_field
     @property
+# /workspace/app/support/subcategory/schemas.py ru start 0001
     def category_ru(self) -> str:
+# /workspace/app/support/subcategory/schemas.py ru end 0001
         return self.__get_lang__('_ru')
 
     @computed_field
     @property
+# /workspace/app/support/subcategory/schemas.py fr start 0001
     def category_fr(self) -> str:
+# /workspace/app/support/subcategory/schemas.py fr end 0001
         return self.__get_lang__('_fr')
 
     @computed_field

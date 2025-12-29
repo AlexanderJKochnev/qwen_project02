@@ -151,9 +151,13 @@ def get_varietal(drink_dict: dict, language_key: dict) -> bool:
             tmp[f'name{lang}'] = varietal
         """
             tmp = {"name": {"Pinot Noir": 42, "Meunier": 12, "Chardonnay": 40},
+# /workspace/app/core/utils/converters.py ru start 0003
                    "name_ru": {"Каберне Совиньон": 91, "Мерло": 6, "Пти Вердо": 2, "Мальбек": 1}
+# /workspace/app/core/utils/converters.py ru end 0003
             convert to:
+# /workspace/app/core/utils/converters.py ru start 0002
             varietals = [{"varietal": {"name": "Pinot Noir", "name_ru": "Пино Нуар"},
+# /workspace/app/core/utils/converters.py ru end 0002
                           "precentage": 42},
                           ...
                           ]
@@ -190,7 +194,9 @@ def get_pairing(drink_dict: dict, language_key: dict,
         length = len(pair.get('name'))
 
         for n in range(length):
+# /workspace/app/core/utils/converters.py ru start 0001
             item: dict = {"superfood": {"name": "Unclassified", "name_ru": "Не классифицированный"}}
+# /workspace/app/core/utils/converters.py ru end 0001
             for key in pair.keys():
                 val: list = pair[key]
                 if val and len(val) < length:

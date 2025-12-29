@@ -354,12 +354,18 @@ class JsonConverter():
         result = {"name": data["name"], "foods": []}
 
         pairing_en = data.get("pairing", [])
+# /workspace/app/core/utils/alchemy_utils.py ru start 0034
         pairing_ru = data.get("pairing_ru", [])
+# /workspace/app/core/utils/alchemy_utils.py ru end 0034
 
         # Объединяем списки попарно
+# /workspace/app/core/utils/alchemy_utils.py ru start 0033
         for en, ru in zip(pairing_en, pairing_ru):
+# /workspace/app/core/utils/alchemy_utils.py ru end 0033
             result["foods"].append(
+# /workspace/app/core/utils/alchemy_utils.py ru start 0032
                 {"name": en, "name_ru": ru}
+# /workspace/app/core/utils/alchemy_utils.py ru end 0032
             )
         return result
 
@@ -615,17 +621,23 @@ class JsonConverter():
                         k2 = 'subcategory'
                         self.data[key]['category'] = 'Wine'
                         self.data[key][k2] = v2
+# /workspace/app/core/utils/alchemy_utils.py ru start 0031
                     if k2 in ['type', 'type_ru']:
+# /workspace/app/core/utils/alchemy_utils.py ru end 0031
                         self.data[key].pop(k2)
                         k2 = k2.replace('type', 'subcategory')
                         self.data[key][k2] = v2.strip('.')
+# /workspace/app/core/utils/alchemy_utils.py ru start 0030
                     if k2 in ['madeOf', 'madeOf_ru']:
+# /workspace/app/core/utils/alchemy_utils.py ru end 0030
                         k3, k2 = k2, k2.lower()
                         self.data[key][k2] = self.data[key].pop(k3)
                     if v2:
                         """ """
                         v2 = self.field_processing(k2, v2)
+# /workspace/app/core/utils/alchemy_utils.py ru start 0029
                         if k2 in ['region', 'region_ru']:
+# /workspace/app/core/utils/alchemy_utils.py ru end 0029
                             if ',' in v2:
                                 region, subregion = v2.split(',', 1)
                                 self.data[key][k2] = region.strip()
@@ -635,7 +647,9 @@ class JsonConverter():
                                 # self.data[key][f'sub{k2}'] = None
                         else:
                             self.data[key][k2] = v2  # !
+# /workspace/app/core/utils/alchemy_utils.py ru start 0028
             for subkey in ['subregion', 'subregion_ru', 'subcategory']:
+# /workspace/app/core/utils/alchemy_utils.py ru end 0028
                 self.data[key][subkey] = self.data[key].get(subkey, None)
             # for k1 in ['title', 'subtitle']:
             #    x = self.data[key].pop(f'{k1}_ru', None)
@@ -648,19 +662,31 @@ class JsonConverter():
         match key:
             case 'alc':
                 result = self.extract_float_advanced(val)
+# /workspace/app/core/utils/alchemy_utils.py ru start 0027
             case 'pairing' | 'pairing_ru':
+# /workspace/app/core/utils/alchemy_utils.py ru end 0027
                 result = self.robust_string_to_list(val)
             case 'vol':
                 result = float(val.rstrip(' l'))
             case 'varietal':
                 result = self.parse_varietal_string_clean(val, 'name')
+# /workspace/app/core/utils/alchemy_utils.py ru start 0026
             case 'varietal_ru':
+# /workspace/app/core/utils/alchemy_utils.py ru end 0026
+# /workspace/app/core/utils/alchemy_utils.py ru start 0025
                 result = self.parse_varietal_string_clean(val, 'name_ru')
+# /workspace/app/core/utils/alchemy_utils.py ru end 0025
+# /workspace/app/core/utils/alchemy_utils.py ru start 0024
             case 'subcategory' | 'subcategory_ru':
+# /workspace/app/core/utils/alchemy_utils.py ru end 0024
                 result = val.rstrip('.')
+# /workspace/app/core/utils/alchemy_utils.py ru start 0023
             case 'title' | 'title_ru' | 'subtitle' | 'subtitle_ru':
+# /workspace/app/core/utils/alchemy_utils.py ru end 0023
                 result = clean_string(val.rstrip('.'))
+# /workspace/app/core/utils/alchemy_utils.py ru start 0022
             case 'description' | 'description_ru':
+# /workspace/app/core/utils/alchemy_utils.py ru end 0022
                 result = clean_string(val)
             case 'age':
                 result = val.rstrip('.')
@@ -678,64 +704,104 @@ class JsonConverter():
         subcategory = {}
         """
         pairing_en = []
+# /workspace/app/core/utils/alchemy_utils.py ru start 0021
         pairing_ru = []
+# /workspace/app/core/utils/alchemy_utils.py ru end 0021
         foods = []
         varietals_en = []
+# /workspace/app/core/utils/alchemy_utils.py ru start 0020
         varietals_ru = []
+# /workspace/app/core/utils/alchemy_utils.py ru end 0020
         varietals = []"""
         for key, val in data.items():
             subregion['name'] = self.camelcase(
                 self.data[key].pop('subregion', None))
+# /workspace/app/core/utils/alchemy_utils.py ru start 0019
             subregion['name_ru'] = self.camelcase(
+# /workspace/app/core/utils/alchemy_utils.py ru end 0019
+# /workspace/app/core/utils/alchemy_utils.py ru start 0018
                 self.data[key].pop('subregion_ru', None))
+# /workspace/app/core/utils/alchemy_utils.py ru end 0018
             region['name'] = self.camelcase(
                 self.data[key].pop('region', None))
+# /workspace/app/core/utils/alchemy_utils.py ru start 0017
             region['name_ru'] = self.camelcase(
+# /workspace/app/core/utils/alchemy_utils.py ru end 0017
+# /workspace/app/core/utils/alchemy_utils.py ru start 0016
                 self.data[key].pop('region_ru', None))
+# /workspace/app/core/utils/alchemy_utils.py ru end 0016
             country['name'] = self.camelcase(
                 self.data[key].pop('country', None))
+# /workspace/app/core/utils/alchemy_utils.py ru start 0015
             country['name_ru'] = self.camelcase(
+# /workspace/app/core/utils/alchemy_utils.py ru end 0015
+# /workspace/app/core/utils/alchemy_utils.py ru start 0014
                 self.data[key].pop('country_ru', None))
+# /workspace/app/core/utils/alchemy_utils.py ru end 0014
             region['country'] = country
             subregion['region'] = region
             self.data[key]['subregion'] = subregion
 
             subcategory['name'] = self.camelcase(
                 self.data[key].pop('subcategory', None))
+# /workspace/app/core/utils/alchemy_utils.py ru start 0013
             subcategory['name_ru'] = self.camelcase(
+# /workspace/app/core/utils/alchemy_utils.py ru end 0013
+# /workspace/app/core/utils/alchemy_utils.py ru start 0012
                 self.data[key].pop('subcategory_ru', None))
+# /workspace/app/core/utils/alchemy_utils.py ru end 0012
             category['name'] = self.camelcase(
                 self.data[key].pop('category', None))
+# /workspace/app/core/utils/alchemy_utils.py ru start 0011
             category['name_ru'] = self.camelcase(
+# /workspace/app/core/utils/alchemy_utils.py ru end 0011
+# /workspace/app/core/utils/alchemy_utils.py ru start 0010
                 self.data[key].pop('category_ru', None))
+# /workspace/app/core/utils/alchemy_utils.py ru end 0010
             subcategory['category'] = category
             self.data[key]['subcategory'] = subcategory
             # pairing -> foods
             pairing_en = self.data[key].pop("pairing", [])
+# /workspace/app/core/utils/alchemy_utils.py ru start 0009
             pairing_ru = self.data[key].pop("pairing_ru", [])
+# /workspace/app/core/utils/alchemy_utils.py ru end 0009
             foods = []
+# /workspace/app/core/utils/alchemy_utils.py ru start 0008
             for en, ru in zip(pairing_en, pairing_ru):
+# /workspace/app/core/utils/alchemy_utils.py ru end 0008
+# /workspace/app/core/utils/alchemy_utils.py ru start 0007
                 foods.append({"name": en, "name_ru": ru})
+# /workspace/app/core/utils/alchemy_utils.py ru end 0007
             if foods:
                 self.data[key]['foods'] = foods
             # varietals
             varietals = []
             varietals_en = data[key].pop("varietal", [])
+# /workspace/app/core/utils/alchemy_utils.py ru start 0006
             varietals_ru = data[key].pop("varietal_ru", [])
+# /workspace/app/core/utils/alchemy_utils.py ru end 0006
 
             # Проверим, что списки одной длины
+# /workspace/app/core/utils/alchemy_utils.py ru start 0005
             if len(varietals_en) != len(varietals_ru):
+# /workspace/app/core/utils/alchemy_utils.py ru end 0005
+# /workspace/app/core/utils/alchemy_utils.py ru start 0004
                 raise ValueError("Списки 'varietal' и 'varietal_ru' "
+# /workspace/app/core/utils/alchemy_utils.py ru end 0004
                                  "должны быть одинаковой длины")
 
+# /workspace/app/core/utils/alchemy_utils.py ru start 0003
             for item_en, item_ru in zip(varietals_en, varietals_ru):
+# /workspace/app/core/utils/alchemy_utils.py ru end 0003
                 # Проверка: проценты должны совпадать (по смыслу)
                 # if item_en["percentage"] != item_ru["percentage"]:
                 #     raise ValueError(f"Проценты не совпадают: "
                 #                      f"{item_en} vs {item_ru}")
 
                 merged_item = {"varietal": {"name": self.camelcase(item_en["name"]),
+# /workspace/app/core/utils/alchemy_utils.py ru start 0002
                                             "name_ru": self.camelcase(item_ru["name_ru"])},
+# /workspace/app/core/utils/alchemy_utils.py ru end 0002
                                "percentage": item_en.get("percentage")}
                 varietals.append(merged_item)
             if varietals:
@@ -760,7 +826,9 @@ class JsonConverter():
                 data[key][item] = val.pop(item, None)
                 data[key]['drink'] = val
                 data[key]['drink'].pop('varietal', None)
+# /workspace/app/core/utils/alchemy_utils.py ru start 0001
                 data[key]['drink'].pop('varietal_ru', None)
+# /workspace/app/core/utils/alchemy_utils.py ru end 0001
         return data
 
 

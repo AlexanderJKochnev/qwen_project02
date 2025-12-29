@@ -153,8 +153,12 @@ class BaseDescription:
         <имя поля>_<2х значный код страны/языка>
     """
     __abstract__ = True
+# /workspace/app/core/models/base_model.py ru start 0003
     description_ru: Mapped[descr]
+# /workspace/app/core/models/base_model.py ru end 0003
+# /workspace/app/core/models/base_model.py fr start 0002
     description_fr: Mapped[descr]
+# /workspace/app/core/models/base_model.py fr end 0002
 
 
 class BaseLang(BaseDescription):
@@ -162,8 +166,12 @@ class BaseLang(BaseDescription):
     общие поля для всех таблиц на разных языках
     """
     __abstract__ = True
+# /workspace/app/core/models/base_model.py ru start 0002
     name_ru: Mapped[str_null_true]
+# /workspace/app/core/models/base_model.py ru end 0002
+# /workspace/app/core/models/base_model.py fr start 0001
     name_fr: Mapped[str_null_true]
+# /workspace/app/core/models/base_model.py fr end 0001
     # name_en: Mapped[str_uniq]
 
 
@@ -178,4 +186,6 @@ class BaseFullFree(Base, BaseIntFree, BaseAt, BaseLang):
 
     def __str__(self):
         # переоопределять в особенных формах
+# /workspace/app/core/models/base_model.py ru start 0001
         return self.name or self.name_fr or self.name_ru or ""
+# /workspace/app/core/models/base_model.py ru end 0001

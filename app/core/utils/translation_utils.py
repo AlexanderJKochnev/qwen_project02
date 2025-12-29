@@ -45,10 +45,18 @@ async def translate_text(text: str, source_lang: str = "en", target_lang: str = 
 def get_localized_fields() -> list:
     """Get list of localized field names that should be translated"""
     return [
+# /workspace/app/core/utils/translation_utils.py ru start 0004
         'name', 'name_fr', 'name_ru',
+# /workspace/app/core/utils/translation_utils.py ru end 0004
+# /workspace/app/core/utils/translation_utils.py ru start 0003
         'description', 'description_fr', 'description_ru',
+# /workspace/app/core/utils/translation_utils.py ru end 0003
+# /workspace/app/core/utils/translation_utils.py ru start 0002
         'title', 'title_fr', 'title_ru',
+# /workspace/app/core/utils/translation_utils.py ru end 0002
+# /workspace/app/core/utils/translation_utils.py ru start 0001
         'subtitle', 'subtitle_fr', 'subtitle_ru'
+# /workspace/app/core/utils/translation_utils.py ru end 0001
     ]
 
 

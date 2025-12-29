@@ -70,15 +70,31 @@ class ItemService(Service):
         if lang == 'en':
             result['title'] = item['drink'].title
         elif lang == 'ru':
+# /workspace/app/support/item/service.py ru start 0018
             title_ru = getattr(item['drink'], 'title_ru', None)
+# /workspace/app/support/item/service.py ru end 0018
+# /workspace/app/support/item/service.py ru start 0017
             if is_mock_object(title_ru):
+# /workspace/app/support/item/service.py ru end 0017
+# /workspace/app/support/item/service.py ru start 0016
                 title_ru = None
+# /workspace/app/support/item/service.py ru end 0016
+# /workspace/app/support/item/service.py ru start 0015
             result['title'] = title_ru if title_ru else item['drink'].title
+# /workspace/app/support/item/service.py ru end 0015
         elif lang == 'fr':
+# /workspace/app/support/item/service.py fr start 0018
             title_fr = getattr(item['drink'], 'title_fr', None)
+# /workspace/app/support/item/service.py fr end 0018
+# /workspace/app/support/item/service.py fr start 0017
             if is_mock_object(title_fr):
+# /workspace/app/support/item/service.py fr end 0017
+# /workspace/app/support/item/service.py fr start 0016
                 title_fr = None
+# /workspace/app/support/item/service.py fr end 0016
+# /workspace/app/support/item/service.py fr start 0015
             result['title'] = title_fr if title_fr else item['drink'].title
+# /workspace/app/support/item/service.py fr end 0015
         else:
             result['title'] = item['drink'].title
 
@@ -86,15 +102,31 @@ class ItemService(Service):
         if lang == 'en':
             result['country'] = item['country'].name
         elif lang == 'ru':
+# /workspace/app/support/item/service.py ru start 0014
             country_name_ru = getattr(item['country'], 'name_ru', None)
+# /workspace/app/support/item/service.py ru end 0014
+# /workspace/app/support/item/service.py ru start 0013
             if is_mock_object(country_name_ru):
+# /workspace/app/support/item/service.py ru end 0013
+# /workspace/app/support/item/service.py ru start 0012
                 country_name_ru = None
+# /workspace/app/support/item/service.py ru end 0012
+# /workspace/app/support/item/service.py ru start 0011
             result['country'] = country_name_ru if country_name_ru else item['country'].name
+# /workspace/app/support/item/service.py ru end 0011
         elif lang == 'fr':
+# /workspace/app/support/item/service.py fr start 0014
             country_name_fr = getattr(item['country'], 'name_fr', None)
+# /workspace/app/support/item/service.py fr end 0014
+# /workspace/app/support/item/service.py fr start 0013
             if is_mock_object(country_name_fr):
+# /workspace/app/support/item/service.py fr end 0013
+# /workspace/app/support/item/service.py fr start 0012
                 country_name_fr = None
+# /workspace/app/support/item/service.py fr end 0012
+# /workspace/app/support/item/service.py fr start 0011
             result['country'] = country_name_fr if country_name_fr else item['country'].name
+# /workspace/app/support/item/service.py fr end 0011
         else:
             result['country'] = item['country'].name
 
@@ -109,7 +141,9 @@ class ItemService(Service):
             else:
                 result['category'] = category_name
         elif lang == 'ru':
+# /workspace/app/support/item/service.py ru start 0010
             category_name = getattr(item['subcategory'].category, 'name_ru', None)
+# /workspace/app/support/item/service.py ru end 0010
             if is_mock_object(category_name):
                 category_name = None
             if category_name:
@@ -117,7 +151,9 @@ class ItemService(Service):
             else:
                 category_name = item['subcategory'].category.name
 
+# /workspace/app/support/item/service.py ru start 0009
             subcategory_name = getattr(item['subcategory'], 'name_ru', None)
+# /workspace/app/support/item/service.py ru end 0009
             if is_mock_object(subcategory_name):
                 subcategory_name = None
             if not subcategory_name:
@@ -130,7 +166,9 @@ class ItemService(Service):
             else:
                 result['category'] = category_name
         elif lang == 'fr':
+# /workspace/app/support/item/service.py fr start 0010
             category_name = getattr(item['subcategory'].category, 'name_fr', None)
+# /workspace/app/support/item/service.py fr end 0010
             if is_mock_object(category_name):
                 category_name = None
             if category_name:
@@ -138,7 +176,9 @@ class ItemService(Service):
             else:
                 category_name = item['subcategory'].category.name
 
+# /workspace/app/support/item/service.py fr start 0009
             subcategory_name = getattr(item['subcategory'], 'name_fr', None)
+# /workspace/app/support/item/service.py fr end 0009
             if is_mock_object(subcategory_name):
                 subcategory_name = None
             if not subcategory_name:
@@ -200,29 +240,61 @@ class ItemService(Service):
             'age': item['age'],
             'image_id': item['image_id'],
             'title': item['drink'].title,
+# /workspace/app/support/item/service.py ru start 0008
             'title_ru': getattr(item['drink'], 'title_ru', ''),
+# /workspace/app/support/item/service.py ru end 0008
+# /workspace/app/support/item/service.py fr start 0008
             'title_fr': getattr(item['drink'], 'title_fr', ''),
+# /workspace/app/support/item/service.py fr end 0008
             'subtitle': getattr(item['drink'], 'subtitle', ''),
+# /workspace/app/support/item/service.py ru start 0007
             'subtitle_ru': getattr(item['drink'], 'subtitle_ru', ''),
+# /workspace/app/support/item/service.py ru end 0007
+# /workspace/app/support/item/service.py fr start 0007
             'subtitle_fr': getattr(item['drink'], 'subtitle_fr', ''),
+# /workspace/app/support/item/service.py fr end 0007
             'country': item['country'].name if item['country'] else '',
+# /workspace/app/support/item/service.py ru start 0006
             'country_ru': getattr(item['country'], 'name_ru', '') if item['country'] else '',
+# /workspace/app/support/item/service.py ru end 0006
+# /workspace/app/support/item/service.py fr start 0006
             'country_fr': getattr(item['country'], 'name_fr', '') if item['country'] else '',
+# /workspace/app/support/item/service.py fr end 0006
             'subcategory': f"{item['subcategory'].category.name} {item['subcategory'].name}",
+# /workspace/app/support/item/service.py ru start 0005
             'subcategory_ru': f"{getattr(item['subcategory'].category, 'name_ru', '')} {getattr(item['subcategory'], 'name_ru', '')}" if (getattr(item['subcategory'].category, 'name_ru', None) and getattr(item['subcategory'], 'name_ru', None)) else '',  # NOQA: E501
+# /workspace/app/support/item/service.py ru end 0005
+# /workspace/app/support/item/service.py fr start 0005
             'subcategory_fr': f"{getattr(item['subcategory'].category, 'name_fr', '')} {getattr(item['subcategory'], 'name_fr', '')}" if (getattr(item['subcategory'].category, 'name_fr', None) and getattr(item['subcategory'], 'name_fr', None)) else '',  # NOQA: E501
+# /workspace/app/support/item/service.py fr end 0005
             'sweetness': getattr(item['sweetness'], 'name', '') if item['sweetness'] else '',
+# /workspace/app/support/item/service.py ru start 0004
             'sweetness_ru': getattr(item['sweetness'], 'name_ru', '') if item['sweetness'] else '',
+# /workspace/app/support/item/service.py ru end 0004
+# /workspace/app/support/item/service.py fr start 0004
             'sweetness_fr': getattr(item['sweetness'], 'name_fr', '') if item['sweetness'] else '',
+# /workspace/app/support/item/service.py fr end 0004
             'recommendation': getattr(item['drink'], 'recommendation', ''),
+# /workspace/app/support/item/service.py ru start 0003
             'recommendation_ru': getattr(item['drink'], 'recommendation_ru', ''),
+# /workspace/app/support/item/service.py ru end 0003
+# /workspace/app/support/item/service.py fr start 0003
             'recommendation_fr': getattr(item['drink'], 'recommendation_fr', ''),
+# /workspace/app/support/item/service.py fr end 0003
             'madeof': getattr(item['drink'], 'madeof', ''),
+# /workspace/app/support/item/service.py ru start 0002
             'madeof_ru': getattr(item['drink'], 'madeof_ru', ''),
+# /workspace/app/support/item/service.py ru end 0002
+# /workspace/app/support/item/service.py fr start 0002
             'madeof_fr': getattr(item['drink'], 'madeof_fr', ''),
+# /workspace/app/support/item/service.py fr end 0002
             'description': getattr(item['drink'], 'description', ''),
+# /workspace/app/support/item/service.py ru start 0001
             'description_ru': getattr(item['drink'], 'description_ru', ''),
+# /workspace/app/support/item/service.py ru end 0001
+# /workspace/app/support/item/service.py fr start 0001
             'description_fr': getattr(item['drink'], 'description_fr', ''),
+# /workspace/app/support/item/service.py fr end 0001
         }
 
         # Handle varietals and pairing with localization (similar to drink schemas)

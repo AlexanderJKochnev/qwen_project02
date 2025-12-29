@@ -431,21 +431,41 @@ def get_drink_search_expression(cls):
     SPACE = literal_column("' '")
 
     return (func.coalesce(cls.title, EMPTY_STRING) + SPACE + func.coalesce(
+# /workspace/app/support/item/repository.py ru start 0005
         cls.title_ru, EMPTY_STRING
+# /workspace/app/support/item/repository.py ru end 0005
+# /workspace/app/support/item/repository.py fr start 0005
     ) + SPACE + func.coalesce(cls.title_fr, EMPTY_STRING) + SPACE + func.coalesce(
+# /workspace/app/support/item/repository.py fr end 0005
         cls.subtitle, EMPTY_STRING
     ) + SPACE + func.coalesce(
+# /workspace/app/support/item/repository.py ru start 0004
         cls.subtitle_ru, EMPTY_STRING
+# /workspace/app/support/item/repository.py ru end 0004
+# /workspace/app/support/item/repository.py fr start 0004
     ) + SPACE + func.coalesce(cls.subtitle_fr, EMPTY_STRING) + SPACE + func.coalesce(
+# /workspace/app/support/item/repository.py fr end 0004
         cls.description, EMPTY_STRING
     ) + SPACE + func.coalesce(
+# /workspace/app/support/item/repository.py ru start 0003
         cls.description_ru, EMPTY_STRING
+# /workspace/app/support/item/repository.py ru end 0003
+# /workspace/app/support/item/repository.py fr start 0003
     ) + SPACE + func.coalesce(cls.description_fr, EMPTY_STRING) + SPACE + func.coalesce(
+# /workspace/app/support/item/repository.py fr end 0003
         cls.recommendation, EMPTY_STRING
     ) + SPACE + func.coalesce(
+# /workspace/app/support/item/repository.py ru start 0002
         cls.recommendation_ru, EMPTY_STRING
+# /workspace/app/support/item/repository.py ru end 0002
+# /workspace/app/support/item/repository.py fr start 0002
     ) + SPACE + func.coalesce(cls.recommendation_fr, EMPTY_STRING) + SPACE + func.coalesce(
+# /workspace/app/support/item/repository.py fr end 0002
         cls.madeof, EMPTY_STRING
     ) + SPACE + func.coalesce(
+# /workspace/app/support/item/repository.py ru start 0001
         cls.madeof_ru, EMPTY_STRING
+# /workspace/app/support/item/repository.py ru end 0001
+# /workspace/app/support/item/repository.py fr start 0001
     ) + SPACE + func.coalesce(cls.madeof_fr, EMPTY_STRING))
+# /workspace/app/support/item/repository.py fr end 0001
