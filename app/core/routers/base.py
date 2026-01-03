@@ -11,7 +11,7 @@ from app.auth.dependencies import get_active_user_or_internal
 from app.core.config.database.db_async import get_db
 from app.core.config.project_config import get_paging, settings
 from app.core.utils.common_utils import back_to_the_future
-from app.core.services.service import Service
+from app.core.utils.translation_utils import fill_missing_translations as default_fill_missing_translations
 from app.core.schemas.base import (DeleteResponse, PaginatedResponse, ReadSchema,
                                    CreateResponse, UpdateSchema, CreateSchema)
 from app.core.exceptions import exception_to_http

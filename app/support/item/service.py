@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
 # from app.support.item.schemas import ItemCreate, ItemCreateRelation, ItemRead
 from app.core.services.service import Service
-from app.core.utils.translation_utils import fill_missing_translations
+from app.core.utils.translation_utils import fill_missing_translations as default_fill_missing_translations
 from app.core.utils.common_utils import flatten_dict_with_localized_fields, get_value, jprint  # noqa: F401
 from app.core.utils.converters import read_convert_json
 from app.core.utils.pydantic_utils import make_paginated_response
@@ -475,7 +475,8 @@ class ItemService(Service):
 
     @classmethod
     async def get_by_id(
-            cls, id: int, repository: Type[ItemRepository], model: Type[Item], session: AsyncSession
+            cls, id: int, repository: Type[ItemRepository], model: Type[Item], session: AsyncSession,
+            fill_missing_translations_func=None
     ) -> Optional[ItemRead]:
         """Получение записи по ID с автоматическим переводом недостающих локализованных полей"""
         result = await repository.get_by_id(id, model, session)

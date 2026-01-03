@@ -12,7 +12,7 @@ from app.core.repositories.sqlalchemy_repository import ModelType, Repository
 from app.core.utils.alchemy_utils import get_models
 from app.core.utils.common_utils import flatten_dict_with_localized_fields
 from app.core.utils.pydantic_utils import make_paginated_response
-from app.core.utils.translation_utils import fill_missing_translations
+from app.core.utils.translation_utils import fill_missing_translations as default_fill_missing_translations
 from app.service_registry import register_service
 
 joint = '. '
@@ -62,11 +62,15 @@ class Service(metaclass=ServiceMeta):
     @classmethod
     async def get_or_create(cls, data: ModelType, repository: Type[Repository],
                             model: ModelType, session: AsyncSession,
+                            fill_missing_translations_func=None,
                             default: List[str] = None) -> Tuple[ModelType, bool]:
         """
             находит или создет запись
             возвращает instance и True (запись создана) или False (запись существует)
         """
+        if fill_missing_translations_func is None:
+            fill_missing_translations_func = default_fill_missing_translations
+            
         try:
             if default is None:
                 default = cls.default
@@ -82,7 +86,7 @@ class Service(metaclass=ServiceMeta):
                 else:
                     instance_dict = instance
 
-                translated_instance = await fill_missing_translations(instance_dict)
+                translated_instance = await fill_missing_translations_func(instance_dict)
 
                 return translated_instance, False
             # запись не найдена
@@ -97,7 +101,7 @@ class Service(metaclass=ServiceMeta):
             else:
                 instance_dict = instance
 
-            translated_instance = await fill_missing_translations(instance_dict)
+            translated_instance = await fill_missing_translations_func(instance_dict)
 
             return translated_instance, True
         except IntegrityError as e:
@@ -181,8 +185,12 @@ class Service(metaclass=ServiceMeta):
     @classmethod
     async def get_by_id(
             cls, id: int, repository: Type[Repository],
-            model: ModelType, session: AsyncSession) -> Optional[ModelType]:
+            model: ModelType, session: AsyncSession, 
+            fill_missing_translations_func=None) -> Optional[ModelType]:
         """Получение записи по ID с автоматическим переводом недостающих локализованных полей"""
+        if fill_missing_translations_func is None:
+            fill_missing_translations_func = default_fill_missing_translations
+            
         result = await repository.get_by_id(id, model, session)
         if result:
             # Convert model to dict to work with translation
@@ -192,7 +200,7 @@ class Service(metaclass=ServiceMeta):
                 result_dict = result
 
             # Apply translations to fill missing localized fields
-            translated_result = await fill_missing_translations(result_dict)
+            translated_result = await fill_missing_translations_func(result_dict)
 
             # Return the model object with translated values
             return translated_result
@@ -323,8 +331,12 @@ class Service(metaclass=ServiceMeta):
 
     @classmethod
     async def get_detail_view(cls, lang: str, id: int, repository: Type[Repository],
-                              model: ModelType, session: AsyncSession) -> Optional[ModelType]:
+                              model: ModelType, session: AsyncSession, 
+                              fill_missing_translations_func=None) -> Optional[ModelType]:
         """ Получение и обработка записи по ID с автоматическим переводом недостающих локализованных полей """
+        if fill_missing_translations_func is None:
+            fill_missing_translations_func = default_fill_missing_translations
+            
         detail_fields = settings.DETAIL_VIEW
         obj = await repository.get_by_id(id, model, session)
         # return obj
@@ -334,6 +346,6 @@ class Service(metaclass=ServiceMeta):
             obj = obj.to_dict()  # model_to_dict(obj)
 
         # Apply translations to fill missing localized fields before flattening
-        translated_obj = await fill_missing_translations(obj)
+        translated_obj = await fill_missing_translations_func(obj)
         result = flatten_dict_with_localized_fields(translated_obj, detail_fields, lang)
         return result
