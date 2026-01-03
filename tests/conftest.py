@@ -4,7 +4,6 @@ import logging
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List
-from unittest.mock import patch
 
 import pytest
 from dateutil.relativedelta import relativedelta
@@ -21,6 +20,7 @@ from app.core.models.base_model import Base
 from app.core.utils.common_utils import jprint
 from app.main import app, get_db
 from app.mongodb.config import get_database, get_mongodb, MongoDB
+from app.core.utils.translation_utils import set_fill_missing_translations_impl
 # from app.mongodb.router import get_mongodb
 from tests.config import settings_db
 from tests.data_factory.fake_generator import generate_test_data
@@ -597,9 +597,10 @@ async def authenticated_client_with_db(test_db_session, super_user_data,
     token_data = {"sub": super_user_data["username"]}
     access_token = create_access_token(data=token_data)
 
-    # Mock the fill_missing_translations function to return input unchanged
-    with patch('app.core.utils.translation_utils.fill_missing_translations', 
-               side_effect=fill_missing_translations_mock):
+    # Set the mock implementation for fill_missing_translations
+    set_fill_missing_translations_impl(fill_missing_translations_mock)
+
+    try:
         # Создаем клиент с токеном в заголовках
         async with AsyncClient(
             transport=ASGITransport(app=app),
@@ -609,5 +610,8 @@ async def authenticated_client_with_db(test_db_session, super_user_data,
             ac._test_user = super_user_data
             ac._access_token = access_token
             yield ac
+    finally:
+        # Restore default implementation after the test
+        set_fill_missing_translations_impl(None)
 
 # -----------data generator------------------

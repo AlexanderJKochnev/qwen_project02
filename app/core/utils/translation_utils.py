@@ -70,9 +70,34 @@ def get_base_field_name(field_name: str) -> str:
     return field_name
 
 
+# Global variable to hold the current implementation of fill_missing_translations
+_fill_missing_translations_impl = None
+
+
+def set_fill_missing_translations_impl(impl_func):
+    """Set the implementation function for fill_missing_translations"""
+    global _fill_missing_translations_impl
+    _fill_missing_translations_impl = impl_func
+
+
+def get_fill_missing_translations_impl():
+    """Get the current implementation function for fill_missing_translations"""
+    global _fill_missing_translations_impl
+    if _fill_missing_translations_impl is None:
+        # Default implementation
+        _fill_missing_translations_impl = _fill_missing_translations_default
+    return _fill_missing_translations_impl
+
+
 async def fill_missing_translations(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Wrapper function that delegates to the current implementation"""
+    impl = get_fill_missing_translations_impl()
+    return await impl(data)
+
+
+async def _fill_missing_translations_default(data: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Fill missing translations in data dictionary using available translations
+    Default implementation: Fill missing translations in data dictionary using available translations
 
     Args:
         data: Dictionary containing fields that may need translation
