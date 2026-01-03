@@ -4,6 +4,7 @@ import logging
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List
+from unittest.mock import patch
 
 import pytest
 from dateutil.relativedelta import relativedelta
@@ -27,6 +28,13 @@ from tests.data_factory.reader_json import JsonConverter
 from tests.utility.assertion import assertions
 from tests.utility.data_generators import FakeData
 from tests.utility.find_models import discover_models, discover_schemas2
+
+
+async def fill_missing_translations_mock(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Mock for fill_missing_translations function that returns the input data unchanged
+    """
+    return data
 
 # from tests.data_factory.fake_generator import generate_test_data
 
@@ -589,15 +597,17 @@ async def authenticated_client_with_db(test_db_session, super_user_data,
     token_data = {"sub": super_user_data["username"]}
     access_token = create_access_token(data=token_data)
 
-    # Создаем клиент с токеном в заголовках
-    async with AsyncClient(
-        transport=ASGITransport(app=app),
-        base_url=base_url,
-        headers={"Authorization": f"Bearer {access_token}"}
-    ) as ac:
-        ac._test_user = super_user_data
-        ac._test_user_db = create_super_user
-        ac._access_token = access_token
-        yield ac
+    # Mock the fill_missing_translations function to return input unchanged
+    with patch('app.core.utils.translation_utils.fill_missing_translations', 
+               side_effect=fill_missing_translations_mock):
+        # Создаем клиент с токеном в заголовках
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url=base_url,
+            headers={"Authorization": f"Bearer {access_token}"}
+        ) as ac:
+            ac._test_user = super_user_data
+            ac._access_token = access_token
+            yield ac
 
 # -----------data generator------------------
