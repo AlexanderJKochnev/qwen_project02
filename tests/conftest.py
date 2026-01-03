@@ -27,6 +27,7 @@ from tests.data_factory.reader_json import JsonConverter
 from tests.utility.assertion import assertions
 from tests.utility.data_generators import FakeData
 from tests.utility.find_models import discover_models, discover_schemas2
+from app.core.utils.translation_utils import fill_missing_translations
 
 # from tests.data_factory.fake_generator import generate_test_data
 

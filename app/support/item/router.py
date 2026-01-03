@@ -15,6 +15,7 @@ from app.support.item.model import Item
 from app.support.item.repository import ItemRepository
 from app.support.item.schemas import (FileUpload, ItemCreate, ItemCreatePreact, ItemCreateRelation,
                                       ItemCreateResponseSchema, ItemRead, ItemUpdate, ItemUpdatePreact)
+from app.core.utils.translation_utils import fill_missing_translations
 
 paging = get_paging
 
@@ -56,9 +57,19 @@ class ItemRouter(BaseRouter):
     async def get_list_view(self, lang: str = Path(..., description="Язык локализации"),
                             session: AsyncSession = Depends(get_db)):
         """Получить список элементов с локализацией"""
-
         items = await self.service.get_list_view(lang, ItemRepository, Item, session)
-        return items
+        
+        # Apply translations to all items
+        translated_items = []
+        for item in items:
+            if not isinstance(item, dict):
+                item_dict = item.to_dict()
+            else:
+                item_dict = item
+            translated_item = await fill_missing_translations(item_dict)
+            translated_items.append(translated_item)
+        
+        return translated_items
 
     async def get_list_view_paginated(self,
                                       lang: str = Path(..., description="Язык локализации"),
@@ -68,6 +79,18 @@ class ItemRouter(BaseRouter):
         """Получить список элементов с пагинацией и локализацией"""
 
         result = await self.service.get_list_view_page(page, page_size, ItemRepository, Item, session)
+        
+        # Apply translations to all items in the result
+        translated_items = []
+        for item in result.get("rows", []):
+            if not isinstance(item, dict):
+                item_dict = item.to_dict()
+            else:
+                item_dict = item
+            translated_item = await fill_missing_translations(item_dict)
+            translated_items.append(translated_item)
+        
+        result["rows"] = translated_items
         return result
 
     async def get_detail_view(self, lang: str = Path(..., description="Язык локализации"),
@@ -78,7 +101,15 @@ class ItemRouter(BaseRouter):
         item = await self.service.get_detail_view(lang, id, ItemRepository, Item, session)
         if not item:
             raise HTTPException(status_code=404, detail=f"Item with id {id} not found")
-        return item
+        
+        # Apply translations to the item
+        if not isinstance(item, dict):
+            item_dict = item.to_dict()
+        else:
+            item_dict = item
+        
+        translated_item = await fill_missing_translations(item_dict)
+        return translated_item
 
     async def create(self, data: ItemCreate,
                      session: AsyncSession = Depends(get_db)) -> ItemCreateResponseSchema:

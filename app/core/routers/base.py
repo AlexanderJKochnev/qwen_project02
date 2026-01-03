@@ -16,6 +16,7 @@ from app.core.schemas.base import (DeleteResponse, PaginatedResponse, ReadSchema
                                    CreateResponse, UpdateSchema, CreateSchema)
 from app.core.exceptions import exception_to_http
 from app.core.utils.pydantic_utils import get_repo, get_service, get_pyschema
+from app.core.utils.translation_utils import fill_missing_translations
 
 
 paging = get_paging
@@ -112,7 +113,15 @@ class BaseRouter:
         try:
             # obj = await self.service.create(data, self.repo, self.model, session)
             obj, created = await self.service.get_or_create(data, self.repo, self.model, session)
-            return obj
+            
+            # Apply translations to the created object
+            if not isinstance(obj, dict):
+                obj_dict = obj.to_dict()
+            else:
+                obj_dict = obj
+            
+            translated_obj = await fill_missing_translations(obj_dict)
+            return translated_obj
         except Exception as e:
             await session.rollback()
             detail = (f'ошибка создания записи {e}, model = {self.model}, '
@@ -132,7 +141,15 @@ class BaseRouter:
             obj = await self.service.create_relation(data, self.repo, self.model, session)
             if isinstance(obj, tuple):
                 obj, _ = obj
-            return obj
+            
+            # Apply translations to the created object
+            if not isinstance(obj, dict):
+                obj_dict = obj.to_dict()
+            else:
+                obj_dict = obj
+            
+            translated_obj = await fill_missing_translations(obj_dict)
+            return translated_obj
             # return await self.service.get_by_id(obj.id, self.repo, self.model, session)
         except Exception as e:
             await session.rollback()
@@ -144,7 +161,15 @@ class BaseRouter:
         """ обновление / добавление одной записи ? пока нигде не используется"""
         try:
             obj, created = await self.service.update_or_create(id, data, self.repo, self.model, session)
-            return obj
+            
+            # Apply translations to the object
+            if not isinstance(obj, dict):
+                obj_dict = obj.to_dict()
+            else:
+                obj_dict = obj
+            
+            translated_obj = await fill_missing_translations(obj_dict)
+            return translated_obj
         except Exception as e:
             await session.rollback()
             detail = (f'ошибка обновления записи {e}, model = {self.model}, '
@@ -180,7 +205,15 @@ class BaseRouter:
             else:
                 raise HTTPException(status_code=500, detail=error_message)
 
-        return result['data']
+        # Apply translations to the updated object
+        obj = result['data']
+        if not isinstance(obj, dict):
+            obj_dict = obj.to_dict()
+        else:
+            obj_dict = obj
+        
+        translated_obj = await fill_missing_translations(obj_dict)
+        return translated_obj
 
     async def delete(self, id: int,
                      session: AsyncSession = Depends(get_db)) -> DeleteResponse:
@@ -207,12 +240,20 @@ class BaseRouter:
                       id: int,
                       session: AsyncSession = Depends(get_db)):
         """
-            Получение одной записи по ID
+            Получение одной записи по ID с автоматическим переводом недостающих локализованных полей
         """
         obj = await self.service.get_by_id(id, self.repo, self.model, session)
         if obj is None:
             raise HTTPException(status_code=404, detail=f'Запрашиваемый файл {id} не найден на сервере')
-        return obj
+        
+        # Apply translations to the object
+        if not isinstance(obj, dict):
+            obj_dict = obj.to_dict()
+        else:
+            obj_dict = obj
+        
+        translated_obj = await fill_missing_translations(obj_dict)
+        return translated_obj
 
     async def get(self,
                   after_date: datetime = Query(delta,
@@ -230,6 +271,18 @@ class BaseRouter:
         # print(f"📥 GET request for {self.model.__name__} from")
         after_date = back_to_the_future(after_date)
         response = await self.service.get_all(after_date, page, page_size, self.repo, self.model, session)
+        
+        # Apply translations to all items in the response
+        translated_items = []
+        for item in response.get("items", []):
+            if not isinstance(item, dict):
+                item_dict = item.to_dict()
+            else:
+                item_dict = item
+            translated_item = await fill_missing_translations(item_dict)
+            translated_items.append(translated_item)
+        
+        response["items"] = translated_items
         result = self.paginated_response(**response)
         return result
 
@@ -243,7 +296,19 @@ class BaseRouter:
         """
         try:
             after_date = back_to_the_future(after_date)
-            return await self.service.get(after_date, self.repo, self.model, session)
+            items = await self.service.get(after_date, self.repo, self.model, session)
+            
+            # Apply translations to all items
+            translated_items = []
+            for item in items:
+                if not isinstance(item, dict):
+                    item_dict = item.to_dict()
+                else:
+                    item_dict = item
+                translated_item = await fill_missing_translations(item_dict)
+                translated_items.append(translated_item)
+            
+            return translated_items
         except Exception as e:
             logger.error(f"Unexpected error in get: {e} {self.model.__name__}")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -265,7 +330,35 @@ class BaseRouter:
         kwargs: str = {'page': page, 'page_size': page_size}
         if search:
             kwargs['search_str'] = search
-        return await self.service.search(self.repo, self.model, session, **kwargs)
+        
+        result = await self.service.search(self.repo, self.model, session, **kwargs)
+        
+        # Apply translations to all items in the search result
+        if isinstance(result, dict) and 'items' in result:
+            # This is a paginated response
+            translated_items = []
+            for item in result.get("items", []):
+                if not isinstance(item, dict):
+                    item_dict = item.to_dict()
+                else:
+                    item_dict = item
+                translated_item = await fill_missing_translations(item_dict)
+                translated_items.append(translated_item)
+            
+            result["items"] = translated_items
+            return self.paginated_response(**result)
+        else:
+            # This is a list response
+            translated_items = []
+            for item in result:
+                if not isinstance(item, dict):
+                    item_dict = item.to_dict()
+                else:
+                    item_dict = item
+                translated_item = await fill_missing_translations(item_dict)
+                translated_items.append(translated_item)
+            
+            return translated_items
 
     async def search_all(self,
                          search: str = Query(None, description="Поисковый запрос. "
@@ -278,7 +371,20 @@ class BaseRouter:
         kwargs: dict = {}
         if search:
             kwargs['search_str'] = search
-        return await self.service.search(self.repo, self.model, session, **kwargs)
+        
+        items = await self.service.search(self.repo, self.model, session, **kwargs)
+        
+        # Apply translations to all items
+        translated_items = []
+        for item in items:
+            if not isinstance(item, dict):
+                item_dict = item.to_dict()
+            else:
+                item_dict = item
+            translated_item = await fill_missing_translations(item_dict)
+            translated_items.append(translated_item)
+        
+        return translated_items
 
 
 class LightRouter:
