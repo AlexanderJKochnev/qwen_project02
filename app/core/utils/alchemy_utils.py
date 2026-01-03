@@ -556,7 +556,7 @@ class JsonConverter():
             result = data.get('items')
             if all((result, isinstance(result, dict))):
                 return result
-        return  data
+        return data
 
     def json_list(self, data: dict) -> dict:
         """ проходит по верхнему уровню словаря """

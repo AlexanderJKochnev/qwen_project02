@@ -176,6 +176,7 @@ class ItemUpdatePreact(ItemCreatePreact):
     drink_id: Optional[int] = None
     id: Optional[int] = None
 
+
 class ItemCreateResponseSchema(ItemCreate, CreateResponse):
     pass
 

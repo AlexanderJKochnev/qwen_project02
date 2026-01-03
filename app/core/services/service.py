@@ -82,9 +82,11 @@ class Service(metaclass=ServiceMeta):
                 else:
                     instance_dict = instance
 
-                translated_instance = await fill_missing_translations(instance_dict)
-
-                return translated_instance, False
+                translated_result = await fill_missing_translations(instance_dict)
+                if isinstance(translated_result, dict):
+                    translated_result = model(**translated_result)
+                # Return the model object with translated values
+                return translated_result, False
             # запись не найдена
             obj = model(**data_dict)
             instance = await repository.create(obj, model, session)
@@ -97,9 +99,11 @@ class Service(metaclass=ServiceMeta):
             else:
                 instance_dict = instance
 
-            translated_instance = await fill_missing_translations(instance_dict)
-
-            return translated_instance, True
+            translated_result = await fill_missing_translations(instance_dict)
+            if isinstance(translated_result, dict):
+                translated_result = model(**translated_result)
+            # Return the model object with translated values
+            return translated_result, True
         except IntegrityError as e:
             raise Exception(f'Integrity error: {e}')
         except Exception as e:
@@ -193,7 +197,8 @@ class Service(metaclass=ServiceMeta):
 
             # Apply translations to fill missing localized fields
             translated_result = await fill_missing_translations(result_dict)
-
+            if isinstance(translated_result, dict):
+                translated_result = model(**translated_result)
             # Return the model object with translated values
             return translated_result
         return result
@@ -334,6 +339,6 @@ class Service(metaclass=ServiceMeta):
             obj = obj.to_dict()  # model_to_dict(obj)
 
         # Apply translations to fill missing localized fields before flattening
-        translated_obj = await fill_missing_translations(obj)
-        result = flatten_dict_with_localized_fields(translated_obj, detail_fields, lang)
+        translated_dict = await fill_missing_translations(obj)
+        result = flatten_dict_with_localized_fields(translated_dict, detail_fields, lang)
         return result

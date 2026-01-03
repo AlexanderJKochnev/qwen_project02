@@ -215,6 +215,7 @@ def test_jsonconverter2():
         assert not diff, key
         # assert temp == item, f'{type(temp)=}, {type(item)=}'
 
+
 def test_source_constraint_data():
     """
         тестирование исходных данных на ограничение по уникальности
@@ -490,28 +491,28 @@ def test_jsonconverter3():
 def test_dict_compaire():
     from deepdiff import DeepDiff
     dict1 = {'drink': {'title': 'Bolgheri Sassicaia 2014 DOC', 'title_ru': 'Bolgheri Sassicaia 2014 DOC',
-                      'subtitle': 'Tenuta San Guido', 'subtitle_ru': 'Tenuta San Guido',
-                      'description': 'Intense, concentrated and deep ruby-colored, this wine offers elegant, complex aromas of red fruits. In the mouth it is rich and dense, but harmonious, with sweet, balanced tannins. \nThe wine has a long finish with a depth and structure that ensure its extraordinary longevity.',
-                      'description_ru': 'Насыщенное, полнотелое вино, глубокого рубинового оттенка предлагает элегантные, сложные ароматы красных фруктов. Вино имеет богатый и плотный, но гармоничный вкус, со сладкими, сбалансированными танинами. \nОбладает послевкусием с глубиной и структурой, обеспечивающей его необычайную продолжительность.',
-                      'subcategory': {'category': {'name': 'Wine'}, 'name': 'Red'},
-                      'subregion': {'region': {'country': {'name': 'Italy'}, 'name': 'Tuscany', 'name_ru': 'Тоскана'},
-                                    'name': 'Bolgheri', 'name_ru': 'Болгери'}, 'alc': 13.5, 'foods': [
-                    {'superfood': {'name': 'Unclassified', 'name_ru': 'Не классифицированный'},
-                     'name': 'Game (venison)', 'name_ru': 'Дичь'},
-                    {'superfood': {'name': 'Unclassified', 'name_ru': 'Не классифицированный'}, 'name': 'Lamb',
-                     'name_ru': 'Баранина'}], 'varietals': [
-                    {'varietal': {'name': 'Cabernet Sauvignon', 'name_ru': 'Каберне Совиньон'}, 'percentage': 85.0},
-                    {'varietal': {'name': 'Cabernet Franc', 'name_ru': 'Каберне Фран'}, 'percentage': 15.0}]},
-            'vol': 0.75, 'count': 0, 'image_path': '-Lymluc5yKRoLQyYLbJG.png', 'image_id': '692642c8c072491af2d85ea9'}
+                       'subtitle': 'Tenuta San Guido', 'subtitle_ru': 'Tenuta San Guido',
+                       'description': 'Intense, concentrated and deep ruby-colored, this wine offers elegant, complex aromas of red fruits. In the mouth it is rich and dense, but harmonious, with sweet, balanced tannins. \nThe wine has a long finish with a depth and structure that ensure its extraordinary longevity.',
+                       'description_ru': 'Насыщенное, полнотелое вино, глубокого рубинового оттенка предлагает элегантные, сложные ароматы красных фруктов. Вино имеет богатый и плотный, но гармоничный вкус, со сладкими, сбалансированными танинами. \nОбладает послевкусием с глубиной и структурой, обеспечивающей его необычайную продолжительность.',
+                       'subcategory': {'category': {'name': 'Wine'}, 'name': 'Red'},
+                       'subregion': {'region': {'country': {'name': 'Italy'}, 'name': 'Tuscany', 'name_ru': 'Тоскана'},
+                                     'name': 'Bolgheri', 'name_ru': 'Болгери'}, 'alc': 13.5, 'foods': [
+                           {'superfood': {'name': 'Unclassified', 'name_ru': 'Не классифицированный'},
+                            'name': 'Game (venison)', 'name_ru': 'Дичь'},
+                           {'superfood': {'name': 'Unclassified', 'name_ru': 'Не классифицированный'}, 'name': 'Lamb',
+                               'name_ru': 'Баранина'}], 'varietals': [
+                           {'varietal': {'name': 'Cabernet Sauvignon', 'name_ru': 'Каберне Совиньон'}, 'percentage': 85.0},
+                           {'varietal': {'name': 'Cabernet Franc', 'name_ru': 'Каберне Фран'}, 'percentage': 15.0}]},
+             'vol': 0.75, 'count': 0, 'image_path': '-Lymluc5yKRoLQyYLbJG.png', 'image_id': '692642c8c072491af2d85ea9'}
     dict2 = {'image_id': '692642c8c072491af2d85ea9',
              'drink': {'title': 'Bolgheri Sassicaia 2014 DOC', 'title_ru': 'Bolgheri Sassicaia 2014 DOC',
-                      'subtitle': 'Tenuta San Guido', 'subtitle_ru': 'Tenuta San Guido',
-                      'description': 'Intense, concentrated and deep ruby-colored, this wine offers elegant, complex aromas of red fruits. In the mouth it is rich and dense, but harmonious, with sweet, balanced tannins. \nThe wine has a long finish with a depth and structure that ensure its extraordinary longevity.',
-                      'description_ru': 'Насыщенное, полнотелое вино, глубокого рубинового оттенка предлагает элегантные, сложные ароматы красных фруктов. Вино имеет богатый и плотный, но гармоничный вкус, со сладкими, сбалансированными танинами. \nОбладает послевкусием с глубиной и структурой, обеспечивающей его необычайную продолжительность.',
-                      'subcategory': {'category': {'name': 'Wine'}, 'name': 'Red'},
-                      'subregion': {'region': {'country': {'name': 'Italy'}, 'name': 'Tuscany', 'name_ru': 'Тоскана'},
-                                    'name': 'Bolgheri', 'name_ru': 'Болгери'}, 'alc': 13.5, 'id': 1}, 'vol': 0.75,
-            'count': 0, 'image_path': '-Lymluc5yKRoLQyYLbJG.png'}
+                       'subtitle': 'Tenuta San Guido', 'subtitle_ru': 'Tenuta San Guido',
+                       'description': 'Intense, concentrated and deep ruby-colored, this wine offers elegant, complex aromas of red fruits. In the mouth it is rich and dense, but harmonious, with sweet, balanced tannins. \nThe wine has a long finish with a depth and structure that ensure its extraordinary longevity.',
+                       'description_ru': 'Насыщенное, полнотелое вино, глубокого рубинового оттенка предлагает элегантные, сложные ароматы красных фруктов. Вино имеет богатый и плотный, но гармоничный вкус, со сладкими, сбалансированными танинами. \nОбладает послевкусием с глубиной и структурой, обеспечивающей его необычайную продолжительность.',
+                       'subcategory': {'category': {'name': 'Wine'}, 'name': 'Red'},
+                       'subregion': {'region': {'country': {'name': 'Italy'}, 'name': 'Tuscany', 'name_ru': 'Тоскана'},
+                                     'name': 'Bolgheri', 'name_ru': 'Болгери'}, 'alc': 13.5, 'id': 1}, 'vol': 0.75,
+             'count': 0, 'image_path': '-Lymluc5yKRoLQyYLbJG.png'}
 
     diff = DeepDiff(dict1, dict2,
                     exclude_paths=["root['price']",

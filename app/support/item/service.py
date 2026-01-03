@@ -537,7 +537,8 @@ class ItemService(Service):
 
             # Apply translations to fill missing localized fields
             translated_result = await fill_missing_translations(result_dict)
-
+            if isinstance(translated_result, dict):
+                translated_result = model(**translated_result)
             # Return the model object with translated values
             return translated_result
         return item_dict

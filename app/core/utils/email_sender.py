@@ -65,7 +65,7 @@ async def send_notification(
 ):
     """
     Sends email notifications for different types of events in the workers.
-    
+
     Args:
         message: Main message content
         notification_type: Type of notification (ERROR, WARNING, SUCCESS, SHUTDOWN)
@@ -74,7 +74,7 @@ async def send_notification(
     """
     email_sender = EmailSender()
     to_email = settings.EMAIL_ADMIN
-    
+
     # Create appropriate subject based on notification type
     type_to_subject = {
         NotificationType.ERROR: f"Ошибка воркера {worker_name}",
@@ -82,23 +82,23 @@ async def send_notification(
         NotificationType.SUCCESS: f"Уведомление от воркера {worker_name}",
         NotificationType.SHUTDOWN: f"Остановка воркера {worker_name}"
     }
-    
+
     subject = type_to_subject.get(notification_type, f"Уведомление от воркера {worker_name}")
-    
+
     # Create body with appropriate formatting based on notification type
     type_to_body_prefix = {
         NotificationType.ERROR: f"Произошла критическая ошибка при выполнении задачи воркера {worker_name}:\n\n",
         NotificationType.WARNING: f"Обнаружена некритичная ошибка при выполнении задачи воркера {worker_name}, "
-                                  f"воркер продолжает работу:\n\n",
+        f"воркер продолжает работу:\n\n",
         NotificationType.SUCCESS: f"Нормальное завершение или уведомление от воркера {worker_name}:\n\n",
         NotificationType.SHUTDOWN: f"Воркер {worker_name} завершает работу:\n\n"
     }
-    
+
     body_prefix = type_to_body_prefix.get(notification_type, f"Уведомление от воркера {worker_name}:\n\n")
-    
+
     body = body_prefix + message
-    
+
     if additional_info:
         body += f"\n\nДополнительная информация: {additional_info}"
-    
+
     await email_sender.send_email(to_email, subject, body)
