@@ -97,7 +97,7 @@ class ItemViewRouter:
             methods=["GET"],
             response_model=ItemReadPreactForUpdate,
             tags=self.tags,
-            summary="Получить детальную информацию по элементу с локализацией"
+            summary="Получить детальную информацию по элементу со всеми локализациями"
         )
 
     async def get_one(self,

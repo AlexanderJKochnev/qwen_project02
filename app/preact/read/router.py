@@ -1,6 +1,7 @@
 # app/support/read/router.py
 """
     роутер для UpdateView (заполнение) для всех кроме Drink & Items
+    Items_Drinks заполняются из ItemViewRouter.get_one
 """
 from fastapi import Request, Depends, HTTPException
 from pydantic import ValidationError
