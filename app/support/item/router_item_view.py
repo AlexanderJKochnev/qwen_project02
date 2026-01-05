@@ -4,14 +4,14 @@
     выводит плоские словари с локализованными полями
     по языкам
 """
-from typing import List
-
+from typing import List, Annotated, Callable
 from fastapi import Depends, Path, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dependencies import get_active_user_or_internal
 from app.core.config.database.db_async import get_db
 from app.core.schemas.base import PaginatedResponse
+from app.depends import get_translator_func
 from app.support.item.model import Item
 from app.support.item.repository import ItemRepository
 from app.support.item.schemas import ItemDetailView, ItemListView, ItemReadPreactForUpdate
@@ -102,15 +102,22 @@ class ItemViewRouter:
 
     async def get_one(self,
                       id: int,
-                      session: AsyncSession = Depends(get_db)) -> ItemReadPreactForUpdate:
+                      translation: Annotated[Callable, Depends(get_translator_func)],
+                      session: AsyncSession = Depends(get_db)
+                      ) -> ItemReadPreactForUpdate:
         """
             Получение одной записи по ID
+            используется для загрузки данных в preact for update
+            сюда вставляетсяя перевод
         """
         # repo = ItemRepository
         item_dict = await self.service.get_one(id, session)
-        item_py = ItemReadPreactForUpdate.validate(item_dict)
-        item_dict = item_py.model_dump(exclude_unset=True, exclude_none=True)
-        return item_dict
+        # item_py = ItemReadPreactForUpdate.validate(item_dict)
+        # item_dict = item_py.model_dump(exclude_unset=False, exclude_none=False)
+        translated_dict = await translation(item_dict, True)
+        for key, val in translated_dict.items():
+            print(f'{key}: new {val}, old {item_dict.get(key)}')
+        return translated_dict
 
     async def get_list(self, lang: str = Path(..., description="Язык локализации"),
                        session: AsyncSession = Depends(get_db)):

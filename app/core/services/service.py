@@ -12,7 +12,6 @@ from app.core.repositories.sqlalchemy_repository import ModelType, Repository
 from app.core.utils.alchemy_utils import get_models
 from app.core.utils.common_utils import flatten_dict_with_localized_fields
 from app.core.utils.pydantic_utils import make_paginated_response
-from app.core.utils.translation_utils import fill_missing_translations
 from app.service_registry import register_service
 
 joint = '. '
@@ -76,34 +75,13 @@ class Service(metaclass=ServiceMeta):
             # поиск существующей записи по совпадению объектов по уникальным полям
             instance = await repository.get_by_fields(default_dict, model, session)
             if instance:
-                # Apply translations to fill missing localized fields for existing record
-                if not isinstance(instance, dict):
-                    instance_dict = instance.to_dict()
-                else:
-                    instance_dict = instance
-
-                translated_result = await fill_missing_translations(instance_dict)
-                if isinstance(translated_result, dict):
-                    translated_result = model(**translated_result)
-                # Return the model object with translated values
-                return translated_result, False
+                return instance, False
             # запись не найдена
             obj = model(**data_dict)
             instance = await repository.create(obj, model, session)
             await session.flush()
             await session.refresh(instance)
-
-            # Apply translations to the newly created instance
-            if not isinstance(instance, dict):
-                instance_dict = instance.to_dict()
-            else:
-                instance_dict = instance
-
-            translated_result = await fill_missing_translations(instance_dict)
-            if isinstance(translated_result, dict):
-                translated_result = model(**translated_result)
-            # Return the model object with translated values
-            return translated_result, True
+            return instance, True
         except IntegrityError as e:
             raise Exception(f'Integrity error: {e}')
         except Exception as e:
@@ -188,19 +166,6 @@ class Service(metaclass=ServiceMeta):
             model: ModelType, session: AsyncSession) -> Optional[ModelType]:
         """Получение записи по ID с автоматическим переводом недостающих локализованных полей"""
         result = await repository.get_by_id(id, model, session)
-        if result:
-            # Convert model to dict to work with translation
-            if not isinstance(result, dict):
-                result_dict = result.to_dict()
-            else:
-                result_dict = result
-
-            # Apply translations to fill missing localized fields
-            translated_result = await fill_missing_translations(result_dict)
-            if isinstance(translated_result, dict):
-                translated_result = model(**translated_result)
-            # Return the model object with translated values
-            return translated_result
         return result
 
     @classmethod
@@ -335,10 +300,5 @@ class Service(metaclass=ServiceMeta):
         # return obj
         if not obj:
             return None
-        if not isinstance(obj, dict):   # если объект не словарь
-            obj = obj.to_dict()  # model_to_dict(obj)
-
-        # Apply translations to fill missing localized fields before flattening
-        translated_dict = await fill_missing_translations(obj)
-        result = flatten_dict_with_localized_fields(translated_dict, detail_fields, lang)
+        result = flatten_dict_with_localized_fields(obj.to_dict(), detail_fields, lang)
         return result

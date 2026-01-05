@@ -60,6 +60,7 @@ export const HandbookTypeList = () => {
       'categories': 'Categories',
       'countries': 'Countries',
       'subcategories': 'Subcategories',
+      'regions': 'Regions',
       'subregions': 'Subregions',
       'sweetness': 'Sweetnesses',
       'foods': 'Foods',

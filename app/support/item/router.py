@@ -40,6 +40,7 @@ class ItemRouter(BaseRouter):
             "/create_item_drink", self.create_item_drink, status_code=status.HTTP_200_OK, methods=["POST"],
             # response_model=ItemCreateResponseSchema
         )
+        # ???????? UPDATE -> POST ?
         self.router.add_api_route(
             "/update_item_drink/{id}", self.update_item_drink, status_code=status.HTTP_200_OK, methods=["POST"],
             # response_model=ItemCreateResponseSchema

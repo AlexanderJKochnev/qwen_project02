@@ -6,7 +6,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
 # from app.support.item.schemas import ItemCreate, ItemCreateRelation, ItemRead
 from app.core.services.service import Service
-from app.core.utils.translation_utils import fill_missing_translations
 from app.core.utils.common_utils import flatten_dict_with_localized_fields, get_value, jprint  # noqa: F401
 from app.core.utils.converters import read_convert_json
 from app.core.utils.pydantic_utils import make_paginated_response
@@ -481,22 +480,6 @@ class ItemService(Service):
         result = await repository.get_by_id(id, model, session)
         return result
 
-        """
-        if result:
-            # Convert model to dict to work with translation
-            if not isinstance(result, dict):
-                result_dict = result.to_dict()
-            else:
-                result_dict = result
-
-            # Apply translations to fill missing localized fields
-            translated_result = await fill_missing_translations(result_dict)
-
-            # Return the model object with translated values
-            return translated_result
-        return result
-        """
-
     @classmethod
     async def get_one(cls,
                       id: int,
@@ -528,17 +511,4 @@ class ItemService(Service):
         tmp = DrinkCreate(**drink_dict)
         drink_dict = tmp.model_dump(exclude_unset=True, exclude_none=True)
         item_dict.update(drink_dict)
-        if item_dict:
-            # Convert model to dict to work with translation
-            if not isinstance(item_dict, dict):
-                result_dict = item_dict.to_dict()
-            else:
-                result_dict = item_dict
-
-            # Apply translations to fill missing localized fields
-            translated_result = await fill_missing_translations(result_dict)
-            if isinstance(translated_result, dict):
-                translated_result = model(**translated_result)
-            # Return the model object with translated values
-            return translated_result
         return item_dict
