@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     LANGS: str = "en, ru, fr"
     # язык по умолчанию
     DEFAULT_LANG: str = "en"
+    # локализованные поля
+    LOCALIZED_FIELDS: str = 'name,title,subtitle,decription'
+    MACHINE_TRANSLATION_MARK: str = 'ai'
     #  справочники
     HANDBOOKS_PREFIX: str = "handbooks"
 
@@ -208,7 +211,17 @@ class Settings(BaseSettings):
 
     @property
     def LANGUAGES(self):
+        """
+        return list of languages codes ['en', 'ru, 'fr' ...]
+        """
         return strtolist(self.LANGS)
+
+    @property
+    def FIELDS_LOCALIZED(self):
+        """
+        return list of localized fileds (without suffix)
+        """
+        return strtolist(self.LOCALIZED_FIELDS)
 
     @property
     def max_file_size(self) -> int:
