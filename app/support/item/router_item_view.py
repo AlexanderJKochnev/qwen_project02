@@ -115,8 +115,6 @@ class ItemViewRouter:
         # item_py = ItemReadPreactForUpdate.validate(item_dict)
         # item_dict = item_py.model_dump(exclude_unset=False, exclude_none=False)
         translated_dict = await translation(item_dict, True)
-        for key, val in translated_dict.items():
-            print(f'{key}: new {val}, old {item_dict.get(key)}')
         return translated_dict
 
     async def get_list(self, lang: str = Path(..., description="Язык локализации"),

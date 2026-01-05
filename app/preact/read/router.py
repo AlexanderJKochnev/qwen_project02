@@ -40,8 +40,6 @@ class ReadRouter(PreactRouter):
             service = self.get_service(model)
             obj = await service.get_by_id(id, repo, model, session)
             result_dict = obj.to_dict()
-            for key, val in result_dict.items():
-                print(f'{key}: {val}')
             translated_dict = await translation(result_dict, True)
             return translated_dict
         except ValidationError as exc:
