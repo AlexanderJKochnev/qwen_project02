@@ -187,56 +187,87 @@ class ItemService(Service):
     @classmethod
     async def get_detail_view(cls, lang: str, id: int, repository: ItemRepository, model: Item, session: AsyncSession):
         """Получение детального представления элемента с локализацией"""
+        from app.core.config.project_config import settings
+        
         item = await repository.get_detail_view(id, model, session)
         if not item:
             return None
 
-        # Подготовим данные для локализации
+        # Получаем настройки языков из конфигурации
+        languages = settings.LANGUAGES
+        localized_fields = settings.FIELDS_LOCALIZED
+        
+        # Подготовим данные для локализации динамически
         localized_data = {
             'id': item['id'],
             'vol': item['vol'],
             'alc': str(item['alc']) if item['alc'] is not None else None,
             'age': item['age'],
             'image_id': item['image_id'],
-            'title': item['drink'].title,
-            'title_ru': getattr(item['drink'], 'title_ru', ''),
-            'title_fr': getattr(item['drink'], 'title_fr', ''),
-            'subtitle': getattr(item['drink'], 'subtitle', ''),
-            'subtitle_ru': getattr(item['drink'], 'subtitle_ru', ''),
-            'subtitle_fr': getattr(item['drink'], 'subtitle_fr', ''),
-            'country': item['country'].name if item['country'] else '',
-            'country_ru': getattr(item['country'], 'name_ru', '') if item['country'] else '',
-            'country_fr': getattr(item['country'], 'name_fr', '') if item['country'] else '',
-            'subcategory': f"{item['subcategory'].category.name} {item['subcategory'].name}",
-            'subcategory_ru': f"{getattr(item['subcategory'].category, 'name_ru', '')} {getattr(item['subcategory'], 'name_ru', '')}" if (getattr(item['subcategory'].category, 'name_ru', None) and getattr(item['subcategory'], 'name_ru', None)) else '',  # NOQA: E501
-            'subcategory_fr': f"{getattr(item['subcategory'].category, 'name_fr', '')} {getattr(item['subcategory'], 'name_fr', '')}" if (getattr(item['subcategory'].category, 'name_fr', None) and getattr(item['subcategory'], 'name_fr', None)) else '',  # NOQA: E501
-            'sweetness': getattr(item['sweetness'], 'name', '') if item['sweetness'] else '',
-            'sweetness_ru': getattr(item['sweetness'], 'name_ru', '') if item['sweetness'] else '',
-            'sweetness_fr': getattr(item['sweetness'], 'name_fr', '') if item['sweetness'] else '',
-            'recommendation': getattr(item['drink'], 'recommendation', ''),
-            'recommendation_ru': getattr(item['drink'], 'recommendation_ru', ''),
-            'recommendation_fr': getattr(item['drink'], 'recommendation_fr', ''),
-            'madeof': getattr(item['drink'], 'madeof', ''),
-            'madeof_ru': getattr(item['drink'], 'madeof_ru', ''),
-            'madeof_fr': getattr(item['drink'], 'madeof_fr', ''),
-            'description': getattr(item['drink'], 'description', ''),
-            'description_ru': getattr(item['drink'], 'description_ru', ''),
-            'description_fr': getattr(item['drink'], 'description_fr', ''),
         }
 
-        # Handle varietals and pairing with localization (similar to drink schemas)
-        lang_suffix = '' if lang == 'en' else f'_{lang}'
+        # Добавляем основные поля с локализацией
+        for field in localized_fields:
+            # Добавляем основное поле
+            if field == 'title':
+                localized_data[field] = item['drink'].title
+            elif field == 'subtitle':
+                localized_data[field] = getattr(item['drink'], 'subtitle', '')
+            elif field == 'name':  # For sweetness
+                localized_data[field] = getattr(item['sweetness'], 'name', '') if item['sweetness'] else ''
+            elif field == 'country':
+                localized_data[field] = item['country'].name if item['country'] else ''
+            elif field == 'description':
+                localized_data[field] = getattr(item['drink'], 'description', '')
+            elif field == 'recommendation':
+                localized_data[field] = getattr(item['drink'], 'recommendation', '')
+            elif field == 'madeof':
+                localized_data[field] = getattr(item['drink'], 'madeof', '')
+            
+            # Добавляем локализованные версии для всех языков
+            for lang_code in languages:
+                if lang_code == 'en':
+                    continue  # Основное поле уже добавлено
+                
+                localized_field_name = f"{field}_{lang_code}"
+                if field == 'title':
+                    localized_data[localized_field_name] = getattr(item['drink'], f'title_{lang_code}', '')
+                elif field == 'subtitle':
+                    localized_data[localized_field_name] = getattr(item['drink'], f'subtitle_{lang_code}', '')
+                elif field == 'name':  # For sweetness
+                    localized_data[localized_field_name] = getattr(item['sweetness'], f'name_{lang_code}', '') if item['sweetness'] else ''
+                elif field == 'country':
+                    localized_data[localized_field_name] = getattr(item['country'], f'name_{lang_code}', '') if item['country'] else ''
+                elif field == 'description':
+                    localized_data[localized_field_name] = getattr(item['drink'], f'description_{lang_code}', '')
+                elif field == 'recommendation':
+                    localized_data[localized_field_name] = getattr(item['drink'], f'recommendation_{lang_code}', '')
+                elif field == 'madeof':
+                    localized_data[localized_field_name] = getattr(item['drink'], f'madeof_{lang_code}', '')
 
-        # Get varietals with localization and percentages
+        # Добавляем subcategory (category)
+        localized_data['subcategory'] = f"{item['subcategory'].category.name} {item['subcategory'].name}"
+        for lang_code in languages:
+            if lang_code == 'en':
+                continue
+            localized_data[f'subcategory_{lang_code}'] = f"{getattr(item['subcategory'].category, f'name_{lang_code}', '')} {getattr(item['subcategory'], f'name_{lang_code}', '')}" if (getattr(item['subcategory'].category, f'name_{lang_code}', None) and getattr(item['subcategory'], f'name_{lang_code}', None)) else ''
+
+        # Handle varietals and pairing with localization based on language order
         varietal = []
         if hasattr(item['drink'], 'varietal_associations') and item['drink'].varietal_associations:
             for assoc in item['drink'].varietal_associations:
-                if hasattr(assoc.varietal, f'name{lang_suffix}'):
-                    name = getattr(assoc.varietal, f'name{lang_suffix}')
-                elif hasattr(assoc.varietal, 'name'):
-                    name = assoc.varietal.name
-                else:
-                    continue
+                name = None
+                # Check languages in order until we find a non-empty value
+                for lang_code in languages:
+                    if lang_code == 'en':
+                        if hasattr(assoc.varietal, 'name') and assoc.varietal.name:
+                            name = assoc.varietal.name
+                            break
+                    else:
+                        if hasattr(assoc.varietal, f'name_{lang_code}') and getattr(assoc.varietal, f'name_{lang_code}', ''):
+                            name = getattr(assoc.varietal, f'name_{lang_code}')
+                            break
+                
                 if name:
                     # Add percentage if available
                     if assoc.percentage is not None:
@@ -244,16 +275,22 @@ class ItemService(Service):
                     else:
                         varietal.append(name)
 
-        # Get pairing (foods) with localization
+        # Get pairing (foods) with localization based on language order
         pairing = []
         if hasattr(item['drink'], 'food_associations') and item['drink'].food_associations:
             for assoc in item['drink'].food_associations:
-                if hasattr(assoc.food, f'name{lang_suffix}'):
-                    name = getattr(assoc.food, f'name{lang_suffix}')
-                elif hasattr(assoc.food, 'name'):
-                    name = assoc.food.name
-                else:
-                    continue
+                name = None
+                # Check languages in order until we find a non-empty value
+                for lang_code in languages:
+                    if lang_code == 'en':
+                        if hasattr(assoc.food, 'name') and assoc.food.name:
+                            name = assoc.food.name
+                            break
+                    else:
+                        if hasattr(assoc.food, f'name_{lang_code}') and getattr(assoc.food, f'name_{lang_code}', ''):
+                            name = getattr(assoc.food, f'name_{lang_code}')
+                            break
+                
                 if name:
                     pairing.append(name)
 
@@ -261,10 +298,12 @@ class ItemService(Service):
         localized_result = flatten_dict_with_localized_fields(
             localized_data,
             ['title', 'subtitle', 'country', 'subcategory', 'description',
-             'sweetness', 'recommendation', 'madeof'],
+             'name', 'recommendation', 'madeof'],  # 'name' for sweetness
             lang
         )
         localized_result['category'] = localized_result.pop('subcategory', '')
+        localized_result['sweetness'] = localized_result.pop('name', '')  # Rename 'name' to 'sweetness'
+        
         # Add varietal (renamed from varietals) and pairing after localization
         if varietal:
             localized_result['varietal'] = varietal
