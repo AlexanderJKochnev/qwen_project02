@@ -37,6 +37,19 @@ class ItemService(Service):
         """
         if fields_to_localize is None:
             fields_to_localize = ['title', 'country', 'subcategory']
+        
+        # Helper function to check if a value is a Mock object
+        def is_mock_object(value):
+            return hasattr(value, '_mock_name') or (hasattr(value, '__class__') and 'Mock' in value.__class__.__name__)
+
+        # Helper function to get attribute with fallback
+        def get_localized_attribute(obj, base_attr, lang_code):
+            if lang_code == settings.DEFAULT_LANG:
+                return getattr(obj, base_attr, None)
+            else:
+                attr_name = f"{base_attr}_{lang_code}"
+                return getattr(obj, attr_name, None)
+                
         # Применим функцию локализации
         localized_result = flatten_dict_with_localized_fields(
             item,  # localized_data,
@@ -67,99 +80,59 @@ class ItemService(Service):
             'image_id': item['image_id']
         }
 
-        # Helper function to check if a value is a Mock object
-        def is_mock_object(value):
-            return hasattr(value, '_mock_name') or (hasattr(value, '__class__') and 'Mock' in value.__class__.__name__)
+        # Helper function to get attribute with fallback
+        def get_localized_attribute(obj, base_attr, lang_code):
+            if lang_code == settings.DEFAULT_LANG:
+                return getattr(obj, base_attr, None)
+            else:
+                attr_name = f"{base_attr}_{lang_code}"
+                return getattr(obj, attr_name, None)
 
         # Локализация заголовка
-        if lang == 'en':
+        if lang == settings.DEFAULT_LANG:
             result['title'] = item['drink'].title
-        elif lang == 'ru':
-            title_ru = getattr(item['drink'], 'title_ru', None)
-            if is_mock_object(title_ru):
-                title_ru = None
-            result['title'] = title_ru if title_ru else item['drink'].title
-        elif lang == 'fr':
-            title_fr = getattr(item['drink'], 'title_fr', None)
-            if is_mock_object(title_fr):
-                title_fr = None
-            result['title'] = title_fr if title_fr else item['drink'].title
         else:
-            result['title'] = item['drink'].title
+            title_lang = get_localized_attribute(item['drink'], 'title', lang)
+            if is_mock_object(title_lang):
+                title_lang = None
+            result['title'] = title_lang if title_lang else item['drink'].title
 
         # Локализация страны
-        if lang == 'en':
+        if lang == settings.DEFAULT_LANG:
             result['country'] = item['country'].name
-        elif lang == 'ru':
-            country_name_ru = getattr(item['country'], 'name_ru', None)
-            if is_mock_object(country_name_ru):
-                country_name_ru = None
-            result['country'] = country_name_ru if country_name_ru else item['country'].name
-        elif lang == 'fr':
-            country_name_fr = getattr(item['country'], 'name_fr', None)
-            if is_mock_object(country_name_fr):
-                country_name_fr = None
-            result['country'] = country_name_fr if country_name_fr else item['country'].name
         else:
-            result['country'] = item['country'].name
+            country_name_lang = get_localized_attribute(item['country'], 'name', lang)
+            if is_mock_object(country_name_lang):
+                country_name_lang = None
+            result['country'] = country_name_lang if country_name_lang else item['country'].name
 
         # Локализация категории
-        if lang == 'en':
+        if lang == settings.DEFAULT_LANG:
             category_name = item['subcategory'].category.name
             subcategory_name = getattr(item['subcategory'], 'name', None)
             if is_mock_object(subcategory_name):
                 subcategory_name = None
-            if subcategory_name:
-                result['category'] = f"{category_name} {subcategory_name}".strip()
-            else:
-                result['category'] = category_name
-        elif lang == 'ru':
-            category_name = getattr(item['subcategory'].category, 'name_ru', None)
-            if is_mock_object(category_name):
-                category_name = None
-            if category_name:
-                category_name = category_name
-            else:
-                category_name = item['subcategory'].category.name
-
-            subcategory_name = getattr(item['subcategory'], 'name_ru', None)
-            if is_mock_object(subcategory_name):
-                subcategory_name = None
-            if not subcategory_name:
-                subcategory_name = getattr(item['subcategory'], 'name', None)
-                if is_mock_object(subcategory_name):
-                    subcategory_name = None
-
-            if subcategory_name:
-                result['category'] = f"{category_name} {subcategory_name}".strip()
-            else:
-                result['category'] = category_name
-        elif lang == 'fr':
-            category_name = getattr(item['subcategory'].category, 'name_fr', None)
-            if is_mock_object(category_name):
-                category_name = None
-            if category_name:
-                category_name = category_name
-            else:
-                category_name = item['subcategory'].category.name
-
-            subcategory_name = getattr(item['subcategory'], 'name_fr', None)
-            if is_mock_object(subcategory_name):
-                subcategory_name = None
-            if not subcategory_name:
-                subcategory_name = getattr(item['subcategory'], 'name', None)
-                if is_mock_object(subcategory_name):
-                    subcategory_name = None
-
             if subcategory_name:
                 result['category'] = f"{category_name} {subcategory_name}".strip()
             else:
                 result['category'] = category_name
         else:
-            category_name = item['subcategory'].category.name
-            subcategory_name = getattr(item['subcategory'], 'name', None)
+            category_name = get_localized_attribute(item['subcategory'].category, 'name', lang)
+            if is_mock_object(category_name):
+                category_name = None
+            if category_name:
+                category_name = category_name
+            else:
+                category_name = item['subcategory'].category.name
+
+            subcategory_name = get_localized_attribute(item['subcategory'], 'name', lang)
             if is_mock_object(subcategory_name):
                 subcategory_name = None
+            if not subcategory_name:
+                subcategory_name = getattr(item['subcategory'], 'name', None)
+                if is_mock_object(subcategory_name):
+                    subcategory_name = None
+
             if subcategory_name:
                 result['category'] = f"{category_name} {subcategory_name}".strip()
             else:

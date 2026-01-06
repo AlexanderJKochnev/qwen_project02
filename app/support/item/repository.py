@@ -286,7 +286,7 @@ class ItemRepository(Repository):
         subtitle_fields = []
 
         for lang in langs:
-            if lang == 'en':
+            if lang == settings.DEFAULT_LANG:
                 title_fields.append(getattr(Drink, 'title'))
                 subtitle_fields.append(getattr(Drink, 'subtitle'))
             else:
