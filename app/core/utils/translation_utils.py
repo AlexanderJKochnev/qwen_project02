@@ -58,8 +58,25 @@ def get_group_localized_fields(langs: list, default_lang: str, localized_fields:
     return result
 
 
+def localized_field_with_replacement(source: Dict[str, Any], key: str,
+                                     langs: list, target_key: str = None) -> Dict[str, Any]:
+    """
+        1. Извлекает из словаря source значения key на всех языках
+        2. Выбирает первое не пустое (langs - список suffixes языков отсортированных по приоритету)
+        3. Возвращает словарь из одной пары target_key: val
+    """
+    for lang in langs:
+        res = source.get(f'{key}{lang}')
+        if res:
+            return {target_key or key: res}
+    else:
+        return {target_key or key: None}
+
+
 def get_localized_fields() -> list:
-    """Get list of localized field names that should be translated"""
+    """Get list of localized field names that should be translated
+        DELETE !!
+    """
     langs = settings.LANGUAGES
     default_lang = settings.DEFAULT_LANG
     langs = [f'_{lang}'if lang != default_lang else '' for lang in settings.LANGUAGES]
@@ -67,26 +84,17 @@ def get_localized_fields() -> list:
     return [f'{field}{lang}' for field in localized_fields for lang in langs]
 
 
-def get_field_language01(field_name: str) -> Optional[str]:
+def get_field_language(field_name: str) -> Optional[str]:
     """Extract language code from field name"""
     if field_name[-3] != '_':
         return 'en'
     return field_name[-2:]
 
 
-def get_field_language(field_name: str) -> Optional[str]:
-    """Extract language code from field name"""
-    if field_name.endswith('_ru'):
-        return 'ru'
-    elif field_name.endswith('_fr'):
-        return 'fr'
-    elif field_name in ['name', 'description', 'title', 'subtitle']:
-        return 'en'  # Assuming English is the base language
-    return None
-
-
 def get_base_field_name(field_name: str) -> str:
-    """Get the base field name without language suffix"""
+    """Get the base field name without language suffix
+        DELETE !!!
+    """
     if field_name.endswith(('_ru', '_fr')):
         return field_name[:-3]  # Remove _ru or _fr
     return field_name
@@ -132,7 +140,7 @@ async def fill_missing_translations(data: Dict[str, Any], test: bool = False) ->
         # Find source -- first non empty fields
         for lang in langs:
             for field_name, value in filled_fields.items():
-                if get_field_language01(field_name) == lang and value:
+                if get_field_language(field_name) == lang and value:
                     source_field = field_name
                     source_value = value
                     source_lang = lang
@@ -146,7 +154,7 @@ async def fill_missing_translations(data: Dict[str, Any], test: bool = False) ->
         # Fill missing translations
         for field in fields:
             if field not in filled_fields:  # Field is missing
-                target_lang = get_field_language01(field)
+                target_lang = get_field_language(field)
                 if target_lang and target_lang != source_lang:
                     # Translate from source to target
                     translated_text = await translate_text(
@@ -172,6 +180,7 @@ async def fill_missing_translations_old(data: Dict[str, Any]) -> Dict[str, Any]:
 
     Returns:
         Updated dictionary with filled translations
+        DELETE !!!
     """
     if not data:
         return data

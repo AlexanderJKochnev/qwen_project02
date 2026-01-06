@@ -1,13 +1,17 @@
 # app.support.item.service.py
 from deepdiff import DeepDiff
+from decimal import Decimal
 from typing import Type, Optional, Dict, Any
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
 # from app.support.item.schemas import ItemCreate, ItemCreateRelation, ItemRead
 from app.core.services.service import Service
+from app.core.config.project_config import settings
+from app.core.utils.translation_utils import localized_field_with_replacement
+from app.core.utils.pydantic_utils import get_field_name
 from app.core.utils.common_utils import flatten_dict_with_localized_fields, get_value, jprint  # noqa: F401
-from app.core.utils.converters import read_convert_json
+from app.core.utils.converters import read_convert_json, list_move, lang_suffix_list
 from app.core.utils.pydantic_utils import make_paginated_response
 from app.mongodb.service import ThumbnailImageService
 from app.support.drink.model import Drink
@@ -17,7 +21,9 @@ from app.support.drink.schemas import DrinkCreate, DrinkUpdate
 from app.support.item.model import Item
 from app.support.item.repository import ItemRepository
 from app.support.item.schemas import (ItemCreate, ItemCreateRelation, ItemRead, ItemReadRelation,
-                                      ItemCreatePreact, ItemUpdatePreact, ItemUpdate)
+                                      ItemCreatePreact, ItemUpdatePreact, ItemUpdate,
+                                      ItemDetailNonLocalized, ItemDetailLocalized, ItemDetailForeignLocalized,
+                                      ItemDetailManyToManyLocalized)
 
 
 class ItemService(Service):
@@ -187,98 +193,77 @@ class ItemService(Service):
     @classmethod
     async def get_detail_view(cls, lang: str, id: int, repository: ItemRepository, model: Item, session: AsyncSession):
         """Получение детального представления элемента с локализацией"""
-        item = await repository.get_detail_view(id, model, session)
+        item_instance = await repository.get_detail_view(id, model, session)
+        # задаем порядок замещения пустых полей
+        language: list = list_move(settings.LANGUAGES, lang)
+        lang_prefixes: list = lang_suffix_list(language)
+        extra = [f'description{lang}' for lang in lang_prefixes]
+        item: dict = item_instance.to_dict()
+        # перенос dложенных словарей на верхний уровень
+        if drink := item.pop('drink'):
+            drink.pop('id', None)
+            for key in ('subcategory.category', 'subregion.region', 'subregion.region.country'):
+                tmp = drink
+                for k in key.split('.'):
+                    tmp = tmp.get(k)
+                for x in extra:
+                    tmp.pop(x, None)
+                drink[k] = tmp
+            item.update(drink)
         if not item:
             return None
-
-        # Подготовим данные для локализации
-        localized_data = {
-            'id': item['id'],
-            'vol': item['vol'],
-            'alc': str(item['alc']) if item['alc'] is not None else None,
-            'age': item['age'],
-            'image_id': item['image_id'],
-            'title': item['drink'].title,
-            'title_ru': getattr(item['drink'], 'title_ru', ''),
-            'title_fr': getattr(item['drink'], 'title_fr', ''),
-            'subtitle': getattr(item['drink'], 'subtitle', ''),
-            'subtitle_ru': getattr(item['drink'], 'subtitle_ru', ''),
-            'subtitle_fr': getattr(item['drink'], 'subtitle_fr', ''),
-            'country': item['country'].name if item['country'] else '',
-            'country_ru': getattr(item['country'], 'name_ru', '') if item['country'] else '',
-            'country_fr': getattr(item['country'], 'name_fr', '') if item['country'] else '',
-            'subcategory': f"{item['subcategory'].category.name} {item['subcategory'].name}",
-            'subcategory_ru': f"{getattr(item['subcategory'].category, 'name_ru', '')} {getattr(item['subcategory'], 'name_ru', '')}" if (getattr(item['subcategory'].category, 'name_ru', None) and getattr(item['subcategory'], 'name_ru', None)) else '',  # NOQA: E501
-            'subcategory_fr': f"{getattr(item['subcategory'].category, 'name_fr', '')} {getattr(item['subcategory'], 'name_fr', '')}" if (getattr(item['subcategory'].category, 'name_fr', None) and getattr(item['subcategory'], 'name_fr', None)) else '',  # NOQA: E501
-            'sweetness': getattr(item['sweetness'], 'name', '') if item['sweetness'] else '',
-            'sweetness_ru': getattr(item['sweetness'], 'name_ru', '') if item['sweetness'] else '',
-            'sweetness_fr': getattr(item['sweetness'], 'name_fr', '') if item['sweetness'] else '',
-            'recommendation': getattr(item['drink'], 'recommendation', ''),
-            'recommendation_ru': getattr(item['drink'], 'recommendation_ru', ''),
-            'recommendation_fr': getattr(item['drink'], 'recommendation_fr', ''),
-            'madeof': getattr(item['drink'], 'madeof', ''),
-            'madeof_ru': getattr(item['drink'], 'madeof_ru', ''),
-            'madeof_fr': getattr(item['drink'], 'madeof_fr', ''),
-            'description': getattr(item['drink'], 'description', ''),
-            'description_ru': getattr(item['drink'], 'description_ru', ''),
-            'description_fr': getattr(item['drink'], 'description_fr', ''),
-        }
-
-        # Handle varietals and pairing with localization (similar to drink schemas)
-        lang_suffix = '' if lang == 'en' else f'_{lang}'
-
-        # Get varietals with localization and percentages
-        varietal = []
-        if hasattr(item['drink'], 'varietal_associations') and item['drink'].varietal_associations:
-            for assoc in item['drink'].varietal_associations:
-                if hasattr(assoc.varietal, f'name{lang_suffix}'):
-                    name = getattr(assoc.varietal, f'name{lang_suffix}')
-                elif hasattr(assoc.varietal, 'name'):
-                    name = assoc.varietal.name
-                else:
-                    continue
-                if name:
-                    # Add percentage if available
-                    if assoc.percentage is not None:
-                        varietal.append(f"{name} {int(round(assoc.percentage))}%")
-                    else:
-                        varietal.append(name)
-
-        # Get pairing (foods) with localization
-        pairing = []
-        if hasattr(item['drink'], 'food_associations') and item['drink'].food_associations:
-            for assoc in item['drink'].food_associations:
-                if hasattr(assoc.food, f'name{lang_suffix}'):
-                    name = getattr(assoc.food, f'name{lang_suffix}')
-                elif hasattr(assoc.food, 'name'):
-                    name = assoc.food.name
-                else:
-                    continue
-                if name:
-                    pairing.append(name)
-
-        # Применим функцию локализации
-        localized_result = flatten_dict_with_localized_fields(
-            localized_data,
-            ['title', 'subtitle', 'country', 'subcategory', 'description',
-             'sweetness', 'recommendation', 'madeof'],
-            lang
-        )
-        localized_result['category'] = localized_result.pop('subcategory', '')
-        # Add varietal (renamed from varietals) and pairing after localization
-        if varietal:
-            localized_result['varietal'] = varietal
-        if pairing:
-            localized_result['pairing'] = pairing
-
-        # Добавим остальные поля
-        localized_result['id'] = item['id']
-        localized_result['vol'] = item['vol']
-        localized_result['alc'] = str(item['alc']) if item['alc'] is not None else None
-        localized_result['age'] = item['age']
-        localized_result['image_id'] = item['image_id']
-
-        return localized_result
+        # for n, (key, val) in enumerate(item.items()):
+        #     print(f'{n}:     {key}: {type(val)}')
+        # список всех локализованных полей приложения
+        # localized_fields = settings.FIELDS_LOCALIZED
+        result: dict = {}
+        # добавление non-localized fields
+        for key in get_field_name(ItemDetailNonLocalized):
+            if val := item.get(key):
+                if isinstance(val, (float, Decimal)):
+                    val = f"{val:.03g}"
+                result[key] = val
+        for key in result.keys():
+            print('============', key)
+        # добавление localized fields
+        for field in get_field_name(ItemDetailLocalized):
+            if lf := localized_field_with_replacement(item, field, lang_prefixes):
+                result.update(lf)
+        # добавление foreign localized fields
+        for field in get_field_name(ItemDetailForeignLocalized):
+            if root := item.get(field):
+                if lf := localized_field_with_replacement(root, 'name', lang_prefixes, field):
+                    result.update(lf)
+        # добавление manytomany fields
+        for field in get_field_name(ItemDetailManyToManyLocalized):
+            match field:
+                case 'pairing':
+                    if tmp := item.get('food_associations'):
+                        pairing = []
+                        for food_dict in tmp:
+                            if sf := food_dict.get('food'):
+                                if tf := localized_field_with_replacement(sf, 'name', lang_prefixes, 'food'):
+                                    pairing.append(tf.get('food'))
+                        if pairing:
+                            result.update({'pairing': pairing})
+                case 'varietal':
+                    if tmp := item.get('varietal_associations'):
+                        varietal = []
+                        for varietal_dict in tmp:
+                            if sf := varietal_dict.get('varietal'):
+                                if tf := localized_field_with_replacement(sf, 'name', lang_prefixes, 'varietal'):
+                                    xf = tf.get('varietal')
+                                    if percent := varietal_dict.get('percentage'):
+                                        xf = f'{xf} {percent:.0f} %'
+                                    varietal.append(xf)
+                        if varietal:
+                            result.update({'varietal': varietal})
+                case _:
+                    pass
+                    # do nothing
+        for key, val in result.items():
+            print(f'{key}: {val} == {type(val)}')
+        return result
 
     @classmethod
     async def create_relation(cls, data: ItemCreateRelation,

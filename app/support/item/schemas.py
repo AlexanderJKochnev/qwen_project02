@@ -220,7 +220,7 @@ class ItemListView(BaseModel):
     country: str  # Country.name or country.name_ru, or country.name_fr зависит от параметра lang в роуте
 
 
-class ItemDetailView(BaseModel):
+class ItemDetailNonLocalized(BaseModel):
     # поля не зависят от параметра lang в роуте
     id: int  # Item.id
     vol: Optional[float] = None  # Item.vol
@@ -228,17 +228,34 @@ class ItemDetailView(BaseModel):
     age: Optional[str] = None
     image_id: Optional[str] = None  # Item.image_id
 
+
+class ItemDetailForeignLocalized(BaseModel):
+    category: Optional[str] = None
+    subcategory: Optional[str] = None
+    country: Optional[str] = None
+    region: Optional[str] = None
+    subregion: Optional[str] = None
+    sweetness: Optional[str] = None
+
+
+class ItemDetailLocalized(BaseModel):
     # поля зависящие от параметра lang в роуте
     title: str  # Item.drink.title or Item.drinks.title_ru or Item.drinks.title_fr
     subtitle: Optional[str] = None
-    country: str  # Country.name or country.name_ru, or country.name_fr зависит от параметра lang в роуте
-    category: Optional[str] = None  # Item.drink.subcategoory.category.name + Item.drink.subcategoory.name
-    sweetness: Optional[str] = None  # Item.drink.sweetness.name (_ru, _fr)
     recommendation: Optional[str] = None   # Drink.recommendation (_ru, _fr)
     madeof: Optional[str] = None  # Drink.madeof (_ru, _fr)
     description: Optional[str] = None  # Drink.description (_ru, _fr)
-    varietal: Optional[List[str]] = None  # From Drink.varietal_associations
+
+
+class ItemDetailManyToManyLocalized(BaseModel):
     pairing: Optional[List[str]] = None  # From Drink.food_associations
+    varietal: Optional[List[str]] = None  # From Drink.varietal_associations
+
+
+class ItemDetailView(ItemDetailManyToManyLocalized, ItemDetailForeignLocalized,
+                     ItemDetailNonLocalized,
+                     ItemDetailLocalized,
+                     ):
 
     model_config = {'populate_by_name': True, 'str_strip_whitespace': True}
 

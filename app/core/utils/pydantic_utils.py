@@ -12,6 +12,11 @@ from fastapi.routing import APIRoute
 from app.service_registry import get_service as get_serv, get_repo as get_rep, get_pyschema as get_pyschem
 
 
+def get_field_name(schema: Type[BaseModel]):
+    """ возвращает все имена полей pydantic models """
+    return list(schema.model_fields.keys())
+
+
 def get_routers(app, method: str = None) -> List[APIRoute]:
     """  список роутеров, содержащих указанный метод """
     # prefix содердится в a.path

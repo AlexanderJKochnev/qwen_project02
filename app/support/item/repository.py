@@ -1,7 +1,7 @@
 # app/support/Item/repository.py
 
 from sqlalchemy.orm import selectinload
-from typing import Optional, List, Type, Tuple, Union
+from typing import Optional, List, Type, Tuple, Union, Dict, Any
 from sqlalchemy import func, select, Select, or_, Row, literal_column, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.types import String
@@ -187,7 +187,7 @@ class ItemRepository(Repository):
         return flat_items
 
     @classmethod
-    async def get_detail_view(cls, id: int, model: ModelType, session: AsyncSession):
+    async def get_detail_view(cls, id: int, model: ModelType, session: AsyncSession) -> Dict[str, Any]:
         """Получение детального представления элемента для DetailView"""
         query = select(Item).options(
             selectinload(Item.drink).options(
@@ -208,6 +208,8 @@ class ItemRepository(Repository):
 
         if not item:
             return None
+        return item
+
 
         # Преобразуем в плоский словарь для детального представления
         flat_item = {

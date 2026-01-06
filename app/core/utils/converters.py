@@ -614,3 +614,27 @@ def convert_varietals(data: dict) -> list[dict]:
             "percentage": percentage
         })
     return result
+
+
+def list_move(source: list, item: Any, pos: int = 0) -> list:
+    """
+        перемещает элемент item со своей позиции на позицию pos (начиная с 0)
+        при отсутствии item или pos > кол-ва элнингьла в списке возвращает исходный список
+    """
+    result = source
+    try:
+        result.remove(item)
+        result.insert(pos, item)
+    except Exception:
+        pass
+    finally:
+        return result
+
+
+def lang_suffix_list(source: list) -> list:
+    """
+        конверирует лист вида ['en', 'ru', 'fr',...]
+        в ['', '_ru', '_fr', ...]
+    """
+    default_lang = settings.DEFAULT_LANG
+    return ['' if lang == default_lang else f'_{lang}' for lang in source]
