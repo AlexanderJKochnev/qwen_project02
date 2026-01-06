@@ -86,9 +86,13 @@ def get_localized_fields() -> list:
 
 def get_field_language(field_name: str) -> Optional[str]:
     """Extract language code from field name"""
-    if field_name[-3] != '_':
-        return 'en'
-    return field_name[-2:]
+    if len(field_name) < 3 or field_name[-3] != '_':
+        return settings.DEFAULT_LANG
+    lang_code = field_name[-2:]
+    # Check if the extracted code is in the configured languages
+    if lang_code in settings.LANGUAGES:
+        return lang_code
+    return settings.DEFAULT_LANG
 
 
 def get_base_field_name(field_name: str) -> str:
@@ -209,8 +213,8 @@ async def fill_missing_translations_old(data: Dict[str, Any]) -> Dict[str, Any]:
         source_field = None
         source_value = None
 
-        # Prefer English as source
-        for lang in ['en', 'fr', 'ru']:
+        # Prefer languages according to the configured order
+        for lang in settings.LANGUAGES:
             for field_name, value in filled_fields.items():
                 if get_field_language(field_name) == lang and value:
                     source_field = field_name

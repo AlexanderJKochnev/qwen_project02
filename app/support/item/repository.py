@@ -210,24 +210,6 @@ class ItemRepository(Repository):
             return None
         return item
 
-
-        # Преобразуем в плоский словарь для детального представления
-        flat_item = {
-            'id': item.id,
-            'vol': item.vol,
-            'alc': item.drink.alc,
-            'age': item.drink.age,
-            'image_id': item.image_id,
-            'title': item.drink.title,  # будет обработано в сервисе для нужного языка
-            'drink': item.drink,
-            'description': item.drink.description,
-            'country': item.drink.subregion.region.country,
-            'subcategory': item.drink.subcategory,
-            'sweetness': item.drink.sweetness
-        }
-
-        return flat_item
-
     @classmethod
     async def get_list_view_page(cls, skip: int, limit: int, model: ModelType, session: AsyncSession):
         """Получение списка элементов с плоскими полями для ListView с пагинацией"""
@@ -286,7 +268,7 @@ class ItemRepository(Repository):
         subtitle_fields = []
 
         for lang in langs:
-            if lang == 'en':
+            if lang == settings.DEFAULT_LANG:
                 title_fields.append(getattr(Drink, 'title'))
                 subtitle_fields.append(getattr(Drink, 'subtitle'))
             else:

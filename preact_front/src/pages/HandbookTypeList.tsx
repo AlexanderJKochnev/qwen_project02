@@ -144,7 +144,8 @@ export const HandbookTypeList = () => {
         <input
           type="text"
           placeholder={`Search ${getReadableName(type).toLowerCase()}...`}
-          className="input-bordered w-full max-w-xs"
+          className="border rounded-l px-3 py-1.5 w-full max-w-xs border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          // className="input-bordered w-full max-w-xs"
           value={search}
           onInput={(e) => {
             const target = e.target as HTMLInputElement;

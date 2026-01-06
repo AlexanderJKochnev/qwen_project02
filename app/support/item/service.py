@@ -212,10 +212,7 @@ class ItemService(Service):
             item.update(drink)
         if not item:
             return None
-        # for n, (key, val) in enumerate(item.items()):
-        #     print(f'{n}:     {key}: {type(val)}')
         # список всех локализованных полей приложения
-        # localized_fields = settings.FIELDS_LOCALIZED
         result: dict = {}
         # добавление non-localized fields
         for key in get_field_name(ItemDetailNonLocalized):
@@ -223,8 +220,6 @@ class ItemService(Service):
                 if isinstance(val, (float, Decimal)):
                     val = f"{val:.03g}"
                 result[key] = val
-        for key in result.keys():
-            print('============', key)
         # добавление localized fields
         for field in get_field_name(ItemDetailLocalized):
             if lf := localized_field_with_replacement(item, field, lang_prefixes):
@@ -261,8 +256,6 @@ class ItemService(Service):
                 case _:
                     pass
                     # do nothing
-        for key, val in result.items():
-            print(f'{key}: {val} == {type(val)}')
         return result
 
     @classmethod
