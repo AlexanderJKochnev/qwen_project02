@@ -4,6 +4,7 @@
 __pycache__/
 *.o
 *.obj
+*.out
 
 # Dependencies
 .venv/
@@ -24,10 +25,20 @@ node_modules/
 .vscode/
 .idea/
 
-# Test-specific ignores (if needed)
+# Coverage
 .coverage
-htmlcov/
 coverage/
+htmlcov/
+
+# Python specific
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Testing
 .pytest_cache/
 .mypy_cache/
 ```
