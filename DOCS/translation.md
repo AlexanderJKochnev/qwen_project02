@@ -7,6 +7,7 @@
     1. добавить машинное обучение;
     2. при достижении высокого качества перевода - полностью.
  4. функция переводчик app/core/utils/translation_utils.py fill_missing_translations
- 5. присоединяется через Annotated[Callable,Depends[fill_missing_translations]] в следуюшие роутеры
-    1. 
+ 5. присоединяется через Annotated[Callable,Depends[get_translator_func]] в следуюшие роутеры
+    1. app/support/read/router.py::def endpoint
+    2. app/support/item/router_item_view.py::get_one
  6. 

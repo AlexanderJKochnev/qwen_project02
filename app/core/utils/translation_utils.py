@@ -8,7 +8,7 @@ from app.core.config.project_config import settings
 async def translate_text(text: str, source_lang: str = "en",
                          target_lang: str = "ru",
                          mark: str = "ai",
-                         test: bool = False) -> Optional[str]:
+                         test: bool = True) -> Optional[str]:
     """
     Translate text using MyMemory translation service
 
@@ -165,8 +165,7 @@ async def fill_missing_translations(data: Dict[str, Any], test: bool = False) ->
                         source_value,
                         source_lang=source_lang,
                         target_lang=target_lang,
-                        mark=mark,
-                        test=test
+                        mark=mark
                     )
 
                     if translated_text:

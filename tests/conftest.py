@@ -3,9 +3,7 @@ import asyncio
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List
-from unittest.mock import patch
-
+from typing import List, Any, Optional, Dict
 import pytest
 from dateutil.relativedelta import relativedelta
 from fastapi.routing import APIRoute
@@ -20,6 +18,7 @@ from app.auth.utils import create_access_token, get_password_hash
 from app.core.models.base_model import Base
 from app.core.utils.common_utils import jprint
 from app.main import app, get_db
+from app.depends import get_translator_func
 from app.mongodb.config import get_database, get_mongodb, MongoDB
 # from app.mongodb.router import get_mongodb
 from tests.config import settings_db
@@ -28,13 +27,6 @@ from tests.data_factory.reader_json import JsonConverter
 from tests.utility.assertion import assertions
 from tests.utility.data_generators import FakeData
 from tests.utility.find_models import discover_models, discover_schemas2
-
-
-async def fill_missing_translations_mock(data: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Mock for fill_missing_translations function that returns the input data unchanged
-    """
-    return data
 
 # from tests.data_factory.fake_generator import generate_test_data
 
@@ -202,6 +194,7 @@ def simple_router_list():
     from app.support.varietal.router import VarietalRouter
     from app.support.superfood.router import SuperfoodRouter   # noqa: F401
     from app.support.food.router import FoodRouter
+
     # generator = TestDataGenerator()
     # template = remove_id(json_reader())
     # return generator.generate(template, count=7)
@@ -586,26 +579,34 @@ async def authenticated_client_with_db(test_db_session, super_user_data,
     async def override_get_database():
         return test_mongodb.database
 
+    async def override_get_translator_func(data: Dict[str, Any], flag: Optional[bool] = None):
+        result: dict = {}
+        for key, val in data.items():
+            if isinstance(result, str):
+                result[key] = f'{val} translated'
+            else:
+                result[key] = val
+        return result
+
     # override_app_dependencies[app.dependency_overrides] = get_test_db
     app.dependency_overrides[get_db] = get_test_db
     app.dependency_overrides[get_mongodb] = override_get_mongodb
     app.dependency_overrides[get_database] = override_get_database
+    app.dependency_overrides[get_translator_func] = lambda: override_get_translator_func
 
     # Создаем JWT токен для тестового пользователя
     token_data = {"sub": super_user_data["username"]}
     access_token = create_access_token(data=token_data)
 
-    # Mock the fill_missing_translations function to return input unchanged
-    with patch('app.core.utils.translation_utils.fill_missing_translations',
-               side_effect=fill_missing_translations_mock):
-        # Создаем клиент с токеном в заголовках
-        async with AsyncClient(
-            transport=ASGITransport(app=app),
-            base_url=base_url,
-            headers={"Authorization": f"Bearer {access_token}"}
-        ) as ac:
-            ac._test_user = super_user_data
-            ac._access_token = access_token
-            yield ac
+    # Создаем клиент с токеном в заголовках
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url=base_url,
+        headers={"Authorization": f"Bearer {access_token}"}
+    ) as ac:
+        ac._test_user = super_user_data
+        ac._test_user_db = create_super_user
+        ac._access_token = access_token
+        yield ac
 
 # -----------data generator------------------

@@ -114,7 +114,7 @@ class ItemViewRouter:
         item_dict = await self.service.get_one(id, session)
         # item_py = ItemReadPreactForUpdate.validate(item_dict)
         # item_dict = item_py.model_dump(exclude_unset=False, exclude_none=False)
-        translated_dict = await translation(item_dict, True)
+        translated_dict = await translation(item_dict)
         return translated_dict
 
     async def get_list(self, lang: str = Path(..., description="Язык локализации"),

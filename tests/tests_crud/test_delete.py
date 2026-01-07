@@ -55,7 +55,7 @@ async def test_delete(authenticated_client_with_db, test_db_session,
     router = ItemRouter()
     prefix = router.prefix
     result = await client.get(f'{prefix}/all')
-    assert result.status_code == 200, 'невозможно подсвитать кол-во записей'
+    assert result.status_code == 200, 'невозможно подсчитать кол-во записей'
     for instance in result.json():
         id = instance.get('id')
         response = await client.delete(f'{prefix}/{id}')
