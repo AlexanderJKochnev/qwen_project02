@@ -29,15 +29,3 @@ async def test_fill_missing_translations():
                              'subtityle_fr': None}
     result = await fill_missing_translations(source, test=True)
     assert result == expected_result
-
-
-def test_get_localized_fields():
-    from app.core.utils.translation_utils import get_localized_fields
-    """ one time test for actual status (fields & langs on 01.01.2026)"""
-    expected_result = ['name', 'name_fr', 'name_ru', 'description',
-                       'description_fr', 'description_ru', 'title', 'title_fr',
-                       'title_ru', 'subtitle', 'subtitle_fr', 'subtitle_ru']
-    result = get_localized_fields()
-    result.sort()
-    expected_result.sort()
-    assert result == expected_result

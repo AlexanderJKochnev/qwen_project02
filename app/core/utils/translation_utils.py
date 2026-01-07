@@ -73,17 +73,6 @@ def localized_field_with_replacement(source: Dict[str, Any], key: str,
         return {target_key or key: None}
 
 
-def get_localized_fields() -> list:
-    """Get list of localized field names that should be translated
-        DELETE !!
-    """
-    langs = settings.LANGUAGES
-    default_lang = settings.DEFAULT_LANG
-    langs = [f'_{lang}'if lang != default_lang else '' for lang in settings.LANGUAGES]
-    localized_fields = settings.FIELDS_LOCALIZED
-    return [f'{field}{lang}' for field in localized_fields for lang in langs]
-
-
 def get_field_language(field_name: str) -> Optional[str]:
     """Extract language code from field name"""
     if len(field_name) < 3 or field_name[-3] != '_':
@@ -166,80 +155,6 @@ async def fill_missing_translations(data: Dict[str, Any], test: bool = False) ->
                         source_lang=source_lang,
                         target_lang=target_lang,
                         mark=mark
-                    )
-
-                    if translated_text:
-                        updated_data[field] = translated_text
-
-    return updated_data
-
-
-async def fill_missing_translations_old(data: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Fill missing translations in data dictionary using available translations
-
-    Args:
-        data: Dictionary containing fields that may need translation
-
-    Returns:
-        Updated dictionary with filled translations
-        DELETE !!!
-    """
-    if not data:
-        return data
-
-    updated_data = data.copy()
-    localized_fields = get_localized_fields()
-
-    # Group fields by their base name
-    field_groups = {}
-    for field_name in localized_fields:
-        base_name = get_base_field_name(field_name)
-        if base_name not in field_groups:
-            field_groups[base_name] = []
-        field_groups[base_name].append(field_name)
-
-    # Process each group of related fields
-    for base_name, fields in field_groups.items():
-        # Check which fields are filled
-        filled_fields = {field: data.get(field) for field in fields if data.get(field)}
-
-        # Skip if no source for translation
-        if not filled_fields:
-            continue
-
-        # Determine source field priority: prefer English, then French, then Russian
-        source_field = None
-        source_value = None
-
-        # Prefer languages according to the configured order
-        for lang in settings.LANGUAGES:
-            for field_name, value in filled_fields.items():
-                if get_field_language(field_name) == lang and value:
-                    source_field = field_name
-                    source_value = value
-                    break
-            if source_field:
-                break
-
-        if not source_value:
-            continue
-
-        # Get source language
-        source_lang = get_field_language(source_field)
-        if not source_lang:
-            continue
-
-        # Fill missing translations
-        for field in fields:
-            if field not in filled_fields:  # Field is missing
-                target_lang = get_field_language(field)
-                if target_lang and target_lang != source_lang:
-                    # Translate from source to target
-                    translated_text = await translate_text(
-                        source_value,
-                        source_lang=source_lang,
-                        target_lang=target_lang
                     )
 
                     if translated_text:
