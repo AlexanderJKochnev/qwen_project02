@@ -1,6 +1,7 @@
-```gitignore
-# Python
 __pycache__/
+*.pyc
+*.pyo
+*.pyd
 *.py[cod]
 *$py.class
 *.so
@@ -20,20 +21,24 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
-# Testing
-.pytest_cache/
+# Coverage
 .coverage
-htmlcov/
 .coverage.*
+htmlcov/
+.coverage.xml
+.pytest_cache/
 
 # Environment
-.env
-.env.local
-.env.*
+# .env
+# .env.local
+# .env.*
 .venv/
 venv/
 ENV/
+env.bak/
+venv.bak/
 
 # IDE
 .vscode/
@@ -45,4 +50,10 @@ ENV/
 # OS
 .DS_Store
 Thumbs.db
-```
+
+TODO.md
+migration_volume
+mongodb_data
+pg_data
+pg_dump
+upload_volume
