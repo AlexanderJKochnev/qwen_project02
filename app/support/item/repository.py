@@ -172,21 +172,10 @@ class ItemRepository(Repository):
 
         result = await session.execute(query)
         items = result.scalars().all()
-        # Преобразуем в плоские словари
-        flat_items = []
+        result = []
         for item in items:
-            flat_item = {
-                'id': item.id,
-                'vol': item.vol,
-                'image_id': item.image_id,
-                'title': item.drink.title,  # будет обработано в сервисе для нужного языка
-                'drink': item.drink,
-                'subcategory': item.drink.subcategory,
-                'country': item.drink.subregion.region.country
-            }
-            flat_items.append(flat_item)
-
-        return flat_items
+            result.append(item.to_dict())
+        return result
 
     @classmethod
     async def get_detail_view(cls, id: int, model: ModelType, session: AsyncSession) -> Dict[str, Any]:
@@ -294,10 +283,14 @@ class ItemRepository(Repository):
                 selectinload(Drink.subcategory).selectinload(Subcategory.category),
                 selectinload(Drink.sweetness)
             )
-        ).join(Item.drink).where(Drink.id.in_(matching_drink_ids))
-
+        ).join(Item.drink).where(search_condition)
         query = query.order_by(Item.id.asc())
+        # Получаем общее количество записей
+        count_query = select(func.count(Item.id)).join(Item.drink).where(search_condition)
+        count_result = await session.execute(count_query)
+        total = count_result.scalar()
 
+        # Добавляем пагинацию
         if skip is not None:
             query = query.offset(skip)
         if limit is not None:
@@ -305,22 +298,10 @@ class ItemRepository(Repository):
 
         result = await session.execute(query)
         items = result.scalars().all()
-
-        # Преобразуем в плоские словари
-        flat_items = []
+        result = []
         for item in items:
-            flat_item = {
-                'id': item.id,
-                'vol': item.vol,
-                'image_id': item.image_id,
-                'title': item.drink.title,  # будет обработано в сервисе для нужного языка
-                'drink': item.drink,
-                'subcategory': item.drink.subcategory,
-                'country': item.drink.subregion.region.country
-            }
-            flat_items.append(flat_item)
-
-        return flat_items, total
+            result.append(item.to_dict())
+        return result, total
 
     @classmethod
     async def search_by_trigram_index(cls, search_str: str, model: ModelType, session: AsyncSession,
@@ -377,22 +358,10 @@ class ItemRepository(Repository):
 
         result = await session.execute(query)
         items = result.scalars().all()
-
-        # Преобразуем в плоские словари
-        flat_items = []
+        result = []
         for item in items:
-            flat_item = {
-                'id': item.id,
-                'vol': item.vol,
-                'image_id': item.image_id,
-                'title': item.drink.title,  # будет обработано в сервисе для нужного языка
-                'drink': item.drink,
-                'subcategory': item.drink.subcategory,
-                'country': item.drink.subregion.region.country
-            }
-            flat_items.append(flat_item)
-
-        return flat_items, total
+            result.append(item.to_dict())
+        return result, total
 
 
 def get_drink_search_expression(cls):
