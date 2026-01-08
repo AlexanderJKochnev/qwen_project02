@@ -3,6 +3,7 @@ Dynamic tests for all registered routes in the application.
 Tests follow the required order: POST, GET, PATCH, DELETE.
 Uses authenticated_client_with_db fixture for database connectivity.
 """
+
 import pytest
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
@@ -178,12 +179,12 @@ class RouteTestManager:
 
         return test_data
 
-    async def test_post_routes(self, authenticated_client_with_db, test_db_session):
+    async def test_post_routes(self, authenticated_client_with_db):
         """Test all POST routes with positive and negative tests."""
         print("\n=== Testing POST routes ===")
         post_routes = self.get_routes_by_method('POST')
         results = {}
-        client = authenticated_client_with_db
+
         for route in post_routes:
             route_path = route.path
             print(f"Testing POST {route_path}")
@@ -195,14 +196,11 @@ class RouteTestManager:
                 # Positive test
                 try:
                     test_data = self.generate_test_data(request_model)
-                    response = await client.post(route_path, json=test_data)
+                    response = await authenticated_client_with_db.post(route_path, json=test_data)
                     success = response.status_code in [200, 201]
-                    results[route_path] = {
-                        'method': 'POST',
-                        'status': 'PASS' if success else 'FAIL',
-                        'status_code': response.status_code,
-                        'response': response.json() if success and response.content else 'No content'
-                    }
+                    results[route_path] = {'method': 'POST', 'status': 'PASS' if success else 'FAIL',
+                                           'status_code': response.status_code,
+                                           'response': response.json() if success and response.content else 'No content'}
 
                     # Store created item ID for future tests
                     if success:
@@ -221,45 +219,32 @@ class RouteTestManager:
                             self.created_items[route_path].append(item_id)
 
                 except Exception as e:
-                    results[route_path] = {
-                        'method': 'POST',
-                        'status': 'ERROR',
-                        'error': str(e),
-                        'status_code': None
-                    }
+                    results[route_path] = {'method': 'POST', 'status': 'ERROR', 'error': str(e), 'status_code': None}
 
                 # Negative test - send empty data
                 try:
-                    response = await client.post(route_path, json={})
+                    response = await authenticated_client_with_db.post(route_path, json={})
                     negative_success = response.status_code >= 400  # Expecting error for empty data
                     if route_path not in results:
                         results[route_path] = {}
-                    results[route_path]['negative_test'] = {
-                        'status': 'PASS' if negative_success else 'FAIL',
-                        'status_code': response.status_code
-                    }
+                    results[route_path]['negative_test'] = {'status': 'PASS' if negative_success else 'FAIL',
+                                                            'status_code': response.status_code}
                 except Exception as e:
                     if route_path not in results:
                         results[route_path] = {}
-                    results[route_path]['negative_test'] = {
-                        'status': 'ERROR',
-                        'error': str(e)
-                    }
+                    results[route_path]['negative_test'] = {'status': 'ERROR', 'error': str(e)}
             else:
-                results[route_path] = {
-                    'method': 'POST',
-                    'status': 'SKIPPED - No request model',
-                    'reason': 'No request model found'
-                }
+                results[route_path] = {'method': 'POST', 'status': 'SKIPPED - No request model',
+                                       'reason': 'No request model found'}
 
         return results
 
-    async def test_get_routes(self, authenticated_client_with_db, test_db_session):
+    async def test_get_routes(self, authenticated_client_with_db):
         """Test all GET routes with positive and negative tests."""
         print("\n=== Testing GET routes ===")
         get_routes = self.get_routes_by_method('GET')
         results = {}
-        client = authenticated_client_with_db
+
         for route in get_routes:
             route_path = route.path
             print(f"Testing GET {route_path}")
@@ -279,69 +264,49 @@ class RouteTestManager:
 
                 if matching_created_items:
                     item_id = matching_created_items[0]  # Use first available ID
-                    actual_path = route_path.replace('{id}', str(item_id)).replace(
-                        '{item_id}', str(item_id)).replace('{_id}', str(item_id))
+                    actual_path = route_path.replace('{id}', str(item_id)).replace('{item_id}', str(item_id)).replace(
+                        '{_id}', str(item_id)
+                    )
 
                     try:
-                        response = await client.get(actual_path)
+                        response = await authenticated_client_with_db.get(actual_path)
                         success = response.status_code in [200, 201]
-                        results[route_path] = {
-                            'method': 'GET (single)',
-                            'status': 'PASS' if success else 'FAIL',
-                            'status_code': response.status_code,
-                            'response': response.json() if success and response.content else 'No content'
-                        }
+                        results[route_path] = {'method': 'GET (single)', 'status': 'PASS' if success else 'FAIL',
+                                               'status_code': response.status_code,
+                                               'response': response.json() if success and response.content else 'No content'}
                     except Exception as e:
-                        results[route_path] = {
-                            'method': 'GET (single)',
-                            'status': 'ERROR',
-                            'error': str(e),
-                            'status_code': None
-                        }
+                        results[route_path] = {'method': 'GET (single)', 'status': 'ERROR', 'error': str(e),
+                                               'status_code': None}
 
                     # Negative test - try with invalid ID
                     try:
-                        invalid_path = route_path.replace('{id}', '999999').replace(
-                            '{item_id}', '999999').replace('{_id}', '999999')
-                        response = await client.get(invalid_path)
+                        invalid_path = route_path.replace('{id}', '999999').replace('{item_id}', '999999').replace(
+                            '{_id}', '999999'
+                        )
+                        response = await authenticated_client_with_db.get(invalid_path)
                         negative_success = response.status_code >= 400
                         if route_path not in results:
                             results[route_path] = {}
-                        results[route_path]['negative_test'] = {
-                            'status': 'PASS' if negative_success else 'FAIL',
-                            'status_code': response.status_code
-                        }
+                        results[route_path]['negative_test'] = {'status': 'PASS' if negative_success else 'FAIL',
+                                                                'status_code': response.status_code}
                     except Exception as e:
                         if route_path not in results:
                             results[route_path] = {}
-                        results[route_path]['negative_test'] = {
-                            'status': 'ERROR',
-                            'error': str(e)
-                        }
+                        results[route_path]['negative_test'] = {'status': 'ERROR', 'error': str(e)}
                 else:
-                    results[route_path] = {
-                        'method': 'GET (single)',
-                        'status': 'SKIPPED - No created items to test',
-                        'reason': 'No items created to test single item retrieval'
-                    }
+                    results[route_path] = {'method': 'GET (single)', 'status': 'SKIPPED - No created items to test',
+                                           'reason': 'No items created to test single item retrieval'}
             else:
                 # This is a list/get-all route
                 try:
-                    response = await client.get(route_path)
+                    response = await authenticated_client_with_db.get(route_path)
                     success = response.status_code in [200, 201]
-                    results[route_path] = {
-                        'method': 'GET (list)',
-                        'status': 'PASS' if success else 'FAIL',
-                        'status_code': response.status_code,
-                        'response': response.json() if success and response.content else 'No content'
-                    }
+                    results[route_path] = {'method': 'GET (list)', 'status': 'PASS' if success else 'FAIL',
+                                           'status_code': response.status_code,
+                                           'response': response.json() if success and response.content else 'No content'}
                 except Exception as e:
-                    results[route_path] = {
-                        'method': 'GET (list)',
-                        'status': 'ERROR',
-                        'error': str(e),
-                        'status_code': None
-                    }
+                    results[route_path] = {'method': 'GET (list)', 'status': 'ERROR', 'error': str(e),
+                                           'status_code': None}
 
                 # Negative test - could involve auth issues, etc.
                 try:
@@ -351,19 +316,16 @@ class RouteTestManager:
                 except Exception as e:
                     if route_path not in results:
                         results[route_path] = {}
-                    results[route_path]['negative_test'] = {
-                        'status': 'ERROR',
-                        'error': str(e)
-                    }
+                    results[route_path]['negative_test'] = {'status': 'ERROR', 'error': str(e)}
 
         return results
 
-    async def test_patch_routes(self, authenticated_client_with_db, test_db_session):
+    async def test_patch_routes(self, authenticated_client_with_db):
         """Test all PATCH routes with positive and negative tests."""
         print("\n=== Testing PATCH routes ===")
         patch_routes = self.get_routes_by_method('PATCH')
         results = {}
-        client = authenticated_client_with_db
+
         for route in patch_routes:
             route_path = route.path
             print(f"Testing PATCH {route_path}")
@@ -383,8 +345,9 @@ class RouteTestManager:
 
                 if matching_created_items:
                     item_id = matching_created_items[0]  # Use first available ID
-                    actual_path = route_path.replace('{id}', str(item_id)).replace(
-                        '{item_id}', str(item_id)).replace('{_id}', str(item_id))
+                    actual_path = route_path.replace('{id}', str(item_id)).replace('{item_id}', str(item_id)).replace(
+                        '{_id}', str(item_id)
+                    )
 
                     # Generate update data
                     update_data = self.generate_test_data(request_model)
@@ -394,60 +357,42 @@ class RouteTestManager:
                             update_data[key] = f"updated_{value}"
 
                     try:
-                        response = await client.patch(actual_path, json=update_data)
+                        response = await authenticated_client_with_db.patch(actual_path, json=update_data)
                         success = response.status_code in [200, 201, 204]
-                        results[route_path] = {
-                            'method': 'PATCH',
-                            'status': 'PASS' if success else 'FAIL',
-                            'status_code': response.status_code,
-                            'response': response.json() if success and response.content else 'No content'
-                        }
+                        results[route_path] = {'method': 'PATCH', 'status': 'PASS' if success else 'FAIL',
+                                               'status_code': response.status_code,
+                                               'response': response.json() if success and response.content else 'No content'}
                     except Exception as e:
-                        results[route_path] = {
-                            'method': 'PATCH',
-                            'status': 'ERROR',
-                            'error': str(e),
-                            'status_code': None
-                        }
+                        results[route_path] = {'method': 'PATCH', 'status': 'ERROR', 'error': str(e),
+                                               'status_code': None}
 
                     # Negative test - send empty data or invalid data
                     try:
-                        response = await client.patch(actual_path, json={})
+                        response = await authenticated_client_with_db.patch(actual_path, json={})
                         negative_success = response.status_code >= 400
                         if route_path not in results:
                             results[route_path] = {}
-                        results[route_path]['negative_test'] = {
-                            'status': 'PASS' if negative_success else 'FAIL',
-                            'status_code': response.status_code
-                        }
+                        results[route_path]['negative_test'] = {'status': 'PASS' if negative_success else 'FAIL',
+                                                                'status_code': response.status_code}
                     except Exception as e:
                         if route_path not in results:
                             results[route_path] = {}
-                        results[route_path]['negative_test'] = {
-                            'status': 'ERROR',
-                            'error': str(e)
-                        }
+                        results[route_path]['negative_test'] = {'status': 'ERROR', 'error': str(e)}
                 else:
-                    results[route_path] = {
-                        'method': 'PATCH',
-                        'status': 'SKIPPED - No created items to test',
-                        'reason': 'No items created to test patch operation'
-                    }
+                    results[route_path] = {'method': 'PATCH', 'status': 'SKIPPED - No created items to test',
+                                           'reason': 'No items created to test patch operation'}
             else:
-                results[route_path] = {
-                    'method': 'PATCH',
-                    'status': 'SKIPPED - No request model',
-                    'reason': 'No request model found for PATCH route'
-                }
+                results[route_path] = {'method': 'PATCH', 'status': 'SKIPPED - No request model',
+                                       'reason': 'No request model found for PATCH route'}
 
         return results
 
-    async def test_delete_routes(self, authenticated_client_with_db, test_db_session):
+    async def test_delete_routes(self, authenticated_client_with_db):
         """Test all DELETE routes with positive and negative tests."""
         print("\n=== Testing DELETE routes ===")
         delete_routes = self.get_routes_by_method('DELETE')
         results = {}
-        client = authenticated_client_with_db
+
         for route in delete_routes:
             route_path = route.path
             print(f"Testing DELETE {route_path}")
@@ -463,58 +408,43 @@ class RouteTestManager:
 
             if matching_created_items:
                 item_id = matching_created_items[0]  # Use first available ID
-                actual_path = route_path.replace('{id}', str(item_id)).replace(
-                    '{item_id}', str(item_id)).replace('{_id}', str(item_id))
+                actual_path = route_path.replace('{id}', str(item_id)).replace('{item_id}', str(item_id)).replace(
+                    '{_id}', str(item_id)
+                )
 
                 try:
-                    response = await client.delete(actual_path)
+                    response = await authenticated_client_with_db.delete(actual_path)
                     success = response.status_code in [200, 204]
-                    results[route_path] = {
-                        'method': 'DELETE',
-                        'status': 'PASS' if success else 'FAIL',
-                        'status_code': response.status_code,
-                        'response': 'Deleted successfully' if success else 'Deletion failed'
-                    }
+                    results[route_path] = {'method': 'DELETE', 'status': 'PASS' if success else 'FAIL',
+                                           'status_code': response.status_code,
+                                           'response': 'Deleted successfully' if success else 'Deletion failed'}
                 except Exception as e:
-                    results[route_path] = {
-                        'method': 'DELETE',
-                        'status': 'ERROR',
-                        'error': str(e),
-                        'status_code': None
-                    }
+                    results[route_path] = {'method': 'DELETE', 'status': 'ERROR', 'error': str(e), 'status_code': None}
 
                 # Negative test - try to delete the same item again (should fail)
                 try:
-                    response = await client.delete(actual_path)
+                    response = await authenticated_client_with_db.delete(actual_path)
                     negative_success = response.status_code >= 400  # Should fail since item was already deleted
                     if route_path not in results:
                         results[route_path] = {}
-                    results[route_path]['negative_test'] = {
-                        'status': 'PASS' if negative_success else 'FAIL',
-                        'status_code': response.status_code
-                    }
+                    results[route_path]['negative_test'] = {'status': 'PASS' if negative_success else 'FAIL',
+                                                            'status_code': response.status_code}
                 except Exception as e:
                     if route_path not in results:
                         results[route_path] = {}
-                    results[route_path]['negative_test'] = {
-                        'status': 'ERROR',
-                        'error': str(e)
-                    }
+                    results[route_path]['negative_test'] = {'status': 'ERROR', 'error': str(e)}
             else:
-                results[route_path] = {
-                    'method': 'DELETE',
-                    'status': 'SKIPPED - No created items to test',
-                    'reason': 'No items created to test delete operation'
-                }
+                results[route_path] = {'method': 'DELETE', 'status': 'SKIPPED - No created items to test',
+                                       'reason': 'No items created to test delete operation'}
 
         return results
 
 
 @pytest.mark.asyncio
-async def test_all_routes_dynamic(authenticated_client_with_db, test_db_session, test_mongodb):
+async def test_all_routes_dynamic(authenticated_client_with_db, test_mongodb):
     """Main test function that runs tests in the required order."""
     print("\nStarting dynamic route testing...")
-    #  client = authenticated_client_with_db
+
     manager = RouteTestManager(main_app)
 
     # 4.1 Test POST routes first
