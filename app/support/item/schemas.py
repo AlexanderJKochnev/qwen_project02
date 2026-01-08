@@ -11,6 +11,20 @@ from app.support.drink.schemas import (DrinkCreateRelation, DrinkReadApi, DrinkR
 from app.core.config.project_config import settings
 
 
+# Apply language fields to CustomReadFlatSchema dynamically
+def _apply_language_fields_to_custom_read_flat_schema(cls):
+    for lang_code in settings.LANGUAGES:
+        # Create a closure to capture the language code
+        def make_lang_property(lang):
+            def lang_prop(self) -> Dict[str, Any]:
+                return self._lang_(lang)
+            return property(lang_prop)
+        
+        # Add the property to the class
+        setattr(cls, lang_code, computed_field(make_lang_property(lang_code)))
+    return cls
+
+@_apply_language_fields_to_custom_read_flat_schema
 class CustomReadFlatSchema:
     id: int
     drink: DrinkReadFlat = Field(exclude=True)
@@ -49,21 +63,19 @@ class CustomReadFlatSchema:
     def _lang_(self, lang: str = 'en') -> Dict[str, Any]:
         return getattr(self.drink, lang)
 
-    # Dynamic language fields based on settings.LANGUAGES
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        # Dynamically add computed properties for each language
-        for lang_code in settings.LANGUAGES:
-            # Create a closure to capture the language code
-            def make_lang_property(lang):
-                def lang_prop(self) -> Dict[str, Any]:
-                    return self._lang_(lang)
-                return property(lang_prop)
-            
-            # Add the property to the class
-            setattr(cls, lang_code, computed_field(make_lang_property(lang_code)))
+    # Dynamic language fields based on settings.LANGUAGES - now handled by decorator above
 
 
+# Apply language fields to CustomReadSchema dynamically
+def _apply_language_fields_to_custom_read_schema(cls):
+    for lang_code in settings.LANGUAGES:
+        if not hasattr(cls, '__annotations__'):
+            cls.__annotations__ = {}
+        cls.__annotations__[lang_code] = Optional[Dict[str, Any]]
+        setattr(cls, lang_code, None)
+    return cls
+
+@_apply_language_fields_to_custom_read_schema
 class CustomReadSchema:
     id: int
     drink: DrinkReadApi = Field(exclude=True)
@@ -75,18 +87,6 @@ class CustomReadSchema:
     updated_at: Optional[datetime] = None
     category: Optional[str] = None
     country: Optional[str] = None
-    
-    # Add language fields dynamically based on settings
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        # Add optional fields for each language
-        for lang_code in settings.LANGUAGES:
-            # Add the field to the class annotations
-            if not hasattr(cls, '__annotations__'):
-                cls.__annotations__ = {}
-            cls.__annotations__[lang_code] = Optional[Dict[str, Any]]
-            # Set default value
-            setattr(cls, lang_code, None)
 
     @model_validator(mode='after')
     def extract_drink_data(self) -> 'CustomReadSchema':
