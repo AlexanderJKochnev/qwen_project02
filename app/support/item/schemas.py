@@ -8,6 +8,7 @@ from app.core.schemas.image_mixin import ImageUrlMixin
 from app.core.schemas.base import BaseModel, CreateResponse
 from app.support.drink.schemas import (DrinkCreateRelation, DrinkReadApi, DrinkReadFlat,
                                        DrinkReadRelation, DrinkCreate, LangMixin)
+from app.core.config.project_config import settings
 
 
 class CustomReadFlatSchema:
@@ -48,20 +49,19 @@ class CustomReadFlatSchema:
     def _lang_(self, lang: str = 'en') -> Dict[str, Any]:
         return getattr(self.drink, lang)
 
-    @computed_field
-    @property
-    def en(self) -> Dict[str, Any]:
-        return self._lang_('en')
-
-    @computed_field
-    @property
-    def ru(self) -> Dict[str, Any]:
-        return self._lang_('ru')
-
-    @computed_field
-    @property
-    def fr(self) -> Dict[str, Any]:
-        return self._lang_('fr')
+    # Dynamic language fields based on settings.LANGUAGES
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        # Dynamically add computed properties for each language
+        for lang_code in settings.LANGUAGES:
+            # Create a closure to capture the language code
+            def make_lang_property(lang):
+                def lang_prop(self) -> Dict[str, Any]:
+                    return self._lang_(lang)
+                return property(lang_prop)
+            
+            # Add the property to the class
+            setattr(cls, lang_code, computed_field(make_lang_property(lang_code)))
 
 
 class CustomReadSchema:
@@ -73,21 +73,31 @@ class CustomReadSchema:
 
     # Вычисляемые поля
     updated_at: Optional[datetime] = None
-    en: Optional[Dict[str, Any]] = None
-    ru: Optional[Dict[str, Any]] = None
-    fr: Optional[Dict[str, Any]] = None
     category: Optional[str] = None
     country: Optional[str] = None
+    
+    # Add language fields dynamically based on settings
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        # Add optional fields for each language
+        for lang_code in settings.LANGUAGES:
+            # Add the field to the class annotations
+            if not hasattr(cls, '__annotations__'):
+                cls.__annotations__ = {}
+            cls.__annotations__[lang_code] = Optional[Dict[str, Any]]
+            # Set default value
+            setattr(cls, lang_code, None)
 
     @model_validator(mode='after')
     def extract_drink_data(self) -> 'CustomReadSchema':
         if self.drink:
             self.updated_at = self.drink.updated_at
-            self.en = self.drink.en
-            self.ru = self.drink.ru
-            self.fr = self.drink.fr
-            self.category = self.drink.en.get('category')
-            self.country = self.drink.en.get('country')
+            # Dynamically assign language fields from drink
+            for lang_code in settings.LANGUAGES:
+                if hasattr(self.drink, lang_code):
+                    setattr(self, lang_code, getattr(self.drink, lang_code))
+            self.category = self.drink.en.get('category') if hasattr(self.drink, 'en') else None
+            self.country = self.drink.en.get('country') if hasattr(self.drink, 'en') else None
         return self
 
 
