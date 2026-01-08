@@ -9,8 +9,8 @@ from dateutil.relativedelta import relativedelta
 from fastapi import Depends, Query, Path
 from app.core.utils.common_utils import back_to_the_future
 from app.core.config.project_config import settings
+from app.core.schemas.base import PaginatedResponse
 from app.mongodb import router as mongorouter
-
 from app.mongodb.models import FileListResponse
 from app.mongodb.service import ImageService
 from app.support.item.router import ItemRouter
@@ -36,13 +36,19 @@ class ApiRouter(ItemRouter):
         super().__init__(prefix='/api')
         # self.prefix = data.prefix
         # self.tags = data.prefix
+        self.paginated_response = PaginatedResponse[self.read_schema]
+        self.nonpaginated_response = List[self.read_schema]
 
     def setup_routes(self):
-        self.router.add_api_route("", self.get, methods=["GET"], response_model=self.paginated_response)
+        # self.router.add_api_route("", self.get, methods=["GET"], response_model=self.paginated_response)
+        self.router.add_api_route("", self.get, methods=["GET"], response_model=PaginatedResponse[self.read_schema])
         self.router.add_api_route("/all", self.get_all, methods=["GET"], response_model=List[self.read_schema])
+        # self.router.add_api_route("/all", self.get_all, methods=["GET"], response_model=self.nonpaginated_response)
         self.router.add_api_route("/search", self.search, methods=["GET"], response_model=self.paginated_response)
+        # self.router.add_api_route("/search_all", self.search_all, methods=["GET"],
+        #                           response_model=List[self.read_schema])
         self.router.add_api_route("/search_all", self.search_all, methods=["GET"],
-                                  response_model=List[self.read_schema])
+                                  response_model=self.nonpaginated_response)
         self.router.add_api_route("/mongo", self.get_images_after_date,
                                   response_model=FileListResponse)
         self.router.add_api_route("/mongo_all", self.get_images_list_after_date,
