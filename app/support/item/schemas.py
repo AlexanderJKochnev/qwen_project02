@@ -308,3 +308,26 @@ class ItemDrinkPreactSchema(BaseModel, LangMixin, ImageUrlMixin):
     price: Optional[float] = None
     image_id: Optional[str] = None
     image_path: Optional[str] = None
+
+
+class ItemApiLang(ItemDetailLocalized, ItemDetailManyToManyLocalized):
+    region: Optional[str] = None  # region + subregion
+    alc: Optional[str] = None  # "12.5%"
+    vol: Optional[str] = None  # "0.75 l"
+
+
+class ItemApiRoot(BaseModel):
+    id: int
+    country: str
+    category: str
+    alc: Optional[str] = None  # "12.5%"
+    vol: Optional[str] = None  # "0.75 l"
+    image_id: Optional[str] = None
+    image_path: Optional[str] = None
+    changed_at: datetime = Field(exclude=True)
+
+
+class ItemApi(ItemApiRoot):
+    en: ItemApiLang
+    ru: ItemApiLang
+    fr: ItemApiLang

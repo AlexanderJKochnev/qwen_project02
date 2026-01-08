@@ -1,21 +1,23 @@
 # app/support/Item/repository.py
 
-from sqlalchemy.orm import selectinload
-from typing import Optional, List, Type, Tuple, Union, Dict, Any
-from sqlalchemy import func, select, Select, or_, Row, literal_column, text
+from typing import Any, Dict, List, Optional, Tuple, Type, Union
+
+from sqlalchemy import func, literal_column, or_, select, Select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 from sqlalchemy.types import String
+
 from app.core.repositories.sqlalchemy_repository import Repository
+from app.core.services.logger import logger
+from app.core.utils.alchemy_utils import create_enum_conditions, create_search_conditions2, ModelType
+from app.support.category.model import Category
+from app.support.country.model import Country
 from app.support.drink.model import Drink, DrinkFood, DrinkVarietal
 from app.support.drink.repository import DrinkRepository  # , get_drink_search_expression
 from app.support.item.model import Item
-from app.support.country.model import Country
 from app.support.region.model import Region
-from app.support.subregion.model import Subregion
 from app.support.subcategory.model import Subcategory
-from app.support.category.model import Category
-from app.core.utils.alchemy_utils import ModelType, create_enum_conditions, create_search_conditions2
-from app.core.services.logger import logger
+from app.support.subregion.model import Subregion
 
 
 # from app.core.config.database.db_noclass import get_db
@@ -233,22 +235,10 @@ class ItemRepository(Repository):
         query = query.offset(skip).limit(limit)
         result = await session.execute(query)
         items = result.scalars().all()
-
-        # Преобразуем в плоские словари
-        flat_items = []
+        result = []
         for item in items:
-            flat_item = {
-                'id': item.id,
-                'vol': item.vol,
-                'image_id': item.image_id,
-                'title': item.drink.title,  # будет обработано в сервисе для нужного языка
-                'drink': item.drink,
-                'subcategory': item.drink.subcategory,
-                'country': item.drink.subregion.region.country
-            }
-            flat_items.append(flat_item)
-
-        return flat_items, total
+            result.append(item.to_dict())
+        return result, total
 
     @classmethod
     async def search_by_drink_title_subtitle(cls, search_str: str,

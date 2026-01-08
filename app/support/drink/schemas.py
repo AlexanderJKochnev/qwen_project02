@@ -259,7 +259,7 @@ class CustomReadApiSchema(LangMixinExclude):
                 return None
 
         # Для вложенных объектов рекурсивно ищем языковые версии
-        print(f'{current_obj=} {type(current_obj)} {lang_suffix=}, ', hasattr(current_obj, f"name{lang_suffix}"))
+        # print(f'{current_obj=} {type(current_obj)} {lang_suffix=}, ', hasattr(current_obj, f"name{lang_suffix}"))
         if hasattr(current_obj, f"name{lang_suffix}"):
             return getattr(current_obj, f"name{lang_suffix}")
         elif hasattr(current_obj, "name"):

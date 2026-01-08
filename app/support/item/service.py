@@ -1,5 +1,6 @@
 # app.support.item.service.py
 from deepdiff import DeepDiff
+from functools import reduce
 from decimal import Decimal
 from typing import Type, Optional, Dict, Any
 from pydantic import ValidationError
@@ -23,7 +24,7 @@ from app.support.item.repository import ItemRepository
 from app.support.item.schemas import (ItemCreate, ItemCreateRelation, ItemRead, ItemReadRelation,
                                       ItemCreatePreact, ItemUpdatePreact, ItemUpdate,
                                       ItemDetailNonLocalized, ItemDetailLocalized, ItemDetailForeignLocalized,
-                                      ItemDetailManyToManyLocalized)
+                                      ItemDetailManyToManyLocalized, ItemListView)
 
 
 class ItemService(Service):
@@ -60,111 +61,42 @@ class ItemService(Service):
         :param lang: Язык локализации ('en', 'ru', 'fr')
         :return: Преобразованный элемент в требуемом формате
         """
+
         # Основные поля
         result = {
             'id': item['id'],
             'vol': item['vol'],
             'image_id': item['image_id']
         }
-
-        # Helper function to check if a value is a Mock object
-        def is_mock_object(value):
-            return hasattr(value, '_mock_name') or (hasattr(value, '__class__') and 'Mock' in value.__class__.__name__)
-
-        # Локализация заголовка
-        if lang == 'en':
-            result['title'] = item['drink'].title
-        elif lang == 'ru':
-            title_ru = getattr(item['drink'], 'title_ru', None)
-            if is_mock_object(title_ru):
-                title_ru = None
-            result['title'] = title_ru if title_ru else item['drink'].title
-        elif lang == 'fr':
-            title_fr = getattr(item['drink'], 'title_fr', None)
-            if is_mock_object(title_fr):
-                title_fr = None
-            result['title'] = title_fr if title_fr else item['drink'].title
-        else:
-            result['title'] = item['drink'].title
-
-        # Локализация страны
-        if lang == 'en':
-            result['country'] = item['country'].name
-        elif lang == 'ru':
-            country_name_ru = getattr(item['country'], 'name_ru', None)
-            if is_mock_object(country_name_ru):
-                country_name_ru = None
-            result['country'] = country_name_ru if country_name_ru else item['country'].name
-        elif lang == 'fr':
-            country_name_fr = getattr(item['country'], 'name_fr', None)
-            if is_mock_object(country_name_fr):
-                country_name_fr = None
-            result['country'] = country_name_fr if country_name_fr else item['country'].name
-        else:
-            result['country'] = item['country'].name
-
-        # Локализация категории
-        if lang == 'en':
-            category_name = item['subcategory'].category.name
-            subcategory_name = getattr(item['subcategory'], 'name', None)
-            if is_mock_object(subcategory_name):
-                subcategory_name = None
-            if subcategory_name:
-                result['category'] = f"{category_name} {subcategory_name}".strip()
-            else:
-                result['category'] = category_name
-        elif lang == 'ru':
-            category_name = getattr(item['subcategory'].category, 'name_ru', None)
-            if is_mock_object(category_name):
-                category_name = None
-            if category_name:
-                category_name = category_name
-            else:
-                category_name = item['subcategory'].category.name
-
-            subcategory_name = getattr(item['subcategory'], 'name_ru', None)
-            if is_mock_object(subcategory_name):
-                subcategory_name = None
-            if not subcategory_name:
-                subcategory_name = getattr(item['subcategory'], 'name', None)
-                if is_mock_object(subcategory_name):
-                    subcategory_name = None
-
-            if subcategory_name:
-                result['category'] = f"{category_name} {subcategory_name}".strip()
-            else:
-                result['category'] = category_name
-        elif lang == 'fr':
-            category_name = getattr(item['subcategory'].category, 'name_fr', None)
-            if is_mock_object(category_name):
-                category_name = None
-            if category_name:
-                category_name = category_name
-            else:
-                category_name = item['subcategory'].category.name
-
-            subcategory_name = getattr(item['subcategory'], 'name_fr', None)
-            if is_mock_object(subcategory_name):
-                subcategory_name = None
-            if not subcategory_name:
-                subcategory_name = getattr(item['subcategory'], 'name', None)
-                if is_mock_object(subcategory_name):
-                    subcategory_name = None
-
-            if subcategory_name:
-                result['category'] = f"{category_name} {subcategory_name}".strip()
-            else:
-                result['category'] = category_name
-        else:
-            category_name = item['subcategory'].category.name
-            subcategory_name = getattr(item['subcategory'], 'name', None)
-            if is_mock_object(subcategory_name):
-                subcategory_name = None
-            if subcategory_name:
-                result['category'] = f"{category_name} {subcategory_name}".strip()
-            else:
-                result['category'] = category_name
-
+        # локализованные поля (если нужны нелокадизованные, всталяй их выше в result)
+        localized_fields = [v for v in get_field_name(ItemListView) if v not in result.keys()]
+        # задаем порядок замещения пустых полей
+        language: list = list_move(settings.LANGUAGES, lang)
+        lang_prefixes: list = lang_suffix_list(language)
+        # extra = [f'description{lang}' for lang in lang_prefixes]
+        drink_dict = item.get('drink')
+        for key in localized_fields:
+            match key:
+                case 'country':
+                    keys = ['subregion', 'region', 'country']
+                    value = reduce(lambda d, k: d.get(k) if isinstance(d, dict) else None, keys, drink_dict)
+                    if isinstance(value, dict):
+                        lf = localized_field_with_replacement(value, 'name', lang_prefixes, key)
+                        result.update(lf)
+                case 'category':
+                    keys = ['subcategory', 'category']
+                    value = reduce(lambda d, k: d.get(k) if isinstance(d, dict) else None, keys, drink_dict)
+                    if isinstance(value, dict):
+                        lf = localized_field_with_replacement(value, 'name', lang_prefixes, key)
+                        if value.get('name').lower() == 'wine':
+                            value = drink_dict.get('subcategory')
+                            ls = localized_field_with_replacement(value, 'name', lang_prefixes, 'subcategory')
+                            lf['category'] = f'{ls.get('subcategory')} {lf.get('category')}'
+                        result.update(lf)
+                case _:
+                    value = drink_dict.get(key)
+                    lf = localized_field_with_replacement(drink_dict, key, lang_prefixes)
+                    result.update(lf)
         return result
 
     @classmethod
@@ -199,7 +131,7 @@ class ItemService(Service):
         lang_prefixes: list = lang_suffix_list(language)
         extra = [f'description{lang}' for lang in lang_prefixes]
         item: dict = item_instance.to_dict()
-        # перенос dложенных словарей на верхний уровень
+        # перенос вложенных словарей на верхний уровень
         if drink := item.pop('drink'):
             drink.pop('id', None)
             for key in ('subcategory.category', 'subregion.region', 'subregion.region.country'):
