@@ -3,12 +3,8 @@
 This document contains all the hardcoded language variables with '_ru' and '_fr' suffixes found in the codebase.
 
 ## File: /app/core/models/base_model.py
-- Line 131: # description_ru: Mapped[descr]
-- Line 133: # name_ru: Mapped[str_null_index]
-- Line 156: description_ru: Mapped[descr]
-- Line 157: description_fr: Mapped[descr]
-- Line 165: name_ru: Mapped[str_null_true]
-- Line 166: name_fr: Mapped[str_null_true]
+- Line 154: # description_xx: Mapped[descr]
+- Line 165: # name_xx: Mapped[str_null_true]
 - Line 181: return self.name or self.name_fr or self.name_ru or ""
 
 ## File: /app/core/schemas/api_mixin.py

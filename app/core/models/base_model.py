@@ -8,9 +8,12 @@ from typing import Annotated
 from sqlalchemy import DateTime, DECIMAL, func, Integer, text, Text
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, declared_attr, Mapped, mapped_column
+from app.core.config.project_config import settings
 
 # from app.core.config.project_config import settings
 from app.core.utils.common_utils import plural
+
+langs = settings.LANGUAGES
 
 # primary key
 int_pk = Annotated[int, mapped_column(Integer, primary_key=True, autoincrement=True)]
@@ -127,10 +130,6 @@ class BaseAt:
     __abstract__ = True
     created_at: Mapped[created_at]
     updated_at: Mapped[updated_at]
-    # description: Mapped[descr]
-    # description_ru: Mapped[descr]
-    # name: Mapped[str_uniq]
-    # name_ru: Mapped[str_null_index]
 
 
 class BaseInt:
@@ -155,6 +154,7 @@ class BaseDescription:
     __abstract__ = True
     description_ru: Mapped[descr]
     description_fr: Mapped[descr]
+    # description_xx: Mapped[descr]
 
 
 class BaseLang(BaseDescription):
@@ -164,7 +164,7 @@ class BaseLang(BaseDescription):
     __abstract__ = True
     name_ru: Mapped[str_null_true]
     name_fr: Mapped[str_null_true]
-    # name_en: Mapped[str_uniq]
+    # name_xx: Mapped[str_null_true]
 
 
 class BaseFull(Base, BaseInt, BaseAt, BaseLang):
@@ -177,5 +177,8 @@ class BaseFullFree(Base, BaseIntFree, BaseAt, BaseLang):
     __abstract__ = True
 
     def __str__(self):
-        # переоопределять в особенных формах
-        return self.name or self.name_fr or self.name_ru or ""
+        # Проходим по списку суффиксов и возвращаем первое непустое значение
+        for lang in langs:
+            if val := getattr(self, f"name{lang}", None):
+                return val
+        return ""
