@@ -149,15 +149,6 @@ def get_varietal(drink_dict: dict, language_key: dict) -> bool:
             varietal = parse_grapes(varietal)
             err = f'2: {varietal}'
             tmp[f'name{lang}'] = varietal
-        """
-            tmp = {"name": {"Pinot Noir": 42, "Meunier": 12, "Chardonnay": 40},
-                   "name_ru": {"Каберне Совиньон": 91, "Мерло": 6, "Пти Вердо": 2, "Мальбек": 1}
-            convert to:
-            varietals = [{"varietal": {"name": "Pinot Noir", "name_ru": "Пино Нуар"},
-                          "precentage": 42},
-                          ...
-                          ]
-        """
         varietals = convert_varietals(tmp)
         drink_dict['varietals'] = varietals
         return True

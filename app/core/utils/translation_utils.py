@@ -88,15 +88,6 @@ def get_field_language(field_name: str) -> Optional[str]:
     return settings.DEFAULT_LANG
 
 
-def get_base_field_name(field_name: str) -> str:
-    """Get the base field name without language suffix
-        DELETE !!!
-    """
-    if field_name.endswith(('_ru', '_fr')):
-        return field_name[:-3]  # Remove _ru or _fr
-    return field_name
-
-
 async def fill_missing_translations(data: Dict[str, Any], test: bool = False) -> Dict[str, Any]:
     """
     Fill missing translations in data dictionary using available translations
