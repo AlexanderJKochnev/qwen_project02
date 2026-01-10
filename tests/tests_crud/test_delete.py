@@ -13,14 +13,14 @@ pytestmark = pytest.mark.asyncio
 
 @pytest.mark.skip
 async def test_fault_delete(authenticated_client_with_db, test_db_session,
-                            routers_get_all, fakedata_generator):
+                            routers_get_all):
     """ тестирует методы DELETE  c проверкой id fault"""
     client = authenticated_client_with_db
     routers = routers_get_all
     for prefix in reversed(routers):
         if 'api' in prefix:     # в api нет метода delete - когдя пояявится - убрать
             continue
-        id = 10000
+        id = 10000   # impossible id
         resp = await client.delete(f'{prefix}/{id}')
         assert resp.status_code == 404, f'{prefix} {resp.text}'
 
@@ -47,8 +47,7 @@ async def test_fault_delete_foreign_violation(authenticated_client_with_db, test
         assert False, e  # response.status_code == 200, f'{prefix}, {response.text}'
 
 
-async def test_delete(authenticated_client_with_db, test_db_session,
-                      fakedata_generator):
+async def test_delete(authenticated_client_with_db, test_db_session):  # fakedata_generator):
     """ тестирует методы DELETE c проверкой id
         удаление всех записей
     """
@@ -58,10 +57,13 @@ async def test_delete(authenticated_client_with_db, test_db_session,
     prefix = router.prefix
     result = await client.get(f'{prefix}/all')
     assert result.status_code == 200, 'невозможно подсчитать кол-во записей'
+    
     for instance in result.json():
         id = instance.get('id')
         response = await client.delete(f'{prefix}/{id}')
-        assert response.status_code == 200, response.text
+        if response.status_code != 200:
+            print(f'ошибка удаления {prefix}')
+        assert response.status_code == 200, f'ошибка удаления {prefix}/{id}'
         # проверка удаления
         check = await client.get(f'{prefix}/{id}')
         assert check.status_code in [404, 500], check.text

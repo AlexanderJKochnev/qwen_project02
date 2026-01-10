@@ -8,12 +8,9 @@ from typing import Annotated
 from sqlalchemy import DateTime, DECIMAL, func, Integer, text, Text
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, declared_attr, Mapped, mapped_column
-from app.core.config.project_config import settings
-
 # from app.core.config.project_config import settings
-from app.core.utils.common_utils import plural
 
-langs = settings.LANGUAGES
+langs = ['en', 'ru', 'fr']
 
 # primary key
 int_pk = Annotated[int, mapped_column(Integer, primary_key=True, autoincrement=True)]
@@ -182,3 +179,22 @@ class BaseFullFree(Base, BaseIntFree, BaseAt, BaseLang):
             if val := getattr(self, f"name{lang}", None):
                 return val
         return ""
+
+
+def plural(single: str) -> str:
+    """
+    возвращает множественное число прописными буквами по правилам англ языка
+    :param single:  single name
+    :type name:     str
+    :return:        plural name
+    :rtype:         str
+    """
+    name = single.lower()
+    if name.endswith('model'):
+        name = name[0:-5]
+    if not name.endswith('s'):
+        if name.endswith('y'):
+            name = f'{name[0:-1]}ies'
+        else:
+            name = f'{name}s'
+    return name

@@ -1,7 +1,6 @@
 # app/core/common_utils.py
 # some useful utilits
 
-from pathlib import Path
 from datetime import datetime, timezone
 from fastapi import HTTPException
 from typing import Any, Dict, List, Optional, Set, TypeVar, Union
@@ -16,23 +15,6 @@ from sqlalchemy.sql.selectable import Select
 ModelType = TypeVar("ModelType", bound=DeclarativeMeta)
 
 
-def strtolist(data: str, delim: str = ',') -> List[str]:
-    """ строка с разделителями в список"""
-    if isinstance(data, str):
-        return [a.strip() for a in data.split(delim)]
-    else:
-        return []
-
-
-def strtodict(data: str, delim1: str = ',', delim2: str = ':') -> Dict[str, str]:
-    tmp = strtolist(data, delim1)
-    result: dict = {}
-    for item in tmp:
-        key, val = item.split(delim2)
-        result[key.strip()] = val.strip()
-    return result
-
-
 def sort_strings_by_alphabet_and_length(strings: List[str]) -> List[str]:
     """
     Сортирует список строк сначала по алфавиту, затем по длине строки.
@@ -44,23 +26,6 @@ def sort_strings_by_alphabet_and_length(strings: List[str]) -> List[str]:
         Отсортированный список строк
     """
     return sorted(strings, key=lambda s: (s.lower(), len(s)))
-
-
-def get_path_to_root(name: str = '.env'):
-    """
-        get path to file or directory in root directory
-    """
-    try:
-        for k in range(1, 10):
-            env_path = Path(__file__).resolve().parents[k] / name
-            if env_path.exists():
-                break
-        else:
-            env_path = None
-            raise Exception('environment file is not found')
-        return env_path
-    except Exception:
-        return None
 
 
 def get_searchable_fields(model: type) -> Dict[str, type]:
@@ -386,25 +351,6 @@ def json_flattern(self, data: dict, parent: str = '') -> dict:
         else:
             result[f'{parent}.{key}'] = ', '.join(val) if isinstance(val, str) else val
     return result
-
-
-def plural(single: str) -> str:
-    """
-    возвращает множественное число прописными буквами по правилам англ языка
-    :param single:  single name
-    :type name:     str
-    :return:        plural name
-    :rtype:         str
-    """
-    name = single.lower()
-    if name.endswith('model'):
-        name = name[0:-5]
-    if not name.endswith('s'):
-        if name.endswith('y'):
-            name = f'{name[0:-1]}ies'
-        else:
-            name = f'{name}s'
-    return name
 
 
 def get_nested(d: dict, path: str) -> Any:
@@ -884,3 +830,22 @@ def search_local(query_string: str) -> int:
         return 1
     else:
         return 2
+
+
+def localized_field_with_replacement(source: Dict[str, Any], key: str,
+                                     langs: list, target_key: str = None) -> Dict[str, Any]:
+    """
+        source - словарь
+        key: ключ
+        langs: список языков
+        target_key: имя поля (если None то key)
+        1. Извлекает из словаря source значения key на всех языках
+        2. Выбирает первое не пустое (langs - список suffixes языков отсортированных по приоритету)
+        3. Возвращает словарь из одной пары target_key: val
+    """
+    for lang in langs:
+        res = source.get(f'{key}{lang}')
+        if res:
+            return {target_key or key: res}
+    else:
+        return {target_key or key: None}

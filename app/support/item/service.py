@@ -9,7 +9,7 @@ from fastapi import HTTPException
 # from app.support.item.schemas import ItemCreate, ItemCreateRelation, ItemRead
 from app.core.services.service import Service
 from app.core.config.project_config import settings
-from app.core.utils.translation_utils import localized_field_with_replacement
+from app.core.utils import localized_field_with_replacement
 from app.core.utils.pydantic_utils import get_field_name
 from app.core.utils.common_utils import flatten_dict_with_localized_fields, get_value, jprint  # noqa: F401
 from app.core.utils.converters import read_convert_json, list_move, lang_suffix_list

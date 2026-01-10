@@ -4,9 +4,8 @@ from __future__ import annotations
 from typing import List, TYPE_CHECKING
 
 from sqlalchemy.orm import Mapped, relationship
-from app.core.utils.common_utils import plural
 from app.core.config.project_config import settings
-from app.core.models.base_model import BaseFull
+from app.core.models.base_model import BaseFull, plural
 
 if TYPE_CHECKING:
     from app.support.drink.model import DrinkVarietal

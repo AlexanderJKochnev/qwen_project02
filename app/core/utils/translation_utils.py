@@ -58,25 +58,6 @@ def get_group_localized_fields(langs: list, default_lang: str, localized_fields:
     return result
 
 
-def localized_field_with_replacement(source: Dict[str, Any], key: str,
-                                     langs: list, target_key: str = None) -> Dict[str, Any]:
-    """
-        source - словарь
-        key: ключ
-        langs: список языков
-        target_key: имя поля (если None то key)
-        1. Извлекает из словаря source значения key на всех языках
-        2. Выбирает первое не пустое (langs - список suffixes языков отсортированных по приоритету)
-        3. Возвращает словарь из одной пары target_key: val
-    """
-    for lang in langs:
-        res = source.get(f'{key}{lang}')
-        if res:
-            return {target_key or key: res}
-    else:
-        return {target_key or key: None}
-
-
 def get_field_language(field_name: str) -> Optional[str]:
     """Extract language code from field name"""
     if len(field_name) < 3 or field_name[-3] != '_':

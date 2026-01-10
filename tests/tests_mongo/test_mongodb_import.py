@@ -8,8 +8,8 @@ from pathlib import Path
 import pytest
 
 # from app.mongodb.config import mongodb
-from app.core.config.project_config import settings
-from app.core.utils.common_utils import get_path_to_root, jprint
+from app.core.config.project_config import get_path_to_root, settings
+from app.core.utils.common_utils import jprint
 
 pytestmark = pytest.mark.asyncio
 

@@ -1,9 +1,43 @@
 # app/core/config/project_config.py
+from pathlib import Path
+from typing import Dict, List
 from pydantic_settings import BaseSettings, SettingsConfigDict
 import os
-from typing import List
-from app.core.utils.common_utils import get_path_to_root
-from app.core.utils.common_utils import strtolist, strtodict
+# from app.core.utils.path_utils import get_path_to_root, strtodict, strtolist
+
+
+def get_path_to_root(name: str = '.env'):
+    """
+        get path to file or directory in root directory
+    """
+    try:
+        for k in range(1, 10):
+            env_path = Path(__file__).resolve().parents[k] / name
+            if env_path.exists():
+                break
+        else:
+            env_path = None
+            raise Exception('environment file is not found')
+        return env_path
+    except Exception:
+        return None
+
+
+def strtolist(data: str, delim: str = ',') -> List[str]:
+    """ строка с разделителями в список"""
+    if isinstance(data, str):
+        return [a.strip() for a in data.split(delim)]
+    else:
+        return []
+
+
+def strtodict(data: str, delim1: str = ',', delim2: str = ':') -> Dict[str, str]:
+    tmp = strtolist(data, delim1)
+    result: dict = {}
+    for item in tmp:
+        key, val = item.split(delim2)
+        result[key.strip()] = val.strip()
+    return result
 
 
 class Settings(BaseSettings):

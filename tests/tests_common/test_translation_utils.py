@@ -16,7 +16,7 @@ source: dict = {'name': 'english name',
 
 
 async def test_fill_missing_translations():
-    from app.core.utils.translation_utils import fill_missing_translations
+    from app.core.utils import fill_missing_translations
     ai = settings.MACHINE_TRANSLATION_MARK
     expected_result: dict = {'name': 'english name',
                              'name_ru': f"english name <{ai}>",

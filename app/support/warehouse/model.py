@@ -7,8 +7,7 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.config.project_config import settings
-from app.core.models.base_model import BaseFull, str_null_true
-from app.core.utils.common_utils import plural
+from app.core.models.base_model import BaseFull, plural, str_null_true
 
 if TYPE_CHECKING:
     from app.support.customer.model import Customer

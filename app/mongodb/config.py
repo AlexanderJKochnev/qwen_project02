@@ -3,8 +3,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from fastapi import Depends  # NOQA: F401
 from typing import Optional
-from app.core.utils.common_utils import get_path_to_root
-from app.core.config.project_config import settings
+from app.core.config.project_config import get_path_to_root, settings
 # import os
 
 

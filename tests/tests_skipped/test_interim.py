@@ -6,7 +6,7 @@ from pathlib import Path
 # from fastapi import status
 import datetime
 import pytest
-from app.core.config.project_config import settings
+from app.core.config.project_config import get_path_to_root, settings
 from app.core.utils.common_utils import jprint  # NOQA: F401
 from pydantic import ValidationError
 from app.core.utils.io_utils import get_filepath_from_dir_by_name
@@ -88,7 +88,7 @@ mandatory_sets = ['Read',
 
 
 def test_get_path_to_root():
-    from app.core.utils.common_utils import get_path_to_root, enum_to_camel
+    from app.core.utils.common_utils import enum_to_camel
     from app.core.utils.io_utils import read_file_lines_stripped
     """
         тестирование функции get_path_to_root

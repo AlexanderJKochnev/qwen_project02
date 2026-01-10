@@ -3,7 +3,8 @@
 from typing import Optional
 from pydantic import PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from app.core.utils.common_utils import get_path_to_root
+from app.core.config.project_config import get_path_to_root
+
 
 # load_dotenv() - не использовать - путает
 

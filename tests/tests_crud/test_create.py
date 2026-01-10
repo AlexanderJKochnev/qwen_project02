@@ -4,11 +4,13 @@
     эта группа тестов падает если запускать их вместе с другими тесатми - очередность не важна
     разобраться
 """
-
 import pytest
 from app.core.utils.common_utils import jprint
 from tests.utility.assertion import assertions
 pytestmark = pytest.mark.asyncio
+
+
+test_number = 5
 
 
 async def test_new_data_generator(authenticated_client_with_db, test_db_session,
@@ -16,7 +18,6 @@ async def test_new_data_generator(authenticated_client_with_db, test_db_session,
     """ валидация генерируемых данных и загрузка """
     from tests.data_factory.fake_generator import generate_test_data
     source = simple_router_list + complex_router_list
-    test_number = 10
     client = authenticated_client_with_db
     for n, item in enumerate(source):
         router = item()
@@ -74,7 +75,6 @@ async def test_new_data_generator_relation_validation(simple_router_list, comple
     from pydantic import TypeAdapter
     failed_cases = []
     source = simple_router_list + complex_router_list
-    test_number = 10
     for n, item in enumerate(source):
         router = item()
         schema = router.create_schema_relation
@@ -110,7 +110,6 @@ async def test_new_data_generator_relation_correctness(simple_router_list, compl
     from tests.data_factory.fake_generator import generate_test_data
     failed_cases = []
     source = simple_router_list + complex_router_list
-    test_number = 10
     for n, item in enumerate(source):
         router = item()
         schema = router.create_schema_relation
@@ -140,7 +139,6 @@ async def test_new_data_generator_relation(authenticated_client_with_db, test_db
     from tests.data_factory.fake_generator import generate_test_data
     failed_cases = []
     source = simple_router_list + complex_router_list
-    test_number = 10
     client = authenticated_client_with_db
     for n, item in enumerate(source):
         router = item()

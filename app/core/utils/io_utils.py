@@ -2,8 +2,8 @@
 from pathlib import Path
 import json
 from typing import List
-from app.core.utils.common_utils import get_path_to_root, enum_to_camel
-from app.core.config.project_config import settings
+from app.core.utils.common_utils import enum_to_camel
+from app.core.config.project_config import get_path_to_root, settings
 # from app.core.utils.alchemy_utils import JsonConverter
 
 

@@ -182,6 +182,21 @@ def get_routers(method: str = 'GET') -> List[APIRoute]:
 
 
 @pytest.fixture(scope=scope)
+def get_all_routes() -> List[APIRoute]:
+    """  список роутеров, содержащих указанный метод """
+    # prefix содерится в a.path
+    # APIRoute(path='/registry/hierarchy', name='create_relation', methods=['POST'])
+    exc_route = ('/', '/auth/token', '/wait')
+    return [a for a in app.routes
+            if all((isinstance(a, APIRoute), a.path not in exc_route))]
+
+
+@pytest.fixture(scope=scope)
+def get_all_routers() -> List[str]:
+    return None
+
+
+@pytest.fixture(scope=scope)
 def simple_router_list():
     """генератор тестовых данных 1
     """

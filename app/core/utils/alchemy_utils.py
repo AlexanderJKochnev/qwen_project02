@@ -13,7 +13,8 @@ from sqlalchemy.orm import DeclarativeBase, DeclarativeMeta, MapperProperty
 from sqlalchemy.orm.attributes import QueryableAttribute
 
 from app.core.models.base_model import Base
-from app.core.utils.common_utils import clean_string, enum_to_camel, get_path_to_root
+from app.core.utils.common_utils import clean_string, enum_to_camel
+from app.core.config.project_config import get_path_to_root
 
 ModelType = TypeVar("ModelType", bound=DeclarativeMeta)
 function = {1: or_, 2: and_}
