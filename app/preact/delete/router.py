@@ -14,7 +14,7 @@ class DeleteRouter(PreactRouter):
         """
             генератор для создания роутов
         """
-        return ((f'/{key}' + '/{id}', DeleteResponse) for key, val in source.items())
+        return ((f'/{key}' + '/{id}', DeleteResponse, None) for key, val in source.items())
 
     async def endpoint(self, request: Request, id: int,
                        session: AsyncSession = Depends(get_db)) -> DeleteResponse:

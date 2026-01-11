@@ -48,7 +48,8 @@ class ItemViewRouter:
             methods=["GET"],
             response_model=List[ItemListView],
             tags=self.tags,
-            summary="Получить список элементов с локализацией"
+            summary="Получить список элементов с локализацией",
+            openapi_extra={'request_model': None}
         )
 
         # Маршрут для получения списка элементов с пагинацией
@@ -58,7 +59,8 @@ class ItemViewRouter:
             methods=["GET"],
             response_model=PaginatedResponse[ItemListView],
             tags=self.tags,
-            summary="Получить список элементов с пагинацией и локализацией"
+            summary="Получить список элементов с пагинацией и локализацией",
+            openapi_extra={'request_model': None}
         )
 
         # Маршрут для получения одного элемента по id с локализацией
@@ -68,7 +70,8 @@ class ItemViewRouter:
             methods=["GET"],
             response_model=ItemDetailView,
             tags=self.tags,
-            summary="Получить детальную информацию по элементу с локализацией"
+            summary="Получить детальную информацию по элементу с локализацией",
+            openapi_extra={'request_model': None}
         )
 
         # 2 Маршрут для поиска элементов по полям title* и subtitle* связанной модели Drink
@@ -78,7 +81,8 @@ class ItemViewRouter:
             methods=["GET"],
             response_model=PaginatedResponse[ItemListView],
             tags=self.tags,
-            summary="Поиск элементов по полям title* и subtitle* связанной модели Drink"
+            summary="Поиск элементов по полям title* и subtitle* связанной модели Drink",
+            openapi_extra={'request_model': None}
         )
 
         # Маршрут для поиска элементов с использованием триграммного индекса
@@ -88,7 +92,8 @@ class ItemViewRouter:
             methods=["GET"],
             response_model=PaginatedResponse[ItemListView],
             tags=self.tags,
-            summary="Поиск элементов по триграммному индексу в связанной модели Drink"
+            summary="Поиск элементов по триграммному индексу в связанной модели Drink",
+            openapi_extra={'request_model': None}
         )
 
         self.router.add_api_route(
@@ -97,7 +102,8 @@ class ItemViewRouter:
             methods=["GET"],
             response_model=ItemReadPreactForUpdate,
             tags=self.tags,
-            summary="Получить детальную информацию по элементу со всеми локализациями"
+            summary="Получить детальную информацию по элементу со всеми локализациями",
+            openapi_extra={'request_model': None}
         )
 
     async def get_one(self,

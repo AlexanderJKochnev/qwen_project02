@@ -25,7 +25,9 @@ class ReadRouter(PreactRouter):
         """
         генератор для создания роутов
         """
-        return ((f'/{key}' + '/{id}', get_pyschema(val, 'Create')) for key, val in source.items())
+        return ((f'/{key}' + '/{id}',
+                 get_pyschema(val, 'Create'),
+                 None) for key, val in source.items())
 
     async def endpoint(self, request: Request, id: int,
                        translation: Annotated[Callable, Depends(get_translator_func)],

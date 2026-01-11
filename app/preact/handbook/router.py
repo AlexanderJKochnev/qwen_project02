@@ -20,7 +20,9 @@ class HandbookRouter(PreactRouter):
         """
         генератор для создания роутов
         """
-        return ((f'/{key}' + '/{lang}', List[get_pyschema(val, 'ListView')]) for key, val in source.items())
+        return ((f'/{key}' + '/{lang}',
+                 List[get_pyschema(val, 'ListView')],
+                 None) for key, val in source.items())
 
     async def endpoint(self, request: Request, lang: str, session: AsyncSession = Depends(get_db)):
         current_path = request.url.path

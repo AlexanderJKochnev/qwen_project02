@@ -35,23 +35,28 @@ class ItemRouter(BaseRouter):
         self.router.add_api_route(
             "/full", self.create_relation_image, status_code=status.HTTP_200_OK, methods=["POST"],
             # response_model=self.read_schema
+            openapi_extra={'request_model': None}
         )
         self.router.add_api_route(
             "/create_item_drink", self.create_item_drink, status_code=status.HTTP_200_OK, methods=["POST"],
             # response_model=ItemCreateResponseSchema
+            openapi_extra={'request_model': None}
         )
         # ???????? UPDATE -> POST ?
         self.router.add_api_route(
             "/update_item_drink/{id}", self.update_item_drink, status_code=status.HTTP_200_OK, methods=["POST"],
             # response_model=ItemCreateResponseSchema
+            openapi_extra={'request_model': None}
         )
         """ import from upload directory """
         self.router.add_api_route(
             "/direct", self.direct_import_data, status_code=status.HTTP_200_OK, methods=["POST"],
-            response_model=dict)
+            response_model=dict,
+            openapi_extra={'request_model': None})
         self.router.add_api_route(
             "/direct/{id}", self.direct_import_single_data, status_code=status.HTTP_200_OK, methods=["GET"],
-            response_model=dict
+            response_model=dict,
+            openapi_extra={'request_model': None}
         )
 
     async def get_list_view(self, lang: str = Path(..., description="Язык локализации"),

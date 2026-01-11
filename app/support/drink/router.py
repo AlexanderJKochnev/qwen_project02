@@ -16,8 +16,8 @@ from app.support.drink.model import Drink
 from app.support.drink.schemas import (DrinkCreate, DrinkCreateRelation, DrinkCreateResponseSchema,
                                        DrinkFoodLinkUpdate, DrinkRead, DrinkReadApi, DrinkUpdate,
                                        )
-from app.support.drink.service import DrinkService
-from app.support.drink.repository import DrinkRepository
+# from app.support.drink.service import DrinkService
+# from app.support.drink.repository import DrinkRepository
 
 
 class DrinkRouter(BaseRouter):
@@ -32,11 +32,14 @@ class DrinkRouter(BaseRouter):
         super().setup_routes()
         # то что ниже удалить - было нужно до relation
         self.router.add_api_route("/{id}/foods", self.update_drink_foods,
-                                  methods=["PATCH"])
+                                  methods=["PATCH"],
+                                  openapi_extra={'request_model': DrinkFoodLinkUpdate})
         self.router.add_api_route("/{id}/flat", self.get_one_flat,
-                                  methods=['GET'], response_model=self.read_schema)
+                                  methods=['GET'], response_model=self.read_schema,
+                                  openapi_extra={'request_model': None})
         self.router.add_api_route("/{id}/api", self.get_one_api, methods=['GET'],
-                                  response_model=self.read_api_schema)
+                                  response_model=self.read_api_schema,
+                                  openapi_extra={'request_model': None})
 
     def get_drink_food_service(session: AsyncSession) -> DrinkFoodService:
         repo = DrinkFoodRepository(session)

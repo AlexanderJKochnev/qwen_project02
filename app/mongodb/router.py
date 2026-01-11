@@ -23,7 +23,7 @@ router = APIRouter(prefix=f"/{prefix}", tags=[f"{prefix}"], dependencies=[Depend
 
 
 # === Списки изображений (метаданные) ===
-@router.get(f'/{subprefix}', response_model=FileListResponse)
+@router.get(f'/{subprefix}', response_model=FileListResponse, openapi_extra={'request_model': None})
 # @cache_key_builder(prefix = 'mongodb_images', expire = 300, key_params = ["after_date", "page", "per_page"])
 async def get_images_after_date(
     after_date: datetime = Query(delta, description="Дата в формате ISO 8601 (например, 2024-01-01T00:00:00Z)"),
@@ -41,7 +41,7 @@ async def get_images_after_date(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get(f'/{subprefix}list', response_model=dict)
+@router.get(f'/{subprefix}list', response_model=dict, openapi_extra={'request_model': None})
 # @cache_key_builder(prefix = 'mongodb_images_list', expire = 300, key_params = ["after_date"])
 async def get_images_list_after_date(
     after_date: datetime = Query(delta, description="Дата в формате ISO 8601 (например, 2024-01-01T00:00:00Z)"),
@@ -60,7 +60,7 @@ async def get_images_list_after_date(
 
 
 # === THUMBNAIL endpoint'ы (для списков) ===
-@router.get(f'/{thumbprefix}/' + "{file_id}")
+@router.get(f'/{thumbprefix}/' + "{file_id}", openapi_extra={'request_model': None})
 async def download_thumbnail(
     file_id: str, image_service: ThumbnailImageService = Depends()
 ):
@@ -84,7 +84,7 @@ async def download_thumbnail(
     )
 
 
-@router.get(f'/{thumbprefix}/name/' + "{filename}")
+@router.get(f'/{thumbprefix}/name/' + "{filename}", openapi_extra={'request_model': None})
 async def download_thumbnail_by_filename(
     filename: str, image_service: ThumbnailImageService = Depends()
 ):
@@ -109,7 +109,7 @@ async def download_thumbnail_by_filename(
 
 
 # === FULL IMAGE endpoint'ы (для детального просмотра) ===
-@router.get(f'/{subprefix}/' + "{file_id}")
+@router.get(f'/{subprefix}/' + "{file_id}", openapi_extra={'request_model': None})
 async def download_full_image(
     file_id: str, image_service: ThumbnailImageService = Depends()
 ):
@@ -133,7 +133,7 @@ async def download_full_image(
     )
 
 
-@router.get(f'/{fileprefix}/' + "{filename}")
+@router.get(f'/{fileprefix}/' + "{filename}", openapi_extra={'request_model': None})
 async def download_full_image_by_filename(
     filename: str, image_service: ThumbnailImageService = Depends()
 ):
@@ -160,7 +160,7 @@ async def download_full_image_by_filename(
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@router.post(f'/{subprefix}', response_model=ImageCreateResponse)
+@router.post(f'/{subprefix}', response_model=ImageCreateResponse, openapi_extra={'request_model': None})
 # @invalidate_cache(patterns = ["mongodb_images:*", "mongodb_images_list:*"])
 async def upload_image(
     file: UploadFile = File(...), description: Optional[str] = Form(None),
@@ -177,7 +177,7 @@ async def upload_image(
     return result
 
 
-@router.post(f'/{directprefix}', response_model=DirectUploadResponse)
+@router.post(f'/{directprefix}', response_model=DirectUploadResponse, openapi_extra={'request_model': None})
 # @invalidate_cache(patterns = ["mongodb_images:*", "mongodb_images_list:*"])
 async def direct_upload(image_service: ThumbnailImageService = Depends()) -> dict:
     """
@@ -187,7 +187,7 @@ async def direct_upload(image_service: ThumbnailImageService = Depends()) -> dic
     return images
 
 
-@router.delete(f'/{subprefix}/' + "{file_id}", response_model=dict)
+@router.delete(f'/{subprefix}/' + "{file_id}", response_model=dict, openapi_extra={'request_model': None})
 # @invalidate_cache(patterns = ["mongodb_images:*", "mongodb_images_list:*"])
 async def delete_image(
     file_id: str, image_service: ThumbnailImageService = Depends()  # ← Используем новый сервис

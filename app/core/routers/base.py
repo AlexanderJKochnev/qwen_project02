@@ -72,38 +72,47 @@ class BaseRouter:
     def setup_routes(self):
         """Настраивает маршруты"""
         self.router.add_api_route("", self.create, methods=["POST"],
-                                  response_model=self.create_response_schema)
+                                  response_model=self.create_response_schema,
+                                  openapi_extra={'request_model': self.create_schema})
 
         self.router.add_api_route("/hierarchy",
                                   self.create_relation,
                                   status_code=status.HTTP_200_OK,
                                   methods=["POST"],
-                                  response_model=self.read_schema_relation)
+                                  response_model=self.read_schema_relation,
+                                  openapi_extra={'request_model': self.create_schema_relation})
         # get all без паггинации
         self.router.add_api_route("", self.get, methods=["GET"],
-                                  response_model=self.paginated_response)
+                                  response_model=self.paginated_response,
+                                  openapi_extra={'request_model': None})
         # search с пагинацией
         self.router.add_api_route("/search", self.search, methods=["GET"],
-                                  response_model=self.paginated_response)
+                                  response_model=self.paginated_response,
+                                  openapi_extra={'request_model': None})
         # search без пагинации
         self.router.add_api_route("/search_all",
                                   self.search_all, methods=["GET"],
-                                  response_model=self.nonpaginated_response)  # List[self.read_schema])
+                                  response_model=self.nonpaginated_response,
+                                  openapi_extra={'request_model': None})
         # get without pagination
         self.router.add_api_route("/all",
                                   self.get_all, methods=["GET"],
-                                  response_model=self.nonpaginated_response)  # List[self.read_response])
+                                  response_model=self.nonpaginated_response,  # List[self.read_response])
+                                  openapi_extra={'request_model': None})
         # get one buy id
         self.router.add_api_route("/{id}",
                                   self.get_one, methods=["GET"],
                                   response_model=self.read_schema,
-                                  )
+                                  openapi_extra={'request_model': None})
+
         self.router.add_api_route("/{id}",
                                   self.patch, methods=["PATCH"],
-                                  response_model=self.read_schema)
+                                  response_model=self.read_schema,
+                                  openapi_extra={'request_model': self.update_schema})
         self.router.add_api_route("/{id}",
                                   self.delete, methods=["DELETE"],
-                                  response_model=self.delete_response)
+                                  response_model=self.delete_response,
+                                  openapi_extra={'request_model': None})
 
     async def create(self, data: TCreateSchema, session: AsyncSession = Depends(get_db)) -> TReadSchema:
         """

@@ -22,7 +22,9 @@ class GetRouter(PreactRouter):
         """
         генератор для создания роутов
         """
-        return ((f'/{key}' + '/{lang}/{id}', get_pyschema(val, 'DetailView')) for key, val in source.items())
+        return ((f'/{key}' + '/{lang}/{id}',
+                 get_pyschema(val, 'DetailView'),
+                 None) for key, val in source.items())
 
     async def endpoint(self, request: Request, lang: str, id: int, session: AsyncSession = Depends(get_db)):
         try:
@@ -39,7 +41,8 @@ class GetRouter(PreactRouter):
     def _setup_routes_(self):
         # Add language endpoint first
         self.router.add_api_route('/languages', self.get_languages, methods=['GET'],
-                                  tags=['system'], summary='Get available languages')
+                                  tags=['system'], summary='Get available languages',
+                                  openapi_extra={'request_model': None})
         # Then call parent method for other routes
         super()._setup_routes_()
 

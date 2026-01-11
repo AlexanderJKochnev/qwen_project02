@@ -182,18 +182,83 @@ def get_routers(method: str = 'GET') -> List[APIRoute]:
 
 
 @pytest.fixture(scope=scope)
-def get_all_routes() -> List[APIRoute]:
-    """  список роутеров, содержащих указанный метод """
-    # prefix содерится в a.path
-    # APIRoute(path='/registry/hierarchy', name='create_relation', methods=['POST'])
-    exc_route = ('/', '/auth/token', '/wait')
-    return [a for a in app.routes
-            if all((isinstance(a, APIRoute), a.path not in exc_route))]
+def exclude_routers() -> List[str]:
+    """ список path prefixes of routes what shall be excluded from tests"""
+    return ('/health', '/openapi', '/users', '/parser', '/rawdatas', '/auth/token',
+            '/registry', "/codes", "/status", "/names", "/images", )
+
+
+def sort_routes(routes: list[APIRoute], path_prefixes: list[str]) -> list[APIRoute]:
+    def get_sort_key(route: APIRoute):
+        # 1. Проверяем, начинается ли путь с одного из заданных префиксов
+        for index, prefix in enumerate(path_prefixes):
+            if route.path.startswith(prefix):
+                # Возвращаем (индекс_префикса, путь)
+                # Числовой индекс гарантирует порядок из списка path_prefixes
+                return (index, route.path)
+
+        # 2. Если префикса нет в списке, отправляем в конец
+        # Используем float('inf'), чтобы эти роуты всегда были после префиксов
+        return (float('inf'), route.path)
+
+    # Сортируем список на месте или возвращаем новый
+    return sorted(routes, key=get_sort_key)
 
 
 @pytest.fixture(scope=scope)
-def get_all_routers() -> List[str]:
-    return None
+def presort_routers() -> List[str]:
+    """ список path prefixes router what shall be sorted
+        для тестирования POST, UPDATE, DELETE
+    """
+    result = ('/items', '/drink', '/subregion', '/region', '/country',
+              '/subcategory', '/category', '/foods', '/superfoods')
+    return result[::-1]
+
+
+def get_xxx_routes(method: str, exc_routers: List[str], pre_routers: List[str]) -> List[APIRoute]:
+    """
+        список роутеров, содержащих указанный метод
+        отсортированный для групповой обработки
+    """
+    exc_route = ('/',)  # исключаем корень
+    tmp = sort_routes([a for a in app.routes
+                       if isinstance(a, APIRoute) and a.path not in exc_route and
+                       method in a.methods and not any((a.path.startswith(x) for x in exc_routers))],
+                      pre_routers)
+    if method in ['POST', 'PATCH']:
+        return tmp[::-1]
+    return tmp
+
+
+@pytest.fixture(scope=scope)
+def get_get_routes(exclude_routers, presort_routers) -> List[APIRoute]:
+    return get_xxx_routes('GET', exclude_routers, presort_routers)
+
+
+@pytest.fixture(scope=scope)
+def get_post_routes(exclude_routers, presort_routers) -> List[APIRoute]:
+    return get_xxx_routes('POST', exclude_routers, presort_routers)
+
+
+@pytest.fixture(scope=scope)
+def get_patch_routes(exclude_routers, presort_routers) -> List[APIRoute]:
+    return get_xxx_routes('PATCH', exclude_routers, presort_routers)
+
+
+@pytest.fixture(scope=scope)
+def get_del_routes(exclude_routers, presort_routers) -> List[APIRoute]:
+    return get_xxx_routes('DELETE', exclude_routers, presort_routers)
+
+
+@pytest.fixture(scope=scope)
+def get_all_routes(exclude_routers) -> List[APIRoute]:
+    """  список роутеров, содержащих указанный метод """
+    # prefix содерится в a.path
+    # APIRoute(path='/registry/hierarchy', name='create_relation', methods=['POST'])
+    exc_route = ('/',)
+    return [a for a in app.routes
+            if isinstance(a, APIRoute) and a.path not in exc_route and
+            not any((a.path.startswith(x) for x in exclude_routers))]
 
 
 @pytest.fixture(scope=scope)

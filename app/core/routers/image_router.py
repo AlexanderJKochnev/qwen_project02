@@ -10,7 +10,7 @@ prefix = settings.IMAGES_PREFIX
 router = APIRouter(prefix=f"/{prefix}", tags=[f"{prefix}"])
 
 
-@router.get("/{filename}")
+@router.get("/{filename}", openapi_extra={'request_model': None})
 async def get_image(filename: str):
     """Получить изображение по имени файла"""
     file_path = os.path.join(settings.UPLOAD_DIR, filename)

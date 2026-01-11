@@ -55,9 +55,10 @@ class PreactRouter:
         return get_service(model)
 
     def _setup_routes_(self):
-        for prefix, response_model in self.__source_generator__(self.source):
+        for prefix, response_model, request_model in self.__source_generator__(self.source):
             self.router.add_api_route(prefix, endpoint=self.endpoint, methods=[self.method],
-                                      response_model=response_model)
+                                      response_model=response_model,
+                                      openapi_extra={'request_model': request_model or None})
 
     def __source_generator__(self, source: dict):
         """

@@ -7,10 +7,70 @@
 import pytest
 from app.core.utils.common_utils import jprint
 from tests.utility.assertion import assertions
+from tests.data_factory.fake_generator import generate_test_data
+
 pytestmark = pytest.mark.asyncio
 
 
 test_number = 5
+
+
+async def test_create_routers(authenticated_client_with_db, get_post_routes):
+    source = get_post_routes
+    client = authenticated_client_with_db
+    result: dict = {}
+    fault_nmbr = 0
+    good_nmbr = 0
+    try:
+        for n, route in enumerate(source):
+            # response_model = route.response_model  #
+            request_model = route.openapi_extra.get('request_model')  # входная модель - по ней генерируются данные
+            path = route.path
+            test_data = generate_test_data(request_model, test_number,
+                                           {'int_range': (1, test_number),
+                                            'decimal_range': (0.5, 1),
+                                            'float_range': (0.1, 1.0),
+                                            # 'field_overrides': {'name': 'Special Product'},
+                                            'faker_seed': 42}
+                                           )
+            if not test_data:
+                fault_nmbr += 1
+                result[path] = 'test_data was not generated'
+                continue
+            for m, data in enumerate(test_data):
+                try:        # валидация исходных данных (проверка генератора тестовых данных)
+                    py_model = request_model(**data)
+                    rev_dict = py_model.model_dump()
+                    if rev_dict != data:
+                        raise Exception('исходные данные не совпадают с валидированными')
+                    # assert data == rev_dict, f'pydantic validation fault {prefix}'
+                except Exception as e:
+                    fault_nmbr += 1
+                    result[path] = f'test_data was generated incorrectly: {e}'
+                    continue
+                try:        # запрос
+                    response = await client.post(path, json=data)
+                    if response.status_code in [200, 201]:
+                        good_nmbr += 1
+                    else:
+                        raise Exception(f'{response.status_code}, {response.text}')
+                    # assert response.status_code in [200, 201], f'{prefix}, {response.text}'
+                except Exception as e:
+                    fault_nmbr += 1
+                    result[path] = f'test_data was generated incorrectly: {e}'
+                    continue
+    except Exception as e:
+        print(path)
+        print(f'ОШИБКА {e}')
+    result['good'] = good_nmbr
+    result['fault'] = fault_nmbr
+    if fault_nmbr > 0:
+        for key, val in result.items():
+            print(f'{key}: {val}')
+        assert False, f'выявлено {fault_nmbr} ошибок'
+    else:
+        assert True
+
 
 
 async def test_new_data_generator(authenticated_client_with_db, test_db_session,
