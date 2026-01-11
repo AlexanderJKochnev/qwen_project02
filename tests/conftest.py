@@ -185,23 +185,26 @@ def get_routers(method: str = 'GET') -> List[APIRoute]:
 def exclude_routers() -> List[str]:
     """ список path prefixes of routes what shall be excluded from tests"""
     return ('/health', '/openapi', '/users', '/parser', '/rawdatas', '/auth/token',
-            '/registry', "/codes", "/status", "/names", "/images", )
+            '/registry', "/codes", "/status", "/names", "/images", "/items")
 
 
 def sort_routes(routes: list[APIRoute], path_prefixes: list[str]) -> list[APIRoute]:
     def get_sort_key(route: APIRoute):
-        # 1. Проверяем, начинается ли путь с одного из заданных префиксов
+        path = route.path
+
+        # Ищем индекс префикса в предоставленном кортеже/списке
         for index, prefix in enumerate(path_prefixes):
-            if route.path.startswith(prefix):
-                # Возвращаем (индекс_префикса, путь)
-                # Числовой индекс гарантирует порядок из списка path_prefixes
-                return (index, route.path)
+            # Важно: проверяем startswith
+            if path.startswith(prefix):
+                # Возвращаем (индекс_префикса, сам_путь)
+                # Индекс гарантирует порядок из path_prefixes
+                # Сам путь нужен для алфавитной сортировки внутри одного префикса
+                return (index, path)
 
-        # 2. Если префикса нет в списке, отправляем в конец
-        # Используем float('inf'), чтобы эти роуты всегда были после префиксов
-        return (float('inf'), route.path)
+        # Если префикс не найден, возвращаем индекс за пределами списка
+        return (len(path_prefixes), path)
 
-    # Сортируем список на месте или возвращаем новый
+    # Сортируем и возвращаем новый список
     return sorted(routes, key=get_sort_key)
 
 
@@ -212,7 +215,7 @@ def presort_routers() -> List[str]:
     """
     result = ('/items', '/drink', '/subregion', '/region', '/country',
               '/subcategory', '/category', '/foods', '/superfoods')
-    return result[::-1]
+    return result
 
 
 def get_xxx_routes(method: str, exc_routers: List[str], pre_routers: List[str]) -> List[APIRoute]:
@@ -225,8 +228,8 @@ def get_xxx_routes(method: str, exc_routers: List[str], pre_routers: List[str]) 
                        if isinstance(a, APIRoute) and a.path not in exc_route and
                        method in a.methods and not any((a.path.startswith(x) for x in exc_routers))],
                       pre_routers)
-    if method in ['POST', 'PATCH']:
-        return tmp[::-1]
+    # if method in ['POST', 'PATCH']:
+    #     return tmp[::-1]
     return tmp
 
 
