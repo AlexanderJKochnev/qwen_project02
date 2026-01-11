@@ -15,6 +15,7 @@ from app.support.drink.drink_food_service import DrinkFoodService
 from app.support.drink.model import Drink
 from app.support.drink.schemas import (DrinkCreate, DrinkCreateRelation, DrinkCreateResponseSchema,
                                        DrinkFoodLinkUpdate, DrinkRead, DrinkReadApi, DrinkUpdate,
+                                       DrinkReadRelation
                                        )
 # from app.support.drink.service import DrinkService
 # from app.support.drink.repository import DrinkRepository
@@ -80,7 +81,7 @@ class DrinkRouter(BaseRouter):
             raise HTTPException(status_code=500, detail=detail)
 
     async def create_relation(self, data: DrinkCreateRelation,
-                              session: AsyncSession = Depends(get_db)) -> DrinkRead:
+                              session: AsyncSession = Depends(get_db)) -> DrinkReadRelation:
         result = await super().create_relation(data, session)
         return result
 

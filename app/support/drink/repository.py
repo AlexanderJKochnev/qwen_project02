@@ -31,7 +31,7 @@ class DrinkRepository(Repository):
                                      # selectinload(Drink.foods),
                                      selectinload(Drink.food_associations),  # .joinedload(DrinkFood.food),
                                      # selectinload(Drink.varietals),
-                                     selectinload(Drink.varietal_associations),  # .joinedload(DrinkVarietal.varietal))
+                                     selectinload(Drink.varietal_associations),
                                      )
 
     @classmethod

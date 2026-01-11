@@ -145,6 +145,7 @@ class CustomReadSchema(LangMixin):
     foods: List[FoodRead]
     varietals: List[VarietalRead]
     varietal_associations: Optional[List[DrinkVarietalRelationFlat]]
+    food_associations: List[DrinkFoodRelation] = []
     updated_at: Optional[datetime] = None
 
     @field_serializer('alc', when_used='unless-none')
