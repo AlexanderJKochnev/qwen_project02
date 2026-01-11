@@ -42,23 +42,14 @@ class DrinkService(Service):
     default = ['title', 'subtitle']
 
     @classmethod
-    async def get_dict_by_id(cls, id: int, repository: Type[Repository],
-                             model: ModelType, session: AsyncSession) -> Optional[ModelType]:
-        result = await super().get_by_id(id, repository, model, session)
-        # return result
-
-        try:
-            subresult = model_to_dict(result)
-            flatresult = flatten_dict(subresult, ['name', 'name_ru'])
-            for key, val in subresult.items():
-                pass
-                # print(f'1.    {key}: {val}')
-            for key, val in flatresult.items():
-                pass
-                # print(f'2.    {key}: {val}')
-            return flatresult
-        except Exception as e:
-            print(f'drink.service..get_by_id error {e}')
+    async def get_by_id(cls, id: int, repository: Type[Repository],
+                        model: Drink, session: AsyncSession) -> Optional[Drink]:
+        """Get drink by ID with all relationships preloaded to avoid lazy loading issues"""
+        # Use the repository's get_query method which includes selectinload options
+        stmt = repository.get_query(model).where(model.id == id)
+        result = await session.execute(stmt)
+        obj = result.scalar_one_or_none()
+        return obj
 
     @classmethod
     async def create_relation(cls, data: DrinkCreateRelation,
