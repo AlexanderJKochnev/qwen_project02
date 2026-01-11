@@ -1,6 +1,8 @@
 import logging
 
+# Отключение логирования
 logger = logging.getLogger(__name__)
+logger.disabled = True
 
 s_handler = logging.StreamHandler()
 f_handler = logging.FileHandler('log')

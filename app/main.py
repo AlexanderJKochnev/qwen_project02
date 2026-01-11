@@ -45,7 +45,9 @@ from app.support.parser.router import (StatusRouter, CodeRouter, NameRouter, Orc
 
 # from app.admin.auth import authentication_backend
 
-logging.basicConfig(level=logging.WARNING)  # в начале main.py или conftest.py
+# logging.basicConfig(level=logging.WARNING)  # в начале main.py или conftest.py
+logging.disable(logging.CRITICAL)
+
 
 app = FastAPI(title="Hybrid PostgreSQL-MongoDB API")
 

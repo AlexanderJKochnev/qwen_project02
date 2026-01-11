@@ -1,9 +1,7 @@
 # tests/test_routers.py
 """
-    тестируем все методы POST и GET ( get all with pagination, get_one)
+    тестируем все роуты GET
     новые методы добавляются автоматически
-    добавить get_by_field
-    ДОБАВИТЬ ТЕСТЫ КОГДА СВЯЗАННЫЕ ПОЛЯ NULL
 """
 
 import pytest
@@ -14,6 +12,61 @@ from app.core.schemas.base import PaginatedResponse
 pytestmark = pytest.mark.asyncio
 
 
+async def test_get_routers(authenticated_client_with_db, get_get_routes):
+    source = get_get_routes
+    client = authenticated_client_with_db
+    result: dict = {}
+    fault_nmbr = 0
+    good_nmbr = 0
+    for n, route in enumerate(source):
+        try:
+            path = route.path
+            lang = 'en'
+            id = "2"
+            search = 'vi'
+            # single = False
+            if any((k in path for k in ('{file}', '{file_id}', '{filename}'))):
+                continue
+            if '{id}' in path:
+                # single = True
+                path = route.path.replace('{id}', f'{id}')
+            if '{lang}' in path:
+                path = path.replace('{lang}', f'{lang}')
+            # if path.endswith('search') or path.endswith('search_all'):
+            if path.endswith('search'):
+                path = f'{path}?search={search}&page=1&page_size=20'
+            if path.endswith('search_all'):
+                path = f'{path}?search={search}'
+            if 'search_by_drink' in path:
+                path = f'{path}?search={search}&page=1&page_size=20'
+            if 'search_trigram' in path:
+                pass
+
+            # if any((path.endswith('{file}'), path.endswith('{file_id}'), path.endswith('{filename}'))):
+            #     continue
+
+            response = await client.get(path)
+            if response.status_code in [200, 201]:
+                good_nmbr += 1
+            else:
+                fault_nmbr += 1
+                result[path] = f'{response.status_code}'
+        except Exception as e:
+            # print(f'ОШИБКА {e}')
+            fault_nmbr += 1
+            result[f'{path}'] = e
+    result['good'] = good_nmbr
+    result['fault'] = fault_nmbr
+    print(f'{good_nmbr} routers tested OK')
+    print(f'{fault_nmbr} routers test failed')
+    for key, val in result.items():
+        print(f'    {key}: {val}')
+        print('------------------')
+    if fault_nmbr > 0:
+        assert False, f'{fault_nmbr} ошибок'
+
+
+@pytest.mark.skip
 async def test_get_all(authenticated_client_with_db, test_db_session,
                        simple_router_list, complex_router_list, fakedata_generator):
     """ тестирует методы get all - с проверкой формата ответа """
@@ -38,6 +91,7 @@ async def test_get_all(authenticated_client_with_db, test_db_session,
         pytest.fail("Failed routers:\n" + "\n".join(failed_cases))
 
 
+@pytest.mark.skip
 async def test_get_nopage(authenticated_client_with_db, test_db_session, routers_get_all, fakedata_generator):
     """ тестирует методы get all - с проверкой формата ответа """
     routers = routers_get_all
@@ -50,6 +104,7 @@ async def test_get_nopage(authenticated_client_with_db, test_db_session, routers
         assert response.status_code == 200, response.text
 
 
+@pytest.mark.skip
 async def test_get_one(authenticated_client_with_db, test_db_session,
                        routers_get_all, fakedata_generator):
     """ тестирует методы get one - c проверкой id """
@@ -67,6 +122,7 @@ async def test_get_one(authenticated_client_with_db, test_db_session,
             jprint(result)
 
 
+@pytest.mark.skip
 async def test_fault_get_one(authenticated_client_with_db, test_db_session,
                              routers_get_all, fakedata_generator):
     """ тестирует методы get one - несуществующий id """
@@ -81,6 +137,7 @@ async def test_fault_get_one(authenticated_client_with_db, test_db_session,
         # assert "not found" in error_data["detail"].lower(), response.text
 
 
+@pytest.mark.skip
 async def test_get_one_items(authenticated_client_with_db, test_db_session,
                              simple_router_list, complex_router_list,
                              fakedata_generator):

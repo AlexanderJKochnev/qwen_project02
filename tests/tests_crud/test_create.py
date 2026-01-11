@@ -119,8 +119,8 @@ async def test_create_routers(authenticated_client_with_db, get_post_routes):
     result: dict = {}
     fault_nmbr = 0
     good_nmbr = 0
-    try:
-        for n, route in enumerate(source[::-1]):
+    for n, route in enumerate(source[::-1]):
+        try:
             # response_model = route.response_model  #
             request_model = route.openapi_extra.get('request_model')  # входная модель - по ней генерируются данные
             path = route.path
@@ -149,22 +149,17 @@ async def test_create_routers(authenticated_client_with_db, get_post_routes):
                     fault_nmbr += 1
                     result[path] = f'{e}'
                     continue
-    except Exception as e:
-        print(path)
-        print(f'ОШИБКА {e}')
-    result['good'] = good_nmbr // test_number
-    result['fault'] = fault_nmbr // test_number
+        except Exception as e:
+            print(path)
+            print(f'ОШИБКА {e}')
+    result['good'] = good_nmbr
+    result['fault'] = fault_nmbr
+    print(f'{good_nmbr} routers tested OK')
+    print(f'{fault_nmbr} routers test failed')
+    for key, val in result.items():
+        print(f'    {key}: {val}')
     if fault_nmbr > 0:
-        for key, val in result.items():
-            print(f'{key}: {val if isinstance(val, int) else val}')
-            print('----------------------------')
-        assert False, f'выявлено {fault_nmbr // test_number} ошибок'
-    else:
-        print(f'{good_nmbr // test_number} routers tested OK')
-        print(f'{fault_nmbr // test_number} routers test failed')
-        for key, val in result.items():
-            print(f'    {key}: {val}')
-        assert True
+        assert False, f'{fault_nmbr} ошибок'
 
 
 @pytest.mark.skip

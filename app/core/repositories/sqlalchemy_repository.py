@@ -270,9 +270,9 @@ class Repository(metaclass=RepositoryMeta):
                 else:
                     conditions.append(column == value)
             stmt = select(model).where(and_(*conditions)).limit(1)
-            print(f"DEBUG: session object: {session}")
-            print(f"DEBUG: session type: {type(session)}")
-            print(f"DEBUG: hasattr execute: {hasattr(session, 'execute')}")
+            # print(f"DEBUG: session object: {session}")
+            # print(f"DEBUG: session type: {type(session)}")
+            # print(f"DEBUG: hasattr execute: {hasattr(session, 'execute')}")
             result = await session.execute(stmt)
             return result.scalar_one_or_none()
         except Exception as e:
@@ -359,6 +359,52 @@ class Repository(metaclass=RepositoryMeta):
                                                      **kwargs)
                 result = await session.execute(count_stmt)
                 total = result.scalar()     # ok
+                query = query.limit(limit)
+                if skip is not None:
+                    query = query.offset(skip)
+                result = await session.execute(query)
+                records = result.scalars().all()
+                return (records if records else [], total)
+            else:
+                result = await session.execute(query)
+                records = result.scalars().all()
+                return records
+        except Exception as e:
+            logger.error(f'ошибка search: {e}')
+
+    @classmethod
+    async def search_all(
+            cls, model: Type[ModelType], session: AsyncSession, **kwargs) -> Optional[List[ModelType]]:
+        """
+        Поиск по всем заданным текстовым полям основной таблицы
+        если указана pagination - возвращвет pagination
+        :param search_str:  текстовое условие поиска
+        :type search_str:   str
+        :param model:       модель
+        :type model:        sqlalchemy model
+        :param session:     async session
+        :type session:      async session
+        :param skip:        сдвиг на кол-во записей (для пагинации)
+        :type skip:         int
+        :param limit:       кол-во записей
+        :type limit:        int
+        :param and_condition:   дополнительные условия _AND
+        :type and_condition:    dict
+        :return:                Optional[List[ModelType]]
+        :rtype:                 Optional[List[ModelType]]
+        """
+        try:
+            query = cls.apply_search_filter(cls.get_query(model), **kwargs)
+            total = 0
+            # Добавляем пагинацию если указано и общее кол-во записей
+            limit, skip = kwargs.get('limit'), kwargs.get('skip')
+            if limit is not None:
+                # общее кол-во записей удовлетворяющих условию
+                count_stmt = cls.apply_search_filter(
+                    select(func.count()).select_from(cls.get_query(model)), **kwargs
+                )
+                result = await session.execute(count_stmt)
+                total = result.scalar()  # ok
                 query = query.limit(limit)
             if skip is not None:
                 query = query.offset(skip)

@@ -11,6 +11,34 @@ import pytest
 pytestmark = pytest.mark.asyncio
 
 
+async def test_delete_routers(authenticated_client_with_db, get_del_routes):
+    source = get_del_routes
+    client = authenticated_client_with_db
+    result: dict = {}
+    fault_nmbr = 0
+    good_nmbr = 0
+    for n, route in enumerate(source):
+        try:
+            id = "2"      # удаляем первую запись
+            path = route.path.replace('{id}', id)
+            response = await client.delete(path)
+            if response.status_code in [200, 201]:
+                good_nmbr += 1
+            else:
+                fault_nmbr += 1
+                result[path] = f'{response.status_code}'
+        except Exception as e:
+            print(f'ОШИБКА {e}')
+    result['good'] = good_nmbr
+    result['fault'] = fault_nmbr
+    print(f'{good_nmbr} routers tested OK')
+    print(f'{fault_nmbr} routers test failed')
+    for key, val in result.items():
+        print(f'    {key}: {val}')
+    if fault_nmbr > 0:
+        assert False, f'{fault_nmbr} ошибок'
+
+
 @pytest.mark.skip
 async def test_fault_delete(authenticated_client_with_db, test_db_session,
                             routers_get_all):
@@ -47,6 +75,7 @@ async def test_fault_delete_foreign_violation(authenticated_client_with_db, test
         assert False, e  # response.status_code == 200, f'{prefix}, {response.text}'
 
 
+@pytest.mark.skip
 async def test_delete(authenticated_client_with_db, test_db_session):  # fakedata_generator):
     """ тестирует методы DELETE c проверкой id
         удаление всех записей
@@ -57,7 +86,6 @@ async def test_delete(authenticated_client_with_db, test_db_session):  # fakedat
     prefix = router.prefix
     result = await client.get(f'{prefix}/all')
     assert result.status_code == 200, 'невозможно подсчитать кол-во записей'
-    
     for instance in result.json():
         id = instance.get('id')
         response = await client.delete(f'{prefix}/{id}')

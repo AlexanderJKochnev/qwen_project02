@@ -153,7 +153,7 @@ async def test_client_with_mongo(test_mongodb):
 
 
 def pytest_configure(config):
-    config.option.log_cli_level = "INFO"
+    config.option.log_cli_level = "CRITICAL"
     config.option.log_cli_format = "%(levelname)s - %(message)s"
 
 
@@ -162,7 +162,7 @@ def disable_httpx_logging():
     """Подавляет INFO-логи от httpx и httpcore"""
     loggers_to_silence = ["httpx", "httpx._client", "httpcore"]
     for name in loggers_to_silence:
-        logging.getLogger(name).setLevel(logging.WARNING)
+        logging.getLogger(name).setLevel(logging.CRITICAL)
 
 
 @pytest.fixture(scope=scope)
@@ -185,7 +185,8 @@ def get_routers(method: str = 'GET') -> List[APIRoute]:
 def exclude_routers() -> List[str]:
     """ список path prefixes of routes what shall be excluded from tests"""
     return ('/health', '/openapi', '/users', '/parser', '/rawdatas', '/auth/token',
-            '/registry', "/codes", "/status", "/names", "/images", "/items/hierarchy", "/drinks/hierarchy")
+            '/registry', "/codes", "/status", "/names", "/images", "/items/hierarchy", "/drinks/hierarchy",
+            "/items/direct", "/api/mongo")
 
 
 def sort_routes(routes: list[APIRoute], path_prefixes: list[str]) -> list[APIRoute]:

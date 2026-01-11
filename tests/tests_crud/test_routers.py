@@ -87,8 +87,8 @@ def test_patch_routers(get_patch_routes):
     print(f'======{method=}')
     for m, ke in enumerate(get_patch_routes):
         try:
-            _ = ke.openapi_extra.get('request_model')
-            # print(f"{m}. {ke} {ke.openapi_extra.get('request_model')}")
+            # _ = ke.openapi_extra.get('request_model')
+            print(f"{m}. {ke} {ke.openapi_extra.get('request_model')}")
         except Exception:
             n += 1
             print(f'{m}. {ke}', 'Nooo')

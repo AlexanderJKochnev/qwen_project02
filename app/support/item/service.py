@@ -294,6 +294,8 @@ class ItemService(Service):
                                       model: Item, session: AsyncSession,
                                       page: int = None, page_size: int = None):
         """Поиск элементов с использованием триграммного индекса в связанной модели Drink с локализацией"""
+        if search_str is None:
+            return make_paginated_response([], 0, page, page_size)
         skip = (page - 1) * page_size
         items, total = await repository.search_by_trigram_index(search_str, model, session, skip, page_size)
         result = []
