@@ -172,7 +172,7 @@ class DrinkRead(ReadNoNameSchema, CustomReadSchema):
     pass
 
 
-class DrinkReadRelation(ReadNoNameSchema, CustomReadRelation):
+class DrinkReadRelation(ReadNoNameSchema, CustomReadSchema):
     pass
 
 

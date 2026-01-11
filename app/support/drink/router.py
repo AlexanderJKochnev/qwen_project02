@@ -54,7 +54,7 @@ class DrinkRouter(BaseRouter):
         await service.set_drink_foods(id, data.food_ids)
         return {"status": "success"}
 
-    async def create(self, data: DrinkCreate, session: AsyncSession = Depends(get_db)) -> DrinkCreateResponseSchema:
+    async def create(self, data: DrinkCreate, session: AsyncSession = Depends(get_db)) -> DrinkReadRelation:
         """
         Создание одной записи
         """
@@ -79,6 +79,8 @@ class DrinkRouter(BaseRouter):
                       f'repository = {self.repo}')
             print(detail)
             raise HTTPException(status_code=500, detail=detail)
+
+    # DrinkCreateResponseSchema
 
     async def create_relation(self, data: DrinkCreateRelation,
                               session: AsyncSession = Depends(get_db)) -> DrinkReadRelation:
