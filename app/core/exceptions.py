@@ -3,6 +3,9 @@
 from fastapi import HTTPException, status
 import logging
 
+# Отключение логирования
+logging.disable(logging.CRITICAL)
+
 
 def exception_to_http(e: Exception) -> HTTPException:
     error_message = str(e)
@@ -20,7 +23,8 @@ def exception_to_http(e: Exception) -> HTTPException:
     for prefix, (status_code, should_log) in ERROR_MAPPING.items():
         if error_message.startswith(prefix):
             if should_log:
-                logging.error(f"Server error {prefix}: {e}", exc_info=True)
+                # logging.error(f"Server error {prefix}: {e}", exc_info=True)  # Логирование отключено
+                pass
             return HTTPException(status_code=status_code,
                                  detail=error_message.replace(prefix, "").strip()
                                  if not should_log else "Внутренняя ошибка сервера")

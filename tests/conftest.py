@@ -13,6 +13,9 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
+# Отключение логирования
+logging.disable(logging.CRITICAL)
+
 from app.auth.models import User
 from app.auth.utils import create_access_token, get_password_hash
 from app.core.models.base_model import Base
@@ -153,7 +156,7 @@ async def test_client_with_mongo(test_mongodb):
 
 
 def pytest_configure(config):
-    config.option.log_cli_level = "INFO"
+    config.option.log_cli_level = "CRITICAL"
     config.option.log_cli_format = "%(levelname)s - %(message)s"
 
 

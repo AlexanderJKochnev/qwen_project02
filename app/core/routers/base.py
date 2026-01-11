@@ -26,9 +26,12 @@ TCreateResponse = TypeVar("TCreateResponse", bound=CreateResponse)
 TUpdateSchema = TypeVar("TUpdateSchema", bound=UpdateSchema)
 TService = TypeVar("TService", bound=Service)
 
+
 dev = settings.DEV
+# logger = logging.getLogger(__name__)
+# Отключение логирования
 logger = logging.getLogger(__name__)
-delta = (datetime.now(timezone.utc) - relativedelta(years=2)).isoformat()
+logger.disabled = True
 
 
 class BaseRouter:
@@ -145,7 +148,7 @@ class BaseRouter:
             # return await self.service.get_by_id(obj.id, self.repo, self.model, session)
         except Exception as e:
             await session.rollback()
-            logger.error(f"Unexpected error in create_item: {e}")
+            # logger.error(f"Unexpected error in create_item: {e}")  # Логирование отключено
             raise exception_to_http(e)
 
     async def update_or_create(self, id: int, data: TCreateSchema,
@@ -254,7 +257,7 @@ class BaseRouter:
             after_date = back_to_the_future(after_date)
             return await self.service.get(after_date, self.repo, self.model, session)
         except Exception as e:
-            logger.error(f"Unexpected error in get: {e} {self.model.__name__}")
+            # logger.error(f"Unexpected error in get: {e} {self.model.__name__}")  # Логирование отключено
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                 detail="Internal server error")
 
