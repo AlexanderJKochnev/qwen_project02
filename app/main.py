@@ -1,6 +1,7 @@
 # app/main.py
 # from sqlalchemy.exc import SQLAlchemyError
 import logging
+import logging as base_logging  # Для настройки уровня логирования SQLAlchemy
 
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -48,6 +49,13 @@ from app.support.parser.router import (StatusRouter, CodeRouter, NameRouter, Orc
 # logging.basicConfig(level=logging.WARNING)  # в начале main.py или conftest.py
 # Отключение логирования
 logging.disable(logging.CRITICAL)
+
+# Также отключаем логирование SQLAlchemy
+base_logging.getLogger('sqlalchemy').setLevel(base_logging.CRITICAL)
+base_logging.getLogger('sqlalchemy.engine').setLevel(base_logging.CRITICAL)
+base_logging.getLogger('sqlalchemy.dialects').setLevel(base_logging.CRITICAL)
+base_logging.getLogger('sqlalchemy.pool').setLevel(base_logging.CRITICAL)
+base_logging.getLogger('sqlalchemy.orm').setLevel(base_logging.CRITICAL)
 
 app = FastAPI(title="Hybrid PostgreSQL-MongoDB API")
 

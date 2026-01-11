@@ -1,6 +1,7 @@
 # tests/conftest.py
 import asyncio
 import logging
+import logging as base_logging  # Для настройки уровня логирования SQLAlchemy
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Any, Optional, Dict
@@ -15,6 +16,13 @@ from sqlalchemy.orm import sessionmaker
 
 # Отключение логирования
 logging.disable(logging.CRITICAL)
+
+# Также отключаем логирование SQLAlchemy
+base_logging.getLogger('sqlalchemy').setLevel(base_logging.CRITICAL)
+base_logging.getLogger('sqlalchemy.engine').setLevel(base_logging.CRITICAL)
+base_logging.getLogger('sqlalchemy.dialects').setLevel(base_logging.CRITICAL)
+base_logging.getLogger('sqlalchemy.pool').setLevel(base_logging.CRITICAL)
+base_logging.getLogger('sqlalchemy.orm').setLevel(base_logging.CRITICAL)
 
 from app.auth.models import User
 from app.auth.utils import create_access_token, get_password_hash

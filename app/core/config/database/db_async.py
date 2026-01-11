@@ -9,7 +9,7 @@ from app.core.config.database.db_config import settings_db
 
 # 1.    Асинхронный двигатель
 engine: AsyncEngine = create_async_engine(settings_db.database_url,
-                                          echo=settings_db.DB_ECHO_LOG,
+                                          echo=False,  # settings_db.DB_ECHO_LOG,
                                           pool_pre_ping=True,)
 
 

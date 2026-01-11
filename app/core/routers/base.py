@@ -33,6 +33,9 @@ dev = settings.DEV
 logger = logging.getLogger(__name__)
 logger.disabled = True
 
+# Определение delta для использования в других модулях
+delta = (datetime.now(timezone.utc) - relativedelta(years=2)).isoformat()
+
 
 class BaseRouter:
     """
@@ -227,7 +230,7 @@ class BaseRouter:
         return obj
 
     async def get(self,
-                  after_date: datetime = Query(delta,
+                  after_date: datetime = Query((datetime.now(timezone.utc) - relativedelta(years=2)).isoformat(),
                                                description="Дата в формате ISO 8601 (например, 2024-01-01T00:00:00Z)"),
                   page: int = Query(1, ge=1),
                   page_size: int = Query(paging.get('def', 20),
