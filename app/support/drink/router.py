@@ -30,6 +30,11 @@ class DrinkRouter(BaseRouter):
 
     def setup_routes(self):
         super().setup_routes()
+        # Override the hierarchy endpoint to use a GET method for retrieving hierarchical data
+        # Remove the default POST hierarchy route from base and add our own GET route
+        self.router.add_api_route("/hierarchy", self.get_all_hierarchy,
+                                  methods=["GET"], response_model=self.nonpaginated_response,
+                                  openapi_extra={'request_model': None})
         # то что ниже удалить - было нужно до relation
         self.router.add_api_route("/{id}/foods", self.update_drink_foods,
                                   methods=["PATCH"],
@@ -39,6 +44,9 @@ class DrinkRouter(BaseRouter):
                                   openapi_extra={'request_model': None})
         self.router.add_api_route("/{id}/api", self.get_one_api, methods=['GET'],
                                   response_model=self.read_api_schema,
+                                  openapi_extra={'request_model': None})
+        self.router.add_api_route("/{id}/hierarchy", self.get_hierarchy_by_id,
+                                  methods=['GET'], response_model=self.read_schema,
                                   openapi_extra={'request_model': None})
 
     def get_drink_food_service(session: AsyncSession) -> DrinkFoodService:
@@ -126,3 +134,45 @@ class DrinkRouter(BaseRouter):
         """
         obj = await self.service.get_by_id(id, self.repo, self.model, session)
         return obj  # self.read_schema.model_validate(obj)
+
+    async def get_hierarchy(self, session: AsyncSession = Depends(get_db)) -> DrinkRead:
+        """
+        Получение иерархии напитков с загруженными связями
+        """
+        # Используем репозиторий напрямую для получения всех записей с предзагруженными связями
+        stmt = self.repo.get_query(self.model)
+        result = await session.execute(stmt)
+        drinks = result.scalars().all()
+        
+        # Возвращаем первый напиток как пример иерархии, или можно вернуть все
+        if drinks:
+            return drinks[0]  # Return first drink with all relationships loaded
+        else:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=404, detail="No drinks found")
+    
+    async def get_hierarchy_by_id(self, id: int, session: AsyncSession = Depends(get_db)) -> DrinkRead:
+        """
+        Получение иерархии конкретного напитка по ID с загруженными связями
+        """
+        # Используем репозиторий напрямую с правильным запросом, включающим selectinload
+        stmt = self.repo.get_query(self.model).where(self.model.id == id)
+        result = await session.execute(stmt)
+        drink = result.scalar_one_or_none()
+        
+        if not drink:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=404, detail=f"Drink with id {id} not found")
+        
+        return drink
+    
+    async def get_all_hierarchy(self, session: AsyncSession = Depends(get_db)) -> list[DrinkRead]:
+        """
+        Получение всех напитков с загруженными иерархическими связями
+        """
+        # Используем репозиторий напрямую с правильным запросом, включающим selectinload
+        stmt = self.repo.get_query(self.model)
+        result = await session.execute(stmt)
+        drinks = result.scalars().all()
+        
+        return drinks
