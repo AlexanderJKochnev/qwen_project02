@@ -1,13 +1,61 @@
 # tests/test_patch.py
 """
-    тестируем все методы POST и UPDATE ()
+    тестируем все методы UPDATE ()
     новые методы добавляются автоматически
     pytest tests/test_patch.py --tb=auto --disable-warnings -vv --capture=no
 """
 import pytest
 from app.core.utils.common_utils import jprint
+from tests.data_factory.fake_generator import generate_test_data
 
 pytestmark = pytest.mark.asyncio
+
+
+async def test_patch_routers(authenticated_client_with_db, get_patch_routes):
+    source = get_patch_routes
+    client = authenticated_client_with_db
+    result: dict = {}
+    fault_nmbr = 0
+    good_nmbr = 0
+    for n, route in enumerate(source):
+        try:
+            path = route.path
+            request_model = route.openapi_extra.get('request_model')
+            id = 3    # модифицируем 3 запись
+            path = route.path.replace('{id}', f'{id}')
+            test_data = generate_test_data(
+                request_model, 2,
+                {'int_range': (1, 2), 'decimal_range': (0.5, 1), 'float_range': (0.1, 1.0),
+                 # 'field_overrides': {'name': 'Special Product'},
+                 'faker_seed': 42}
+            )
+            if not test_data:
+                fault_nmbr += 1
+                result[path] = 'test_data was not generated'
+                continue
+            data = next(test_data, None)
+            response = await client.get(f"{path}/{id}")
+            sts = response.status_code
+            response = await client.patch(f"{path}/{id}", json=data)
+            print(f"{sts=}", f"{response.status_code=}  {path=}", )
+            if response.status_code in [200, 201]:
+                good_nmbr += 1
+            else:
+                fault_nmbr += 1
+                result[path] = f'{response.status_code}'
+        except Exception as e:
+            # print(f'ОШИБКА {e}')
+            fault_nmbr += 1
+            result[f'{path}'] = e
+    result['good'] = good_nmbr
+    result['fault'] = fault_nmbr
+    print(f'{good_nmbr} routers tested OK')
+    print(f'{fault_nmbr} routers test failed')
+    for key, val in result.items():
+        print(f'    {key}: {val}')
+        print('------------------')
+    if fault_nmbr > 0:
+        assert False, f'{fault_nmbr} ошибок'
 
 
 @pytest.mark.skip
@@ -57,6 +105,7 @@ async def test_patch_success(authenticated_client_with_db, test_db_session,
             assert response_data.get(key) == val, f'{prefix=}, {key=}, {val=} {response_data.get(key)=}'
 
 
+@pytest.mark.skip
 async def test_patch_success2(authenticated_client_with_db, test_db_session,
                               simple_router_list, complex_router_list, fakedata_generator):
     """

@@ -92,12 +92,12 @@ class BaseRouter:
         # search без пагинации
         self.router.add_api_route("/search_all",
                                   self.search_all, methods=["GET"],
-                                  response_model=self.nonpaginated_response,
+                                  # response_model=self.nonpaginated_response,
                                   openapi_extra={'request_model': None})
         # get without pagination
         self.router.add_api_route("/all",
                                   self.get_all, methods=["GET"],
-                                  response_model=self.nonpaginated_response,  # List[self.read_response])
+                                  # response_model=self.nonpaginated_response,  # List[self.read_response])
                                   openapi_extra={'request_model': None})
         # get one buy id
         self.router.add_api_route("/{id}",

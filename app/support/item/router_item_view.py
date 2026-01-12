@@ -5,7 +5,7 @@
     по языкам
 """
 from typing import List, Annotated, Callable
-from fastapi import Depends, Path, Query, APIRouter, HTTPException
+from fastapi import Depends, Path, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dependencies import get_active_user_or_internal
@@ -20,7 +20,7 @@ from app.support.item.service import ItemService
 
 class ItemViewRouter:
     def __init__(self, prefix: str = '/items_view', tags: List[str] = None):
-        # from fastapi import APIRouter
+        from fastapi import APIRouter
         self.prefix = prefix
         self.tags = tags or ["items_view"]
         # self.router = APIRouter()
