@@ -232,7 +232,7 @@ class BaseRouter:
                                          ge=paging.get('min', 1),
                                          le=paging.get('max', 1000)),
                   session: AsyncSession = Depends(get_db)
-                  ) -> PaginatedResponse:
+                  ):
         """
         Получение постранично всех записей после заданной даты.
         По умолчанию задана дата - 2 года от сейчас
@@ -246,7 +246,7 @@ class BaseRouter:
     async def get_all(self, after_date: datetime = Query(
         (datetime.now(timezone.utc) - relativedelta(years=2)).isoformat(),
         description="Дата в формате ISO 8601 (например, 2024-01-01T00:00:00Z)"
-    ), session: AsyncSession = Depends(get_db)) -> List[TReadSchema]:
+    ), session: AsyncSession = Depends(get_db)):
         """
         Получение все записей одним списком после указанной даты.
         По умолчанию задана дата - 2 года от сейчас
@@ -267,7 +267,7 @@ class BaseRouter:
                                             ge=paging.get('min', 1),
                                             le=paging.get('max', 1000)),
                      session: AsyncSession = Depends(get_db),
-                     ) -> PaginatedResponse:
+                     ):
         """
             Поиск по всем текстовым полям основной таблицы
             с постраничным выводом результата
@@ -281,7 +281,7 @@ class BaseRouter:
                          search: str = Query(None, description="Поисковый запрос. "
                                              "В случае пустого запроса будут "
                                              "выведены все данные "),
-                         session: AsyncSession = Depends(get_db)) -> List[TReadSchema]:
+                         session: AsyncSession = Depends(get_db)):
         """
             Поиск по всем текстовым полям основной таблицы БЕЗ пагинации
         """

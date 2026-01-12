@@ -289,7 +289,7 @@ class ItemRouter(BaseRouter):
                      page_size: int = Query(paging.get('def', 20),
                                             ge=paging.get('min', 1),
                                             le=paging.get('max', 1000)),
-                     session: AsyncSession = Depends(get_db)) -> PaginatedResponse:
+                     session: AsyncSession = Depends(get_db)):
         """
             Поиск по всем текстовым полям основной таблицы
             с постраничным выводом результата
@@ -308,7 +308,7 @@ class ItemRouter(BaseRouter):
                          search: Optional[str] = None,
                          country_enum: Optional[str] = None,
                          category_enum: Optional[str] = None,
-                         session: AsyncSession = Depends(get_db)) -> PaginatedResponse:
+                         session: AsyncSession = Depends(get_db)):
         """
             Поиск по всем текстовым полям основной таблицы
             с постраничным выводом результата
