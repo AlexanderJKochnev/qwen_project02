@@ -165,11 +165,16 @@ class PyUtils:
         return create_model(f'{read_schema.__name__}Response', __base__=read_schema)
 
     @classmethod
-    def paginated_response(cls, schema: Type[BaseModel]) -> Type[PaginatedResponse]:
+    def paginated_response(cls, schema: Type[BaseModel]) -> Type[BaseModel]:
         return create_model(f"Paginated{schema.__name__}",
-                            __base__=PaginatedResponse[schema])
+                            items=(List[schema], ...),
+                            total=(Optional[int], None),
+                            page=(Optional[int], None),
+                            page_size=(Optional[int], None),
+                            has_next=(Optional[bool], None),
+                            has_prev=(Optional[bool], None))
 
     @classmethod
-    def non_paginated_response(cls, schema: Type[BaseModel]) -> Type[List]:
-        return create_model(f'NonPaginated{schema.__name__}',
-                            __base__=List[schema])
+    def non_paginated_response(cls, schema: Type[BaseModel]) -> Type[BaseModel]:
+        return create_model(f'List{schema.__name__}',
+                            items=(List[schema], ...))

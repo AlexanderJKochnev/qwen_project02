@@ -279,12 +279,15 @@ class RawdataRouter(BaseRouter):
             model=Rawdata,
             prefix="/rawdatas",
         )
+        from app.core.utils.pydantic_utils import PyUtils
+        self.paginated_response = PyUtils.paginated_response(self.read_schema_relation)
+        self.nonpaginated_response = PyUtils.non_paginated_response(self.read_schema_relation)
 
     def setup_routes(self):
         self.router.add_api_route(
             "/searchtfs",
             self.search_fts, methods=["GET"],
-            response_model=PaginatedResponse[schemas.RawdataRead]
+            response_model=self.paginated_response
         )
         super().setup_routes()
 
@@ -308,7 +311,7 @@ class RawdataRouter(BaseRouter):
                              "(при отсутствии значения - выдает все записи)"),
                          page: int = Query(1, ge=1, description="Номер страницы"),
                          page_size: int = Query(15, ge=1, le=100, description="Размер страницы"),
-                         session: AsyncSession = Depends(get_db)) -> PaginatedResponse[schemas.RawdataRead]:
+                         session: AsyncSession = Depends(get_db)):
         """Поиск элементов с использованием триграммного индекса в связанной модели Drink"""
         try:
             result = await RawdataService.search_fts(search_str,
