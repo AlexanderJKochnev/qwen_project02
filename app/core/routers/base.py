@@ -57,8 +57,9 @@ class BaseRouter:
         # response schemas:
         self.read_schema = get_pyschema(model, 'Read')
         self.read_schema_relation = get_pyschema(model, 'ReadRelation') or self.read_schema
-        self.paginated_response = PaginatedResponse[self.read_schema_relation]
-        self.nonpaginated_response = List[self.read_schema_relation]
+        from app.core.utils.pydantic_utils import PyUtils
+        self.paginated_response = PyUtils.paginated_response(self.read_schema_relation)
+        self.nonpaginated_response = PyUtils.non_paginated_response(self.read_schema_relation)
         self.delete_response = DeleteResponse
 
         self.prefix = prefix

@@ -26,7 +26,9 @@ class ItemViewRouter:
         # self.router = APIRouter()
         self.router = APIRouter(dependencies=[Depends(get_active_user_or_internal)])
         self.service = ItemService()
-        self.paginated_response = PaginatedResponse[ItemListView]
+        from app.core.utils.pydantic_utils import PyUtils
+        self.paginated_response = PyUtils.paginated_response(ItemListView)
+        self.nonpaginated_response = PyUtils.non_paginated_response(ItemListView)
         self.setup_routes()
 
     def setup_routes(self):
@@ -46,7 +48,7 @@ class ItemViewRouter:
             "/list/{lang}",
             self.get_list,
             methods=["GET"],
-            response_model=List[ItemListView],
+            response_model=self.nonpaginated_response,
             tags=self.tags,
             summary="Получить список элементов с локализацией",
             openapi_extra={'request_model': None}
@@ -57,7 +59,7 @@ class ItemViewRouter:
             "/list_paginated/{lang}",
             self.get_list_paginated,
             methods=["GET"],
-            response_model=PaginatedResponse[ItemListView],
+            response_model=self.paginated_response,
             tags=self.tags,
             summary="Получить список элементов с пагинацией и локализацией",
             openapi_extra={'request_model': None}
@@ -79,7 +81,7 @@ class ItemViewRouter:
             "/search_by_drink/{lang}",
             self.search_by_drink_title_subtitle_paginated,
             methods=["GET"],
-            response_model=PaginatedResponse[ItemListView],
+            response_model=self.paginated_response,
             tags=self.tags,
             summary="Поиск элементов по полям title* и subtitle* связанной модели Drink",
             openapi_extra={'request_model': None}
@@ -90,7 +92,7 @@ class ItemViewRouter:
             "/search_trigram/{lang}",
             self.search_by_trigram_index,
             methods=["GET"],
-            response_model=PaginatedResponse[ItemListView],
+            response_model=self.paginated_response,
             tags=self.tags,
             summary="Поиск элементов по триграммному индексу в связанной модели Drink",
             openapi_extra={'request_model': None}

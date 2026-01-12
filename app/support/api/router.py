@@ -36,16 +36,17 @@ class ApiRouter(ItemRouter):
         super().__init__(prefix='/api')
         # self.prefix = data.prefix
         # self.tags = data.prefix
-        self.paginated_response = PaginatedResponse[self.read_schema]
-        self.nonpaginated_response = List[self.read_schema]
+        from app.core.utils.pydantic_utils import PyUtils
+        self.paginated_response = PyUtils.paginated_response(self.read_schema)
+        self.nonpaginated_response = PyUtils.non_paginated_response(self.read_schema)
 
     def setup_routes(self):
         # self.router.add_api_route("", self.get, methods=["GET"], response_model=self.paginated_response)
         self.router.add_api_route("", self.get, methods=["GET"],
-                                  response_model=PaginatedResponse[self.read_schema],
+                                  response_model=self.paginated_response,
                                   openapi_extra={'request_model': None})
         self.router.add_api_route("/all", self.get_all, methods=["GET"],
-                                  response_model=List[self.read_schema],
+                                  response_model=self.nonpaginated_response,
                                   openapi_extra={'request_model': None})
         # self.router.add_api_route("/all", self.get_all, methods=["GET"], response_model=self.nonpaginated_response)
         self.router.add_api_route("/search", self.search, methods=["GET"],
