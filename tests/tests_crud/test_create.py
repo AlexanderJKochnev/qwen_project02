@@ -143,7 +143,7 @@ async def test_create_routers(authenticated_client_with_db, get_post_routes):
                                            )
             if not test_data:
                 fault_nmbr += 1
-                result[path] = 'test_data was not generated'
+                result[path] = f'test_data was not generated. {request_model_name}'
                 continue
             for m, data in enumerate(test_data):
                 try:        # запрос
@@ -151,7 +151,11 @@ async def test_create_routers(authenticated_client_with_db, get_post_routes):
                     if response.status_code in [200, 201]:
                         good_nmbr += 1
                     else:
-                        raise Exception(f'{response.status_code}, {response.text}')
+                        print('==============')
+                        for key, val in data.items():
+                            print(f'         {key}: {val}')
+                        print('==============')
+                        raise Exception(f'{response.status_code}, {response.text}, {request_model_name}')
                 except Exception as e:
                     fault_nmbr += 1
                     result[path] = f'{e}'
@@ -159,8 +163,8 @@ async def test_create_routers(authenticated_client_with_db, get_post_routes):
         except Exception as e:
             print(path)
             print(f'ОШИБКА {e}')
-    result['good'] = good_nmbr
-    result['fault'] = fault_nmbr
+    result['good'] = good_nmbr // test_number
+    result['fault'] = fault_nmbr // test_number
     print(f'{good_nmbr // test_number} routers tested OK')
     print(f'{fault_nmbr // test_number} routers test failed')
     for key, val in result.items():

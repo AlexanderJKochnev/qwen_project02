@@ -40,7 +40,7 @@ async def test_get_routers(authenticated_client_with_db, get_get_routes):
             if 'search_by_drink' in path:
                 path = f'{path}?search={search}&page=1&page_size=20'
             if 'search_trigram' in path:
-                pass
+                path = f'{path}?search_str={search}&page=1&page_size=15'
 
             # if any((path.endswith('{file}'), path.endswith('{file_id}'), path.endswith('{filename}'))):
             #     continue

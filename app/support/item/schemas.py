@@ -177,7 +177,7 @@ class ItemUpdatePreact(ItemCreatePreact):
     id: Optional[int] = None
 
 
-class ItemCreateResponseSchema(ItemCreate, CreateResponse):
+class ItemCreateResponseSchema(CreateResponse, ItemCreate):
     pass
 
 
@@ -270,7 +270,7 @@ class ItemDetailView(ItemDetailManyToManyLocalized, ItemDetailForeignLocalized,
         return cleaned_data
 
 
-class ItemDrinkPreactSchema(BaseModel, LangMixin, ImageUrlMixin):
+class ItemDrinkPreactSchema(LangMixin, ImageUrlMixin, BaseModel):
     # перечисленные ниже поля из модели Drink
     title: str
     """

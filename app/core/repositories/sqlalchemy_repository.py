@@ -395,22 +395,9 @@ class Repository(metaclass=RepositoryMeta):
         """
         try:
             query = cls.apply_search_filter(cls.get_query(model), **kwargs)
-            total = 0
-            # Добавляем пагинацию если указано и общее кол-во записей
-            limit, skip = kwargs.get('limit'), kwargs.get('skip')
-            if limit is not None:
-                # общее кол-во записей удовлетворяющих условию
-                count_stmt = cls.apply_search_filter(
-                    select(func.count()).select_from(cls.get_query(model)), **kwargs
-                )
-                result = await session.execute(count_stmt)
-                total = result.scalar()  # ok
-                query = query.limit(limit)
-            if skip is not None:
-                query = query.offset(skip)
             result = await session.execute(query)
             records = result.scalars().all()
-            return (records if records else [], total)
+            return records
         except Exception as e:
             logger.error(f'ошибка search: {e}')
 

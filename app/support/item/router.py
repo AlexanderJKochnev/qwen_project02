@@ -86,7 +86,7 @@ class ItemRouter(BaseRouter):
             raise HTTPException(status_code=404, detail=f"Item with id {id} not found")
         return item
 
-    async def create(self, data: Type[ItemCreate],
+    async def create(self, data: ItemCreate,
                      session: AsyncSession = Depends(get_db)) -> ItemCreateResponseSchema:
         return await super().create(data, session)
 
@@ -320,5 +320,7 @@ class ItemRouter(BaseRouter):
             kwargs['country_enum'] = country_enum
         if category_enum:
             kwargs['category_enum'] = category_enum
-        return await self.service.search(self.repo, self.model, session,
-                                         **kwargs)
+        result = await self.service.search(self.repo, self.model, session,
+                                           **kwargs)
+        print(f'{result=}')
+        return result
