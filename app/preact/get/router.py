@@ -42,7 +42,7 @@ class GetRouter(PreactRouter):
         # Add language endpoint first
         self.router.add_api_route('/languages', self.get_languages, methods=['GET'],
                                   tags=['system'], summary='Get available languages',
-                                  openapi_extra={'request_model': None})
+                                  openapi_extra={'x-request-schema': None})
         # Then call parent method for other routes
         super()._setup_routes_()
 

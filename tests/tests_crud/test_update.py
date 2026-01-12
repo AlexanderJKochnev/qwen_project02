@@ -7,6 +7,7 @@
 import pytest
 from app.core.utils.common_utils import jprint
 from tests.data_factory.fake_generator import generate_test_data
+from tests.conftest import get_model_by_name
 
 pytestmark = pytest.mark.asyncio
 
@@ -20,7 +21,8 @@ async def test_patch_routers(authenticated_client_with_db, get_patch_routes):
     for n, route in enumerate(source):
         try:
             path = route.path
-            request_model = route.openapi_extra.get('request_model')
+            request_model_name = route.openapi_extra.get('x-request-schema')
+            request_model = get_model_by_name(request_model_name)
             id = 3    # модифицируем 3 запись
             path = route.path.replace('{id}', f'{id}')
             test_data = generate_test_data(

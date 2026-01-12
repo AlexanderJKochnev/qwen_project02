@@ -34,13 +34,13 @@ class DrinkRouter(BaseRouter):
         # то что ниже удалить - было нужно до relation
         self.router.add_api_route("/{id}/foods", self.update_drink_foods,
                                   methods=["PATCH"],
-                                  openapi_extra={'request_model': DrinkFoodLinkUpdate})
+                                  openapi_extra={'x-request-schema': DrinkFoodLinkUpdate.__name__})
         self.router.add_api_route("/{id}/flat", self.get_one_flat,
                                   methods=['GET'], response_model=self.read_schema,
-                                  openapi_extra={'request_model': None})
+                                  openapi_extra={'x-request-schema': None})
         self.router.add_api_route("/{id}/api", self.get_one_api, methods=['GET'],
                                   response_model=self.read_api_schema,
-                                  openapi_extra={'request_model': None})
+                                  openapi_extra={'x-request-schema': None})
 
     def get_drink_food_service(session: AsyncSession) -> DrinkFoodService:
         repo = DrinkFoodRepository(session)

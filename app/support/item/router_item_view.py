@@ -49,7 +49,7 @@ class ItemViewRouter:
             response_model=List[ItemListView],
             tags=self.tags,
             summary="Получить список элементов с локализацией",
-            openapi_extra={'request_model': None}
+            openapi_extra={'x-request-schema': None}
         )
 
         # Маршрут для получения списка элементов с пагинацией
@@ -60,7 +60,7 @@ class ItemViewRouter:
             response_model=PaginatedResponse[ItemListView],
             tags=self.tags,
             summary="Получить список элементов с пагинацией и локализацией",
-            openapi_extra={'request_model': None}
+            openapi_extra={'x-request-schema': None}
         )
 
         # Маршрут для получения одного элемента по id с локализацией
@@ -71,7 +71,7 @@ class ItemViewRouter:
             response_model=ItemDetailView,
             tags=self.tags,
             summary="Получить детальную информацию по элементу с локализацией",
-            openapi_extra={'request_model': None}
+            openapi_extra={'x-request-schema': None}
         )
 
         # 2 Маршрут для поиска элементов по полям title* и subtitle* связанной модели Drink
@@ -82,7 +82,7 @@ class ItemViewRouter:
             response_model=PaginatedResponse[ItemListView],
             tags=self.tags,
             summary="Поиск элементов по полям title* и subtitle* связанной модели Drink",
-            openapi_extra={'request_model': None}
+            openapi_extra={'x-request-schema': None}
         )
 
         # Маршрут для поиска элементов с использованием триграммного индекса
@@ -93,7 +93,7 @@ class ItemViewRouter:
             response_model=PaginatedResponse[ItemListView],
             tags=self.tags,
             summary="Поиск элементов по триграммному индексу в связанной модели Drink",
-            openapi_extra={'request_model': None}
+            openapi_extra={'x-request-schema': None}
         )
 
         self.router.add_api_route(
@@ -103,7 +103,7 @@ class ItemViewRouter:
             response_model=ItemReadPreactForUpdate,
             tags=self.tags,
             summary="Получить детальную информацию по элементу со всеми локализациями",
-            openapi_extra={'request_model': None}
+            openapi_extra={'x-request-schema': None}
         )
 
     async def get_one(self,

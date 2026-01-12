@@ -8,7 +8,7 @@ import pytest
 from app.core.utils.common_utils import jprint
 from tests.utility.assertion import assertions
 from tests.data_factory.fake_generator import generate_test_data
-
+from tests.conftest import get_model_by_name
 pytestmark = pytest.mark.asyncio
 
 
@@ -25,7 +25,9 @@ async def test_generate_input_data(authenticated_client_with_db, get_post_routes
     try:
         for n, route in enumerate(source[::-1]):
             # response_model = route.response_model  #
-            request_model = route.openapi_extra.get('request_model')  # входная модель - по ней генерируются данные
+            request_model_name = route.openapi_extra.get('x-request-schema')
+            # входная модель - по ней генерируются данные
+            request_model = get_model_by_name(request_model_name)
             path = route.path
             if not request_model:
                 no_model += 1
@@ -68,7 +70,10 @@ async def test_validate_input_data(authenticated_client_with_db, get_post_routes
     try:
         for n, route in enumerate(source[::-1]):
             # response_model = route.response_model  #
-            request_model = route.openapi_extra.get('request_model')  # входная модель - по ней генерируются данные
+            request_model_name = route.openapi_extra.get('x-request-schema')
+            # входная модель - по ней генерируются данные
+            request_model = get_model_by_name(request_model_name)
+            print(f'{request_model_name=},  {request_model=}')
             path = route.path
             if not request_model:       # пропускаем роуты без request_model
                 continue
@@ -122,7 +127,9 @@ async def test_create_routers(authenticated_client_with_db, get_post_routes):
     for n, route in enumerate(source[::-1]):
         try:
             # response_model = route.response_model  #
-            request_model = route.openapi_extra.get('request_model')  # входная модель - по ней генерируются данные
+            request_model_name = route.openapi_extra.get('x-request-schema')
+            # входная модель - по ней генерируются данные
+            request_model = get_model_by_name(request_model_name)
             path = route.path
             if not request_model:       # пропускаем роуты без request_model
                 continue
@@ -154,12 +161,12 @@ async def test_create_routers(authenticated_client_with_db, get_post_routes):
             print(f'ОШИБКА {e}')
     result['good'] = good_nmbr
     result['fault'] = fault_nmbr
-    print(f'{good_nmbr} routers tested OK')
-    print(f'{fault_nmbr} routers test failed')
+    print(f'{good_nmbr // test_number} routers tested OK')
+    print(f'{fault_nmbr // test_number} routers test failed')
     for key, val in result.items():
         print(f'    {key}: {val}')
     if fault_nmbr > 0:
-        assert False, f'{fault_nmbr} ошибок'
+        assert False, f'{fault_nmbr // test_number} ошибок'
 
 
 @pytest.mark.skip

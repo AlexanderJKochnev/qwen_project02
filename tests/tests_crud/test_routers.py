@@ -23,10 +23,10 @@ def test_routers_no_request_model(get_all_routes):
 
     for m, ke in enumerate(router_list):
         try:
-            _ = ke.openapi_extra.get('request_model') if hasattr(ke, 'openapi_extra') else None
-            # ke.openapi_extra.get('request_model')
+            _ = ke.openapi_extra.get('x-request-schema') if hasattr(ke, 'openapi_extra') else None
+            # ke.openapi_extra.get('x-request-schema')
             # print(f'{m}. {ke}',
-            #       ke.openapi_extra.get('request_model') if hasattr(ke, 'openapi_extra') else None)
+            #       ke.openapi_extra.get('x-request-schema') if hasattr(ke, 'openapi_extra') else None)
         except Exception:
             n += 1
             print(f'{m}. {ke}', 'Nooo')
@@ -46,7 +46,7 @@ def test_routers(get_all_routes, get_get_routes, get_del_routes, get_post_routes
                    if not any((route.path.startswith(x) for x in router_exclude_list))]
     for m, ke in enumerate(router_list):
         try:
-            print(f"{m}. {ke} {ke.openapi_extra.get('request_model')}, {ke.response_model}")
+            print(f"{m}. {ke} {ke.openapi_extra.get('x-request-schema')}, {ke.response_model}")
         except Exception:
             n += 1
             print(f'{m}. {ke}', 'Nooo')
@@ -59,8 +59,8 @@ def test_post_routers(get_post_routes):
     print(f'======{method=}')
     for m, ke in enumerate(get_post_routes):
         try:
-            _ = ke.openapi_extra.get('request_model')
-            print(f"{m}. {ke} {ke.openapi_extra.get('request_model')}")
+            _ = ke.openapi_extra.get('x-request-schema')
+            print(f"{m}. {ke} {ke.openapi_extra.get('x-request-schema')}")
         except Exception:
             n += 1
             print(f'{m}. {ke}', 'Nooo')
@@ -73,8 +73,8 @@ def test_get_routers(get_get_routes):
     print(f'======{method=}')
     for m, ke in enumerate(get_get_routes):
         try:
-            _ = ke.openapi_extra.get('request_model')
-            # print(f"{m}. {ke} {ke.openapi_extra.get('request_model')}")
+            _ = ke.openapi_extra.get('x-request-schema')
+            # print(f"{m}. {ke} {ke.openapi_extra.get('x-request-schema')}")
         except Exception:
             n += 1
             print(f'{m}. {ke}', 'Nooo')
@@ -87,8 +87,8 @@ def test_patch_routers(get_patch_routes):
     print(f'======{method=}')
     for m, ke in enumerate(get_patch_routes):
         try:
-            # _ = ke.openapi_extra.get('request_model')
-            print(f"{m}. {ke} {ke.openapi_extra.get('request_model')}")
+            # _ = ke.openapi_extra.get('x-request-schema')
+            print(f"{m}. {ke} {ke.openapi_extra.get('x-request-schema')}")
         except Exception:
             n += 1
             print(f'{m}. {ke}', 'Nooo')
@@ -101,8 +101,8 @@ def test_delete_routers(get_del_routes):
     print(f'======{method=}')
     for m, ke in enumerate(get_del_routes):
         try:
-            _ = ke.openapi_extra.get('request_model')
-            # print(f"{m}. {ke} {ke.openapi_extra.get('request_model')}")
+            _ = ke.openapi_extra.get('x-request-schema')
+            # print(f"{m}. {ke} {ke.openapi_extra.get('x-request-schema')}")
         except Exception:
             n += 1
             print(f'{m}. {ke}', 'Nooo')

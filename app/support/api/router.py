@@ -43,32 +43,32 @@ class ApiRouter(ItemRouter):
         # self.router.add_api_route("", self.get, methods=["GET"], response_model=self.paginated_response)
         self.router.add_api_route("", self.get, methods=["GET"],
                                   response_model=PaginatedResponse[self.read_schema],
-                                  openapi_extra={'request_model': None})
+                                  openapi_extra={'x-request-schema': None})
         self.router.add_api_route("/all", self.get_all, methods=["GET"],
                                   response_model=List[self.read_schema],
-                                  openapi_extra={'request_model': None})
+                                  openapi_extra={'x-request-schema': None})
         # self.router.add_api_route("/all", self.get_all, methods=["GET"], response_model=self.nonpaginated_response)
         self.router.add_api_route("/search", self.search, methods=["GET"],
                                   response_model=self.paginated_response,
-                                  openapi_extra={'request_model': None})
+                                  openapi_extra={'x-request-schema': None})
         # self.router.add_api_route("/search_all", self.search_all, methods=["GET"],
         #                           response_model=List[self.read_schema])
         self.router.add_api_route("/search_all", self.search_all, methods=["GET"],
                                   response_model=self.nonpaginated_response,
-                                  openapi_extra={'request_model': None})
+                                  openapi_extra={'x-request-schema': None})
         self.router.add_api_route("/mongo", self.get_images_after_date, methods=["GET"],
                                   response_model=FileListResponse,
-                                  openapi_extra={'request_model': None})
+                                  openapi_extra={'x-request-schema': None})
         self.router.add_api_route("/mongo_all", self.get_images_list_after_date, methods=["GET"],
                                   response_model=dict,
-                                  openapi_extra={'request_model': None})
+                                  openapi_extra={'x-request-schema': None})
         self.router.add_api_route("/{id}", self.get_one, methods=["GET"],
                                   response_model=self.read_schema,
-                                  openapi_extra={'request_model': None})
+                                  openapi_extra={'x-request-schema': None})
         self.router.add_api_route("/mongo/{id}", self.download_image, methods=["GET"],
-                                  openapi_extra={'request_model': None})
+                                  openapi_extra={'x-request-schema': None})
         self.router.add_api_route("/file/{file}", self.download_file, methods=["GET"],
-                                  openapi_extra={'request_model': None})
+                                  openapi_extra={'x-request-schema': None})
 
     async def get_images_after_date(self, after_date: datetime = Query(data.delta, description="Дата в формате ISO "
                                                                                                "8601 (например, "

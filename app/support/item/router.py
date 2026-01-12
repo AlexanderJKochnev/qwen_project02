@@ -1,6 +1,6 @@
 # app/support/item/router.py
 import json
-from typing import Optional
+from typing import Optional, Type
 
 from fastapi import Depends, File, Form, HTTPException, Path, Query, status, UploadFile
 from pydantic import ValidationError
@@ -34,29 +34,29 @@ class ItemRouter(BaseRouter):
 
         self.router.add_api_route(
             "/full", self.create_relation_image, status_code=status.HTTP_200_OK, methods=["POST"],
-            # response_model=self.read_schema
-            openapi_extra={'request_model': None}
+            response_model=self.read_schema,
+            openapi_extra={'x-request-schema': None}
         )
         self.router.add_api_route(
             "/create_item_drink", self.create_item_drink, status_code=status.HTTP_200_OK, methods=["POST"],
-            # response_model=ItemCreateResponseSchema
-            openapi_extra={'request_model': None}
+            response_model=ItemCreateResponseSchema,
+            openapi_extra={'x-request-schema': None}
         )
         # ???????? UPDATE -> POST ?
         self.router.add_api_route(
             "/update_item_drink/{id}", self.update_item_drink, status_code=status.HTTP_200_OK, methods=["POST"],
-            # response_model=ItemCreateResponseSchema
-            openapi_extra={'request_model': None}
+            response_model=ItemCreateResponseSchema,
+            openapi_extra={'x-request-schema': None}
         )
         """ import from upload directory """
         self.router.add_api_route(
             "/direct", self.direct_import_data, status_code=status.HTTP_200_OK, methods=["POST"],
             response_model=dict,
-            openapi_extra={'request_model': None})
+            openapi_extra={'x-request-schema': None})
         self.router.add_api_route(
             "/direct/{id}", self.direct_import_single_data, status_code=status.HTTP_200_OK, methods=["GET"],
             response_model=dict,
-            openapi_extra={'request_model': None}
+            openapi_extra={'x-request-schema': None}
         )
 
     async def get_list_view(self, lang: str = Path(..., description="Язык локализации"),
@@ -86,7 +86,7 @@ class ItemRouter(BaseRouter):
             raise HTTPException(status_code=404, detail=f"Item with id {id} not found")
         return item
 
-    async def create(self, data: ItemCreate,
+    async def create(self, data: Type[ItemCreate],
                      session: AsyncSession = Depends(get_db)) -> ItemCreateResponseSchema:
         return await super().create(data, session)
 

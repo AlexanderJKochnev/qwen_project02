@@ -1,9 +1,10 @@
 # tests/conftest.py
 import asyncio
 import logging
+from pydantic import BaseModel
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import List, Any, Optional, Dict
+from typing import List, Any, Optional, Dict, Type
 import pytest
 from dateutil.relativedelta import relativedelta
 from fastapi.routing import APIRoute
@@ -34,6 +35,22 @@ scope = 'session'
 scope2 = 'session'
 example_count = 5      # количество тестовых записей - рекомедуется >20 для paging test
 
+
+def get_model_by_name(name: str) -> Optional[Type[BaseModel]]:
+    """
+        получение pydantic модели по ее имени (для тестирования openapi_extra={'x-request-schema': ModelName)
+    """
+    def get_all_subclasses(cls):
+        all_subclasses = []
+        for subclass in cls.__subclasses__():
+            all_subclasses.append(subclass)
+            all_subclasses.extend(get_all_subclasses(subclass))
+        return all_subclasses
+
+    for cls in get_all_subclasses(BaseModel):
+        if cls.__name__ == name:
+            return cls
+    return None
 # ----------REAL IMAGE FIXTURES-----------
 
 
