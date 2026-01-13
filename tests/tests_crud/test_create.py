@@ -5,6 +5,7 @@
     все отклюенные роутеры см conftest.py::exclude_routers
 """
 import pytest
+from tqdm import tqdm
 from app.core.utils.common_utils import jprint
 from tests.utility.assertion import assertions
 from tests.data_factory.fake_generator import generate_test_data
@@ -23,7 +24,7 @@ async def test_generate_input_data(authenticated_client_with_db, get_post_routes
     good_nmbr = 0
     no_model = 0
     try:
-        for n, route in enumerate(source[::-1]):
+        for route in tqdm(source[::-1], desc=('перебираем роутеры')):
             # response_model = route.response_model  #
             request_model_name = route.openapi_extra.get('x-request-schema')
             # входная модель - по ней генерируются данные
@@ -73,7 +74,6 @@ async def test_validate_input_data(authenticated_client_with_db, get_post_routes
             request_model_name = route.openapi_extra.get('x-request-schema')
             # входная модель - по ней генерируются данные
             request_model = get_model_by_name(request_model_name)
-            print(f'{request_model_name=},  {request_model=}')
             path = route.path
             if not request_model:       # пропускаем роуты без request_model
                 continue
@@ -170,7 +170,7 @@ async def test_create_routers(authenticated_client_with_db, get_post_routes):
     for key, val in result.items():
         print(f'    {key}: {val}')
     if fault_nmbr > 0:
-        assert False, f'{fault_nmbr // test_number} ошибок'
+        assert False, f'{fault_nmbr // test_number} ошибок {fault_nmbr}'
 
 
 @pytest.mark.skip

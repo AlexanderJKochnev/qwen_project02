@@ -23,7 +23,7 @@ async def test_get_routers(authenticated_client_with_db, get_get_routes):
             path = route.path
             lang = 'en'
             id = "2"
-            search = 'vi'
+            search = 'baro'
             # single = False
             if any((k in path for k in ('{file}', '{file_id}', '{filename}'))):
                 continue

@@ -1,6 +1,6 @@
 # app/support/item/router.py
 import json
-from typing import Optional, Type
+from typing import Optional
 
 from fastapi import Depends, File, Form, HTTPException, Path, Query, status, UploadFile
 from pydantic import ValidationError
@@ -216,7 +216,7 @@ class ItemRouter(BaseRouter):
         """
         try:
             data_dict = json.loads(data)
-            drink_action = data_dict.get('drink_action')
+            # drink_action = data_dict.get('drink_action')
             item_drink_data = ItemUpdatePreact(**data_dict)
             # load image to database, get image_id & image_path
             isfile: bool = False
@@ -322,5 +322,5 @@ class ItemRouter(BaseRouter):
             kwargs['category_enum'] = category_enum
         result = await self.service.search(self.repo, self.model, session,
                                            **kwargs)
-        print(f'{result=}')
+
         return result

@@ -24,7 +24,12 @@ async def test_patch_routers(authenticated_client_with_db, get_patch_routes):
             request_model_name = route.openapi_extra.get('x-request-schema')
             request_model = get_model_by_name(request_model_name)
             id = 3    # модифицируем 3 запись
-            path = route.path.replace('{id}', f'{id}')
+            path = route.path
+            if '{id}' not in path:
+                if not path.endswith('/'):
+                    path = f'{path}/'
+                path = path + '{id}'
+            path = path.replace('{id}', str(id))
             test_data = generate_test_data(
                 request_model, 2,
                 {'int_range': (1, 2), 'decimal_range': (0.5, 1), 'float_range': (0.1, 1.0),
@@ -36,13 +41,12 @@ async def test_patch_routers(authenticated_client_with_db, get_patch_routes):
                 result[path] = 'test_data was not generated'
                 continue
             data = next(test_data, None)
-            response = await client.get(f"{path}/{id}")
-            sts = response.status_code
-            response = await client.patch(f"{path}/{id}", json=data)
-            print(f"{sts=}", f"{response.status_code=}  {path=}", )
+            response = await client.patch(path, json=data)
+            # print(f"{sts=}", f"{response.status_code=}  {path=}", )
             if response.status_code in [200, 201]:
                 good_nmbr += 1
             else:
+                print(f'=========={response.status_code}, {path=}, {response.text}')
                 fault_nmbr += 1
                 result[path] = f'{response.status_code}'
         except Exception as e:
@@ -62,7 +66,7 @@ async def test_patch_routers(authenticated_client_with_db, get_patch_routes):
 
 @pytest.mark.skip
 async def test_patch_success(authenticated_client_with_db, test_db_session,
-                             simple_router_list, complex_router_list, fakedata_generator):
+                             simple_router_list, complex_router_list):  # , fakedata_generator):
     """
         тестирует методы PATCH (patch) - c проверкой id
         доделать
@@ -109,7 +113,7 @@ async def test_patch_success(authenticated_client_with_db, test_db_session,
 
 @pytest.mark.skip
 async def test_patch_success2(authenticated_client_with_db, test_db_session,
-                              simple_router_list, complex_router_list, fakedata_generator):
+                              simple_router_list, complex_router_list):
     """
         тестирует методы PATCH (patch) - c проверкой id
     """
@@ -136,4 +140,4 @@ async def test_patch_success2(authenticated_client_with_db, test_db_session,
         response = await client.patch(f"{prefix}/{id}", json=updated_dict)
         if response.status_code != 200:
             print(response.text)
-        assert response.status_code == 200, f'{prefix=} ошибка обновления'
+        assert response.status_code == 200, f'{prefix}/{id} ... {response.text}'

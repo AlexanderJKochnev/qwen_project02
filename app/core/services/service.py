@@ -265,7 +265,7 @@ class Service(metaclass=ServiceMeta):
                       "has_next": skip + len(items) < total,
                       "has_prev": skip > 1}
         else:
-            result = await repository.search(model, session, **kwargs)
+            result = await repository.search_all(model, session, **kwargs)
         return result
 
     @classmethod
