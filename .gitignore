@@ -1,59 +1,57 @@
-__pycache__/
+```python
+# Compiled and build artifacts
 *.pyc
+__pycache__/
+*.o
+*.obj
+*.so
+*.dll
+*.exe
+*.class
+*.out
+
+# Dependencies
+.venv/
+venv/
+.env
+.env.local
+*.env.*
+
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+*.swo
+
+# Editors
+.vscode/
+.idea/
+
+# Build directories
+build/
+dist/
+target/
+*.egg-info/
+
+# Python specific
 *.pyo
 *.pyd
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+*.py~
+*.bak
+*.orig
+*.rej
 
 # Coverage
 .coverage
-.coverage.*
+coverage/
 htmlcov/
-.coverage.xml
+
+# Testing
 .pytest_cache/
+.mypy_cache/
+.hypothesis/
 
-# Environment
-# .env
-# .env.local
-# .env.*
-.venv/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*.tmp
-
-# OS
+# OS generated
 .DS_Store
 Thumbs.db
-
-TODO.md
-migration_volume
-mongodb_data
-pg_data
-pg_dump
-upload_volume
+```
