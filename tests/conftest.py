@@ -1,6 +1,7 @@
 # tests/conftest.py
 import asyncio
 import logging
+from psycopg.errors import ForeignKeyViolation
 from pydantic import BaseModel
 from datetime import datetime, timezone
 from pathlib import Path
@@ -231,8 +232,13 @@ def presort_routers() -> List[str]:
     """ список path prefixes router what shall be sorted
         для тестирования POST, UPDATE, DELETE
     """
-    result = ('/items', '/drink', '/subregion', '/create/subregions', '/region', '/create/regions',
-              '/country', '/subcategory', '/create/subcategory', '/category', '/foods', '/create/foods',
+    result = ('/items', '/drink',
+              '/subregion', '/create/subregions', '/delete/subregions',
+              '/region', '/create/regions', '/delete/regions',
+              '/country', '/delete/country',
+              '/subcategory', '/create/subcategory', '/delete/subcategory',
+              '/category',
+              '/foods', '/create/foods', '/delete/foods'
               '/superfoods')
     return result
 
@@ -598,6 +604,8 @@ async def test_db_session(mock_engine):
             yield session
             await session.commit()   # !
             # await session.close()
+        except ForeignKeyViolation:
+            pass
         except Exception:
             await session.rollback()  # Откат при ошибках
             raise

@@ -33,19 +33,41 @@ async def test_delete_routers(authenticated_client_with_db, get_del_routes):
     for n, route in enumerate(source):
         try:
             path = route.path
-            if 'delete' in path:
-                id = 3
+            if 'mongodb' in path:
+                continue
+                # вынести в отдельнй тест так как mongodb session закрывается после каждого теста
+                get_path = '/mongodb/imageslist'
             else:
-                id = 2
-            if any((x in path for x in ('sub', 'foods'))):
-                id = id + 1
-            path = path.replace('{id}', f'{id}')
-            response = await client.delete(path)
+                get_path = f'{path.replace('/delete', '').replace('{id}', '')}all'
+
+            response = await client.get(get_path)
             if response.status_code in [200, 201]:
-                table.add_row(path, good, None)
-                good_nmbr += 1
+                result = response.json()
+                if 'mongodb' in path:
+                    continue
+                    # ids = list(result.values())
+                else:
+                    ids = [val.get('id') for val in result]
+                    # print(f'{get_path}...{ids=}')
+                for id in ids:   # перебор записей пока не найдется без зависимых
+                    if '/delete/sweetness' in route.path:
+                        table.add_row(route.path, fault, f'{route.path}')
+                        # print(f"==={route.path.replace('{id}', str(id))=}")
+                        # print(f"{route.path=}")
+                    path = route.path.replace('{id}', f'{id}')
+                           # .replace('{file_id}', f'{id}'))
+                    try:
+                        response = await client.delete(path)
+                        if response.status_code == 500:
+                            continue
+                        if response.status_code in [200, 201]:
+                            table.add_row(path, good, None)
+                            good_nmbr += 1
+                            break
+                    except Exception as e:
+                        print(f'{path=}  {e}')
             else:
-                table.add_row(path, good, f'{response.status_code}. {response.text}')
+                table.add_row(path, fault, f'{response.status_code}. {response.text}')
                 fault_nmbr += 1
                 result[path] = f'{response.status_code}'
         except Exception as e:

@@ -181,7 +181,9 @@ class Repository(metaclass=RepositoryMeta):
             await session.rollback()
             # Проверяем, является ли ошибка Foreign Key violation
             error_str = str(e.orig)
-            if "foreign key constraint" in error_str.lower() or "violates foreign key constraint" in error_str.lower():
+            if ("foreign key constraint" in error_str.lower() or
+                    "violates foreign key constraint" in error_str.lower() or
+                    "violates not-null constraint" in error_str.lower()):
                 return "foreign_key_violation"
             return f"integrity_error: {error_str}"
         except Exception as e:

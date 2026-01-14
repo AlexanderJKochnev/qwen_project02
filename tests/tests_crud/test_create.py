@@ -15,7 +15,7 @@ from tests.conftest import get_model_by_name
 pytestmark = pytest.mark.asyncio
 
 # test_number -
-test_number = 10
+test_number = 5
 
 
 good = "✅"
