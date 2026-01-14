@@ -48,7 +48,7 @@ class BaseRouter:
         self.service: TService = get_service(model)
         # input py schema for simple create without relation
         self.create_schema = get_pyschema(model, 'Create')
-        self.create_response_schema = get_pyschema(model, 'CreateResponse') or self.create_schema
+        self.create_response_schema = get_pyschema(model, 'CreateResponseSchema') or self.create_schema
         # input py schema for create with relation
         self.create_schema_relation = get_pyschema(model, 'CreateRelation') or self.create_schema
         # input update schema

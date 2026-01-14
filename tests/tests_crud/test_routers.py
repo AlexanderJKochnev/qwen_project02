@@ -3,9 +3,22 @@
     compaire all routes and tested ones
 """
 import pytest
+from rich.console import Console
+from rich.table import Table
+
+pytestmark = pytest.mark.asyncio
+
+console = Console()
+
+table = Table(title="Отчет по количеству зарегитрированных роутов")
+
 # from app.core.utils.common_utils import jprint
 # from tests.utility.assertion import assertions
-pytestmark = pytest.mark.asyncio
+
+
+table.add_column("Test", style="cyan", no_wrap=True)
+table.add_column("Кол-во роутеров", style="magenta")
+table.add_column("Кол-во ошибок", justify="right", style="green")
 
 
 def test_routers_no_request_model(get_all_routes):
@@ -30,7 +43,7 @@ def test_routers_no_request_model(get_all_routes):
         except Exception:
             n += 1
             print(f'{m}. {ke}', 'Nooo')
-    print(f'{n} of {m}')
+    table.add_row("test_routers_no_request_model", f"{m}", f"{n}")
 
 
 def test_routers(get_all_routes, get_get_routes, get_del_routes, get_post_routes, get_patch_routes):
@@ -51,7 +64,7 @@ def test_routers(get_all_routes, get_get_routes, get_del_routes, get_post_routes
         except Exception:
             n += 1
             print(f'{m}. {ke}', 'Nooo')
-    print(f'{n} of {m}')
+    table.add_row("test_routers", f"{m}", f"{n}")
 
 
 def test_post_routers(get_post_routes):
@@ -65,7 +78,7 @@ def test_post_routers(get_post_routes):
         except Exception:
             n += 1
             print(f'{m}. {ke}', 'Nooo')
-    print(f'всего роутеров {method}: {m} из них не имеют request_model: {n}')
+    table.add_row("test_post_routers", f"{m}", f"{n}")
 
 
 def test_get_routers(get_get_routes):
@@ -79,7 +92,7 @@ def test_get_routers(get_get_routes):
         except Exception:
             n += 1
             print(f'{m}. {ke}', 'Nooo')
-    print(f'всего роутеров {method}: {m} из них не имеют request_model: {n}')
+    table.add_row("test_get_routers", f"{m}", f"{n}")
 
 
 def test_patch_routers(get_patch_routes):
@@ -88,12 +101,12 @@ def test_patch_routers(get_patch_routes):
     print(f'{method=}')
     for m, ke in enumerate(get_patch_routes):
         try:
-            # _ = ke.openapi_extra.get('x-request-schema')
-            print(f"{m}. {ke} {ke.openapi_extra.get('x-request-schema')}")
+            _ = ke.openapi_extra.get('x-request-schema')
+            # print(f"{m}. {ke} {ke.openapi_extra.get('x-request-schema')}")
         except Exception:
             n += 1
             print(f'{m}. {ke}', 'Nooo')
-    print(f'всего роутеров {method}: {m} из них не имеют request_model: {n}')
+    table.add_row("test_patch_routers", f"{m}", f"{n}")
 
 
 def test_delete_routers(get_del_routes):
@@ -107,4 +120,5 @@ def test_delete_routers(get_del_routes):
         except Exception:
             n += 1
             print(f'{m}. {ke}', 'Nooo')
-    print(f'всего роутеров {method}: {m} из них не имеют request_model: {n}')
+    table.add_row("test_delete_routers", f"{m}", f"{n}")
+    console.print(table)

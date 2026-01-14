@@ -1,5 +1,5 @@
-fastapi[all]
-httpx
+fastapi[all]~=0.116.1
+httpx~=0.28.1
 sqladmin==0.21.0
 pydantic-settings==2.10.1
 email-validator
@@ -7,10 +7,10 @@ alembic==1.16.4
 asyncpg==0.29.0
 python-jose==3.5.0
 passlib==1.7.4
-pytest
+pytest~=8.4.1
 pytest-asyncio
 pytest-cov
-pillow
+pillow~=11.3.0
 psycopg2-binary
 python-jose[cryptography]
 passlib[bcrypt]
@@ -19,22 +19,30 @@ bcrypt==4.0.1
 sqlalchemy-utils
 motor==3.3.2
 pymongo==4.6.0
-python-dateutil
+python-dateutil~=2.9.0.post0
 # для считывания больших json кусками
-ijson
+ijson~=3.4.0.post0
 # morphology
 setuptools<81
-pymorphy2
+pymorphy2~=0.9.1
 pymorphy2-dicts-ru
-deepdiff
+deepdiff~=8.6.1
 # for parsing
-beautifulsoup4
+beautifulsoup4~=4.14.2
 requests
 # arq
 arq>=0.25
 # for testing purpose only
-Faker
+Faker~=37.5.3
 itsdangerous>=2.1.0
 pydantic_factories
-python-magic
+python-magic~=0.4.27
 #для работы python-magic нужно: brew install libmagic
+SQLAlchemy~=2.0.43
+pydantic~=2.11.7
+pydantic_core~=2.33.2
+starlette~=0.47.2
+tqdm~=4.67.1
+rich~=14.1.0
+PyJWT~=2.10.1
+polyfactory~=2.22.2

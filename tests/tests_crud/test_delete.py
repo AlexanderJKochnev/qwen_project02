@@ -2,16 +2,29 @@
 """
     тестируем все методы POST и DELETE ()
     новые методы добавляются автоматически
-    pytest tests/test_delete.py --tb=auto --disable-warnings -vv --capture=no
+    ПОЧЕМУ ПРИ ТЕСТИРОВАНИИ УДАЛЯЮТСЯ ЗАПИСИ ИЗ ПОДЧИНЕННЫХ ТАБЛИЦ?
+    ПРИ УДАЛЕНИИ ИЗ CATEGORY - УДАЛЯЮТСЯ ЗАВИСИМЫЕ ЗАПИСИ ИЗ SUBCATEGORY?
 """
 
 import pytest
-
+from rich.console import Console
+from rich.table import Table
 
 pytestmark = pytest.mark.asyncio
 
+good = "✅"
+fault = "❌"
+
 
 async def test_delete_routers(authenticated_client_with_db, get_del_routes):
+    console = Console()
+
+    table = Table(title="Отчет по тестированию роутов DELETE")
+
+    table.add_column("ROUTE", style="cyan", no_wrap=True)
+    table.add_column("статус", justify="center", style="magenta")
+    table.add_column('error', justify="left", style="red")
+
     source = get_del_routes
     client = authenticated_client_with_db
     result: dict = {}
@@ -19,24 +32,34 @@ async def test_delete_routers(authenticated_client_with_db, get_del_routes):
     good_nmbr = 0
     for n, route in enumerate(source):
         try:
-            id = "2"      # удаляем первую запись
-            path = route.path.replace('{id}', id)
+            path = route.path
+            if 'delete' in path:
+                id = 3
+            else:
+                id = 2
+            if any((x in path for x in ('sub', 'foods'))):
+                id = id + 1
+            path = path.replace('{id}', f'{id}')
             response = await client.delete(path)
             if response.status_code in [200, 201]:
+                table.add_row(path, good, None)
                 good_nmbr += 1
             else:
+                table.add_row(path, good, f'{response.status_code}. {response.text}')
                 fault_nmbr += 1
                 result[path] = f'{response.status_code}'
         except Exception as e:
-            print(f'ОШИБКА {e}')
-    result['good'] = good_nmbr
-    result['fault'] = fault_nmbr
-    print(f'{good_nmbr} routers tested OK')
-    print(f'{fault_nmbr} routers test failed')
-    for key, val in result.items():
-        print(f'    {key}: {val}')
+            table.add_row(path, good, f'{e}')
+    console.print(table)
+    table2 = Table(title="SUMMARY DELETE")
+    table2.add_column("STATEMENT", style="cyan", no_wrap=True)
+    table2.add_column("NUMBERS", justify="center", style="black")
+    table2.add_row("total number of routes", f"{good_nmbr + fault_nmbr}")
+    table2.add_row("number of good routes", f"{good_nmbr}")
+    table2.add_row("number of fault routes", f"{fault_nmbr}")
+    console.print(table2)
     if fault_nmbr > 0:
-        assert False, f'{fault_nmbr} ошибок'
+        assert False
 
 
 @pytest.mark.skip

@@ -7,12 +7,24 @@
 import pytest
 
 from app.core.schemas.base import PaginatedResponse
-
+from rich.console import Console
+from rich.table import Table
 
 pytestmark = pytest.mark.asyncio
 
 
+good = "✅"
+fault = "❌"
+
+
 async def test_get_routers(authenticated_client_with_db, get_get_routes):
+    console = Console()
+
+    table = Table(title="Отчет по тестированию роутов GET")
+
+    table.add_column("ROUTE", style="cyan", no_wrap=True)
+    table.add_column("статус", justify="center", style="magenta")
+    table.add_column('error', justify="left", style="red")
     source = get_get_routes
     client = authenticated_client_with_db
     result: dict = {}
@@ -47,23 +59,28 @@ async def test_get_routers(authenticated_client_with_db, get_get_routes):
 
             response = await client.get(path)
             if response.status_code in [200, 201]:
+                table.add_row(path, good, None)
                 good_nmbr += 1
             else:
+                table.add_row(path, fault, f"{response.status_code} {response.text}")
                 fault_nmbr += 1
                 result[path] = f'{response.status_code}'
         except Exception as e:
+            table.add_row(path, fault, f"{e}")
             # print(f'ОШИБКА {e}')
             fault_nmbr += 1
             result[f'{path}'] = e
-    result['good'] = good_nmbr
-    result['fault'] = fault_nmbr
-    print(f'{good_nmbr} routers tested OK')
-    print(f'{fault_nmbr} routers test failed')
-    for key, val in result.items():
-        print(f'    {key}: {val}')
-        print('------------------')
+
+    console.print(table)
+    table2 = Table(title="SUMMARY GET")
+    table2.add_column("STATEMENT", style="cyan", no_wrap=True)
+    table2.add_column("NUMBERS", justify="center", style="black")
+    table2.add_row("total number of routes", f"{good_nmbr + fault_nmbr}")
+    table2.add_row("number of good routes", f"{good_nmbr}")
+    table2.add_row("number of fault routes", f"{fault_nmbr}")
+    console.print(table2)
     if fault_nmbr > 0:
-        assert False, f'{fault_nmbr} ошибок'
+        assert False
 
 
 @pytest.mark.skip

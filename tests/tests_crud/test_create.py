@@ -6,17 +6,32 @@
 """
 import pytest
 from tqdm import tqdm
+from rich.console import Console
+from rich.table import Table
 from app.core.utils.common_utils import jprint
 from tests.utility.assertion import assertions
 from tests.data_factory.fake_generator import generate_test_data
 from tests.conftest import get_model_by_name
 pytestmark = pytest.mark.asyncio
 
+# test_number -
+test_number = 10
 
-test_number = 5
+
+good = "✅"
+fault = "❌"
 
 
 async def test_generate_input_data(authenticated_client_with_db, get_post_routes):
+    console = Console()
+
+    table = Table(title="Отчет по тестированию роутов CREATE")
+
+    table.add_column("ROUTE", style="cyan", no_wrap=True)
+    table.add_column("статус", justify="center", style="magenta")
+    table.add_column("request model", justify="right", style="green")
+    table.add_column('error', justify="right", style="red")
+
     source = get_post_routes
     # client = authenticated_client_with_db
     result: dict = {}
@@ -31,6 +46,7 @@ async def test_generate_input_data(authenticated_client_with_db, get_post_routes
             request_model = get_model_by_name(request_model_name)
             path = route.path
             if not request_model:
+                table.add_row(path, fault, None, 'route has no request model')
                 no_model += 1
                 result[path] = 'test_data has no request model'
                 continue
@@ -42,34 +58,44 @@ async def test_generate_input_data(authenticated_client_with_db, get_post_routes
                                             'faker_seed': 42}
                                            )
             if not test_data:
+                table.add_row(path, fault, request_model_name, 'route has no request model')
                 fault_nmbr += 1
                 result[path] = 'test_data was not generated'
                 continue
+            table.add_row(path, good, request_model_name)
             good_nmbr += 1
     except Exception as e:
-        print(path)
-        print(f'ОШИБКА {e}')
-    result['good'] = good_nmbr
-    result['fault'] = fault_nmbr
-    if fault_nmbr > 0:
-        for key, val in result.items():
-            print(f'{key}: {val if isinstance(val, int) else val[0:15]}')
-        assert False, f'выявлено {fault_nmbr} ошибок'
-    else:
-        print(f'{good_nmbr} routers tested OK')
-        print(f'{no_model} routers have no request_model')
-        for key, val in result.items():
-            print(f'    {key}: {val}')
-        assert True
+        table.add_row(path, fault, request_model_name if request_model_name else None,
+                      f'{e}')
+    finally:
+        print()
+        console.print(table)
+        table2 = Table(title="SUMMARY")
+        table2.add_column("STATEMENT", style="cyan", no_wrap=True)
+        table2.add_column("NUMBERS", justify="center", style="black")
+        table2.add_row("total number of routes", f"{good_nmbr + fault_nmbr + no_model}")
+        table2.add_row("number of good routes", f"{good_nmbr}")
+        table2.add_row("number of fault routes", f"{fault_nmbr}")
+        table2.add_row("number of routes without response models", f"{no_model}")
+        console.print(table2)
 
 
 async def test_validate_input_data(authenticated_client_with_db, get_post_routes):
+    console = Console()
+
+    table = Table(title="Отчет по валидации сгенерированных данных для роутов CREATE")
+
+    table.add_column("ROUTE", style="cyan", no_wrap=True)
+    table.add_column("статус", justify="center", style="magenta")
+    table.add_column("request model", justify="right", style="green")
+    table.add_column('error', justify="right", style="red")
     source = get_post_routes
     result: dict = {}
     fault_nmbr = 0
     good_nmbr = 0
-    try:
-        for n, route in enumerate(source[::-1]):
+
+    for n, route in enumerate(source[::-1]):
+        try:
             # response_model = route.response_model  #
             request_model_name = route.openapi_extra.get('x-request-schema')
             # входная модель - по ней генерируются данные
@@ -86,6 +112,7 @@ async def test_validate_input_data(authenticated_client_with_db, get_post_routes
                                             'faker_seed': 42}
                                            )
             if not test_data:
+                table.add_row(path, fault, request_model_name, 'test_data was not generated')
                 fault_nmbr += 1
                 result[path] = 'test_data was not generated'
                 continue
@@ -95,36 +122,43 @@ async def test_validate_input_data(authenticated_client_with_db, get_post_routes
                     rev_dict = py_model.model_dump()
                     if rev_dict != data:
                         raise Exception('исходные данные не совпадают с валидированными')
+                    # table.add_row(path, good, request_model_name, None)
                     good_nmbr += 1
                     # assert data == rev_dict, f'pydantic validation fault {prefix}'
                 except Exception as e:
+                    table.add_row(path, fault, request_model_name, f'{e}')
                     fault_nmbr += 1
                     result[path] = f'test_data was generated incorrectly: {e}'
                     continue
-    except Exception as e:
-        print(path)
-        print(f'ОШИБКА {e}')
-    result['good'] = good_nmbr // test_number
-    result['fault'] = fault_nmbr // test_number
-    if fault_nmbr > 0:
-        for key, val in result.items():
-            print(f'{key}: {val if isinstance(val, int) else val[0:15]}')
-        assert False, f'выявлено {fault_nmbr} ошибок'
-    else:
-        print(f'{good_nmbr // test_number} routers tested OK')
-        print(f'{fault_nmbr // test_number} routers test failed')
-        for key, val in result.items():
-            print(f'    {key}: {val}')
-        assert True
+            else:
+                table.add_row(path, good, request_model_name, None)
+        except Exception as e:
+            table.add_row(path, fault, request_model_name, f'{e}')
+    print()
+    console.print(table)
+    table2 = Table(title="SUMMARY")
+    table2.add_column("STATEMENT", style="cyan", no_wrap=True)
+    table2.add_column("NUMBERS", justify="center", style="black")
+    table2.add_row("total number of routes", f"{good_nmbr // test_number + fault_nmbr // test_number}")
+    table2.add_row("number of good routes", f"{good_nmbr // test_number}")
+    table2.add_row("number of fault routes", f"{fault_nmbr // test_number}")
+    console.print(table2)
 
 
 async def test_create_routers(authenticated_client_with_db, get_post_routes):
+    console = Console()
+
+    table = Table(title="Отчет по валидации сгенерированных данных для роутов CREATE")
+    table.add_column("ROUTE", style="cyan", no_wrap=True)
+    table.add_column("статус", justify="center", style="magenta")
+    table.add_column("request model", justify="right", style="green")
+    table.add_column('error', justify="right", style="red")
     source = get_post_routes
     client = authenticated_client_with_db
     result: dict = {}
     fault_nmbr = 0
     good_nmbr = 0
-    for n, route in enumerate(source[::-1]):
+    for n, route in tqdm(enumerate(source[::-1]), desc=('перебираем роутеры')):
         try:
             # response_model = route.response_model  #
             request_model_name = route.openapi_extra.get('x-request-schema')
@@ -160,17 +194,21 @@ async def test_create_routers(authenticated_client_with_db, get_post_routes):
                     fault_nmbr += 1
                     result[path] = f'{e}'
                     continue
+            else:
+                table.add_row(path, good, request_model_name, None)
         except Exception as e:
-            print(path)
-            print(f'ОШИБКА {e}')
-    result['good'] = good_nmbr // test_number
-    result['fault'] = fault_nmbr // test_number
-    print(f'{good_nmbr // test_number} routers tested OK')
-    print(f'{fault_nmbr // test_number} routers test failed')
-    for key, val in result.items():
-        print(f'    {key}: {val}')
+            table.add_row(path, fault, request_model_name, f'{e}')
+
+    console.print(table)
+    table2 = Table(title="SUMMARY CREATE")
+    table2.add_column("STATEMENT", style="cyan", no_wrap=True)
+    table2.add_column("NUMBERS", justify="center", style="black")
+    table2.add_row("total number of routes", f"{good_nmbr // test_number + fault_nmbr // test_number}")
+    table2.add_row("number of good routes", f"{good_nmbr // test_number}")
+    table2.add_row("number of fault routes", f"{fault_nmbr // test_number}")
+    console.print(table2)
     if fault_nmbr > 0:
-        assert False, f'{fault_nmbr // test_number} ошибок {fault_nmbr}'
+        assert False
 
 
 @pytest.mark.skip

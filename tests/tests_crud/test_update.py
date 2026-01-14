@@ -8,11 +8,24 @@ import pytest
 from app.core.utils.common_utils import jprint
 from tests.data_factory.fake_generator import generate_test_data
 from tests.conftest import get_model_by_name
+from rich.console import Console
+from rich.table import Table
 
 pytestmark = pytest.mark.asyncio
 
+good = "✅"
+fault = "❌"
+
 
 async def test_patch_routers(authenticated_client_with_db, get_patch_routes):
+    console = Console()
+
+    table = Table(title="Отчет по тестированию роутов DELETE")
+
+    table.add_column("ROUTE", style="cyan", no_wrap=True)
+    table.add_column("статус", justify="center", style="magenta")
+    table.add_column('error', justify="left", style="red")
+
     source = get_patch_routes
     client = authenticated_client_with_db
     result: dict = {}
