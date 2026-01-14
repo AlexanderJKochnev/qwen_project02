@@ -1,9 +1,8 @@
-# tests/test_delete.py
+# tests/tests_crud/test_delete.py
 """
-    тестируем все методы POST и DELETE ()
+    тестируем все методы GET и DELETE ()
     новые методы добавляются автоматически
-    ПОЧЕМУ ПРИ ТЕСТИРОВАНИИ УДАЛЯЮТСЯ ЗАПИСИ ИЗ ПОДЧИНЕННЫХ ТАБЛИЦ?
-    ПРИ УДАЛЕНИИ ИЗ CATEGORY - УДАЛЯЮТСЯ ЗАВИСИМЫЕ ЗАПИСИ ИЗ SUBCATEGORY?
+    mongodb relation routes aare avoided due to scope function of mongodb client. see tests for mongodb only
 """
 
 import pytest
@@ -38,7 +37,7 @@ async def test_delete_routers(authenticated_client_with_db, get_del_routes):
                 # вынести в отдельнй тест так как mongodb session закрывается после каждого теста
                 get_path = '/mongodb/imageslist'
             else:
-                get_path = f'{path.replace('/delete', '').replace('{id}', '')}all'
+                get_path = f"{path.replace('/delete', '').replace('{id}', '')}all"
 
             response = await client.get(get_path)
             if response.status_code in [200, 201]:
@@ -50,12 +49,8 @@ async def test_delete_routers(authenticated_client_with_db, get_del_routes):
                     ids = [val.get('id') for val in result]
                     # print(f'{get_path}...{ids=}')
                 for id in ids:   # перебор записей пока не найдется без зависимых
-                    if '/delete/sweetness' in route.path:
-                        table.add_row(route.path, fault, f'{route.path}')
-                        # print(f"==={route.path.replace('{id}', str(id))=}")
-                        # print(f"{route.path=}")
                     path = route.path.replace('{id}', f'{id}')
-                           # .replace('{file_id}', f'{id}'))
+                    # .replace('{file_id}', f'{id}'))
                     try:
                         response = await client.delete(path)
                         if response.status_code == 500:

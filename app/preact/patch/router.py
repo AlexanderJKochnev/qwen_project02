@@ -29,7 +29,7 @@ class PatchRouter(PreactRouter):
         """
         генератор для создания роутов
         """
-        return ((f'/{key}',
+        return ((f'/{key}/' + '{id}',
                  get_pyschema(val, 'Update'),
                  get_pyschema(val, 'Read'),) for key, val in source.items())
         # return ((f'/{key}' + '/{id}', get_pyschema(val, 'Update')) for key, val in source.items())
@@ -38,9 +38,7 @@ class PatchRouter(PreactRouter):
                        session: AsyncSession = Depends(get_db)):
         current_path = request.url.path
         _, tmp = self.__path_decoder__(current_path, self.tier)
-        print(f'{current_path=}========{tmp=}')
         model = self.source.get(tmp)
-        print(f'========{model=}')
         route = request.scope["route"]
         schema = route.response_model
         repo = self.get_repo(model)

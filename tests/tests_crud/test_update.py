@@ -20,7 +20,7 @@ fault = "❌"
 async def test_patch_routers(authenticated_client_with_db, get_patch_routes):
     console = Console()
 
-    table = Table(title="Отчет по тестированию роутов DELETE")
+    table = Table(title="Отчет по тестированию роутов UPDATE")
 
     table.add_column("ROUTE", style="cyan", no_wrap=True)
     table.add_column("статус", justify="center", style="magenta")
@@ -28,53 +28,50 @@ async def test_patch_routers(authenticated_client_with_db, get_patch_routes):
 
     source = get_patch_routes
     client = authenticated_client_with_db
-    result: dict = {}
+    # result: dict = {}
     fault_nmbr = 0
     good_nmbr = 0
+    subj_fields = ('title', 'subtitle', 'name', 'description', 'image_id')
     for n, route in enumerate(source):
         try:
+            # получаем список всех записей
             path = route.path
-            request_model_name = route.openapi_extra.get('x-request-schema')
-            request_model = get_model_by_name(request_model_name)
-            id = 3    # модифицируем 3 запись
-            path = route.path
-            if '{id}' not in path:
-                if not path.endswith('/'):
-                    path = f'{path}/'
-                path = path + '{id}'
-            path = path.replace('{id}', str(id))
-            test_data = generate_test_data(
-                request_model, 2,
-                {'int_range': (1, 2), 'decimal_range': (0.5, 1), 'float_range': (0.1, 1.0),
-                 # 'field_overrides': {'name': 'Special Product'},
-                 'faker_seed': 42}
-            )
-            if not test_data:
-                fault_nmbr += 1
-                result[path] = 'test_data was not generated'
-                continue
-            data = next(test_data, None)
-            response = await client.patch(path, json=data)
-            # print(f"{sts=}", f"{response.status_code=}  {path=}", )
+            get_path = f"{path.replace('/patch', '').replace('{id}', '')}all"
+            response = await client.get(get_path)
             if response.status_code in [200, 201]:
-                good_nmbr += 1
-            else:
-                print(f'=========={response.status_code}, {path=}, {response.text}')
-                fault_nmbr += 1
-                result[path] = f'{response.status_code}'
+                result = response.json()
+                instance = result[-1]        # берем последнюю запись
+                id = instance.get('id')
+                path = route.path.replace('{id}', f'{id}')
+                if path.startswith('/items'):
+                    updated_dict = {'count': 100, 'price': 0.1}
+                elif path.startswith('/drink'):
+                    updated_dict = {'title': 'TEST', 'subtitle': 'TEST'}
+                else:
+                    updated_dict = {key: f'UPDATED {val}' for key, val in instance.items()
+                                    if any((key.startswith(subj) for subj in subj_fields))}
+                response = await client.patch(path, json=updated_dict)
+
+                if response.status_code in [200, 201]:
+                    good_nmbr += 1
+                    table.add_row(path, good, None)
+                else:
+                    fault_nmbr += 1
+                    table.add_row(path, fault, f'{response.status_code} {response.text}')
+                    # result[path] = f'{response.status_code}'
         except Exception as e:
-            # print(f'ОШИБКА {e}')
             fault_nmbr += 1
-            result[f'{path}'] = e
-    result['good'] = good_nmbr
-    result['fault'] = fault_nmbr
-    print(f'{good_nmbr} routers tested OK')
-    print(f'{fault_nmbr} routers test failed')
-    for key, val in result.items():
-        print(f'    {key}: {val}')
-        print('------------------')
+            table.add_row(path, fault, f'ERROR: {e}')
+    console.print(table)
+    table2 = Table(title="SUMMARY UPDATE")
+    table2.add_column("STATEMENT", style="cyan", no_wrap=True)
+    table2.add_column("NUMBERS", justify="center", style="black")
+    table2.add_row("total number of routes", f"{good_nmbr + fault_nmbr}")
+    table2.add_row("number of good routes", f"{good_nmbr}")
+    table2.add_row("number of fault routes", f"{fault_nmbr}")
+    console.print(table2)
     if fault_nmbr > 0:
-        assert False, f'{fault_nmbr} ошибок'
+        assert False
 
 
 @pytest.mark.skip
