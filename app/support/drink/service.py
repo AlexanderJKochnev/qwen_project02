@@ -168,6 +168,16 @@ class DrinkService(Service):
         data_dict = data.model_dump()
         varietals = data_dict.pop('varietals', None)
         foods = data_dict.pop('foods', None)
+        
+        # Filter out None values for required fields to prevent NOT NULL constraint violations
+        # These fields are required in the database but optional in the schema
+        filtered_data_dict = {}
+        for key, value in data_dict.items():
+            # Skip None values for required fields that have foreign key constraints
+            if key in ['subcategory_id', 'subregion_id'] and value is None:
+                continue
+            filtered_data_dict[key] = value
+        
         if varietals and isinstance(varietals, list):
             #  обновляем varietals
             #  заодно проверим правильность процентов (дополнить)
@@ -181,7 +191,7 @@ class DrinkService(Service):
             result = await DrinkFoodRepository.set_drink_foods(id, food_ids, session)
             if not result:
                 raise HTTPException(status_code=500, detail=f'не удалось обновить foods для drink {id=}')
-        result = await repository.patch(obj, data_dict, session)
+        result = await repository.patch(obj, filtered_data_dict, session)
         """ will be return:
             {"success": True, "data": obj}
             or
