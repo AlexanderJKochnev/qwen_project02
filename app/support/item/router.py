@@ -305,22 +305,12 @@ class ItemRouter(BaseRouter):
                                          **kwargs)
 
     async def search_all(self,
-                         search: Optional[str] = None,
-                         country_enum: Optional[str] = None,
-                         category_enum: Optional[str] = None,
-                         session: AsyncSession = Depends(get_db)) -> PaginatedResponse:
+                         search_str: Optional[str] = None,
+                         session: AsyncSession = Depends(get_db)):
         """
             Поиск по всем текстовым полям основной таблицы
             с постраничным выводом результата
         """
-        kwargs: str = {}
-        if search:
-            kwargs['search_str'] = search
-        if country_enum:
-            kwargs['country_enum'] = country_enum
-        if category_enum:
-            kwargs['category_enum'] = category_enum
-        result = await self.service.search(self.repo, self.model, session,
-                                           **kwargs)
+        result = await self.service.search_all(search_str, self.repo, self.model, session)
 
         return result

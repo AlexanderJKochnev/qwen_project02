@@ -269,6 +269,20 @@ class Service(metaclass=ServiceMeta):
         return result
 
     @classmethod
+    async def search_all(cls,
+                         search_str: str,
+                         repository: Type[Repository],
+                         model: ModelType,
+                         session: AsyncSession,
+                         **kwargs) -> List[ModelType]:
+        """
+            базовый поиск без пагинации
+        """
+        kwargs = {'search_str': search_str}
+        result = await repository.search_all(model, session, **kwargs)
+        return result
+
+    @classmethod
     async def get_list_view_page(cls, page: int, page_size: int,
                                  repository: Type[Repository], model: ModelType, session: AsyncSession, ) -> List[dict]:
         # Запрос с загрузкой связей и пагинацией

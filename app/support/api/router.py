@@ -51,8 +51,6 @@ class ApiRouter(ItemRouter):
         self.router.add_api_route("/search", self.search, methods=["GET"],
                                   response_model=self.paginated_response,
                                   openapi_extra={'x-request-schema': None})
-        # self.router.add_api_route("/search_all", self.search_all, methods=["GET"],
-        #                           response_model=List[self.read_schema])
         self.router.add_api_route("/search_all", self.search_all, methods=["GET"],
                                   response_model=self.nonpaginated_response,
                                   openapi_extra={'x-request-schema': None})

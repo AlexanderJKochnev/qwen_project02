@@ -284,10 +284,7 @@ class BaseRouter:
         """
             Поиск по всем текстовым полям основной таблицы БЕЗ пагинации
         """
-        kwargs: dict = {}
-        if search:
-            kwargs['search_str'] = search
-        return await self.service.search(self.repo, self.model, session, **kwargs)
+        return await self.service.search_all(search, self.repo, self.model, session)
 
 
 class LightRouter:
