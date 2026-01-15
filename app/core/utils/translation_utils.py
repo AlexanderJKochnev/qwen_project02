@@ -8,7 +8,7 @@ from app.core.config.project_config import settings
 async def translate_text(text: str, source_lang: str = "en",
                          target_lang: str = "ru",
                          mark: str = "ai",
-                         test: bool = True) -> Optional[str]:
+                         test: bool = False) -> Optional[str]:
     """
     Translate text using MyMemory translation service
 

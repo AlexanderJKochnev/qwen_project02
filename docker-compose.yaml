@@ -8,9 +8,13 @@ services:
         max-size: "10m"   # Максимальный размер файла лога: 10 МБ
         max-file: "3"     # Количество хранимых файлов ротации: 3
     # -----------------------------
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile.postgres
     restart: unless-stopped
     container_name: ${POSTGRES_HOST}
     image: postgres:alpine
+    # image: ghcr.io/alexanderjkochnev/my-postgres:alpine
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
