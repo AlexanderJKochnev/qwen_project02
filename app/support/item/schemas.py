@@ -8,6 +8,7 @@ from app.core.schemas.image_mixin import ImageUrlMixin
 from app.core.schemas.base import BaseModel, CreateResponse
 from app.support.drink.schemas import (DrinkCreateRelation, DrinkReadApi, DrinkReadFlat,
                                        DrinkReadRelation, DrinkCreate, LangMixin)
+from app.core.config.project_config import settings
 
 
 class CustomReadFlatSchema:
@@ -51,17 +52,21 @@ class CustomReadFlatSchema:
     @computed_field
     @property
     def en(self) -> Dict[str, Any]:
-        return self._lang_('en')
+        return self._lang_(settings.DEFAULT_LANG)
 
     @computed_field
     @property
     def ru(self) -> Dict[str, Any]:
-        return self._lang_('ru')
+        if 'ru' in settings.LANGUAGES and settings.DEFAULT_LANG != 'ru':
+            return self._lang_('ru')
+        return self._lang_(settings.DEFAULT_LANG)
 
     @computed_field
     @property
     def fr(self) -> Dict[str, Any]:
-        return self._lang_('fr')
+        if 'fr' in settings.LANGUAGES and settings.DEFAULT_LANG != 'fr':
+            return self._lang_('fr')
+        return self._lang_(settings.DEFAULT_LANG)
 
 
 class CustomReadSchema:

@@ -13,6 +13,7 @@ from app.support.subcategory.schemas import SubcategoryCreateRelation, Subcatego
 from app.support.subregion.schemas import SubregionCreateRelation, SubregionRead, SubregionReadApiSchema
 from app.support.sweetness.schemas import SweetnessCreateRelation, SweetnessRead
 from app.support.varietal.schemas import VarietalRead
+from app.core.config.project_config import settings
 
 
 class LangMixin:
@@ -289,9 +290,12 @@ class CustomReadApiSchema(LangMixinExclude):
     def __parser__(self, lang_suffix: str) -> Dict[str, Any]:
         """Парсер для преобразования полей в словарь по языкам"""
 
-        # Маппинг суффиксов на названия полей
-        lang_map = {"": "en", "_ru": "ru", "_fr": "fr"}
-        current_lang = lang_map.get(lang_suffix, "en")
+        # Динамически создаем маппинг суффиксов на названия языков
+        lang_map = {"": settings.DEFAULT_LANG}
+        for lang in settings.LANGUAGES:
+            if lang != settings.DEFAULT_LANG:
+                lang_map[f"_{lang}"] = lang
+        current_lang = lang_map.get(lang_suffix, settings.DEFAULT_LANG)
 
         result = {}
 
@@ -347,10 +351,10 @@ class CustomReadApiSchema(LangMixinExclude):
 
         # Общие поля (одинаковые для всех языков)
         if self.alc is not None:
-            result["alc"] = f"{self.alc}%" if current_lang == "en" else f"{self.alc}%"
+            result["alc"] = f"{self.alc}%" if current_lang == settings.DEFAULT_LANG else f"{self.alc}%"
 
         if self.sugar is not None:
-            result["sugar"] = f"{self.sugar}%" if current_lang == "en" else f"{self.sugar}%"
+            result["sugar"] = f"{self.sugar}%" if current_lang == settings.DEFAULT_LANG else f"{self.sugar}%"
 
         result["age"] = self.age
 
@@ -360,20 +364,24 @@ class CustomReadApiSchema(LangMixinExclude):
     @computed_field
     @property
     def en(self) -> Dict[str, Any]:
-        """Английская версия"""
+        """Default language version"""
         return self.__parser__("")
 
     @computed_field
     @property
     def ru(self) -> Dict[str, Any]:
-        """Русская версия"""
-        return self.__parser__("_ru")
+        """Russian language version"""
+        if 'ru' in settings.LANGUAGES and settings.DEFAULT_LANG != 'ru':
+            return self.__parser__("_ru")
+        return self.__parser__("")
 
     @computed_field
     @property
     def fr(self) -> Dict[str, Any]:
-        """Французская версия"""
-        return self.__parser__("_fr")
+        """French language version"""
+        if 'fr' in settings.LANGUAGES and settings.DEFAULT_LANG != 'fr':
+            return self.__parser__("_fr")
+        return self.__parser__("")
 
 
 class DrinkReadApi(PkSchema, CustomReadApiSchema):
@@ -474,12 +482,16 @@ class CustomReadFlatSchema(LangMixinExclude):
     @computed_field
     @property
     def ru(self) -> Dict[str, Any]:
-        return self._lang_('_ru')
+        if 'ru' in settings.LANGUAGES and settings.DEFAULT_LANG != 'ru':
+            return self._lang_('_ru')
+        return self._lang_('')
 
     @computed_field
     @property
     def fr(self) -> Dict[str, Any]:
-        return self._lang_('_fr')
+        if 'fr' in settings.LANGUAGES and settings.DEFAULT_LANG != 'fr':
+            return self._lang_('_fr')
+        return self._lang_('')
 
 
 class DrinkReadFlat(BaseModel, CustomReadFlatSchema):
