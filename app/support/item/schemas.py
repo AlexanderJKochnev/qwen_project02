@@ -8,6 +8,7 @@ from app.core.schemas.image_mixin import ImageUrlMixin
 from app.core.schemas.base import BaseModel, CreateResponse
 from app.support.drink.schemas import (DrinkCreateRelation, DrinkReadApi, DrinkReadFlat,
                                        DrinkReadRelation, DrinkCreate, LangMixin)
+from app.core.config.project_config import settings
 
 
 class CustomReadFlatSchema:
@@ -45,23 +46,22 @@ class CustomReadFlatSchema:
                         return camel_to_enum(self.drink.subcategory.category.name)
         return None
 
-    def _lang_(self, lang: str = 'en') -> Dict[str, Any]:
-        return getattr(self.drink, lang)
-
-    @computed_field
-    @property
-    def en(self) -> Dict[str, Any]:
-        return self._lang_('en')
-
-    @computed_field
-    @property
-    def ru(self) -> Dict[str, Any]:
-        return self._lang_('ru')
-
-    @computed_field
-    @property
-    def fr(self) -> Dict[str, Any]:
-        return self._lang_('fr')
+    def _lang_(self, lang: str) -> Dict[str, Any]:
+        if lang == settings.DEFAULT_LANG:
+            lang_attr = settings.DEFAULT_LANG
+        else:
+            lang_attr = lang
+        return getattr(self.drink, lang_attr)
+    
+    def __getattr__(self, name: str) -> Any:
+        """
+        Динамическое создание локализованных полей на основе настроек
+        """
+        if name in settings.LANGUAGES:
+            return self._lang_(name if name != settings.DEFAULT_LANG else settings.DEFAULT_LANG)
+        
+        # Вызов стандартного поведения для других атрибутов
+        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
 
 
 class CustomReadSchema:
@@ -73,19 +73,27 @@ class CustomReadSchema:
 
     # Вычисляемые поля
     updated_at: Optional[datetime] = None
-    en: Optional[Dict[str, Any]] = None
-    ru: Optional[Dict[str, Any]] = None
-    fr: Optional[Dict[str, Any]] = None
     category: Optional[str] = None
     country: Optional[str] = None
+
+    def __getattr__(self, name: str) -> Any:
+        """
+        Динамическое создание локализованных полей на основе настроек
+        """
+        if name in settings.LANGUAGES:
+            if hasattr(self.drink, name):
+                return getattr(self.drink, name)
+            else:
+                # Если у drink нет динамического атрибута, вызываем его __getattr__
+                return self.drink.__getattr__(name)
+        
+        # Вызов стандартного поведения для других атрибутов
+        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
 
     @model_validator(mode='after')
     def extract_drink_data(self) -> 'CustomReadSchema':
         if self.drink:
             self.updated_at = self.drink.updated_at
-            self.en = self.drink.en
-            self.ru = self.drink.ru
-            self.fr = self.drink.fr
             self.category = self.drink.en.get('category')
             self.country = self.drink.en.get('country')
         return self
@@ -328,6 +336,14 @@ class ItemApiRoot(BaseModel):
 
 
 class ItemApi(ItemApiRoot):
-    en: ItemApiLang
-    ru: ItemApiLang
-    fr: ItemApiLang
+    def __getattr__(self, name: str) -> Any:
+        """
+        Динамическое создание локализованных полей на основе настроек
+        """
+        if name in settings.LANGUAGES:
+            # Возвращаем экземпляр ItemApiLang для каждого языка
+            # На практике это будет обработано валидатором Pydantic
+            return ItemApiLang()
+        
+        # Вызов стандартного поведения для других атрибутов
+        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")

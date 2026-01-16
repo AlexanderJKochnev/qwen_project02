@@ -1,44 +1,25 @@
+```gitignore
+# Python cache
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
 
-# Coverage
-.coverage
-.coverage.*
-htmlcov/
-.coverage.xml
-.pytest_cache/
-
-# Environment
-# .env
-# .env.local
-# .env.*
+# Local environment
 .venv/
 venv/
-ENV/
-env.bak/
-venv.bak/
+.env
+.env.local
+*.env.*
+
+# Logs
+*.log
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
 
 # IDE
 .vscode/
@@ -51,9 +32,9 @@ venv.bak/
 .DS_Store
 Thumbs.db
 
-TODO.md
-migration_volume
-mongodb_data
-pg_data
-pg_dump
-upload_volume
+# Build and distribution
+dist/
+build/
+target/
+*.egg-info/
+```
