@@ -34,11 +34,3 @@ class DrinkFoodLinkCreate(BaseModel):
 
 class DrinkFoodLinkUpdate(BaseModel):
     food_ids: List[int]
-
-
-class DrinkDetailResponse(BaseModel):
-    """ not used """
-    id: int
-    name: str
-    # ... другие поля ...
-    foods: List[str]  # список __str__() значений

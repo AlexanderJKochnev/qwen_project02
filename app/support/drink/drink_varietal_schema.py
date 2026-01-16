@@ -59,8 +59,9 @@ class DrinkVarietalLinkUpdate(BaseModel):
     varietal_ids: List[int]
 
 
+"""
 class DrinkDetailResponse(BaseModel):
-    """ not used """
+    # not used
     id: int
     name: str
     # ... другие поля ...
@@ -68,3 +69,4 @@ class DrinkDetailResponse(BaseModel):
 
     class Config:
         from_attributes = True
+"""

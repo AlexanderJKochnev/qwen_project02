@@ -16,7 +16,7 @@ from app.support.varietal.schemas import VarietalRead
 
 
 class LangMixin:
-    title: Optional[str] = None
+    # title: Optional[str] = None
     title_ru: Optional[str] = None
     title_fr: Optional[str] = None
 
@@ -63,6 +63,7 @@ class LangMixinExclude:
 
 
 class CustomUpdSchema(LangMixin):
+    title: Optional[str] = None
     subcategory_id: Optional[int] = None
     sweetness_id: Optional[int] = None
     subregion_id: Optional[int] = None
@@ -92,6 +93,7 @@ class CustomCreateDrinkItem(LangMixin):
     """
          для  схемы ItemDrinkCreate
     """
+    title: str
     subcategory_id: Optional[int] = Field(exclude=True)
     sweetness_id: Optional[int] = Field(exclude=True)
     subregion_id: Optional[int] = Field(exclude=True)
@@ -136,6 +138,7 @@ class CustomReadRelation(LangMixin):
 
 
 class CustomReadSchema(LangMixin):
+    title: Optional[str] = None
     subcategory: SubcategoryRead
     sweetness: Optional[SweetnessRead] = None
     subregion: Optional[SubregionRead] = None
