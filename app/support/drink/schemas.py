@@ -361,27 +361,16 @@ class CustomReadApiSchema(LangMixinExclude):
         # Убираем None значения
         return {k: v for k, v in result.items() if v is not None}
 
-    @computed_field
-    @property
-    def en(self) -> Dict[str, Any]:
-        """Default language version"""
-        return self.__parser__("")
-
-    @computed_field
-    @property
-    def ru(self) -> Dict[str, Any]:
-        """Russian language version"""
-        if 'ru' in settings.LANGUAGES and settings.DEFAULT_LANG != 'ru':
-            return self.__parser__("_ru")
-        return self.__parser__("")
-
-    @computed_field
-    @property
-    def fr(self) -> Dict[str, Any]:
-        """French language version"""
-        if 'fr' in settings.LANGUAGES and settings.DEFAULT_LANG != 'fr':
-            return self.__parser__("_fr")
-        return self.__parser__("")
+    def __getattr__(self, name: str) -> Any:
+        """
+        Динамическое создание локализованных полей на основе настроек
+        """
+        if name in settings.LANGUAGES:
+            lang_suffix = "" if name == settings.DEFAULT_LANG else f"_{name}"
+            return self.__parser__(lang_suffix)
+        
+        # Вызов стандартного поведения для других атрибутов
+        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
 
 
 class DrinkReadApi(PkSchema, CustomReadApiSchema):
@@ -402,15 +391,10 @@ class CustomReadFlatSchema(LangMixinExclude):
 
     def _get_base_field_names(self) -> set[str]:
         """
-        Автоматически определяет базовые языковые поля по наличию полей с суффиксом '_ru'.
-        Например: если есть 'title_ru' → базовое поле 'title'.
+        Возвращает базовые языковые поля, которые могут иметь суффиксы
         """
-        field_names = self.model_fields.keys()
-        base_fields = set()
-        for name in field_names:
-            if name.endswith('_ru'):
-                base_name = name[:-3]  # убираем '_ru'
-                base_fields.add(base_name)
+        # Список базовых полей, которые могут иметь локализованные версии
+        base_fields = {'title', 'subtitle', 'description', 'recommendation', 'madeof'}
         return base_fields
 
     def __get_field_value__(self, field_name: str, lang_suffix: str) -> Any:
@@ -474,24 +458,41 @@ class CustomReadFlatSchema(LangMixinExclude):
                     result[v1] = tmp
         return result
 
-    @computed_field
-    @property
-    def en(self) -> Dict[str, Any]:
-        return self._lang_('')
+    def __getattr__(self, name: str) -> Any:
+        """
+        Динамическое создание локализованных полей на основе настроек
+        """
+        if name in settings.LANGUAGES:
+            lang_suffix = "" if name == settings.DEFAULT_LANG else f"_{name}"
+            return self._lang_(lang_suffix)
+        
+        # Вызов стандартного поведения для других атрибутов
+        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
 
-    @computed_field
-    @property
-    def ru(self) -> Dict[str, Any]:
-        if 'ru' in settings.LANGUAGES and settings.DEFAULT_LANG != 'ru':
-            return self._lang_('_ru')
-        return self._lang_('')
-
-    @computed_field
-    @property
-    def fr(self) -> Dict[str, Any]:
-        if 'fr' in settings.LANGUAGES and settings.DEFAULT_LANG != 'fr':
-            return self._lang_('_fr')
-        return self._lang_('')
+    def _lang_(self, lang_suffix: str) -> Dict[str, Any]:
+        result: dict = {}
+        # добавляем поля из языковой модели
+        for field in self._get_base_field_names():
+            fname = f'{field}{lang_suffix}'
+            res = getattr(self, fname, None) or getattr(self, field, None)
+            if res:
+                result[field] = res
+        if self.alc:
+            result['alc'] = f'{self.alc}%'
+        if self.sugar:
+            result['sugar'] = f'{self.sugar}%'
+        if self.age:
+            result['age'] = f'{self.age}%'
+        many = ((self.food_associations, 'pairing'),
+                (self.varietal_associations, 'varietal'))
+        for key, v1 in many:
+            if key:
+                tmp = [getattr(v, f'name{lang_suffix}') or getattr(v, 'name') for v in key]
+                if tmp:
+                    # если нужна строка - use tmp_str instead of tmp
+                    # tmp_str = ', '.join(tmp)
+                    result[v1] = tmp
+        return result
 
 
 class DrinkReadFlat(BaseModel, CustomReadFlatSchema):
