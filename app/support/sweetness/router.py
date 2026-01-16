@@ -13,7 +13,7 @@ class SweetnessRouter(BaseRouter):
     def __init__(self):
         super().__init__(
             model=Sweetness,
-            prefix="/sweetnesses",
+            prefix="/sweetness",
         )
 
     async def create(self, data: SweetnessCreate,

@@ -62,7 +62,7 @@ export const HandbookTypeList = () => {
       'subcategories': 'Subcategories',
       'regions': 'Regions',
       'subregions': 'Subregions',
-      'sweetness': 'Sweetnesses',
+      'sweetness': 'Sweetness',
       'foods': 'Foods',
       'varietals': 'Varietals',
       'superfoods': 'Superfoods',
