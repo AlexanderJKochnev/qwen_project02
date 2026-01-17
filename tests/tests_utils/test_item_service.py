@@ -275,3 +275,16 @@ def test_get_api_view():
     # pprint(input_data, indent_guides=True, expand_all=False)
     result = service.__api_view__(input_data)
     pprint(result, indent_guides=True, expand_all=True)
+
+
+def test_item_read_vs_api():
+    """
+    сравнение схем ItemRead ItemApi
+    """
+    from deepdiff import DeepDiff
+    from app.support.item.schemas import ItemApi, ItemRead
+    from app.core.utils.pydantic_utils import get_field_name
+    api = get_field_name(ItemApi)
+    rea = get_field_name(ItemRead)
+    diff = DeepDiff(api, rea, ignore_order=True)
+    assert diff == {}

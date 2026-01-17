@@ -28,6 +28,21 @@ class ItemRepository(Repository):
     model = Item
 
     @classmethod
+    def get_query3(cls):
+        query = select(Item).options(
+            selectinload(Item.drink).options(
+                selectinload(Drink.subregion).options(
+                    selectinload(Subregion.region).options(
+                        selectinload(Region.country)
+                    )
+                ), selectinload(Drink.subcategory).selectinload(Subcategory.category),
+                selectinload(Drink.sweetness), selectinload(Drink.food_associations).joinedload(DrinkFood.food),
+                selectinload(Drink.varietal_associations).joinedload(DrinkVarietal.varietal)
+            )
+        )
+        return query
+
+    @classmethod
     def get_query2(csl, model: ModelType):
         """ Добавляем загрузку связи с relationships
             Обратить внимание! для последовательной загрузки использовать точку.

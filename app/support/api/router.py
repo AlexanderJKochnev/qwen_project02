@@ -1,6 +1,7 @@
 # app/support/api/router.py
 import io
 from fastapi import HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.responses import StreamingResponse
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -11,9 +12,12 @@ from app.core.utils.common_utils import back_to_the_future
 from app.core.config.project_config import settings
 from app.core.schemas.base import PaginatedResponse
 from app.mongodb import router as mongorouter
+from app.core.config.database.db_async import get_db
 from app.mongodb.models import FileListResponse
 from app.mongodb.service import ImageService
 from app.support.item.router import ItemRouter
+from app.support.item.schemas import ItemApi
+from app.support.item.service import ItemService
 
 
 @dataclass
@@ -60,8 +64,8 @@ class ApiRouter(ItemRouter):
         self.router.add_api_route("/mongo_all", self.get_images_list_after_date, methods=["GET"],
                                   response_model=dict,
                                   openapi_extra={'x-request-schema': None})
-        self.router.add_api_route("/{id}", self.get_one, methods=["GET"],
-                                  response_model=self.read_schema,
+        self.router.add_api_route("/{id}", self.get_api, methods=["GET"],
+                                  response_model=ItemApi,
                                   openapi_extra={'x-request-schema': None})
         self.router.add_api_route("/mongo/{id}", self.download_image, methods=["GET"],
                                   openapi_extra={'x-request-schema': None})
@@ -124,3 +128,11 @@ class ApiRouter(ItemRouter):
             io.BytesIO(image_data["content"]), media_type=image_data['content_type'],
             headers={"Content-Disposition": f"attachment; filename={image_data['filename']}"}
         )
+
+    async def get_api(self, id: int, session: AsyncSession = Depends(get_db)) -> ItemApi:
+        """
+             ItemApi
+        """
+        service = ItemService
+        result = await service.get_item_api_view(id, session)
+        return result

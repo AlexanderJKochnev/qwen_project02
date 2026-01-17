@@ -24,7 +24,7 @@ from app.support.item.repository import ItemRepository
 from app.support.item.schemas import (ItemCreate, ItemCreateRelation, ItemRead, ItemReadRelation,
                                       ItemCreatePreact, ItemUpdatePreact, ItemUpdate,
                                       ItemDetailNonLocalized, ItemDetailLocalized, ItemDetailForeignLocalized,
-                                      ItemDetailManyToManyLocalized, ItemListView, ItemApiRoot,
+                                      ItemDetailManyToManyLocalized, ItemListView,
                                       ItemApiLangNonLocalized, ItemApiLangLocalized, ItemApiLang, ItemApi)
 
 
@@ -567,7 +567,4 @@ class ItemService(Service):
         if not item:
             return None
         result = cls.__api_view__(item)
-        print('=============get_one==================')
-        jprint(result)
-        print('=============get_one==================')
         return result
