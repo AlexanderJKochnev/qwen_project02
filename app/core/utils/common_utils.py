@@ -4,7 +4,7 @@
 from datetime import datetime, timezone
 from fastapi import HTTPException
 from typing import Any, Dict, List, Optional, Set, TypeVar, Union
-import json
+from rich.pretty import pprint
 import re
 # from sqlalchemy.sql.sqltypes import String, Text, Boolean
 from sqlalchemy import Boolean, inspect, String, Text, Unicode, UnicodeText
@@ -509,9 +509,11 @@ def pop_nested(d: dict, path: str, default=None):
     return default
 
 
-def jprint(data: dict):
+def jprint(data: Union[dict, list, tuple],
+           expand_all: bool = False, indent_guides: bool = True):
     """ красивая печать словарей, списков """
-    print(json.dumps(data, indent=2, ensure_ascii=False))
+    # print(json.dumps(data, indent=2, ensure_ascii=False))
+    pprint(data, indent_guides=indent_guides, expand_all=expand_all)
 
 
 def back_to_the_future(after_date: datetime) -> datetime:

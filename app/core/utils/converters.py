@@ -612,7 +612,7 @@ def list_move(source: list, item: Any, pos: int = 0) -> list:
         перемещает элемент item со своей позиции на позицию pos (начиная с 0)
         при отсутствии item или pos > кол-ва элнингьла в списке возвращает исходный список
     """
-    result = source
+    result = source.copy()
     try:
         result.remove(item)
         result.insert(pos, item)
@@ -629,3 +629,12 @@ def lang_suffix_list(source: list) -> list:
     """
     default_lang = settings.DEFAULT_LANG
     return ['' if lang == default_lang else f'_{lang}' for lang in source]
+
+
+def lang_suffix_dict(source: list) -> Dict[str, tuple]:
+    """
+         комбинация lang_suffix_list и list_move
+         возвращает:
+         {'en': ('', ('en', 'ru', 'fr'), ),...}
+    """
+    return {key: (lang_suffix_list(list_move(source, key))) for key in source}

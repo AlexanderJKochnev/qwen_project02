@@ -37,10 +37,11 @@ class DrinkRouter(BaseRouter):
                                   openapi_extra={'x-request-schema': DrinkFoodLinkUpdate.__name__})
         self.router.add_api_route("/{id}/flat", self.get_one_flat,
                                   methods=['GET'], response_model=self.read_schema,
-                                  openapi_extra={'x-request-schema': None})
+                                  openapi_extra={'x-request-schema': None})  # удалить
         self.router.add_api_route("/{id}/api", self.get_one_api, methods=['GET'],
                                   response_model=self.read_api_schema,
-                                  openapi_extra={'x-request-schema': None})
+                                  openapi_extra={'x-request-schema': None})  # переделать или тоже удалить item api
+        # instead
 
     def get_drink_food_service(session: AsyncSession) -> DrinkFoodService:
         repo = DrinkFoodRepository(session)

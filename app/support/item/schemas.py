@@ -138,18 +138,6 @@ class CustomUpdSchema:
     image_id: Optional[str] = None
 
 
-class ItemRead(BaseModel, CustomReadFlatSchema, ImageUrlMixin):
-    pass
-
-
-class ItemReadRelation(BaseModel, CustomReadRelation, ImageUrlMixin):
-    pass
-
-
-class ItemReadPreact(ItemRead):
-    pass
-
-
 class ItemCreate(BaseModel, CustomCreateSchema, ImageUrlMixin):
     pass
 
@@ -310,18 +298,27 @@ class ItemDrinkPreactSchema(LangMixin, ImageUrlMixin, BaseModel):
     image_path: Optional[str] = None
 
 
-class ItemApiLang(ItemDetailLocalized, ItemDetailManyToManyLocalized):
-    region: Optional[str] = None  # region + subregion
+class ItemApiLangNonLocalized(BaseModel):
     alc: Optional[str] = None  # "12.5%"
     vol: Optional[str] = None  # "0.75 l"
+
+
+class ItemApiLangLocalized(ItemDetailLocalized):
+    region: Optional[str] = None  # Region. Subregion
+
+
+class ItemApiLang(ItemDetailManyToManyLocalized, ItemDetailLocalized, ItemApiLangNonLocalized):
+    pass
 
 
 class ItemApiRoot(BaseModel):
+    """
+      fields for root levele of api_items
+      SHALL be equal .env API_ROOT_FIELDS
+    """
     id: int
     country: str
     category: str
-    alc: Optional[str] = None  # "12.5%"
-    vol: Optional[str] = None  # "0.75 l"
     image_id: Optional[str] = None
     image_path: Optional[str] = None
     changed_at: datetime = Field(exclude=True)
@@ -331,3 +328,15 @@ class ItemApi(ItemApiRoot):
     en: ItemApiLang
     ru: ItemApiLang
     fr: ItemApiLang
+
+
+class ItemRead(BaseModel, CustomReadFlatSchema, ImageUrlMixin):
+    pass
+
+
+class ItemReadRelation(BaseModel, CustomReadRelation, ImageUrlMixin):
+    pass
+
+
+class ItemReadPreact(ItemRead):
+    pass

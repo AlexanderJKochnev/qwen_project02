@@ -11,8 +11,8 @@ from app.core.services.service import Service
 from app.core.config.project_config import settings
 from app.core.utils import localized_field_with_replacement
 from app.core.utils.pydantic_utils import get_field_name
-from app.core.utils.common_utils import flatten_dict_with_localized_fields, get_value, jprint  # noqa: F401
-from app.core.utils.converters import read_convert_json, list_move, lang_suffix_list
+from app.core.utils.common_utils import flatten_dict_with_localized_fields, camel_to_enum, jprint
+from app.core.utils.converters import read_convert_json, list_move, lang_suffix_list, lang_suffix_dict
 from app.core.utils.pydantic_utils import make_paginated_response
 from app.mongodb.service import ThumbnailImageService
 from app.support.drink.model import Drink
@@ -24,11 +24,124 @@ from app.support.item.repository import ItemRepository
 from app.support.item.schemas import (ItemCreate, ItemCreateRelation, ItemRead, ItemReadRelation,
                                       ItemCreatePreact, ItemUpdatePreact, ItemUpdate,
                                       ItemDetailNonLocalized, ItemDetailLocalized, ItemDetailForeignLocalized,
-                                      ItemDetailManyToManyLocalized, ItemListView)
+                                      ItemDetailManyToManyLocalized, ItemListView, ItemApiRoot,
+                                      ItemApiLangNonLocalized, ItemApiLangLocalized, ItemApiLang, ItemApi)
 
 
 class ItemService(Service):
     default = ['vol', 'drink_id']
+
+    @classmethod
+    def _level_up_(cls, lang_prefixes: list, item: dict) -> dict:
+        """
+            внутренний метод
+            перенос вложенных словарей на верхний уровень (drink -> item)
+        """
+        extra = [f'description{lang}' for lang in lang_prefixes]
+        if drink := item.pop('drink'):
+            drink.pop('id', None)
+            # вложенные в drink словари тоже на верхний уровень
+            for key in ('subcategory.category', 'subregion.region', 'subregion.region.country'):
+                tmp = drink
+                for k in key.split('.'):
+                    tmp = tmp.get(k)
+                for x in extra:
+                    tmp.pop(x, None)
+                drink[k] = tmp
+            item.update(drink)
+        return item
+
+    @classmethod
+    def __add_manytomany_fields__(cls, item: dict, lang_prefixes: list) -> dict:
+        """
+        добавляет foods и varietals в api и detail views
+        """
+        dict_lang: dict = {}
+        for field in get_field_name(ItemDetailManyToManyLocalized):
+            match field:
+                case 'pairing':
+                    if tmp := item.get('food_associations'):
+                        pairing = []
+                        for food_dict in tmp:
+                            if sf := food_dict.get('food'):
+                                if tf := localized_field_with_replacement(sf, 'name', lang_prefixes, 'food'):
+                                    pairing.append(tf.get('food'))
+                        if pairing:
+                            dict_lang.update({'pairing': pairing})
+                case 'varietal':
+                    if tmp := item.get('varietal_associations'):
+                        varietal = []
+                        for varietal_dict in tmp:
+                            if sf := varietal_dict.get('varietal'):
+                                if tf := localized_field_with_replacement(sf, 'name', lang_prefixes, 'varietal'):
+                                    xf = tf.get('varietal')
+                                    if percent := varietal_dict.get('percentage'):
+                                        xf = f'{xf} {percent:.0f} %'
+                                    varietal.append(xf)
+                        if varietal:
+                            dict_lang.update({'varietal': varietal})
+                case _:
+                    pass  # do nothing
+        return dict_lang
+
+    @classmethod
+    def __api_view__(cls, item: dict) -> dict:
+        """ логика метода get_api_view """
+        # задаем порядок замещения пустых полей
+        language: list = settings.LANGUAGES
+        # список языковых суффиксов
+        lang_prefixes: list = lang_suffix_list(language)
+        # словарь {'en': ['', '_ru': '_fr'],...}
+        # списки языков отсортированы в порядке очередности замены для каждого языка
+        lang_dict = lang_suffix_dict(language)
+        # перенос вложенных словарей на верхний уровень (drink -> root)
+        item = cls._level_up_(lang_prefixes, item)
+        item['changed_at'] = item.pop('updated_at')
+        result: dict = {}
+        # добавление корневых не локализованных полей
+        # country enum - только на англ enum
+        # category - только на англ enum
+        root_fields = settings.api_root_fields
+        # add root fields
+        for key in root_fields:
+            if val := item.get(key):
+                if key == 'category' and val == 'Wine':
+                    val = item.get('subcategory')
+                if isinstance(val, (float, Decimal)):
+                    val = f"{val:.03g}"
+                elif isinstance(val, dict):
+                    val = camel_to_enum(val.get('name'))
+                result[key] = val
+        # add localized fields:
+
+        for key, lang_suff in lang_dict.items():
+            dict_lang = {}
+            # add non-localized subfields to localized fields
+            for k in get_field_name(ItemApiLangNonLocalized):
+                if v := item.get(k):
+                    if isinstance(v, (float, Decimal)):
+                        v = f"{v:.03g}"
+                dict_lang[k] = v
+            # add localized subfields to localized fields
+            for k in get_field_name(ItemApiLangLocalized):
+                if k == 'region':   # вложенные сущности
+                    if subregion := item.get('subregion'):
+                        if region := subregion.get('region'):
+                            lf = localized_field_with_replacement(region, 'name', lang_suff, k)
+                            if lt := localized_field_with_replacement(subregion, 'name', lang_suff):
+                                lf['region'] = f"{lf['region']}. {lt['name']}"
+                else:
+                    lf = localized_field_with_replacement(item, k, lang_suff)
+                if lf:
+                    dict_lang.update(lf)
+            # add many-to-many fields
+            many_to_many = cls.__add_manytomany_fields__(item, lang_suff)
+            dict_lang.update(many_to_many)
+
+            validated_result = ItemApiLang.model_validate(dict_lang)
+            result[key] = validated_result.model_dump(exclude_none=True)
+        validated_result = ItemApi.model_validate(result)
+        return result
 
     @classmethod
     def _process_item_localization(cls, item: dict, lang: str, fields_to_localize: list = None):
@@ -73,7 +186,6 @@ class ItemService(Service):
         # задаем порядок замещения пустых полей
         language: list = list_move(settings.LANGUAGES, lang)
         lang_prefixes: list = lang_suffix_list(language)
-        # extra = [f'description{lang}' for lang in lang_prefixes]
         drink_dict = item.get('drink')
         for key in localized_fields:
             match key:
@@ -126,24 +238,13 @@ class ItemService(Service):
     async def get_detail_view(cls, lang: str, id: int, repository: ItemRepository, model: Item, session: AsyncSession):
         """Получение детального представления элемента с локализацией"""
         item_instance = await repository.get_detail_view(id, model, session)
+        item: dict = item_instance.to_dict()
+        if not item:    # если ничего нет
+            return None
         # задаем порядок замещения пустых полей
         language: list = list_move(settings.LANGUAGES, lang)
         lang_prefixes: list = lang_suffix_list(language)
-        extra = [f'description{lang}' for lang in lang_prefixes]
-        item: dict = item_instance.to_dict()
-        # перенос вложенных словарей на верхний уровень
-        if drink := item.pop('drink'):
-            drink.pop('id', None)
-            for key in ('subcategory.category', 'subregion.region', 'subregion.region.country'):
-                tmp = drink
-                for k in key.split('.'):
-                    tmp = tmp.get(k)
-                for x in extra:
-                    tmp.pop(x, None)
-                drink[k] = tmp
-            item.update(drink)
-        if not item:
-            return None
+        item = cls._level_up_(lang_prefixes, item)
         # список всех локализованных полей приложения
         result: dict = {}
         # добавление non-localized fields
@@ -162,6 +263,8 @@ class ItemService(Service):
                 if lf := localized_field_with_replacement(root, 'name', lang_prefixes, field):
                     result.update(lf)
         # добавление manytomany fields
+        many_to_many = cls.__add_manytomany_fields__(item, lang_prefixes)
+        """
         for field in get_field_name(ItemDetailManyToManyLocalized):
             match field:
                 case 'pairing':
@@ -187,7 +290,8 @@ class ItemService(Service):
                             result.update({'varietal': varietal})
                 case _:
                     pass
-                    # do nothing
+                    # do nothing"""
+        result.update(many_to_many)
         return result
 
     @classmethod
@@ -391,7 +495,7 @@ class ItemService(Service):
     async def get_by_id(
             cls, id: int, repository: Type[ItemRepository], model: Type[Item], session: AsyncSession
     ) -> Optional[ItemRead]:
-        """Получение записи по ID с автоматическим переводом недостающих локализованных полей"""
+        """Получение записи по ID"""
         result = await repository.get_by_id(id, model, session)
         return result
 
@@ -427,3 +531,43 @@ class ItemService(Service):
         drink_dict = tmp.model_dump(exclude_unset=True, exclude_none=True)
         item_dict.update(drink_dict)
         return item_dict
+
+    @classmethod
+    async def get_item_api_view(cls, id: int, session: AsyncSession):
+        """
+            Получение представления элемента с локализацией by lang
+            {
+              "image_id": "string",
+              "image_path": "string",
+              "id": 0,
+              "vol": 0,
+              "changed_at": "2026-01-16T19:17:33.245Z",
+              "country": "string",
+              "category": "string",
+              "en": {
+                "description": "string",
+                "title": "string",
+                "subtitle": "string",
+                "alc": "13.5%",
+                "pairing": [
+                  "string",
+                  "string"
+                ],
+                "varietal": [
+                  "Cabernet Sauvignon 85%",
+                  "Cabernet Franc 15%"
+                ]
+              },
+            }
+        """
+        repository = ItemRepository
+        model = Item
+        item_instance = await repository.get_detail_view(id, model, session)
+        item: dict = item_instance.to_dict()
+        if not item:
+            return None
+        result = cls.__api_view__(item)
+        print('=============get_one==================')
+        jprint(result)
+        print('=============get_one==================')
+        return result

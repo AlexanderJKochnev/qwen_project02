@@ -164,6 +164,7 @@ class Settings(BaseSettings):
     INTL_FLDS: str = 'vol, alc, count'
     CASTED_FLDS: str = 'vol: float, count: int, alc: float'
     FIRST_LEVEL_FLDS: str = 'vol, count, image_path, image_id'
+    API_ROOT_FIELDS: str = 'vol, count, image_path, image_id, uid, country, category'
     COMPLEX_FLDS: str = 'country, category, region, pairing, varietal'
     LANGUAGE_KEY: str = 'english: en, russian: ru'
     RE_DELIMITER: str = '.,;:'
@@ -214,6 +215,10 @@ class Settings(BaseSettings):
     @property
     def first_level_fields(self) -> list:
         return strtolist(self.FIRST_LEVEL_FLDS)
+
+    @property
+    def api_root_fields(self) -> list:
+        return strtolist(self.API_ROOT_FIELDS)
 
     @property
     def wine_category(self) -> list:

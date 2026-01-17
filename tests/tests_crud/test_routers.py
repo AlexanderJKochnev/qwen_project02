@@ -5,6 +5,8 @@
 import pytest
 from rich.console import Console
 from rich.table import Table
+from rich.progress import track
+
 
 pytestmark = pytest.mark.asyncio
 
@@ -34,7 +36,7 @@ def test_routers_no_request_model(get_all_routes):
     router_list = [route for route in get_all_routes
                    if not any((route.path.startswith(x) for x in router_exclude_list))]
 
-    for m, ke in enumerate(router_list):
+    for m, ke in enumerate(track(router_list)):
         try:
             _ = ke.openapi_extra.get('x-request-schema') if hasattr(ke, 'openapi_extra') else None
             # ke.openapi_extra.get('x-request-schema')
@@ -57,7 +59,7 @@ def test_routers(get_all_routes, get_get_routes, get_del_routes, get_post_routes
     router_exclude_list = ['/health', '/openapi', '/users', '/parser', '/rawdatas']
     router_list = [route for route in get_all_routes
                    if not any((route.path.startswith(x) for x in router_exclude_list))]
-    for m, ke in enumerate(router_list):
+    for m, ke in enumerate(track(router_list)):
         try:
             _ = ke.openapi_extra.get('x-request-schema')
             # print(f"{m}. {ke} {ke.openapi_extra.get('x-request-schema')}, {ke.response_model}")
@@ -71,7 +73,7 @@ def test_post_routers(get_post_routes):
     n = 0
     method = 'POST'
     print(f'{method=}')
-    for m, ke in enumerate(get_post_routes):
+    for m, ke in enumerate(track(get_post_routes)):
         try:
             _ = ke.openapi_extra.get('x-request-schema')
             # print(f"{m}. {ke} {ke.openapi_extra.get('x-request-schema')}")
@@ -85,7 +87,7 @@ def test_get_routers(get_get_routes):
     n = 0
     method = 'GET'
     print(f'{method=}')
-    for m, ke in enumerate(get_get_routes):
+    for m, ke in enumerate(track(get_get_routes)):
         try:
             _ = ke.openapi_extra.get('x-request-schema')
             # print(f"{m}. {ke} {ke.openapi_extra.get('x-request-schema')}")
@@ -99,7 +101,7 @@ def test_patch_routers(get_patch_routes):
     n = 0
     method = 'PATCH'
     print(f'{method=}')
-    for m, ke in enumerate(get_patch_routes):
+    for m, ke in enumerate(track(get_patch_routes)):
         try:
             _ = ke.openapi_extra.get('x-request-schema')
             # print(f"{m}. {ke} {ke.openapi_extra.get('x-request-schema')}")
@@ -113,7 +115,7 @@ def test_delete_routers(get_del_routes):
     n = 0
     method = 'DELETE'
     print(f'======{method=}')
-    for m, ke in enumerate(get_del_routes):
+    for m, ke in enumerate(track(get_del_routes)):
         try:
             _ = ke.openapi_extra.get('x-request-schema')
             # print(f"{m}. {ke} {ke.openapi_extra.get('x-request-schema')}")
