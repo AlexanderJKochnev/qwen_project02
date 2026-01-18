@@ -1,6 +1,6 @@
 # app/support/api/router.py
 import io
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.responses import StreamingResponse
 from dataclasses import dataclass
@@ -18,6 +18,9 @@ from app.mongodb.service import ImageService
 from app.support.item.router import ItemRouter
 from app.support.item.schemas import ItemApi
 from app.support.item.service import ItemService
+from app.support.item.repository import ItemRepository
+
+delta = (datetime.now(timezone.utc) - relativedelta(years=2)).isoformat()
 
 
 @dataclass
@@ -46,12 +49,13 @@ class ApiRouter(ItemRouter):
     def setup_routes(self):
         # self.router.add_api_route("", self.get, methods=["GET"], response_model=self.paginated_response)
         self.router.add_api_route("", self.get, methods=["GET"],
-                                  response_model=PaginatedResponse[self.read_schema],
+                                  # response_model=PaginatedResponse[self.read_schema],
+                                  response_model=PaginatedResponse[ItemApi],
                                   openapi_extra={'x-request-schema': None})
         self.router.add_api_route("/all", self.get_all, methods=["GET"],
-                                  response_model=List[self.read_schema],
+                                  response_model=List[ItemApi],
+                                  # response_model=List[self.read_schema],
                                   openapi_extra={'x-request-schema': None})
-        # self.router.add_api_route("/all", self.get_all, methods=["GET"], response_model=self.nonpaginated_response)
         self.router.add_api_route("/search", self.search, methods=["GET"],
                                   response_model=self.paginated_response,
                                   openapi_extra={'x-request-schema': None})
@@ -136,3 +140,23 @@ class ApiRouter(ItemRouter):
         service = ItemService
         result = await service.get_item_api_view(id, session)
         return result
+
+    async def get_all(self, after_date: datetime = Query(
+        (datetime.now(timezone.utc) - relativedelta(years=2)).isoformat(),
+        description="Дата в формате ISO 8601 (например, 2024-01-01T00:00:00Z)"
+    ), session: AsyncSession = Depends(get_db)):
+        """
+            Получение всех записей одним списком после указанной даты.
+            По умолчанию задана дата - 2 года от сейчас
+            Очень тяжелый запрос
+        """
+        try:
+            after_date = back_to_the_future(after_date)
+            service = ItemService
+            repository = ItemRepository
+            result = await service.get_list_api_view(after_date, repository, self.model, session)
+            return result
+
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail=f"Internal server error. {e}")

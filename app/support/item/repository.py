@@ -28,7 +28,7 @@ class ItemRepository(Repository):
     model = Item
 
     @classmethod
-    def get_query3(cls):
+    def get_query(cls, model: ModelType):
         query = select(Item).options(
             selectinload(Item.drink).options(
                 selectinload(Drink.subregion).options(
@@ -44,9 +44,8 @@ class ItemRepository(Repository):
 
     @classmethod
     def get_query2(csl, model: ModelType):
-        """ Добавляем загрузку связи с relationships
-            Обратить внимание! для последовательной загрузки использовать точку.
-            параллельно запятая
+        """
+            delete after tests
         """
         return select(Item).options(selectinload(Item.drink).
                                     selectinload(Drink.subregion).
@@ -63,7 +62,8 @@ class ItemRepository(Repository):
                                     selectinload(Drink.varietal_associations).joinedload(DrinkVarietal.varietal))
 
     @classmethod
-    def get_query(cls, model: ModelType):
+    def get_query1(cls, model: ModelType):
+        """ delete after tests"""
         return select(model).options(
             selectinload(Item.drink).options(
                 selectinload(Drink.subregion).options(
@@ -79,16 +79,20 @@ class ItemRepository(Repository):
         )
 
     @classmethod
-    def get_query_for_list_view(cls):
-        """ get_query для запроса lit_view """
-        return selectinload(Item.drink).options(
-            selectinload(Drink.subregion).options(
-                selectinload(Subregion.region).options(
-                    selectinload(Region.country)
-                )
-            ),
-            selectinload(Drink.subcategory).selectinload(Subcategory.category),
-            selectinload(Drink.sweetness)
+    def get_query_for_list_view(cls, model: ModelType):
+        """
+            get_query для запроса list_view - без varietals & foods
+        """
+        return select(Item).options(
+            selectinload(Item.drink).options(
+                selectinload(Drink.subregion).options(
+                    selectinload(Subregion.region).options(
+                        selectinload(Region.country)
+                    )
+                ),
+                selectinload(Drink.subcategory).selectinload(Subcategory.category),
+                selectinload(Drink.sweetness)
+            )
         )
 
     @classmethod
@@ -173,18 +177,7 @@ class ItemRepository(Repository):
     @classmethod
     async def get_list_view(cls, model: ModelType, session: AsyncSession):
         """Получение списка элементов с плоскими полями для ListView"""
-        query = select(Item).options(
-            selectinload(Item.drink).options(
-                selectinload(Drink.subregion).options(
-                    selectinload(Subregion.region).options(
-                        selectinload(Region.country)
-                    )
-                ),
-                selectinload(Drink.subcategory).selectinload(Subcategory.category),
-                selectinload(Drink.sweetness)
-            )
-        ).order_by(Item.id.asc())
-
+        query = cls.get_query_for_list_view(Item).order_by(Item.id.asc())
         result = await session.execute(query)
         items = result.scalars().all()
         result = []
@@ -195,20 +188,7 @@ class ItemRepository(Repository):
     @classmethod
     async def get_detail_view(cls, id: int, model: ModelType, session: AsyncSession) -> Dict[str, Any]:
         """Получение детального представления элемента для DetailView"""
-        query = select(Item).options(
-            selectinload(Item.drink).options(
-                selectinload(Drink.subregion).options(
-                    selectinload(Subregion.region).options(
-                        selectinload(Region.country)
-                    )
-                ),
-                selectinload(Drink.subcategory).selectinload(Subcategory.category),
-                selectinload(Drink.sweetness),
-                selectinload(Drink.food_associations).joinedload(DrinkFood.food),
-                selectinload(Drink.varietal_associations).joinedload(DrinkVarietal.varietal)
-            )
-        ).where(Item.id == id)
-
+        query = cls.get_query(Item).where(Item.id == id)
         result = await session.execute(query)
         item = result.scalar_one_or_none()
 
@@ -219,19 +199,7 @@ class ItemRepository(Repository):
     @classmethod
     async def get_list_view_page(cls, skip: int, limit: int, model: ModelType, session: AsyncSession):
         """Получение списка элементов с плоскими полями для ListView с пагинацией"""
-        query = select(Item).options(
-            selectinload(Item.drink).options(
-                selectinload(Drink.subregion).options(
-                    selectinload(Subregion.region).options(
-                        selectinload(Region.country)
-                    )
-                ),
-                selectinload(Drink.subcategory).selectinload(Subcategory.category),
-                selectinload(Drink.sweetness)
-            )
-        )
-
-        query = query.order_by(Item.id.asc())
+        query = cls.get_query_for_list_view(Item).order_by(Item.id.asc())
         count_query = select(func.count()).select_from(Item)
         count_result = await session.execute(count_query)
         total = count_result.scalar()
@@ -288,17 +256,7 @@ class ItemRepository(Repository):
             return [], 0
 
         # Формируем запрос с JOIN на Drink
-        query = select(Item).options(
-            selectinload(Item.drink).options(
-                selectinload(Drink.subregion).options(
-                    selectinload(Subregion.region).options(
-                        selectinload(Region.country)
-                    )
-                ),
-                selectinload(Drink.subcategory).selectinload(Subcategory.category),
-                selectinload(Drink.sweetness)
-            )
-        ).join(Item.drink).where(search_condition)
+        query = cls.get_query(Item).join(Item.drink).where(search_condition)
         query = query.order_by(Item.id.asc())
         # Получаем общее количество записей
         count_query = select(func.count(Item.id)).join(Item.drink).where(search_condition)
@@ -352,17 +310,7 @@ class ItemRepository(Repository):
         total = count_result.scalar()
 
         # Now get the actual items with their related data
-        query = select(Item).options(
-            selectinload(Item.drink).options(
-                selectinload(Drink.subregion).options(
-                    selectinload(Subregion.region).options(
-                        selectinload(Region.country)
-                    )
-                ),
-                selectinload(Drink.subcategory).selectinload(Subcategory.category),
-                selectinload(Drink.sweetness)
-            )
-        ).join(Item.drink).where(Drink.id.in_(matching_drink_ids))
+        query = cls.get_query(Item).join(Item.drink).where(Drink.id.in_(matching_drink_ids))
 
         query = query.order_by(Item.id.asc())
 

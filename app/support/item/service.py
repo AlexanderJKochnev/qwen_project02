@@ -1,5 +1,6 @@
 # app.support.item.service.py
 from deepdiff import DeepDiff
+from datetime import datetime
 from functools import reduce
 from decimal import Decimal
 from typing import Type, Optional, Dict, Any
@@ -568,3 +569,27 @@ class ItemService(Service):
             return None
         result = cls.__api_view__(item)
         return result
+
+    @classmethod
+    async def get_list_api_view(cls, after_date: datetime, repository, model,
+                                session: AsyncSession,):
+        """ Получение списка элементов для api view """
+        items = await repository.get(after_date, model, session)
+        result = []
+        for item in items:
+            if item_dict := item.to_dict():
+                result.append(cls.__api_view__(item_dict))
+        return result
+
+    @classmethod
+    async def get_list_api_view_page(cls, ater_date: datetime, page: int, page_size: int,
+                                     repository: ItemRepository, model: Item, session: AsyncSession):
+        """Получение списка элементов для ListView с пагинацией и локализацией"""
+        skip = (page - 1) * page_size
+        items, total = await repository.get_all(ater_date, skip, page_size, model, session)
+        result = []
+        for item in items:
+            if item_dict := item.to_dict():
+                result.append(cls.__api_view__(item_dict))
+        return make_paginated_response(result, total, page, page_size)
+

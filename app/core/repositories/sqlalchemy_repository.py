@@ -225,7 +225,10 @@ class Repository(metaclass=RepositoryMeta):
     @classmethod
     async def get_all(cls, after_date: datetime, skip: int,
                       limit: int, model: ModelType, session: AsyncSession, ) -> tuple:
-        # Запрос с загрузкой связей и пагинацией
+        """
+            Запрос с загрузкой связей и пагинацией
+            return Tuple[List[instances], int]
+        """
         stmt = (cls.get_query(model).where(model.updated_at > after_date)
                 .order_by(model.id.asc()).offset(skip).limit(limit))
         total = await cls.get_count(after_date, model, session)
@@ -236,11 +239,13 @@ class Repository(metaclass=RepositoryMeta):
 
     @classmethod
     async def get(cls, after_date: datetime, model: ModelType, session: AsyncSession, ) -> list:
-        # Запрос с загрузкой связей NO PAGINATION
+        """
+            Запрос с загрузкой связей NO PAGINATION
+            return List[instance]
+        """
         stmt = cls.get_query(model).where(model.updated_at > after_date).order_by(model.id.asc())
         result = await session.execute(stmt)
         items = result.scalars().all()
-        # items = result.mappings().all()
         return items
 
     @classmethod
