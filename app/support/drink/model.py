@@ -72,13 +72,16 @@ class Drink(Base, BaseAt, Lang):
     # Связь через промежуточную модель NEW
     # 1. Связь через промежуточную таблицу
     food_associations: Mapped[List["DrinkFood"]] = relationship(
-        back_populates="drink", cascade="all, delete-orphan"
+        back_populates="drink",
+        cascade="all, delete-orphan",
+        lazy="selectin"
     )
 
     # 2. Прямая связь Many-to-Many
     foods: Mapped[List["Food"]] = relationship(
         secondary="drink_food_associations",
-        back_populates="drinks", lazy="selectin",
+        back_populates="drinks",
+        lazy="selectin",
         viewonly=True
         # Загрузит список объектов Food автоматически
     )
@@ -96,7 +99,11 @@ class Drink(Base, BaseAt, Lang):
                          overlaps="food_associations,drink")
     """
     varietal_associations = relationship(
-        "DrinkVarietal", back_populates="drink", cascade="all, delete-orphan", overlaps="varietals"
+        "DrinkVarietal",
+        back_populates="drink", 
+        cascade="all, delete-orphan",
+        # overlaps="varietals"
+        lazy="selectin"
     )
     varietals = relationship("Varietal",
                              secondary="drink_varietal_associations",

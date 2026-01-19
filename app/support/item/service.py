@@ -89,49 +89,30 @@ class ItemService(Service):
             'subcategory',
             'foods',
             'varietal_associations',
-            'varietals',
             'subregion',
             'sweetness',
-            'food_associations',
             'items',
             'category',
             'region',
             'country',
             'changed_at'
         """
-        if item.get('id') in [1,2,3]:
-            print('--------------------------------')
-            jprint(item.keys(), expand_all=True)
-            print('++++++++++++++++++++++++++++++++++')
         try:
             dict_lang: dict = {}
             for field in get_field_name(ItemDetailManyToManyLocalized):
-                varietal = []
-                pairing = []
-                """
-                print(f'{id}=====foods=======')
-                jprint(item.get('foods'))
-                jprint(item.get('food_associations'))
-                print(f'{id}=====varietals=======')
-                jprint(item.get('varietals'))
-                jprint(item.get('varietal_associations'))
-                """
                 match field:
                     case 'pairing':
-                        tmp = item.get('foods')  # 'food_associations')
+                        pairing: list = []
+                        tmp: list = item.get('foods')
                         if tmp and isinstance(tmp, (list, tuple)):
-                            # print('===food======')
-                            # jprint(tmp)
                             for food_dict in tmp:
-                                if sf := food_dict.get('food'):
-                                    if tf := localized_field_with_replacement(sf, 'name', lang_prefixes, 'food'):
-                                        pairing.append(tf.get('food'))
+                                if tf := localized_field_with_replacement(food_dict, 'name', lang_prefixes, 'food'):
+                                    pairing.append(tf.get('food'))
                         dict_lang.update({'pairing': pairing})
                     case 'varietal':
                         tmp = item.get('varietal_associations')
+                        varietal: list = []
                         if tmp and isinstance(tmp, (list, tuple)):
-                            # print('===varietal====')
-                            # jprint(tmp)
                             for varietal_dict in tmp:
                                 if sf := varietal_dict.get('varietal'):
                                     if tf := localized_field_with_replacement(sf, 'name', lang_prefixes, 'varietal'):

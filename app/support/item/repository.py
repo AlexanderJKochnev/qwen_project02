@@ -31,13 +31,35 @@ class ItemRepository(Repository):
     def get_query(cls, model: ModelType):
         query = select(Item).options(
             selectinload(Item.drink).options(
+                # Уровень 1: Drink -> ...
+                selectinload(Drink.subregion).selectinload(Subregion.region).selectinload(Region.country),
+                selectinload(Drink.subcategory).selectinload(Subcategory.category),
+                selectinload(Drink.sweetness),
+
+                # Работа с Food (загружаем и ассоциацию, и прямой список)
+                # selectinload(Drink.food_associations).selectinload(DrinkFood.food),
+                selectinload(Drink.foods),
+
+                # Работа с Varietals (загружаем и ассоциацию, и прямой список)
+                selectinload(Drink.varietal_associations).selectinload(DrinkVarietal.varietal),
+                # selectinload(Drink.varietals)
+            )
+        )
+        return query
+
+    @classmethod
+    def get_query0(cls, model: ModelType):
+        query = select(Item).options(
+            selectinload(Item.drink).options(
                 selectinload(Drink.subregion).options(
                     selectinload(Subregion.region).options(
                         selectinload(Region.country)
                     )
                 ), selectinload(Drink.subcategory).selectinload(Subcategory.category),
                 selectinload(Drink.sweetness), selectinload(Drink.food_associations).joinedload(DrinkFood.food),
-                selectinload(Drink.varietal_associations).joinedload(DrinkVarietal.varietal)
+                selectinload(Drink.varietal_associations).joinedload(DrinkVarietal.varietal),
+                selectinload(Drink.foods),
+                selectinload(Drink.varietals)
             )
         )
         return query
