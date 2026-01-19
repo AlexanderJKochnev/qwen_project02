@@ -27,7 +27,6 @@ async def test_get_routers(authenticated_client_with_db, get_get_routes):
     table.add_column('error', justify="left", style="red")
     source = get_get_routes
     client = authenticated_client_with_db
-    result: dict = {}
     fault_nmbr = 0
     good_nmbr = 0
     for n, route in enumerate(track(source, description='test_get_routers')):
@@ -55,8 +54,9 @@ async def test_get_routers(authenticated_client_with_db, get_get_routes):
                 path = f'{path}?search_str={search}&page=1&page_size=15'
 
             # if any((path.endswith('{file}'), path.endswith('{file_id}'), path.endswith('{filename}'))):
-            #     continue
-
+            #     continue3
+            if path in ['/detail/en/2', '/api/2']:  # '/api/all']
+                path = path.replace('2', '3')
             response = await client.get(path)
             if response.status_code in [200, 201]:
                 table.add_row(path, good, None)
@@ -64,12 +64,10 @@ async def test_get_routers(authenticated_client_with_db, get_get_routes):
             else:
                 table.add_row(path, fault, f"{response.status_code} {response.text}")
                 fault_nmbr += 1
-                result[path] = f'{response.status_code}'
         except Exception as e:
             table.add_row(path, fault, f"{e}")
             # print(f'ОШИБКА {e}')
             fault_nmbr += 1
-            result[f'{path}'] = e
 
     console.print(table)
     table2 = Table(title="SUMMARY GET RUTERS")

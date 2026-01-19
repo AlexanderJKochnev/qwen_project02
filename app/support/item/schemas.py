@@ -2,7 +2,7 @@
 
 from typing import Optional, Dict, Any, List, Tuple
 from datetime import datetime
-from pydantic import Field, model_validator, computed_field
+from pydantic import Field, model_validator, computed_field, field_serializer
 from app.core.utils.common_utils import camel_to_enum
 from app.core.schemas.image_mixin import ImageUrlMixin
 from app.core.schemas.base import BaseModel, CreateResponse
@@ -101,6 +101,7 @@ class CustomCreateSchema:
 
 
 class CustomReadRelation:
+    id: int
     drink: DrinkReadRelation
     vol: Optional[float] = None
     price: Optional[float] = None
@@ -261,26 +262,6 @@ class ItemDetailView(ItemDetailManyToManyLocalized, ItemDetailForeignLocalized,
 class ItemDrinkPreactSchema(LangMixin, ImageUrlMixin, BaseModel):
     # перечисленные ниже поля из модели Drink
     title: str
-    """
-    title_ru: Optional[str] = None
-    title_fr: Optional[str] = None
-
-    subtitle: Optional[str] = None
-    subtitle_ru: Optional[str] = None
-    subtitle_fr: Optional[str] = None
-
-    description: Optional[str] = None
-    description_ru: Optional[str] = None
-    description_fr: Optional[str] = None
-
-    recommendation: Optional[str] = None
-    recommendation_ru: Optional[str] = None
-    recommendation_fr: Optional[str] = None
-
-    madeof: Optional[str] = None
-    madeof_ru: Optional[str] = None
-    madeof_fr: Optional[str] = None
-    """
     subcategory_id: int
     sweetness_id: Optional[int] = None
     subregion_id: int
@@ -339,4 +320,47 @@ class ItemReadRelation(BaseModel, CustomReadRelation, ImageUrlMixin):
 
 
 class ItemReadPreact(ItemRead):
+    """
+        {
+          "title_ru": "string",
+          "title_fr": "string",
+          "subtitle": "string",
+          "subtitle_ru": "string",
+          "subtitle_fr": "string",
+          "description": "string",
+          "description_ru": "string",
+          "description_fr": "string",
+          "recommendation": "string",
+          "recommendation_ru": "string",
+          "recommendation_fr": "string",
+          "madeof": "string",
+          "madeof_ru": "string",
+          "madeof_fr": "string",
+          "title": "string",
+          "subcategory_id": 0,
+          "sweetness_id": 0,
+          "subregion_id": 0,
+          "alc": 0,
+          "sugar": 0,
+          "age": "string",
+          "image_id": "string",
+          "image_path": "string",
+          "foods": [
+            {
+              "id": 0
+            }
+          ],
+          "varietals": [
+            {
+              "id": 0,
+              "percentage": 0
+            }
+          ],
+          "vol": 0,
+          "price": 0,
+          "count": 0,
+          "id": 0,
+          "drink_id": 0
+        }
+    """
     pass

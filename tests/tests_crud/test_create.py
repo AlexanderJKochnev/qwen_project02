@@ -32,7 +32,6 @@ async def test_generate_input_data(authenticated_client_with_db, get_post_routes
 
     source = get_post_routes
     # client = authenticated_client_with_db
-    result: dict = {}
     fault_nmbr = 0
     good_nmbr = 0
     no_model = 0
@@ -46,7 +45,6 @@ async def test_generate_input_data(authenticated_client_with_db, get_post_routes
             if not request_model:
                 table.add_row(path, fault, None, 'route has no request model')
                 no_model += 1
-                result[path] = 'test_data has no request model'
                 continue
             test_data = generate_test_data(request_model, test_number,
                                            {'int_range': (1, test_number),
@@ -58,7 +56,6 @@ async def test_generate_input_data(authenticated_client_with_db, get_post_routes
             if not test_data:
                 table.add_row(path, fault, request_model_name, 'route has no request model')
                 fault_nmbr += 1
-                result[path] = 'test_data was not generated'
                 continue
             table.add_row(path, good, request_model_name)
             good_nmbr += 1
@@ -88,7 +85,6 @@ async def test_validate_input_data(authenticated_client_with_db, get_post_routes
     table.add_column("request model", justify="right", style="green")
     table.add_column('error', justify="right", style="red")
     source = get_post_routes
-    result: dict = {}
     fault_nmbr = 0
     good_nmbr = 0
 
@@ -112,7 +108,6 @@ async def test_validate_input_data(authenticated_client_with_db, get_post_routes
             if not test_data:
                 table.add_row(path, fault, request_model_name, 'test_data was not generated')
                 fault_nmbr += 1
-                result[path] = 'test_data was not generated'
                 continue
             for m, data in enumerate(test_data):
                 try:        # валидация исходных данных (проверка генератора тестовых данных)
@@ -126,7 +121,6 @@ async def test_validate_input_data(authenticated_client_with_db, get_post_routes
                 except Exception as e:
                     table.add_row(path, fault, request_model_name, f'{e}')
                     fault_nmbr += 1
-                    result[path] = f'test_data was generated incorrectly: {e}'
                     continue
             else:
                 table.add_row(path, good, request_model_name, None)
@@ -153,7 +147,6 @@ async def test_create_routers(authenticated_client_with_db, get_post_routes):
     table.add_column('error', justify="right", style="red")
     source = get_post_routes
     client = authenticated_client_with_db
-    result: dict = {}
     fault_nmbr = 0
     good_nmbr = 0
     for n, route in enumerate(track(source[::-1], description='test_create_routers')):
@@ -169,13 +162,13 @@ async def test_create_routers(authenticated_client_with_db, get_post_routes):
             test_data = generate_test_data(request_model, test_number,
                                            {'int_range': (1, test_number),
                                             'decimal_range': (0.5, 1),
-                                            'float_range': (0.1, 1.0),
+                                            'float_range': (0.01, 1.0),
                                             # 'field_overrides': {'name': 'Special Product'},
                                             'faker_seed': 42}
                                            )
             if not test_data:
                 fault_nmbr += 1
-                result[path] = f'test_data was not generated. {request_model_name}'
+                table.add_row(path, fault, request_model_name, 'test_data was not generated.')
                 continue
             for m, data in enumerate(test_data):
                 try:        # запрос
@@ -190,7 +183,7 @@ async def test_create_routers(authenticated_client_with_db, get_post_routes):
                         raise Exception(f'{response.status_code}, {response.text}, {request_model_name}')
                 except Exception as e:
                     fault_nmbr += 1
-                    result[path] = f'{e}'
+                    table.add_row(path, fault, request_model_name, f'{e}')
                     continue
             else:
                 table.add_row(path, good, request_model_name, None)

@@ -56,34 +56,98 @@ class ItemService(Service):
     def __add_manytomany_fields__(cls, item: dict, lang_prefixes: list) -> dict:
         """
         добавляет foods и varietals в api и detail views
+        items.keys():
+            'drink_id',
+            'vol',
+            'created_at',
+            'image_path',
+            'price', 'count',
+            'id',
+            'image_id',
+            'sugar',
+            'sweetness_id',
+            'subtitle_ru',
+            'madeof',
+            'age',
+            'subtitle_fr',
+            'madeof_ru',
+            'description',
+            'madeof_fr',
+            'description_ru',
+            'title',
+            'description_fr',
+            'sparkling',
+            'title_ru',
+            'recommendation',
+            'alc',
+            'subcategory_id',
+            'title_fr',
+            'recommendation_ru',
+            'subregion_id',
+            'subtitle',
+            'recommendation_fr',
+            'subcategory',
+            'foods',
+            'varietal_associations',
+            'varietals',
+            'subregion',
+            'sweetness',
+            'food_associations',
+            'items',
+            'category',
+            'region',
+            'country',
+            'changed_at'
         """
-        dict_lang: dict = {}
-        for field in get_field_name(ItemDetailManyToManyLocalized):
-            match field:
-                case 'pairing':
-                    if tmp := item.get('food_associations'):
-                        pairing = []
-                        for food_dict in tmp:
-                            if sf := food_dict.get('food'):
-                                if tf := localized_field_with_replacement(sf, 'name', lang_prefixes, 'food'):
-                                    pairing.append(tf.get('food'))
-                        if pairing:
-                            dict_lang.update({'pairing': pairing})
-                case 'varietal':
-                    if tmp := item.get('varietal_associations'):
-                        varietal = []
-                        for varietal_dict in tmp:
-                            if sf := varietal_dict.get('varietal'):
-                                if tf := localized_field_with_replacement(sf, 'name', lang_prefixes, 'varietal'):
-                                    xf = tf.get('varietal')
-                                    if percent := varietal_dict.get('percentage'):
-                                        xf = f'{xf} {percent:.0f} %'
-                                    varietal.append(xf)
-                        if varietal:
-                            dict_lang.update({'varietal': varietal})
-                case _:
-                    pass  # do nothing
-        return dict_lang
+        if item.get('id') in [1,2,3]:
+            print('--------------------------------')
+            jprint(item.keys(), expand_all=True)
+            print('++++++++++++++++++++++++++++++++++')
+        try:
+            dict_lang: dict = {}
+            for field in get_field_name(ItemDetailManyToManyLocalized):
+                varietal = []
+                pairing = []
+                """
+                print(f'{id}=====foods=======')
+                jprint(item.get('foods'))
+                jprint(item.get('food_associations'))
+                print(f'{id}=====varietals=======')
+                jprint(item.get('varietals'))
+                jprint(item.get('varietal_associations'))
+                """
+                match field:
+                    case 'pairing':
+                        tmp = item.get('foods')  # 'food_associations')
+                        if tmp and isinstance(tmp, (list, tuple)):
+                            # print('===food======')
+                            # jprint(tmp)
+                            for food_dict in tmp:
+                                if sf := food_dict.get('food'):
+                                    if tf := localized_field_with_replacement(sf, 'name', lang_prefixes, 'food'):
+                                        pairing.append(tf.get('food'))
+                        dict_lang.update({'pairing': pairing})
+                    case 'varietal':
+                        tmp = item.get('varietal_associations')
+                        if tmp and isinstance(tmp, (list, tuple)):
+                            # print('===varietal====')
+                            # jprint(tmp)
+                            for varietal_dict in tmp:
+                                if sf := varietal_dict.get('varietal'):
+                                    if tf := localized_field_with_replacement(sf, 'name', lang_prefixes, 'varietal'):
+                                        xf = tf.get('varietal')
+                                        if percent := varietal_dict.get('percentage'):
+                                            xf = f'{xf} {percent:.0f} %'
+                                        varietal.append(xf)
+                        dict_lang.update({'varietal': varietal})
+                    case _:
+                        pass  # do nothing
+            return dict_lang
+        except Exception as e:
+            print(f'__add_manytomany_fields__.{e}')
+            print(f"{item.get('food_associations')=} food")
+            print(f"{item.get('varietal_associations')=} varietaldsd")
+            return None
 
     @classmethod
     def __api_view__(cls, item: dict) -> dict:
@@ -113,36 +177,47 @@ class ItemService(Service):
                 elif isinstance(val, dict):
                     val = camel_to_enum(val.get('name'))
                 result[key] = val
-        # add localized fields:
-
-        for key, lang_suff in lang_dict.items():
-            dict_lang = {}
-            # add non-localized subfields to localized fields
-            for k in get_field_name(ItemApiLangNonLocalized):
-                if v := item.get(k):
+        try:
+            # add localized fields:
+            # print(f'1.{result.keys()=}, {result.get("id")=}')
+            for key, lang_suff in lang_dict.items():
+                dict_lang = {}
+                # add non-localized subfields to localized fields
+                for k in get_field_name(ItemApiLangNonLocalized):
+                    v = item.get(k)
                     if isinstance(v, (float, Decimal)):
                         v = f"{v:.03g}"
-                dict_lang[k] = v
-            # add localized subfields to localized fields
-            for k in get_field_name(ItemApiLangLocalized):
-                if k == 'region':   # вложенные сущности
-                    if subregion := item.get('subregion'):
-                        if region := subregion.get('region'):
-                            lf = localized_field_with_replacement(region, 'name', lang_suff, k)
-                            if lt := localized_field_with_replacement(subregion, 'name', lang_suff):
-                                lf['region'] = f"{lf['region']}. {lt['name']}"
-                else:
-                    lf = localized_field_with_replacement(item, k, lang_suff)
-                if lf:
-                    dict_lang.update(lf)
-            # add many-to-many fields
-            many_to_many = cls.__add_manytomany_fields__(item, lang_suff)
-            dict_lang.update(many_to_many)
-
-            validated_result = ItemApiLang.model_validate(dict_lang)
-            result[key] = validated_result.model_dump(exclude_none=True)
-        validated_result = ItemApi.model_validate(result)
-        return result
+                    dict_lang[k] = v
+                # add localized subfields to localized fields
+                # print(f'2.{dict_lang=} {key}, {type(dict_lang.get("alc"))}')
+                for k in get_field_name(ItemApiLangLocalized):
+                    if k == 'region':   # вложенные сущности
+                        subregion = item.get('subregion')
+                        region = subregion.get('region')
+                        lf = localized_field_with_replacement(region, 'name', lang_suff, k)
+                        lt = localized_field_with_replacement(subregion, 'name', lang_suff)
+                        lf['region'] = f"{lf['region']}. {lt['name']}".replace('None', '').replace('..', '.')
+                    else:
+                        lf = localized_field_with_replacement(item, k, lang_suff)
+                    if lf:
+                        dict_lang.update(lf)
+                # print(f'2.2.{dict_lang.keys()=}')
+                # add many-to-many fields
+                many_to_many = cls.__add_manytomany_fields__(item, lang_suff)
+                # print(f'2.3. {many_to_many=}')
+                dict_lang.update(many_to_many)
+                validated_result = ItemApiLang.model_validate(dict_lang)
+                result[key] = validated_result.model_dump(exclude_none=True)
+            # print(f'3.{result.keys()=}')
+            validated_result = ItemApi.model_validate(result)
+            # print(f'4.{result.keys()=}')
+            return result
+        except Exception as e:
+            print(f'__api_view__.error {e} {item.get("id")=}')
+            # jprint(result)
+            # jprint(dict_lang)
+            # print('================')
+            return None
 
     @classmethod
     def _process_item_localization(cls, item: dict, lang: str, fields_to_localize: list = None):
@@ -592,4 +667,3 @@ class ItemService(Service):
             if item_dict := item.to_dict():
                 result.append(cls.__api_view__(item_dict))
         return make_paginated_response(result, total, page, page_size)
-

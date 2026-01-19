@@ -97,7 +97,7 @@ class BaseRouter:
         # get without pagination
         self.router.add_api_route("/all",
                                   self.get_all, methods=["GET"],
-                                  # response_model=self.nonpaginated_response,  # List[self.read_response])
+                                  response_model=self.nonpaginated_response,  # List[self.read_response])
                                   openapi_extra={'x-request-schema': None})
         # get one buy id
         self.router.add_api_route("/{id}",
@@ -117,6 +117,8 @@ class BaseRouter:
     async def create(self, data: TCreateSchema, session: AsyncSession = Depends(get_db)) -> TReadSchema:
         """
         Создание одной записи без зависимостей
+        input_valudation_chema <>CreateRelation
+        response_model <>CreateResponseSchema
         """
         try:
             # obj = await self.service.create(data, self.repo, self.model, session)
@@ -136,13 +138,15 @@ class BaseRouter:
         Создание одной записи с зависимостями - если в таблице есть зависимости
         они будут рекурсивно найдены в связанных таблицах (или добавлены при отсутсвии)
         переписать если есть зависимости
+        input_valudation_chema <>CreateRelation
+        response_model <>ReadRelation
         """
         try:
             obj = await self.service.create_relation(data, self.repo, self.model, session)
             if isinstance(obj, tuple):
                 obj, _ = obj
-            return obj
-            # return await self.service.get_by_id(obj.id, self.repo, self.model, session)
+            # return obj
+            return await self.service.get_by_id(obj.id, self.repo, self.model, session)
         except Exception as e:
             await session.rollback()
             logger.error(f"Unexpected error in create_item: {e}")
@@ -150,7 +154,11 @@ class BaseRouter:
 
     async def update_or_create(self, id: int, data: TCreateSchema,
                                session: AsyncSession = Depends(get_db)) -> TReadSchema:
-        """ обновление / добавление одной записи ? пока нигде не используется"""
+        """
+            обновление / добавление одной записи ? пока нигде не используется
+            input_valudation_chema <>CreateRelation
+            response_model <>ReadRelation
+        """
         try:
             obj, created = await self.service.update_or_create(id, data, self.repo, self.model, session)
             return obj
@@ -166,7 +174,9 @@ class BaseRouter:
     async def patch(self, id: int,
                     data: TUpdateSchema, session: AsyncSession = Depends(get_db)) -> TReadSchema:
         """
-        Изменение одной записи по id
+            Изменение одной записи по id
+            input_valudation_chema <>Update
+            response_model <>Read
         """
         result = await self.service.patch(id, data, self.repo, self.model, session)
         if not result.get('success'):
@@ -195,6 +205,8 @@ class BaseRouter:
                      session: AsyncSession = Depends(get_db)) -> DeleteResponse:
         """
             Удаление одной записи по id
+            input_valudation_chema No
+            response_model <>DeleteResponse
         """
         result = await self.service.delete(id, self.model, self.repo, session)
         if not result.get('success'):
@@ -217,6 +229,8 @@ class BaseRouter:
                       session: AsyncSession = Depends(get_db)):
         """
             Получение одной записи по ID
+            input_valudation_chema <>CreateRelation
+            response_model <>ReadRelatio
         """
         obj = await self.service.get_by_id(id, self.repo, self.model, session)
         if obj is None:
@@ -233,8 +247,10 @@ class BaseRouter:
                   session: AsyncSession = Depends(get_db)
                   ) -> PaginatedResponse:
         """
-        Получение постранично всех записей после заданной даты.
-        По умолчанию задана дата - 2 года от сейчас
+            Получение постранично всех записей после заданной даты.
+            По умолчанию задана дата - 2 года от сейчас
+            input_valudation_chema None
+            response_model PaginatedResponse[<>ReadRelation>]
         """
         # print(f"📥 GET request for {self.model.__name__} from")
         after_date = back_to_the_future(after_date)
@@ -247,8 +263,10 @@ class BaseRouter:
         description="Дата в формате ISO 8601 (например, 2024-01-01T00:00:00Z)"
     ), session: AsyncSession = Depends(get_db)) -> List[TReadSchema]:
         """
-        Получение все записей одним списком после указанной даты.
-        По умолчанию задана дата - 2 года от сейчас
+            Получение все записей одним списком после указанной даты.
+            По умолчанию задана дата - 2 года от сейчас
+            input_valudation_chema <>CreateRelation
+            response_model <>ReadRelatio
         """
         try:
             after_date = back_to_the_future(after_date)
@@ -270,6 +288,8 @@ class BaseRouter:
         """
             Поиск по всем текстовым полям основной таблицы
             с постраничным выводом результата
+            input_valudation_chema None
+            response_model PaginatedResponse[<>ReadRelation>]
         """
         kwargs: str = {'page': page, 'page_size': page_size}
         if search:
@@ -283,6 +303,8 @@ class BaseRouter:
                          session: AsyncSession = Depends(get_db)) -> List[TReadSchema]:
         """
             Поиск по всем текстовым полям основной таблицы БЕЗ пагинации
+            input_valudation_chema <>CreateRelation
+            response_model <>ReadRelatio
         """
         return await self.service.search_all(search, self.repo, self.model, session)
 

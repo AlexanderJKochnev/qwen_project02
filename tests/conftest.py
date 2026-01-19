@@ -203,7 +203,9 @@ def get_routers(method: str = 'GET') -> List[APIRoute]:
 def exclude_routers() -> List[str]:
     """ список path prefixes of routes what shall be excluded from tests"""
     return ('/health', '/openapi', '/users', '/parser', '/rawdatas', '/auth/token',
-            '/registry', "/codes", "/status", "/names", "/images", "/items/hierarchy", "/drinks/hierarchy",
+            '/registry', "/codes", "/status", "/names", "/images",
+            # "/items/hierarchy",
+            # "/drinks/hierarchy",
             "/items/direct", "/api/mongo")
 
 

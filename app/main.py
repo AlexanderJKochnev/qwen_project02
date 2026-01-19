@@ -49,7 +49,13 @@ logging.basicConfig(level=logging.WARNING)  # в начале main.py или con
 # logging.disable(logging.CRITICAL)
 
 
-app = FastAPI(title="Hybrid PostgreSQL-MongoDB API")
+app = FastAPI(title="Hybrid PostgreSQL-MongoDB API",
+              swagger_ui_parameters={
+                  "docExpansion": "none",  # Сворачивает всё: и теги, и операции
+                  "deepLinking": True,  # Позволяет копировать ссылки на конкретные методы
+                  "filter": True  # Полезный бонус: добавляет строку поиска в Swagger
+              }
+              )
 
 app.add_middleware(
     CORSMiddleware,
