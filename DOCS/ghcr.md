@@ -18,14 +18,13 @@
     Скопируйте токен сразу! После того как вы закроете страницу, он станет недоступен для просмотра.
 5. Авторизация:
    1. cat /Users/kochnev/git/filesxxx.txt | docker login ghcr.io -u AlexanderJKochnev --password-stdin
-6. Тестирование и push образов (п.7. ниже - урезает):
-   1. docker buildx imagetools create --tag ghcr.io/alexanderjkochnev/my-postgres:alpine postgres:alpine
-   2. brew install skopeo / sudo apt install skopeo
-   3. skopeo copy docker://docker.io/library/postgres:alpine docker://ghcr.io/AlexanderJKochnev/postgres:alpine
-7. Тестирование и push образов
+   2. linux
+      1. cd dockers/ghcr
+      2. cat filesxxx.txt | docker login ghcr.io -u alexanderjkochnev --password-stdin
+6. Тестирование и push образов
    1. docker pull postgres:alpine
-   2. docker tag postgres:alpine ghcr.io/alexanderjkochnev/my-postgres:alpine
-   3. docker push ghcr.io/alexanderjkochnev/my-postgres:alpine
-8. Использование в Docker Compose:
+   2. docker tag postgres:alpine ghcr.io/alexanderjkochnev/postgres-17-alpine
+   3. docker push ghcr.io/alexanderjkochnev/postgres-17-alpine
+7. Использование в Docker Compose:
    1. image: ghcr.io/alexanderjkochnev/my-postgres:alpine
-9. 
+8. 

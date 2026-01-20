@@ -13,8 +13,8 @@ services:
     #   dockerfile: Dockerfile.postgres
     restart: unless-stopped
     container_name: ${POSTGRES_HOST}
-    image: postgres:alpine
-    # image: ghcr.io/alexanderjkochnev/my-postgres:alpine
+    # image: postgres:17-alpine
+    image: ghcr.io/alexanderjkochnev/postgres-17-alpine:latest
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
