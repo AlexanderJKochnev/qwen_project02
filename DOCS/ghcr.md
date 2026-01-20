@@ -23,8 +23,8 @@
       2. cat filesxxx.txt | docker login ghcr.io -u alexanderjkochnev --password-stdin
 6. Тестирование и push образов
    1. docker pull postgres:alpine
-   2. docker tag postgres:alpine ghcr.io/alexanderjkochnev/postgres-17-alpine
-   3. docker push ghcr.io/alexanderjkochnev/postgres-17-alpine
+   2. docker tag postgres:alpine ghcr.io/alexanderjkochnev/postgres:17-alpine
+   3. docker push ghcr.io/alexanderjkochnev/postgres:17-alpine
 7. Использование в Docker Compose:
    1. image: ghcr.io/alexanderjkochnev/my-postgres:alpine
 8. 
