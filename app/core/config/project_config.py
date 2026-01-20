@@ -196,6 +196,11 @@ class Settings(BaseSettings):
     MYMEMORY_API_EMAIL: str = "akochnev66@gmail.com"
     MYMEMORY_API_BASE_URL: str = "https://api.mymemory.translated.net/get"
 
+    # === GROKCLOUD TRANSLATION SERVICE ===
+    GROKCLOUD_API_BASE_URL: str = "https://api.grok.com/translate"
+    GROKCLOUD_API_EMAIL: str = ""
+    GROKCLOUD_API_KEY: str = ""
+
     model_config = SettingsConfigDict(env_file=get_path_to_root(),
                                       env_file_encoding='utf-8',
                                       extra='ignore')

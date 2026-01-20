@@ -1,59 +1,74 @@
+```
+# Environment
+.env
+.env.local
+.env.*
+
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+
+# Editors
+.vscode/
+.idea/
+
+# Dependencies
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+*.py~
+*.py.class
+*.py.obj
+*.py.out
+*.py.exe
+*.py.dll
+*.py.so
+*.py.a
+*.py.obj
+*.py.out
 
-# Coverage
-.coverage
-.coverage.*
-htmlcov/
-.coverage.xml
+# Python specific
+*.pyc
+__pycache__/
 .pytest_cache/
+.mypy_cache/
+.coverage
+coverage/
+htmlcov/
 
-# Environment
-# .env
-# .env.local
-# .env.*
-.venv/
-venv/
-ENV/
-env.bak/
-venv.bak/
+# Build and distribution
+build/
+dist/
+*.egg-info/
+*.egg
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*.tmp
-
-# OS
+# OS generated files
 .DS_Store
 Thumbs.db
 
-TODO.md
-migration_volume
-mongodb_data
-pg_data
-pg_dump
-upload_volume
+# Compression archives
+*.zip
+*.gz
+*.tar
+*.tgz
+*.bz2
+*.xz
+*.7z
+*.rar
+*.zst
+*.lz4
+*.lzh
+*.cab
+*.arj
+*.rpm
+*.deb
+*.Z
+*.lz
+*.lzo
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.tar.zst
+```
