@@ -52,7 +52,8 @@ services:
         max-file: "3"     # Количество хранимых файлов ротации: 3
     # -----------------------------
     container_name: pg_admin
-    image: adminer:4.8.1
+    image: ghcr.io/alexanderjkochnev/adminer:4.8.1
+    # image: adminer:4.8.1
     restart: unless-stopped
     environment:
       - ADMINER_PLUGINS=tables-filter enum-option enum-types
@@ -117,7 +118,7 @@ services:
         max-size: "10m"   # Максимальный размер файла лога: 10 МБ
         max-file: "3"     # Количество хранимых файлов ротации: 3
     # -----------------------------
-    image: mongo:4.4.20
+    image: ghcr.io/alexanderjkochnev/mongo:4.4.20
     container_name: ${MONGODB_CONTAINER_NAME}
     hostname: ${MONGO_HOSTNAME}
     restart: unless-stopped
@@ -163,7 +164,7 @@ services:
         max-size: "10m"   # Максимальный размер файла лога: 10 МБ
         max-file: "3"     # Количество хранимых файлов ротации: 3
     # -----------------------------
-    image: mongo-express
+    image: ghcr.io/alexanderjkochnev/mongo-express
     container_name: ${MONGO_EXPRESS_CONTAINER_NAME}
     restart: unless-stopped
     environment:

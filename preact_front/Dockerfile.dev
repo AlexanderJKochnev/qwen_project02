@@ -1,6 +1,6 @@
 # preact_front/src/Dockerfile.dev
 # Используем Node.js 20 (меньше 20 конфликтует с vite)
-FROM node:20-alpine
+FROM ghcr.io/alexanderjkochnev/node:20-alpine
 
 WORKDIR /app
 

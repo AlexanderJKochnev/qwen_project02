@@ -1,5 +1,5 @@
 # --- ЭТАП 1: Базовые зависимости (Base) ---
-FROM node:20-alpine AS build-stage
+FROM ghcr.io/alexanderjkochnev/node:20-alpine AS build-stage
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
@@ -8,7 +8,8 @@ RUN npm run build
 RUN apk add --no-cache certbot
 
 # Stage 2: Раздача статики через Nginx
-FROM nginx:stable-alpine
+# FROM nginx:stable-alpine
+FROM ghcr.io/alexanderjkochnev/nginx1.28.1:stable-alpine
 # Копируем билд из первого стейджа
 COPY --from=build-stage /app/dist /usr/share/nginx/html
 # Копируем конфиг
