@@ -195,6 +195,14 @@ class Settings(BaseSettings):
     # === MYMEMORY TRANSLATION SERVICE ===
     MYMEMORY_API_EMAIL: str = "akochnev66@gmail.com"
     MYMEMORY_API_BASE_URL: str = "https://api.mymemory.translated.net/get"
+    MYMEMORY_REQUESTS_PER_MINUTE: int = 10  # Rate limit for MyMemory API
+    MYMEMORY_REQUESTS_PER_DAY: int = 1000   # Daily limit for MyMemory API
+
+    # === HUGGINGFACE TRANSLATION SERVICE ===
+    HF_API_TOKEN: str = "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"  # Default token
+    HF_MODEL_NAME: str = "google/translategemma-4b-it"
+    HF_REQUESTS_PER_MINUTE: int = 5  # Rate limit for HuggingFace API
+    HF_REQUESTS_PER_DAY: int = 100   # Daily limit for HuggingFace API
 
     model_config = SettingsConfigDict(env_file=get_path_to_root(),
                                       env_file_encoding='utf-8',

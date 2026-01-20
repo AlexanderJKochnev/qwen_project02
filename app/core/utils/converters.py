@@ -158,8 +158,9 @@ def get_varietal(drink_dict: dict, language_key: dict) -> bool:
         return False
 
 
-def get_pairing(drink_dict: dict, language_key: dict,
-                delim: str) -> bool:
+def get_pairingX(drink_dict: dict, language_key: dict,
+                 delim: str) -> bool:
+    """ DELETE ?"""
     try:
         pair: dict = {}
         pair2: list = []

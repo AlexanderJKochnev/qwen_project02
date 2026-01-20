@@ -160,7 +160,6 @@ class ItemService(Service):
                 result[key] = val
         try:
             # add localized fields:
-            # print(f'1.{result.keys()=}, {result.get("id")=}')
             for key, lang_suff in lang_dict.items():
                 dict_lang = {}
                 # add non-localized subfields to localized fields
@@ -170,7 +169,6 @@ class ItemService(Service):
                         v = f"{v:.03g}"
                     dict_lang[k] = v
                 # add localized subfields to localized fields
-                # print(f'2.{dict_lang=} {key}, {type(dict_lang.get("alc"))}')
                 for k in get_field_name(ItemApiLangLocalized):
                     if k == 'region':   # вложенные сущности
                         subregion = item.get('subregion')
@@ -182,23 +180,16 @@ class ItemService(Service):
                         lf = localized_field_with_replacement(item, k, lang_suff)
                     if lf:
                         dict_lang.update(lf)
-                # print(f'2.2.{dict_lang.keys()=}')
                 # add many-to-many fields
                 many_to_many = cls.__add_manytomany_fields__(item, lang_suff)
-                # print(f'2.3. {many_to_many=}')
                 dict_lang.update(many_to_many)
                 validated_result = ItemApiLang.model_validate(dict_lang)
                 result[key] = validated_result.model_dump(exclude_none=True)
-            # print(f'3.{result.keys()=}')
             validated_result = ItemApi.model_validate(result)
-            # print(f'4.{result.keys()=}')
-            return result
+            return validated_result
         except Exception as e:
             print(f'__api_view__.error {e} {item.get("id")=}')
-            # jprint(result)
-            # jprint(dict_lang)
-            # print('================')
-            return None
+            raise HTTPException(status_code=500, detail=f'error.__api_view__.{e}')
 
     @classmethod
     def _process_item_localization(cls, item: dict, lang: str, fields_to_localize: list = None):

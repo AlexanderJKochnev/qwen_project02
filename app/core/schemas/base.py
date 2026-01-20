@@ -12,7 +12,7 @@ ListResponse - тоже что и Pagianted только без Pagianted
 from datetime import datetime
 from typing import Generic, List, NewType, Optional, TypeVar
 from app.service_registry import register_pyschema
-from pydantic import BaseModel as BaseOrigin, ConfigDict, Field
+from pydantic import BaseModel as BaseOrigin, ConfigDict
 
 # from abc import ABC
 
@@ -78,11 +78,14 @@ class DescriptionSchema(BaseModel):
     description_fr: Optional[str] = None
 
 
+"""
 class DescriptionExcludeSchema(BaseModel):
-    """ добавлять поля описаний на других языках """
+    # добавлять поля описаний на других языках DELETE
+
     description: Optional[str] = Field(exclude=True)
     description_ru: Optional[str] = Field(exclude=True)
     description_fr: Optional[str] = Field(exclude=True)
+"""
 
 
 class NameSchema(BaseModel):
@@ -92,11 +95,14 @@ class NameSchema(BaseModel):
     name_fr: Optional[str] = None
 
 
+"""
 class NameExcludeSchema(BaseModel):
-    """ добавлять поля на других языках """
+    # добавлять поля на других языках
     name: Optional[str] = Field(exclude=True)
     name_ru: Optional[str] = Field(exclude=True)
     name_fr: Optional[str] = Field(exclude=True)
+
+"""
 
 
 class LangSchema(NameSchema, DescriptionSchema):
