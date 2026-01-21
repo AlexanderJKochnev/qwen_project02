@@ -6,7 +6,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.repositories.sqlalchemy_repository import ModelType, Repository
-from app.core.services.logger import logger
 from app.support.drink.model import Drink
 from app.support.region.model import Region
 from app.support.subcategory.model import Subcategory
@@ -95,7 +94,6 @@ class DrinkRepository(Repository):
 
             return records, total
         except Exception as e:
-            logger.error(f'ошибка search_in_main_table: {e}')
             print(f'search_in_main_table.error: {e}')
 
     @classmethod

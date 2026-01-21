@@ -1,6 +1,6 @@
 # tests/conftest.py
 import asyncio
-import logging
+import sys
 from psycopg.errors import ForeignKeyViolation
 from pydantic import BaseModel
 from datetime import datetime, timezone
@@ -14,7 +14,8 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-
+from loguru import logger
+import logging
 from app.auth.models import User
 from app.auth.utils import create_access_token, get_password_hash
 from app.core.models.base_model import Base
@@ -35,6 +36,20 @@ from tests.utility.find_models import discover_models, discover_schemas2
 scope = 'session'
 scope2 = 'session'
 example_count = 5      # количество тестовых записей - рекомедуется >20 для paging test
+
+
+@pytest.fixture(autouse=True)
+def setup_test_logger():
+    # 1. Удаляем все обработчики, настроенные в приложении (включая INFO из middleware)
+    logger.remove()
+
+    # 2. Добавляем новый обработчик только для уровня ERROR
+    logger.add(sys.stderr, level="ERROR")
+
+    logging.getLogger("httpx").setLevel(logging.ERROR)
+    logging.getLogger("httpcore").setLevel(logging.ERROR)
+
+    yield  # После завершения теста можно ничего не делать или вернуть настройки
 
 
 def get_model_by_name(name: str) -> Optional[Type[BaseModel]]:
@@ -173,14 +188,6 @@ async def test_client_with_mongo(test_mongodb):
 def pytest_configure(config):
     config.option.log_cli_level = "CRITICAL"
     config.option.log_cli_format = "%(levelname)s - %(message)s"
-
-
-@pytest.fixture(autouse=True)
-def disable_httpx_logging():
-    """Подавляет INFO-логи от httpx и httpcore"""
-    loggers_to_silence = ["httpx", "httpx._client", "httpcore"]
-    for name in loggers_to_silence:
-        logging.getLogger(name).setLevel(logging.CRITICAL)
 
 
 @pytest.fixture(scope=scope)

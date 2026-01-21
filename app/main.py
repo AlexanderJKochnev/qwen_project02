@@ -2,9 +2,12 @@
 # from sqlalchemy.exc import SQLAlchemyError
 import logging
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.gzip import GZipMiddleware
+from loguru import logger
+import sys
+import time
 from app.auth.routers import auth_router, user_router
 from app.core.config.database.db_async import engine, get_db, init_db_extensions  # noqa: F401
 from app.mongodb.config import get_mongodb, MongoDB  # close_mongo_connection, connect_to_mongo
@@ -56,6 +59,38 @@ app = FastAPI(title="Hybrid PostgreSQL-MongoDB API",
                   "filter": True  # Полезный бонус: добавляет строку поиска в Swagger
               }
               )
+
+logger.remove()  # Удаляем стандартный обработчик
+logger.add(
+    sys.stdout,
+    colorize=True,
+    format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | "
+           "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
+    level="DEBUG",
+    enqueue=True  # ВАЖНО: делает логирование неблокирующим (использует очередь)
+)
+logger.add("logs/app.log", rotation="500 MB", retention="10 days", compression="zip", enqueue=True)
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = time.time()
+
+    # Логируем начало запроса
+    logger.info(f"Начало запроса: {request.method} {request.url.path}")
+
+    response = await call_next(request)
+
+    process_time = (time.time() - start_time) * 1000
+    formatted_process_time = "{0:.2f}".format(process_time)
+
+    # Логируем завершение и время выполнения
+    logger.info(
+        f"Завершено: {request.method} {request.url.path} | Статус: {response.status_code} | Время: {formatted_process_time}мс"
+    )
+
+    return response
+
 
 app.add_middleware(
     CORSMiddleware,

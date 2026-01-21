@@ -1,6 +1,5 @@
 # app/core/routers/base.py
 
-import logging
 from typing import Any, List, Type, TypeVar
 from dateutil.relativedelta import relativedelta
 from datetime import datetime, timezone
@@ -27,7 +26,6 @@ TUpdateSchema = TypeVar("TUpdateSchema", bound=UpdateSchema)
 TService = TypeVar("TService", bound=Service)
 
 dev = settings.DEV
-logger = logging.getLogger(__name__)
 delta = (datetime.now(timezone.utc) - relativedelta(years=2)).isoformat()
 
 
@@ -149,7 +147,6 @@ class BaseRouter:
             return await self.service.get_by_id(obj.id, self.repo, self.model, session)
         except Exception as e:
             await session.rollback()
-            logger.error(f"Unexpected error in create_item: {e}")
             raise exception_to_http(e)
 
     async def update_or_create(self, id: int, data: TCreateSchema,
@@ -272,7 +269,6 @@ class BaseRouter:
             after_date = back_to_the_future(after_date)
             return await self.service.get(after_date, self.repo, self.model, session)
         except Exception as e:
-            logger.error(f"Unexpected error in get: {e} {self.model.__name__}")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                 detail="Internal server error")
 

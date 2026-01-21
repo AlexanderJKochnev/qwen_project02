@@ -178,6 +178,7 @@ class ItemCreateRelation(BaseModel, CustomCreateRelation, ImageUrlMixin):
 
 
 class DrinkPreactDetailView:
+    """  похоже нигде не используется """
     id: int
     drink: DrinkReadApi
 

@@ -27,6 +27,8 @@ setuptools<81
 pymorphy2~=0.9.1
 pymorphy2-dicts-ru
 deepdiff~=8.6.1
+# loger loguru
+loguru
 # for parsing
 beautifulsoup4~=4.14.2
 requests

@@ -8,7 +8,6 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.types import String
 
 from app.core.repositories.sqlalchemy_repository import Repository
-from app.core.services.logger import logger
 from app.core.utils.alchemy_utils import create_enum_conditions, create_search_conditions2, ModelType
 from app.support.category.model import Category
 from app.support.country.model import Country
@@ -160,7 +159,6 @@ class ItemRepository(Repository):
                 records = result.scalars().all()
             return (records if records else [], total)
         except Exception as e:
-            logger.error(f'ошибка search_in_main_table: {e}')
             print(f'search_in_main_table.error: {e}')
 
     @classmethod

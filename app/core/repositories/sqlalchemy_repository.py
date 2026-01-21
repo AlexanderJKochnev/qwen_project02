@@ -12,7 +12,6 @@ from sqlalchemy import and_, func, select, Select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 # from sqlalchemy.sql.elements import ColumnElement
-from app.core.services.logger import logger
 from app.core.utils.alchemy_utils import (create_enum_conditions,
                                           create_search_conditions2, ModelType)
 from app.core.utils.alchemy_utils import get_sqlalchemy_fields
@@ -377,7 +376,7 @@ class Repository(metaclass=RepositoryMeta):
                 records = result.scalars().all()
                 return records
         except Exception as e:
-            logger.error(f'ошибка search: {e}')
+            print(f'ошибка search: {e}')
 
     @classmethod
     async def search_all(
@@ -406,7 +405,7 @@ class Repository(metaclass=RepositoryMeta):
             records = result.scalars().all()
             return records
         except Exception as e:
-            logger.error(f'ошибка search: {e}')
+            print(f'{e}')
 
     @classmethod
     async def get_list_paging(cls, skip: int, limit: int,

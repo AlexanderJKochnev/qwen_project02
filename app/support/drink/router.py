@@ -14,7 +14,7 @@ from app.support.drink.drink_food_repo import DrinkFoodRepository
 from app.support.drink.drink_food_service import DrinkFoodService
 from app.support.drink.model import Drink
 from app.support.drink.schemas import (DrinkCreate, DrinkCreateRelation, DrinkCreateResponseSchema,
-                                       DrinkFoodLinkUpdate, DrinkRead, DrinkReadApi, DrinkUpdate,
+                                       DrinkFoodLinkUpdate, DrinkRead, DrinkUpdate,
                                        DrinkReadRelation
                                        )
 # from app.support.drink.service import DrinkService
@@ -23,7 +23,7 @@ from app.support.drink.schemas import (DrinkCreate, DrinkCreateRelation, DrinkCr
 
 class DrinkRouter(BaseRouter):
     def __init__(self, prefix: str = '/drinks'):
-        self.read_api_schema = DrinkReadApi
+        # self.read_api_schema = DrinkReadApi
         super().__init__(
             model=Drink,
             prefix=prefix)
@@ -35,12 +35,10 @@ class DrinkRouter(BaseRouter):
         self.router.add_api_route("/{id}/foods", self.update_drink_foods,
                                   methods=["PATCH"],
                                   openapi_extra={'x-request-schema': DrinkFoodLinkUpdate.__name__})
-        self.router.add_api_route("/{id}/flat", self.get_one_flat,
-                                  methods=['GET'], response_model=self.read_schema,
-                                  openapi_extra={'x-request-schema': None})  # удалить
-        self.router.add_api_route("/{id}/api", self.get_one_api, methods=['GET'],
-                                  response_model=self.read_api_schema,
-                                  openapi_extra={'x-request-schema': None})  # переделать или тоже удалить item api
+        # self.router.add_api_route("/{id}/api", self.get_one_api, methods=['GET'],
+        #                           # response_model=self.read_api_schema,
+        #                           response_model=self.read_schema,
+        #                           openapi_extra={'x-request-schema': None})  # переделать или тоже удалить item api
         # instead
 
     def get_drink_food_service(session: AsyncSession) -> DrinkFoodService:
@@ -116,15 +114,7 @@ class DrinkRouter(BaseRouter):
         result = await super().create_relation(drink_data, session)
         return result
 
-    async def get_one_flat(self, id: int, session: AsyncSession = Depends(get_db)) -> DrinkRead:
-        """
-            Получение одной записи по ID
-        """
-        obj = await self.service.get_by_id(id, self.repo, self.model, session)
-        # obj = await self.service.get_dict_by_id(id, self.repo, self.model, session)
-        return obj  # self.read_schema.model_validate(obj)
-
-    async def get_one_api(self, id: int, session: AsyncSession = Depends(get_db)) -> DrinkReadApi:
+    async def get_one_api(self, id: int, session: AsyncSession = Depends(get_db)):
         """
             Получение одной записи по ID
         """
