@@ -24,6 +24,8 @@
            # description_xx[PyCharm CE.app](..%2F..%2F..%2F..%2F..%2F..%2FApplications%2FPyCharm%20CE.app)
       2. create_gin_index_sql: the same fields as above
          1. также см. scripts/create_index.sql
+      3. app/support/item/schemas/
+           # class ItemApi(ItemApiRoot)
 2. preact_front
    1. 
 3. 
