@@ -5,7 +5,7 @@ from dateutil.relativedelta import relativedelta
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from loguru import logger
 from app.auth.dependencies import get_active_user_or_internal
 from app.core.config.database.db_async import get_db
 from app.core.config.project_config import get_paging, settings
@@ -198,6 +198,7 @@ class BaseRouter:
 
         return result['data']
 
+    # @logger.catch(reraise=True)
     async def delete(self, id: int,
                      session: AsyncSession = Depends(get_db)) -> DeleteResponse:
         """
@@ -210,15 +211,15 @@ class BaseRouter:
             error_message = result.get('message', 'Unknown error')
             # Для Foreign Key violation возвращаем 400 Bad Request
             if 'невозможно удалить запись: на неё ссылаются другие объекты' in error_message:
-                raise HTTPException(status_code=400, detail=error_message)
+                raise HTTPException(status_code=400, detail=f'{self.model.__name__} {error_message}')
             # Для других ошибок базы данных возвращаем 500
             elif 'ошибка базы данных' in error_message.lower():
-                raise HTTPException(status_code=500, detail=error_message)
+                raise HTTPException(status_code=500, detail=f'{self.model.__name__} {error_message}')
             # Для "не найдена" возвращаем 404
             elif 'не найдена' in error_message:
-                raise HTTPException(status_code=404, detail=error_message)
+                raise HTTPException(status_code=404, detail=f'{self.model.__name__} {error_message}')
             else:
-                raise HTTPException(status_code=500, detail=error_message)
+                raise HTTPException(status_code=500, detail=f'{self.model.__name__} {error_message}')
         return DeleteResponse(**result)
 
     async def get_one(self,
@@ -270,7 +271,7 @@ class BaseRouter:
             return await self.service.get(after_date, self.repo, self.model, session)
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                                detail="Internal server error")
+                                detail=f"Internal server error. {e}")
 
     async def search(self, search: str = Query(None, description="Поисковый запрос. "
                                                "В случае пустого запроса будут "

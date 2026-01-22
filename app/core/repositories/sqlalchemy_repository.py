@@ -173,7 +173,8 @@ class Repository(metaclass=RepositoryMeta):
         :param obj: instance
         """
         try:
-            await session.delete(obj)
+            async with session.begin_nested():
+                await session.delete(obj)
             await session.commit()
             return True
         except IntegrityError as e:

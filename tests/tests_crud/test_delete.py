@@ -39,7 +39,7 @@ async def test_delete_routers(authenticated_client_with_db, get_del_routes):
                 get_path = '/mongodb/imageslist'
             else:
                 get_path = f"{path.replace('/delete', '').replace('{id}', '')}all"
-
+            # получение списка id
             response = await client.get(get_path)
             if response.status_code in [200, 201]:
                 result = response.json()
@@ -47,9 +47,9 @@ async def test_delete_routers(authenticated_client_with_db, get_del_routes):
                     continue
                     # ids = list(result.values())
                 else:
+                    # список id существующих
                     ids = [val.get('id') for val in result]
-                    # print(f'{get_path}...{ids=}')
-                for id in ids:   # перебор записей пока не найдется без зависимых
+                for id in reversed(ids):   # перебор записей пока не найдется без зависимых
                     path = route.path.replace('{id}', f'{id}')
                     # .replace('{file_id}', f'{id}'))
                     try:
