@@ -1,4 +1,6 @@
 # app/core/schemas/api_mixin.py
+""" нигде не используется """
+
 from pydantic import computed_field
 
 from app.core.schemas.base import BaseModel

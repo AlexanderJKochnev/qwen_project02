@@ -2,7 +2,7 @@
 from pydantic import Field
 from typing import List, Optional
 from app.core.schemas.base import BaseModel, ConfigDict
-from app.core.schemas.api_mixin import LangMixin
+# from app.core.schemas.api_mixin import LangMixin
 from app.support.varietal.schemas import VarietalCreateRelation
 
 
@@ -31,6 +31,7 @@ class DrinkVarietalRelationFlat(BaseModel):
     percentage: Optional[float]
 
 
+"""
 class DrinkVarietalRelationApi(LangMixin):
     model_config = ConfigDict(from_attributes=True,
                               arbitrary_types_allowed=True,
@@ -48,6 +49,7 @@ class DrinkVarietalRelationApi(LangMixin):
                 prefix = f"{prefix} {int(round(self.percentage))}%"
             return prefix
         return None
+"""
 
 
 class DrinkVarietalLinkCreate(BaseModel):

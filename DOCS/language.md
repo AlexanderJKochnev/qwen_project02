@@ -1,6 +1,6 @@
 ## Добавление языков;
 1. app.core
-   1. ap.core.models
+   1. app.core.models
       1. app.core.models.base_model.py
          1. class BaseDescription: add/delete 
             #  description_xx
@@ -11,4 +11,17 @@
             # description_xx
       2. class NameSchema(BaseModel): 
             # add/delete name_xx
-   3. 
+   3. app.support
+      1. app/support/drink/model.py
+         1. class Lang:
+           # title_xx
+           # subtitle_xx
+           # description_xx
+           # recommendation_xx
+           # madeof_xx
+           # description_xx
+      2. create_gin_index_sql: the same fields as above
+         1. также см. scripts/create_index.sql
+2. после всего выполнить:
+   1. sh alembic.sh
+   2. sh create_trigram.sh
