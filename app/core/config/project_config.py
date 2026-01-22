@@ -199,7 +199,7 @@ class Settings(BaseSettings):
     MYMEMORY_REQUESTS_PER_DAY: int = 1000   # Daily limit for MyMemory API
 
     # === HUGGINGFACE TRANSLATION SERVICE ===
-    HF_API_TOKEN: str = "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"  # Default token
+    HF_API_TOKEN: str = "test token"  # Default token
     HF_MODEL_NAME: str = "google/translategemma-4b-it"
     HF_REQUESTS_PER_MINUTE: int = 5  # Rate limit for HuggingFace API
     HF_REQUESTS_PER_DAY: int = 100   # Daily limit for HuggingFace API
