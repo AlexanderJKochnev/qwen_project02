@@ -5,7 +5,7 @@ from dateutil.relativedelta import relativedelta
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
-from loguru import logger
+# from loguru import logger
 from app.auth.dependencies import get_active_user_or_internal
 from app.core.config.database.db_async import get_db
 from app.core.config.project_config import get_paging, settings
@@ -61,7 +61,11 @@ class BaseRouter:
 
         self.prefix = prefix
         self.tags = [prefix.replace('/', '')]
-        self.router = APIRouter(prefix=prefix, tags=self.tags, dependencies=[Depends(get_active_user_or_internal)])
+        include_in_schema = kwargs.get('include_in_schema', True)
+        self.router = APIRouter(prefix=prefix,
+                                tags=self.tags,
+                                dependencies=[Depends(get_active_user_or_internal)],
+                                include_in_schema=include_in_schema)
         self.setup_routes()
 
         # self.read_response = py.read_response(read_schema)
@@ -311,12 +315,14 @@ class LightRouter:
         минимальный роутер с зависимостями
     """
 
-    def __init__(self, prefix: str):
+    def __init__(self, prefix: str, **kwargs):
         self.prefix = prefix
         self.tags = [prefix.replace('/', '')]
+        include_in_schema = kwargs.get('include_in_schema', True)
         self.router = APIRouter(prefix=prefix,
                                 tags=self.tags,
-                                dependencies=[Depends(get_active_user_or_internal)]
+                                dependencies=[Depends(get_active_user_or_internal)],
+                                include_in_schema=include_in_schema
                                 )
         # self.session: AsyncSession = Depends(get_db)
         self.setup_routes()

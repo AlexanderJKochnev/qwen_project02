@@ -9,7 +9,7 @@ from typing import List
 from dateutil.relativedelta import relativedelta
 from fastapi import Depends, Query, Path
 from app.core.utils.common_utils import back_to_the_future
-from app.core.config.project_config import settings
+from app.core.config.project_config import settings, get_paging
 from app.core.schemas.base import PaginatedResponse
 from app.mongodb import router as mongorouter
 from app.core.config.database.db_async import get_db
@@ -21,6 +21,7 @@ from app.support.item.service import ItemService
 from app.support.item.repository import ItemRepository
 
 delta = (datetime.now(timezone.utc) - relativedelta(years=2)).isoformat()
+paging = get_paging
 
 
 @dataclass
@@ -43,7 +44,7 @@ class ApiRouter(ItemRouter):
         super().__init__(prefix='/api')
         # self.prefix = data.prefix
         # self.tags = data.prefix
-        self.paginated_response = PaginatedResponse[self.read_schema]
+        self.paginated_response = PaginatedResponse[ItemApi]
         self.nonpaginated_response = List[self.read_schema]
 
     def setup_routes(self):
@@ -160,3 +161,25 @@ class ApiRouter(ItemRouter):
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                 detail=f"Internal server error. {e}")
+
+    async def get(self,
+                  after_date: datetime = Query(delta,
+                                               description="Дата в формате ISO 8601 (например, 2024-01-01T00:00:00Z)"),
+                  page: int = Query(1, ge=1),
+                  page_size: int = Query(paging.get('def', 20),
+                                         ge=paging.get('min', 1),
+                                         le=paging.get('max', 1000)),
+                  session: AsyncSession = Depends(get_db)
+                  ) -> PaginatedResponse:
+        """
+            Получение постранично всех записей после заданной даты.
+            По умолчанию задана дата - 2 года от сейчас
+            input_valudation_chema None
+            response_model PaginatedResponse[<>ReadRelation>]
+        """
+        # print(f"📥 GET request for {self.model.__name__} from")
+        after_date = back_to_the_future(after_date)
+        service = ItemService
+        response = await service.get_list_api_view_page(after_date, page, page_size, self.repo, self.model, session)
+        result = self.paginated_response(**response)
+        return result

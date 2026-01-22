@@ -26,7 +26,8 @@ class DrinkRouter(BaseRouter):
         # self.read_api_schema = DrinkReadApi
         super().__init__(
             model=Drink,
-            prefix=prefix)
+            prefix=prefix,
+            include_in_schema=False)
         # self.image_service: ImageService = Depends()
 
     def setup_routes(self):

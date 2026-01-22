@@ -1,5 +1,4 @@
 # app/support/drink/drink_food_schema.py
-#
 from typing import List
 from pydantic import Field
 from app.core.schemas.base import BaseModel, ConfigDict

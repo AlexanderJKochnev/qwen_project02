@@ -21,7 +21,7 @@ background_tasks = set()  # чтобы ссылка не удалилась
 
 class OrchestratorRouter(LightRouter):
     def __init__(self):
-        super().__init__(prefix='/parser')
+        super().__init__(prefix='/parser', include_in_schema=False)
 
     def setup_routes(self):
         self.router.add_api_route(
@@ -187,7 +187,7 @@ class RegistryRouter(BaseRouter):
     def __init__(self):
         super().__init__(
             model=Registry,
-            prefix="/registry",
+            prefix="/registry", include_in_schema=False
         )
 
     async def create(self, data: schemas.RegistryCreate,
@@ -210,7 +210,7 @@ class CodeRouter(BaseRouter):
     def __init__(self):
         super().__init__(
             model=Code,
-            prefix="/codes",
+            prefix="/codes", include_in_schema=False
         )
 
     async def create(self, data: schemas.CodeCreate,
@@ -232,7 +232,7 @@ class StatusRouter(BaseRouter):
     def __init__(self):
         super().__init__(
             model=Status,
-            prefix="/status",
+            prefix="/status", include_in_schema=False
         )
 
     async def create(self, data: schemas.StatusCreate,
@@ -254,7 +254,7 @@ class NameRouter(BaseRouter):
     def __init__(self):
         super().__init__(
             model=Name,
-            prefix="/names",
+            prefix="/names", include_in_schema=False
         )
 
     async def create(self, data: schemas.NameCreate,
@@ -277,7 +277,7 @@ class RawdataRouter(BaseRouter):
     def __init__(self):
         super().__init__(
             model=Rawdata,
-            prefix="/rawdatas",
+            prefix="/rawdatas", include_in_schema=False
         )
 
     def setup_routes(self):
@@ -324,7 +324,7 @@ class ImageRouter(BaseRouter):
     def __init__(self):
         super().__init__(
             model=Image,
-            prefix="/images",
+            prefix="/images", include_in_schema=False
         )
 
     async def create(self, data: schemas.ImageCreate,

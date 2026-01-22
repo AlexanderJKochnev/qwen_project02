@@ -1,15 +1,15 @@
 # app/support/item/schemas.py
 
-from typing import Optional, Dict, Any, List, Tuple
+from typing import Optional, List, Tuple
 from datetime import datetime
-from pydantic import Field, model_validator, computed_field, field_serializer
-from app.core.utils.common_utils import camel_to_enum
+from pydantic import Field
 from app.core.schemas.image_mixin import ImageUrlMixin
 from app.core.schemas.base import BaseModel, CreateResponse
-from app.support.drink.schemas import (DrinkCreateRelation, DrinkReadApi, DrinkReadFlat,
+from app.support.drink.schemas import (DrinkCreateRelation,
                                        DrinkReadRelation, DrinkCreate, LangMixin)
 
 
+"""
 class CustomReadFlatSchema:
     id: int
     drink: DrinkReadFlat = Field(exclude=True)
@@ -62,33 +62,7 @@ class CustomReadFlatSchema:
     @property
     def fr(self) -> Dict[str, Any]:
         return self._lang_('fr')
-
-
-class CustomReadSchema:
-    id: int
-    drink: DrinkReadApi = Field(exclude=True)
-    vol: Optional[float] = None
-    price: Optional[float] = None
-    count: Optional[int] = 0
-
-    # Вычисляемые поля
-    updated_at: Optional[datetime] = None
-    en: Optional[Dict[str, Any]] = None
-    ru: Optional[Dict[str, Any]] = None
-    fr: Optional[Dict[str, Any]] = None
-    category: Optional[str] = None
-    country: Optional[str] = None
-
-    @model_validator(mode='after')
-    def extract_drink_data(self) -> 'CustomReadSchema':
-        if self.drink:
-            self.updated_at = self.drink.updated_at
-            self.en = self.drink.en
-            self.ru = self.drink.ru
-            self.fr = self.drink.fr
-            self.category = self.drink.en.get('category')
-            self.country = self.drink.en.get('country')
-        return self
+"""
 
 
 class CustomCreateSchema:
@@ -98,6 +72,10 @@ class CustomCreateSchema:
     count: Optional[int] = 0
     image_path: Optional[str] = None
     image_id: Optional[str] = None
+
+
+class CustomReadSchema(CustomCreateSchema):
+    id: int
 
 
 class CustomReadRelation:
@@ -176,9 +154,9 @@ class ItemCreateRelation(BaseModel, CustomCreateRelation, ImageUrlMixin):
 
 # -------------------preact schemas-----------------------
 
-
+"""
 class DrinkPreactDetailView:
-    """  похоже нигде не используется """
+    #  похоже нигде не используется
     id: int
     drink: DrinkReadApi
 
@@ -197,6 +175,7 @@ class DrinkPreactCreate:
     title: str
     title_ru: Optional[str]
     title_fr: Optional[str]
+"""
 
 
 class ItemListView(BaseModel):
@@ -312,7 +291,7 @@ class ItemApi(ItemApiRoot):
     fr: ItemApiLang
 
 
-class ItemRead(BaseModel, CustomReadFlatSchema, ImageUrlMixin):
+class ItemRead(BaseModel, CustomReadSchema, ImageUrlMixin):
     pass
 
 

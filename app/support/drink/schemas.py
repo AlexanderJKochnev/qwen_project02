@@ -1,16 +1,15 @@
 # app/support/drink/schemas.py
-from typing import Dict, Any, List, Optional
+from typing import List, Optional
 from datetime import datetime
-from pydantic import field_serializer, Field, computed_field
-from app.core.utils.common_utils import camel_to_enum
-from app.core.schemas.base import (BaseModel, CreateNoNameSchema, CreateResponse, PkSchema,
-                                   ReadNoNameSchema, UpdateNoNameSchema, ReadApiSchema)
+from pydantic import field_serializer, Field
+from app.core.schemas.base import (BaseModel, CreateNoNameSchema, CreateResponse,
+                                   ReadNoNameSchema, UpdateNoNameSchema)
 from app.support.drink.drink_varietal_schema import (DrinkVarietalRelation, DrinkVarietalRelationFlat,
-                                                     DrinkVarietalRelationApi, DrinkVarietalId)
-from app.support.drink.drink_food_schema import DrinkFoodRelationApi, DrinkFoodRelation
+                                                     DrinkVarietalId)
+from app.support.drink.drink_food_schema import DrinkFoodRelation
 from app.support.food.schemas import FoodCreateRelation, FoodRead, FoodId
-from app.support.subcategory.schemas import SubcategoryCreateRelation, SubcategoryRead, SubcategoryReadApiSchema
-from app.support.subregion.schemas import SubregionCreateRelation, SubregionRead, SubregionReadApiSchema
+from app.support.subcategory.schemas import SubcategoryCreateRelation, SubcategoryRead
+from app.support.subregion.schemas import SubregionCreateRelation, SubregionRead
 from app.support.sweetness.schemas import SweetnessCreateRelation, SweetnessRead
 from app.support.varietal.schemas import VarietalRead
 
@@ -116,6 +115,7 @@ class CustomCreateRelation(LangMixin):
     varietals: Optional[List[DrinkVarietalRelation]] = None
 
 
+"""
 class CustomReadRelation(LangMixin):
     title: str
     subcategory: SubcategoryCreateRelation
@@ -135,6 +135,7 @@ class CustomReadRelation(LangMixin):
     @property
     def foods(self):
         return [assoc.model_dump() for assoc in self.food_associations]
+"""
 
 
 class CustomReadSchema(LangMixin):
@@ -220,6 +221,7 @@ class DrinkVarietalLinkCreate(BaseModel):
     drink: DrinkRead
 
 
+"""
 class CustomReadApiSchema(LangMixinExclude):
     subcategory: SubcategoryReadApiSchema = Field(exclude=True)
     sweetness: Optional[ReadApiSchema] = Field(exclude=True)
@@ -233,10 +235,9 @@ class CustomReadApiSchema(LangMixinExclude):
     updated_at: Optional[datetime] = None
 
     def __get_field_value__(self, field_name: str, lang_suffix: str) -> Any:
-        """
-            Получить значение поля с учетом языкового суффикса
-            Если нет значения на языке - берется значение из поля по молчанию (english)
-        """
+        #    Получить значение поля с учетом языкового суффикса
+        #    Если нет значения на языке - берется значение из поля по молчанию (english)
+
         lang_field = f"{field_name}{lang_suffix}"
         if hasattr(self, lang_field):
             value = getattr(self, lang_field)
@@ -249,7 +250,7 @@ class CustomReadApiSchema(LangMixinExclude):
         return None
 
     def __get_nested_field__(self, obj, field_path: str, lang_suffix: str) -> Any:
-        """Получить значение из вложенного объекта"""
+        #  Получить значение из вложенного объекта
         if obj is None:
             return None
 
@@ -272,7 +273,7 @@ class CustomReadApiSchema(LangMixinExclude):
         return str(current_obj) if current_obj else None
 
     def __get_association_names__(self, associations: List, lang_suffix: str) -> str:
-        """Получить строку названий ассоциаций"""
+        #   Получить строку названий ассоциаций
         if not associations:
             return ""
 
@@ -290,7 +291,7 @@ class CustomReadApiSchema(LangMixinExclude):
         return ", ".join(names) if names else ""
 
     def __parser__(self, lang_suffix: str) -> Dict[str, Any]:
-        """Парсер для преобразования полей в словарь по языкам"""
+        #   Парсер для преобразования полей в словарь по языкам
 
         # Маппинг суффиксов на названия полей
         lang_map = {"": "en", "_ru": "ru", "_fr": "fr"}
@@ -363,19 +364,19 @@ class CustomReadApiSchema(LangMixinExclude):
     @computed_field
     @property
     def en(self) -> Dict[str, Any]:
-        """Английская версия"""
+        # Английская версия
         return self.__parser__("")
 
     @computed_field
     @property
     def ru(self) -> Dict[str, Any]:
-        """Русская версия"""
+        # Русская версия
         return self.__parser__("_ru")
 
     @computed_field
     @property
     def fr(self) -> Dict[str, Any]:
-        """Французская версия"""
+        # Французская версия
         return self.__parser__("_fr")
 
 
@@ -396,10 +397,10 @@ class CustomReadFlatSchema(LangMixinExclude):
     updated_at: Optional[datetime] = None
 
     def _get_base_field_names(self) -> set[str]:
-        """
-        Автоматически определяет базовые языковые поля по наличию полей с суффиксом '_ru'.
-        Например: если есть 'title_ru' → базовое поле 'title'.
-        """
+
+        # Автоматически определяет базовые языковые поля по наличию полей с суффиксом '_ru'.
+        # Например: если есть 'title_ru' → базовое поле 'title'.
+
         field_names = self.model_fields.keys()
         base_fields = set()
         for name in field_names:
@@ -409,10 +410,10 @@ class CustomReadFlatSchema(LangMixinExclude):
         return base_fields
 
     def __get_field_value__(self, field_name: str, lang_suffix: str) -> Any:
-        """
-            Получить значение поля с учетом языкового суффикса
-            Если нет значения на языке - берется значение из поля по молчанию (english)
-        """
+
+        #    Получить значение поля с учетом языкового суффикса
+        #    Если нет значения на языке - берется значение из поля по молчанию (english)
+
         lang_field = f"{field_name}{lang_suffix}"
         if hasattr(self, lang_field):
             value = getattr(self, lang_field)
@@ -487,3 +488,4 @@ class CustomReadFlatSchema(LangMixinExclude):
 
 class DrinkReadFlat(BaseModel, CustomReadFlatSchema):
     id: int
+"""
