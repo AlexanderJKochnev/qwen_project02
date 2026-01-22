@@ -104,7 +104,7 @@ class ItemService(Service):
                     case 'pairing':
                         pairing: list = []
                         tmp: list = item.get('foods')
-                        if tmp and isinstance(tmp, (list, tuple)):
+                        if tmp and isinstance(tmp, (list, tuple)) and tmp != [None]:
                             for food_dict in tmp:
                                 if tf := localized_field_with_replacement(food_dict, 'name', lang_prefixes, 'food'):
                                     pairing.append(tf.get('food'))
@@ -112,7 +112,7 @@ class ItemService(Service):
                     case 'varietal':
                         tmp = item.get('varietal_associations')
                         varietal: list = []
-                        if tmp and isinstance(tmp, (list, tuple)):
+                        if tmp and isinstance(tmp, (list, tuple)) and tmp != [None]:
                             for varietal_dict in tmp:
                                 if sf := varietal_dict.get('varietal'):
                                     if tf := localized_field_with_replacement(sf, 'name', lang_prefixes, 'varietal'):
@@ -126,8 +126,8 @@ class ItemService(Service):
             return dict_lang
         except Exception as e:
             print(f'__add_manytomany_fields__.{e}')
-            print(f"{item.get('food_associations')=} food")
-            print(f"{item.get('varietal_associations')=} varietaldsd")
+            print(f"{item.get('foods')=} food")
+            print(f"{item.get('varietal_associations')=} varietalds")
             return None
 
     @classmethod
