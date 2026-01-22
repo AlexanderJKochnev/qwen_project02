@@ -40,6 +40,38 @@ class Lang:
     madeof_ru: Mapped[descr]
     madeof_fr: Mapped[descr]
 
+    """
+    title_xx: Mapped[str_null_true]
+    subtitle_xx: Mapped[str_null_true]
+    description_xx: Mapped[descr]
+    recommendation_xx: Mapped[descr]
+    madeof_xx: Mapped[descr]
+    """
+
+    title_es: Mapped[str_null_true]
+    subtitle_es: Mapped[str_null_true]
+    description_es: Mapped[descr]
+    recommendation_es: Mapped[descr]
+    madeof_es: Mapped[descr]
+
+    title_it: Mapped[str_null_true]
+    subtitle_it: Mapped[str_null_true]
+    description_it: Mapped[descr]
+    recommendation_it: Mapped[descr]
+    madeof_it: Mapped[descr]
+
+    title_de: Mapped[str_null_true]
+    subtitle_de: Mapped[str_null_true]
+    description_de: Mapped[descr]
+    recommendation_de: Mapped[descr]
+    madeof_de: Mapped[descr]
+
+    title_cn: Mapped[str_null_true]
+    subtitle_cn: Mapped[str_null_true]
+    description_cn: Mapped[descr]
+    recommendation_cn: Mapped[descr]
+    madeof_cn: Mapped[descr]
+
 
 class Drink(Base, BaseAt, Lang):
     lazy = settings.LAZY

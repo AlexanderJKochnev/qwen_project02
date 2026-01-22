@@ -76,6 +76,10 @@ class DescriptionSchema(BaseModel):
     description: Optional[str] = None
     description_ru: Optional[str] = None
     description_fr: Optional[str] = None
+    description_es: Optional[str] = None
+    description_it: Optional[str] = None
+    description_de: Optional[str] = None
+    description_cn: Optional[str] = None
 
 
 """
@@ -93,6 +97,10 @@ class NameSchema(BaseModel):
     name: Optional[str] = None
     name_ru: Optional[str] = None
     name_fr: Optional[str] = None
+    name_es: Optional[str] = None
+    name_it: Optional[str] = None
+    name_de: Optional[str] = None
+    name_cn: Optional[str] = None
 
 
 """

@@ -151,6 +151,10 @@ class BaseDescription:
     __abstract__ = True
     description_ru: Mapped[descr]
     description_fr: Mapped[descr]
+    description_es: Mapped[descr]
+    description_it: Mapped[descr]
+    description_de: Mapped[descr]
+    description_cn: Mapped[descr]
     # description_xx: Mapped[descr]
 
 
@@ -161,6 +165,10 @@ class BaseLang(BaseDescription):
     __abstract__ = True
     name_ru: Mapped[str_null_true]
     name_fr: Mapped[str_null_true]
+    name_es: Mapped[str_null_true]
+    name_it: Mapped[str_null_true]
+    name_de: Mapped[str_null_true]
+    name_cn: Mapped[str_null_true]
     # name_xx: Mapped[str_null_true]
 
 

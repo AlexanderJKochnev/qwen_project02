@@ -1,4 +1,6 @@
 ## Добавление языков;
+0. .env
+   1. LANGS=en,ru,fr,es,it,de,cn
 1. app.core
    1. app.core.models
       1. app.core.models.base_model.py
@@ -19,9 +21,12 @@
            # description_xx
            # recommendation_xx
            # madeof_xx
-           # description_xx
+           # description_xx[PyCharm CE.app](..%2F..%2F..%2F..%2F..%2F..%2FApplications%2FPyCharm%20CE.app)
       2. create_gin_index_sql: the same fields as above
          1. также см. scripts/create_index.sql
-2. после всего выполнить:
+2. preact_front
+   1. 
+3. 
+4. после всего выполнить:
    1. sh alembic.sh
    2. sh create_trigram.sh
