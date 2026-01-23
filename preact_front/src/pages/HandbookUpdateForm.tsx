@@ -84,9 +84,19 @@ export const HandbookUpdateForm = () => {
     name: '',
     name_ru: '',
     name_fr: '',
+    name_es: '',
+    name_it: '',
+    name_de: '',
+    name_zh: '',
+    // name_xx: '',
     description: '',
     description_ru: '',
     description_fr: '',
+    description_es: '',
+    description_it: '',
+    description_de: '',
+    description_zh: '',
+    // description_xx: '',
     country_id: undefined,
     category_id: undefined,
     region_id: undefined,
@@ -101,9 +111,19 @@ export const HandbookUpdateForm = () => {
         name: data.name || '',
         name_ru: data.name_ru || '',
         name_fr: data.name_fr || '',
+        name_es: data.name_es || '',
+        name_it: data.name_it || '',
+        name_de: data.name_de || '',
+        name_zh: data.name_zh || '',
+        // name_xx: data.name_xx || '',
         description: data.description || '',
         description_ru: data.description_ru || '',
         description_fr: data.description_fr || '',
+        description_es: data.description_es || '',
+        description_it: data.description_it || '',
+        description_de: data.description_de || '',
+        description_zh: data.description_zh || '',
+        // description_xx: data.description_xx || '',
         country_id: data.country_id || undefined,
         category_id: data.category_id || undefined,
         region_id: data.region_id || undefined,
@@ -247,7 +267,74 @@ export const HandbookUpdateForm = () => {
                   placeholder="Nom en Francais"
                 />
               </div>
+              <div>
+                <label className="label">
+                  <span className="label-text">Name (Spain)</span>
+                </label>
+                <input
+                  type="text"
+                  name="name_es"
+                  value={formData.name_es}
+                  onInput={handleChange}
+                  className="input input-bordered w-full"
+                  placeholder="Nombre en Español"
+                />
+              </div>
+              <div>
+                <label className="label">
+                  <span className="label-text">Name (Italy)</span>
+                </label>
+                <input
+                  type="text"
+                  name="name_it"
+                  value={formData.name_it}
+                  onInput={handleChange}
+                  className="input input-bordered w-full"
+                  placeholder="Nome in Italiano"
+                />
+              </div>
+              <div>
+                <label className="label">
+                  <span className="label-text">Name (German)</span>
+                </label>
+                <input
+                  type="text"
+                  name="name_de"
+                  value={formData.name_de}
+                  onInput={handleChange}
+                  className="input input-bordered w-full"
+                  placeholder="Name auf Deutsch"
+                />
+              </div>
+              <div>
+                <label className="label">
+                  <span className="label-text">Name (Chinese)</span>
+                </label>
+                <input
+                  type="text"
+                  name="name_zh"
+                  value={formData.name_zh}
+                  onInput={handleChange}
+                  className="input input-bordered w-full"
+                  placeholder="中文名稱"
+                />
+              </div>
+              {/*
+              <div>
+                <label className="label">
+                  <span className="label-text">Name (Xxxxx)</span>
+                </label>
+                <input
+                  type="text"
+                  name="name_xx"
+                  value={formData.name_xx}
+                  onInput={handleChange}
+                  className="input input-bordered w-full"
+                  placeholder="Nom en Francais"
+                />
+              </div>
 
+              */}
               <div>
                 <label className="label">
                   <span className="label-text">Description</span>
@@ -289,6 +376,77 @@ export const HandbookUpdateForm = () => {
                   placeholder="Description en Francais"
                 />
               </div>
+
+              <div>
+                <label className="label">
+                  <span className="label-text">Description (Spain)</span>
+                </label>
+                <textarea
+                  name="description_es"
+                  value={formData.description_es}
+                  onInput={handleChange}
+                  className="textarea textarea-bordered w-full"
+                  rows={3}
+                  placeholder="Descripción en español"
+                />
+              </div>
+
+              <div>
+                <label className="label">
+                  <span className="label-text">Description (Italy)</span>
+                </label>
+                <textarea
+                  name="description_it"
+                  value={formData.description_it}
+                  onInput={handleChange}
+                  className="textarea textarea-bordered w-full"
+                  rows={3}
+                  placeholder="Descrizione in italiano"
+                />
+              </div>
+
+              <div>
+                <label className="label">
+                  <span className="label-text">Description (German)</span>
+                </label>
+                <textarea
+                  name="description_de"
+                  value={formData.description_de}
+                  onInput={handleChange}
+                  className="textarea textarea-bordered w-full"
+                  rows={3}
+                  placeholder="Beschreibung auf Deutsch"
+                />
+              </div>
+
+              <div>
+                <label className="label">
+                  <span className="label-text">Description (Chinese)</span>
+                </label>
+                <textarea
+                  name="description_zh"
+                  value={formData.description_zh}
+                  onInput={handleChange}
+                  className="textarea textarea-bordered w-full"
+                  rows={3}
+                  placeholder="中文說明"
+                />
+              </div>
+              {/*
+              <div>
+                <label className="label">
+                  <span className="label-text">Description (Xxxx)</span>
+                </label>
+                <textarea
+                  name="description_xx"
+                  value={formData.description_xx}
+                  onInput={handleChange}
+                  className="textarea textarea-bordered w-full"
+                  rows={3}
+                  placeholder="Description en Francais"
+                />
+              </div>
+              */}
 
               {/* Conditional dropdowns based on handbook type */}
               {type === 'regions' && (

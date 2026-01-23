@@ -66,11 +66,11 @@ class Lang:
     recommendation_de: Mapped[descr]
     madeof_de: Mapped[descr]
 
-    title_cn: Mapped[str_null_true]
-    subtitle_cn: Mapped[str_null_true]
-    description_cn: Mapped[descr]
-    recommendation_cn: Mapped[descr]
-    madeof_cn: Mapped[descr]
+    title_zh: Mapped[str_null_true]
+    subtitle_zh: Mapped[str_null_true]
+    description_zh: Mapped[descr]
+    recommendation_zh: Mapped[descr]
+    madeof_zh: Mapped[descr]
 
 
 class Drink(Base, BaseAt, Lang):

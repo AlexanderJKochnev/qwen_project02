@@ -292,7 +292,7 @@ class ItemApi(ItemApiRoot):
     es: ItemApiLang
     it: ItemApiLang
     de: ItemApiLang
-    cn: ItemApiLang
+    zh: ItemApiLang
 
 
 class ItemRead(BaseModel, CustomReadSchema, ImageUrlMixin):

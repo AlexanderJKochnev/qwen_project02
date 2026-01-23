@@ -154,7 +154,7 @@ class BaseDescription:
     description_es: Mapped[descr]
     description_it: Mapped[descr]
     description_de: Mapped[descr]
-    description_cn: Mapped[descr]
+    description_zh: Mapped[descr]
     # description_xx: Mapped[descr]
 
 
@@ -168,7 +168,7 @@ class BaseLang(BaseDescription):
     name_es: Mapped[str_null_true]
     name_it: Mapped[str_null_true]
     name_de: Mapped[str_null_true]
-    name_cn: Mapped[str_null_true]
+    name_zh: Mapped[str_null_true]
     # name_xx: Mapped[str_null_true]
 
 

@@ -57,9 +57,17 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
     title: '',
     title_ru: '',
     title_fr: '',
+    title_es: '',
+    title_it: '',
+    title_de: '',
+    title_zh: '',
     subtitle: '',
     subtitle_ru: '',
     subtitle_fr: '',
+    subtitle_es: '',
+    subtitle_it: '',
+    subtitle_de: '',
+    subtitle_zh: '',
     subcategory_id: '',
     sweetness_id: '',
     subregion_id: '',
@@ -69,12 +77,24 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
     description: '',
     description_ru: '',
     description_fr: '',
+    description_es: '',
+    description_it: '',
+    description_de: '',
+    description_zh: '',
     recommendation: '',
     recommendation_ru: '',
     recommendation_fr: '',
+    recommendation_es: '',
+    recommendation_it: '',
+    recommendation_de: '',
+    recommendation_zh: '',
     madeof: '',
     madeof_ru: '',
     madeof_fr: '',
+    madeof_es: '',
+    madeof_it: '',
+    madeof_de: '',
+    madeof_zh: '',
     vol: '',
     price: '',
     varietals: [] as string[], // Format: "id:percentage"
@@ -121,7 +141,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
 
         // Sort each handbook alphabetically by the visible field
         const getVisibleName = (item: any) => {
-          return item.name || item.name_en || item.name_ru || item.name_fr || '';
+          return item.name || item.name_en || item.name_ru || item.name_fr || item.name_es || item.name_it || item.name_de || item.name_zh || '';
         };
 
         const sortedSubcategories = [...subcategories].sort((a, b) =>
@@ -175,8 +195,8 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
         const sortedVarietals = [...checkedVarietals]
           .sort((a, b) => {
             // Sort checked items alphabetically by name
-            const aName = handbooks.varietals.find(hv => hv.id === a.id)?.name || a.name_en || a.name_ru || a.name_fr || '';
-            const bName = handbooks.varietals.find(hv => hv.id === b.id)?.name || b.name_en || b.name_ru || b.name_fr || '';
+            const aName = handbooks.varietals.find(hv => hv.id === a.id)?.name || a.name_en || a.name_ru || a.name_fr || item.name_es || item.name_it || item.name_de || item.name_zh || '';
+            const bName = handbooks.varietals.find(hv => hv.id === b.id)?.name || b.name_en || b.name_ru || b.name_fr || item.name_es || item.name_it || item.name_de || item.name_zh || '';
             return aName.localeCompare(bName);
           })
           .map(v => `${v.id}:${v.percentage}`);
@@ -185,8 +205,8 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
         const sortedFoods = [...(data.foods || [])]
           .sort((a, b) => {
             // Sort checked items alphabetically by name
-            const aName = handbooks.foods.find(hf => hf.id === a.id)?.name || a.name_en || a.name_ru || a.name_fr || '';
-            const bName = handbooks.foods.find(hf => hf.id === b.id)?.name || b.name_en || b.name_ru || b.name_fr || '';
+            const aName = handbooks.foods.find(hf => hf.id === a.id)?.name || a.name_en || a.name_ru || a.name_fr || item.name_es || item.name_it || item.name_de || item.name_zh || '';
+            const bName = handbooks.foods.find(hf => hf.id === b.id)?.name || b.name_en || b.name_ru || b.name_fr || item.name_es || item.name_it || item.name_de || item.name_zh || '';
             return aName.localeCompare(bName);
           })
           .map(f => f.id.toString());
@@ -195,9 +215,17 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
           title: data.title || '',
           title_ru: data.title_ru || '',
           title_fr: data.title_fr || null || '',
+          title_es: data.title_es || null || '',
+          title_it: data.title_it || null || '',
+          title_de: data.title_de || null || '',
+          title_zh: data.title_zh || null || '',
           subtitle: data.subtitle || '',
           subtitle_ru: data.subtitle_ru || '',
           subtitle_fr: data.subtitle_fr || null || '',
+          subtitle_es: data.subtitle_es || null || '',
+          subtitle_it: data.subtitle_it || null || '',
+          subtitle_de: data.subtitle_de || null || '',
+          subtitle_zh: data.subtitle_zh || null || '',
           subcategory_id: data.subcategory_id ? data.subcategory_id.toString() : '',
           sweetness_id: data.sweetness_id ? data.sweetness_id.toString() : '',
           subregion_id: data.subregion_id ? data.subregion_id.toString() : '',
@@ -207,12 +235,24 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
           description: data.description || '',
           description_ru: data.description_ru || '',
           description_fr: data.description_fr || null || '',
+          description_es: data.description_es || null || '',
+          description_it: data.description_it || null || '',
+          description_de: data.description_de || null || '',
+          description_zh: data.description_zh || null || '',
           recommendation: data.recommendation || '',
           recommendation_ru: data.recommendation_ru || '',
           recommendation_fr: data.recommendation_fr || null || '',
+          recommendation_es: data.recommendation_es || null || '',
+          recommendation_it: data.recommendation_it || null || '',
+          recommendation_de: data.recommendation_de || null || '',
+          recommendation_zh: data.recommendation_zh || null || '',
           madeof: data.madeof || '',
           madeof_ru: data.madeof_ru || '',
           madeof_fr: data.madeof_fr || null || '',
+          madeof_es: data.madeof_es || null || '',
+          madeof_it: data.madeof_it || null || '',
+          madeof_de: data.madeof_de || null || '',
+          madeof_zh: data.madeof_zh || null || '',
           vol: data.vol ? data.vol.toString() : '',
           price: data.price ? data.price.toString() : '',
           varietals: sortedVarietals,
@@ -518,7 +558,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                 </div>
                 <div>
                   <label className="label">
-                    <span className="label-text">Title (RU)</span>
+                    <span className="label-text">Title (Russian)</span>
                   </label>
                   <input
                     type="text"
@@ -532,7 +572,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
 
                 <div>
                   <label className="label">
-                    <span className="label-text">Title (FR)</span>
+                    <span className="label-text">Title (French)</span>
                   </label>
                   <input
                     type="text"
@@ -544,6 +584,63 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                   />
                 </div>
 
+                <div>
+                  <label className="label">
+                    <span className="label-text">Title (Spanish)</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="title_es"
+                    value={formData.title_es}
+                    onInput={handleChange}
+                    className="input input-bordered w-full"
+                    placeholder="Título en español"
+                  />
+                </div>
+
+                <div>
+                  <label className="label">
+                    <span className="label-text">Title (Italian)</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="title_it"
+                    value={formData.title_it}
+                    onInput={handleChange}
+                    className="input input-bordered w-full"
+                    placeholder="Titolo"
+                  />
+                </div>
+
+                <div>
+                  <label className="label">
+                    <span className="label-text">Title (German)</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="title_de"
+                    value={formData.title_de}
+                    onInput={handleChange}
+                    className="input input-bordered w-full"
+                    placeholder="Titel"
+                  />
+                </div>
+
+                <div>
+                  <label className="label">
+                    <span className="label-text">Title (Chinese)</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="title_zh"
+                    value={formData.title_zh}
+                    onInput={handleChange}
+                    className="input input-bordered w-full"
+                    placeholder="標題"
+                  />
+                </div>
+
+                {/* lang title */}
                 <div>
                   <label className="label">
                     <span className="label-text">Subtitle</span>
@@ -560,7 +657,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
 
                 <div>
                   <label className="label">
-                    <span className="label-text">Subtitle (RU)</span>
+                    <span className="label-text">Subtitle (Russian)</span>
                   </label>
                   <input
                     type="text"
@@ -568,12 +665,13 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                     value={formData.subtitle_ru}
                     onInput={handleChange}
                     className="input input-bordered w-full"
+                    placeholder="Наименование"
                   />
                 </div>
 
                 <div>
                   <label className="label">
-                    <span className="label-text">Subtitle (FR)</span>
+                    <span className="label-text">Subtitle (French)</span>
                   </label>
                   <input
                     type="text"
@@ -581,8 +679,67 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                     value={formData.subtitle_fr}
                     onInput={handleChange}
                     className="input input-bordered w-full"
+                    placeholder="Subtitre"
                   />
                 </div>
+
+                <div>
+                  <label className="label">
+                    <span className="label-text">Subtitle (Spanish)</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="subtitle_es"
+                    value={formData.subtitle_es}
+                    onInput={handleChange}
+                    className="input input-bordered w-full"
+                    placeholder="Subtítulo en español"
+                  />
+                </div>
+
+                <div>
+                  <label className="label">
+                    <span className="label-text">Subtitle (Italian)</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="subtitle_it"
+                    value={formData.subtitle_it}
+                    onInput={handleChange}
+                    className="input input-bordered w-full"
+                    placeholder="Sottotitolo"
+                  />
+                </div>
+
+                <div>
+                  <label className="label">
+                    <span className="label-text">Subtitle (German)</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="subtitle_de"
+                    value={formData.subtitle_de}
+                    onInput={handleChange}
+                    className="input input-bordered w-full"
+                    placeholder="Untertitel"
+                  />
+                </div>
+
+                <div>
+                  <label className="label">
+                    <span className="label-text">Subtitle (Chinese)</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="subtitle_zh"
+                    value={formData.subtitle_zh}
+                    onInput={handleChange}
+                    className="input input-bordered w-full"
+                    placeholder="標題"
+                  />
+                </div>
+
+                {/* lang subtitle */}
 
                 <div>
                   <label className="label">
@@ -679,7 +836,8 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                     <option value="">Select a subcategory</option>
                     {handbooks.subcategories.map(subcategory => (
                       <option key={subcategory.id} value={subcategory.id}>
-                        {subcategory.name || subcategory.name_en || subcategory.name_ru || subcategory.name_fr}
+                        {subcategory.name || subcategory.name_en || subcategory.name_ru || subcategory.name_fr || subcategory.name_es || subcategory.name_it || subcategory.name_de || subcategory.name_zh}
+                        {/* lang subcategory*/}
                       </option>
                     ))}
                   </select>
@@ -698,7 +856,8 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                     <option value="">Select sweetness</option>
                     {handbooks.sweetness.map(sweet => (
                       <option key={sweet.id} value={sweet.id}>
-                        {sweet.name || sweet.name_en || sweet.name_ru || sweet.name_fr}
+                        {sweet.name || sweet.name_en || sweet.name_ru || sweet.name_fr || sweet.name_es || sweet.name_it || sweet.name_de || sweet.name_zh}
+                        {/* lang sweet */}
                       </option>
                     ))}
                   </select>
@@ -718,7 +877,8 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                     <option value="">Select a subregion</option>
                     {handbooks.subregions.map(subregion => (
                       <option key={subregion.id} value={subregion.id}>
-                        {subregion.name || subregion.name_en || subregion.name_ru || subregion.name_fr}
+                        {subregion.name || subregion.name_en || subregion.name_ru || subregion.name_fr || subregion.name_es || subregion.name_it || subregion.name_de || subregion.name_zh}
+                        {/* lang subregion*/}
                       </option>
                     ))}
                   </select>
@@ -787,12 +947,13 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                     onInput={handleChange}
                     className="textarea textarea-bordered w-full"
                     rows={3}
+                    placeholder="Description"
                   />
                 </div>
 
                 <div>
                   <label className="label">
-                    <span className="label-text">Description (RU)</span>
+                    <span className="label-text">Description (Russian)</span>
                   </label>
                   <textarea
                     name="description_ru"
@@ -800,12 +961,13 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                     onInput={handleChange}
                     className="textarea textarea-bordered w-full"
                     rows={3}
+                    placeholder="Описание"
                   />
                 </div>
 
                 <div>
                   <label className="label">
-                    <span className="label-text">Description (FR)</span>
+                    <span className="label-text">Description (French)</span>
                   </label>
                   <textarea
                     name="description_fr"
@@ -813,8 +975,66 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                     onInput={handleChange}
                     className="textarea textarea-bordered w-full"
                     rows={3}
+                    placeholder="Description"
                   />
                 </div>
+
+                <div>
+                  <label className="label">
+                    <span className="label-text">Description (Spain)</span>
+                  </label>
+                  <textarea
+                    name="description_es"
+                    value={formData.description_es}
+                    onInput={handleChange}
+                    className="textarea textarea-bordered w-full"
+                    rows={3}
+                    placeholder="Descripción en español"
+                  />
+                </div>
+
+                <div>
+                    <label className="label">
+                      <span className="label-text">Description (Italy)</span>
+                    </label>
+                    <textarea
+                      name="description_it"
+                      value={formData.description_it}
+                      onInput={handleChange}
+                      className="textarea textarea-bordered w-full"
+                      rows={3}
+                      placeholder="Descrizione in italiano"
+                    />
+                </div>
+
+                <div>
+                    <label className="label">
+                      <span className="label-text">Description (German)</span>
+                    </label>
+                    <textarea
+                      name="description_de"
+                      value={formData.description_de}
+                      onInput={handleChange}
+                      className="textarea textarea-bordered w-full"
+                      rows={3}
+                      placeholder="Beschreibung auf Deutsch"
+                    />
+                </div>
+
+                <div>
+                    <label className="label">
+                      <span className="label-text">Description (Chinese)</span>
+                    </label>
+                    <textarea
+                      name="description_zh"
+                      value={formData.description_zh}
+                      onInput={handleChange}
+                      className="textarea textarea-bordered w-full"
+                      rows={3}
+                      placeholder="中文說明"
+                    />
+                </div>
+                {/* lang description */}
               </div>
             </details>
             </div>
@@ -834,12 +1054,13 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                     onInput={handleChange}
                     className="textarea textarea-bordered w-full"
                     rows={3}
+                    placeholder="Recommendation"
                   />
                 </div>
 
                 <div>
                   <label className="label">
-                    <span className="label-text">Recommendation (RU)</span>
+                    <span className="label-text">Recommendation (Russian)</span>
                   </label>
                   <textarea
                     name="recommendation_ru"
@@ -847,12 +1068,13 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                     onInput={handleChange}
                     className="textarea textarea-bordered w-full"
                     rows={3}
+                    placeholder="Рекомендации"
                   />
                 </div>
 
                 <div>
                   <label className="label">
-                    <span className="label-text">Recommendation (FR)</span>
+                    <span className="label-text">Recommendation (French)</span>
                   </label>
                   <textarea
                     name="recommendation_fr"
@@ -860,8 +1082,67 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                     onInput={handleChange}
                     className="textarea textarea-bordered w-full"
                     rows={3}
+                    placeholder="Recommandation"
                   />
                 </div>
+
+                <div>
+                  <label className="label">
+                    <span className="label-text">Recommendation (Spanish)</span>
+                  </label>
+                  <textarea
+                    name="recommendation_es"
+                    value={formData.recommendation_es}
+                    onInput={handleChange}
+                    className="textarea textarea-bordered w-full"
+                    rows={3}
+                    placeholder="Recomendación"
+                  />
+                </div>
+
+                <div>
+                  <label className="label">
+                    <span className="label-text">Recommendation (Italian)</span>
+                  </label>
+                  <textarea
+                    name="recommendation_it"
+                    value={formData.recommendation_it}
+                    onInput={handleChange}
+                    className="textarea textarea-bordered w-full"
+                    rows={3}
+                    placeholder="Raccomandazione"
+                  />
+                </div>
+
+                <div>
+                  <label className="label">
+                    <span className="label-text">Recommendation (German)</span>
+                  </label>
+                  <textarea
+                    name="recommendation_de"
+                    value={formData.recommendation_de}
+                    onInput={handleChange}
+                    className="textarea textarea-bordered w-full"
+                    rows={3}
+                    placeholder="Empfehlung"
+                  />
+                </div>
+
+                <div>
+                  <label className="label">
+                    <span className="label-text">Recommendation (Chinese)</span>
+                  </label>
+                  <textarea
+                    name="recommendation_zh"
+                    value={formData.recommendation_zh}
+                    onInput={handleChange}
+                    className="textarea textarea-bordered w-full"
+                    rows={3}
+                    placeholder="推薦"
+                  />
+                </div>
+
+                {/* lang recommendation */}
 
                 <div>
                   <label className="label">
@@ -873,12 +1154,13 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                     onInput={handleChange}
                     className="textarea textarea-bordered w-full"
                     rows={3}
+                    placeholder="Made of"
                   />
                 </div>
 
                 <div>
                   <label className="label">
-                    <span className="label-text">Made Of (RU)</span>
+                    <span className="label-text">Made Of (Russian)</span>
                   </label>
                   <textarea
                     name="madeof_ru"
@@ -886,12 +1168,13 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                     onInput={handleChange}
                     className="textarea textarea-bordered w-full"
                     rows={3}
+                    placeholder="Сделано из"
                   />
                 </div>
 
                 <div>
                   <label className="label">
-                    <span className="label-text">Made Of (FR)</span>
+                    <span className="label-text">Made Of (French)</span>
                   </label>
                   <textarea
                     name="madeof_fr"
@@ -899,8 +1182,67 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                     onInput={handleChange}
                     className="textarea textarea-bordered w-full"
                     rows={3}
+                    placeholder="Fait de"
                   />
                 </div>
+
+                <div>
+                  <label className="label">
+                    <span className="label-text">Made Of (Spanish)</span>
+                  </label>
+                  <textarea
+                    name="madeof_es"
+                    value={formData.madeof_es}
+                    onInput={handleChange}
+                    className="textarea textarea-bordered w-full"
+                    rows={3}
+                    placeholder="Hecho de"
+                  />
+                </div>
+
+                <div>
+                  <label className="label">
+                    <span className="label-text">Made Of (Italian)</span>
+                  </label>
+                  <textarea
+                    name="madeof_it"
+                    value={formData.madeof_it}
+                    onInput={handleChange}
+                    className="textarea textarea-bordered w-full"
+                    rows={3}
+                    placeholder="Fatto di"
+                  />
+                </div>
+
+                <div>
+                  <label className="label">
+                    <span className="label-text">Made Of (German)</span>
+                  </label>
+                  <textarea
+                    name="madeof_de"
+                    value={formData.madeof_de}
+                    onInput={handleChange}
+                    className="textarea textarea-bordered w-full"
+                    rows={3}
+                    placeholder="Hergestellt aus"
+                  />
+                </div>
+
+                <div>
+                  <label className="label">
+                    <span className="label-text">Made Of (Chinese)</span>
+                  </label>
+                  <textarea
+                    name="madeof_zh"
+                    value={formData.madeof_zh}
+                    onInput={handleChange}
+                    className="textarea textarea-bordered w-full"
+                    rows={3}
+                    placeholder="製成"
+                  />
+                </div>
+
+                {/* lanf madeof*/}
               </div>
             </details>
             </div>
@@ -922,8 +1264,9 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                         if (!aIsChecked && bIsChecked) return 1;
 
                         // Second priority: alphabetical by name
-                        const aName = a.name || a.name_en || a.name_ru || a.name_fr || "";
-                        const bName = b.name || b.name_en || b.name_ru || b.name_fr || "";
+                        const aName = a.name || a.name_en || a.name_ru || a.name_fr || a.name_es || a.name_it || a.name_de || a.name_zh || "";
+                        const bName = b.name || b.name_en || b.name_ru || b.name_fr || b.name_es || b.name_it || b.name_de || b.name_zh || "";
+                        {/* varieta l*/}
                         return aName.localeCompare(bName);
                       })
                       .map(varietal => {
@@ -942,7 +1285,8 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                               className="mr-2"
                             />
                             <label htmlFor={`varietal-${varietal.id}`} className="flex-1 cursor-pointer">
-                              {varietal.name || varietal.name_en || varietal.name_ru || varietal.name_fr}
+                              {varietal.name || varietal.name_en || varietal.name_ru || varietal.name_fr || varietal.name_es || varietal.name_it || varietal.name_de || varietal.name_zh}
+                              {/* lang varietal.name */}
                             </label>
                             {isChecked && (
                               <div className="ml-2">
@@ -980,8 +1324,9 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                         if (!aIsChecked && bIsChecked) return 1;
 
                         // Second priority: alphabetical by name
-                        const aName = a.name || a.name_en || a.name_ru || a.name_fr || "";
-                        const bName = b.name || b.name_en || b.name_ru || b.name_fr || "";
+                        const aName = a.name || a.name_en || a.name_ru || a.name_fr || a.name_es || a.name_it || a.name_de || a.name_zh || "";
+                        const bName = b.name || b.name_en || b.name_ru || b.name_fr || b.name_es || b.name_it || b.name_de || b.name_zh || "";
+                        {/* lang fooods */}
                         return aName.localeCompare(bName);
                       })
                       .map(food => {
@@ -998,7 +1343,8 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                               className="mr-2"
                             />
                             <label htmlFor={`food-${food.id}`} className="cursor-pointer">
-                              {food.name || food.name_en || food.name_ru || food.name_fr}
+                              {food.name || food.name_en || food.name_ru || food.name_fr || food.name_es || food.name_it || food.name_de || food.name_zh}
+                              {/* lang food.name */}
                             </label>
                           </div>
                         );
