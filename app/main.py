@@ -156,9 +156,12 @@ async def health_check(mongodb_instance: MongoDB = Depends(get_mongodb)):
 
 @app.on_event("startup")
 async def startup_event():
+    import os
     await init_db_extensions()
     # Initialize background tasks
-    await init_background_tasks()
+    # Check if we should populate the Meilisearch index with initial data
+    populate_meilisearch = os.getenv("POPULATE_MEILISEARCH_ON_STARTUP", "false").lower() == "true"
+    await init_background_tasks(populate_initial_data=populate_meilisearch)
 
 
 @app.on_event("shutdown")

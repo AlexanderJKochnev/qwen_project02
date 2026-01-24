@@ -32,7 +32,7 @@ async def process_meilisearch_outbox():
             await asyncio.sleep(10)  # Wait longer on error
 
 
-async def start_background_tasks():
+async def start_background_tasks(populate_initial_data: bool = False):
     """
     Start all background tasks as asyncio tasks
     """
@@ -42,6 +42,15 @@ async def start_background_tasks():
         logger.info("Meilisearch index initialized")
     except Exception as e:
         logger.error(f"Failed to initialize Meilisearch index: {e}")
+
+    # Optionally populate the index with initial data
+    if populate_initial_data:
+        logger.info("Populating Meilisearch index with initial data...")
+        try:
+            await search_service.populate_index_from_db(batch_size=100)
+            logger.info("Meilisearch index populated with initial data")
+        except Exception as e:
+            logger.error(f"Failed to populate Meilisearch index with initial data: {e}")
 
     # Start the outbox processor as a background task
     outbox_processor_task = asyncio.create_task(process_meilisearch_outbox())
@@ -53,12 +62,12 @@ async def start_background_tasks():
 background_tasks = []
 
 
-async def init_background_tasks():
+async def init_background_tasks(populate_initial_data: bool = False):
     """
     Initialize and start all background tasks
     """
     global background_tasks
-    background_tasks = await start_background_tasks()
+    background_tasks = await start_background_tasks(populate_initial_data=populate_initial_data)
 
 
 async def stop_background_tasks():

@@ -1,12 +1,10 @@
+```
+# Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
 *.py[cod]
 *$py.class
 *.so
 .Python
-meili_data/
 build/
 develop-eggs/
 dist/
@@ -22,24 +20,21 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-MANIFEST
 
-# Coverage
-.coverage
-.coverage.*
-htmlcov/
-.coverage.xml
-.pytest_cache/
-
-# Environment
-# .env
-# .env.local
-# .env.*
-.venv/
+# Virtual environments
 venv/
+env/
 ENV/
-env.bak/
-venv.bak/
+.venv/
+.env/
+
+# Logs
+*.log
+
+# Environment variables
+.env
+.env.local
+*.env.*
 
 # IDE
 .vscode/
@@ -48,13 +43,15 @@ venv.bak/
 *.swo
 *.tmp
 
-# OS
-.DS_Store
-Thumbs.db
+# Coverage
+.coverage
+coverage/
+htmlcov/
 
-TODO.md
-migration_volume
-mongodb_data
-pg_data
-pg_dump
-upload_volume
+# Distribution / packaging
+.Python
+_build/
+buck-out/
+build/
+dist/
+```

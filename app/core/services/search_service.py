@@ -15,6 +15,8 @@ from app.core.models.outbox import Outbox
 from app.core.config.project_config import settings
 from app.support.item.schemas import ItemReadRelation
 from app.core.utils.pydantic_key_extractor import extract_keys_with_blacklist
+from app.support.item.repository import ItemRepository
+from app.core.config.database.db_async import get_db
 
 
 class SearchService:
@@ -145,6 +147,84 @@ class SearchService:
     async def close(self):
         """Close the Meilisearch client."""
         await self.client.aclose()
+
+    async def populate_index_from_db(self, batch_size: int = 100):
+        """
+        Populate the Meilisearch index with all existing items from the database.
+        This method should be called once after index creation to fill it with initial data.
+        """
+        from sqlalchemy.ext.asyncio import AsyncSession
+        from sqlalchemy import select
+        from sqlalchemy.orm import selectinload, joinedload
+        from app.support.item.model import Item
+        from app.support.drink.model import Drink
+        from app.support.subcategory.model import Subcategory
+        from app.support.subregion.model import Subregion
+        from app.support.region.model import Region
+        from app.support.country.model import Country
+        from app.support.sweetness.model import Sweetness
+        from app.support.varietal.model import Varietal
+        from app.support.food.model import Food
+        
+        logger.info("Starting initial population of Meilisearch index...")
+        
+        try:
+            # Get all items from database in batches with all required relationships
+            async for session in get_db():
+                offset = 0
+                
+                while True:
+                    # Get a batch of items with their relations loaded
+                    stmt = (
+                        select(Item)
+                        .options(
+                            selectinload(Item.drink).selectinload(Drink.subcategory).selectinload(Subcategory.category),
+                            selectinload(Item.drink).selectinload(Drink.subregion).selectinload(Subregion.region).selectinload(Region.country),
+                            selectinload(Item.drink).selectinload(Drink.sweetness),
+                            selectinload(Item.drink).selectinload(Drink.food_associations).selectinload('food'),
+                            selectinload(Item.drink).selectinload(Drink.varietal_associations).selectinload('varietal')
+                        )
+                        .offset(offset)
+                        .limit(batch_size)
+                    )
+                    result = await session.execute(stmt)
+                    items = result.scalars().all()
+                    
+                    if not items:
+                        break  # No more items to process
+                    
+                    # Convert items to dictionaries for Meilisearch
+                    documents = []
+                    for item in items:
+                        try:
+                            # Convert item to dictionary using the schema
+                            item_dict = ItemReadRelation.model_validate(item).model_dump()
+                            documents.append(item_dict)
+                        except Exception as e:
+                            logger.error(f"Failed to convert item {item.id} to schema: {e}")
+                            continue
+                    
+                    if documents:
+                        # Add documents to Meilisearch
+                        index = self.client.index(self.index_name)
+                        task_info = await index.add_documents(documents)
+                        
+                        # Wait for the task to complete
+                        await self.client.wait_for_task(task_info.task_uid)
+                        
+                        logger.info(f"Added {len(documents)} documents to Meilisearch index")
+                    
+                    offset += batch_size
+                    
+                    # Break if we got less than batch_size items (last batch)
+                    if len(items) < batch_size:
+                        break
+            
+            logger.info("Completed initial population of Meilisearch index.")
+            
+        except Exception as e:
+            logger.error(f"Failed to populate Meilisearch index: {e}")
+            raise
 
 
 # Global search service instance
