@@ -31,6 +31,7 @@ from app.support.subregion.model import Subregion
 from app.support.subcategory.model import Subcategory
 from app.support.parser.model import Name, Image, Code, Rawdata, Registry
 from app.support.field_keys.model import FieldKey
+from app.core.models.outbox import Outbox
 
 
 # this is the Alembic Config object, which provides
