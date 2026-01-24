@@ -198,11 +198,14 @@ class Settings(BaseSettings):
     MYMEMORY_REQUESTS_PER_MINUTE: int = 10  # Rate limit for MyMemory API
     MYMEMORY_REQUESTS_PER_DAY: int = 1000   # Daily limit for MyMemory API
 
-    # === HUGGINGFACE TRANSLATION SERVICE ===
+    # === HUGGINGFACE TRANSLATION SERVICE === NOT USED
     HF_API_TOKEN: str = "test token"  # Default token
     HF_MODEL_NAME: str = "google/translategemma-4b-it"
     HF_REQUESTS_PER_MINUTE: int = 5  # Rate limit for HuggingFace API
     HF_REQUESTS_PER_DAY: int = 100   # Daily limit for HuggingFace API
+    # === ПОИСКОВЫЙ СЕРВИС
+    MEILISEARCH_URL: str = "http://meilisearch:7700"  # ← имя сервиса в docker-compose
+    MEILISEARCH_MASTER_KEY: str = "your_strong_master_key_here"
 
     model_config = SettingsConfigDict(env_file=get_path_to_root(),
                                       env_file_encoding='utf-8',

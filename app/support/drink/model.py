@@ -132,7 +132,7 @@ class Drink(Base, BaseAt, Lang):
     """
     varietal_associations = relationship(
         "DrinkVarietal",
-        back_populates="drink", 
+        back_populates="drink",
         cascade="all, delete-orphan",
         # overlaps="varietals"
         lazy="selectin"

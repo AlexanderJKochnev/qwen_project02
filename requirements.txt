@@ -32,6 +32,8 @@ loguru
 # for parsing
 beautifulsoup4~=4.14.2
 requests
+# for search
+meilisearch
 # arq
 arq>=0.25
 # for testing purpose only

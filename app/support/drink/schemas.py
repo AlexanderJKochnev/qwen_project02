@@ -8,9 +8,9 @@ from app.support.drink.drink_varietal_schema import (DrinkVarietalRelation, Drin
                                                      DrinkVarietalId)
 from app.support.drink.drink_food_schema import DrinkFoodRelation
 from app.support.food.schemas import FoodCreateRelation, FoodRead, FoodId
-from app.support.subcategory.schemas import SubcategoryCreateRelation, SubcategoryRead
-from app.support.subregion.schemas import SubregionCreateRelation, SubregionRead
-from app.support.sweetness.schemas import SweetnessCreateRelation, SweetnessRead
+from app.support.subcategory.schemas import SubcategoryCreateRelation, SubcategoryRead, SubcategoryReadRelation
+from app.support.subregion.schemas import SubregionCreateRelation, SubregionRead, SubregionReadRelation
+from app.support.sweetness.schemas import SweetnessCreateRelation, SweetnessRead, SweetnessReadRelation
 from app.support.varietal.schemas import VarietalRead
 
 
@@ -115,27 +115,26 @@ class CustomCreateRelation(LangMixin):
     varietals: Optional[List[DrinkVarietalRelation]] = None
 
 
-"""
 class CustomReadRelation(LangMixin):
     title: str
-    subcategory: SubcategoryCreateRelation
-    sweetness: Optional[SweetnessCreateRelation] = None
-    subregion: SubregionCreateRelation
+    subcategory: SubcategoryReadRelation
+    sweetness: Optional[SweetnessReadRelation] = None
+    subregion: SubregionReadRelation
     alc: Optional[float] = None
     sugar: Optional[float] = None
     age: Optional[str] = None
     varietal_associations: Optional[List[DrinkVarietalRelation]] = Field(exclude=True)
-    food_associations: Optional[List[DrinkFoodRelation]] = Field(exclude=True)
+    foods: Optional[list] = []
+    # food_associations: Optional[List[DrinkFoodRelation]] = Field(exclude=True)
 
     @property
     def varietals(self):
         return [{"varietal": assoc.varietal, "percentage": assoc.percentage}
                 for assoc in self.varietal_associations]
 
-    @property
-    def foods(self):
-        return [assoc.model_dump() for assoc in self.food_associations]
-"""
+    # @property
+    # def foods(self):
+    #     return [assoc.model_dump() for assoc in self.food_associations]
 
 
 class CustomReadSchema(LangMixin):

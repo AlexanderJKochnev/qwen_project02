@@ -295,7 +295,7 @@ class ItemApi(ItemApiRoot):
     zh: ItemApiLang
 
 
-class ItemRead(BaseModel, CustomReadSchema, ImageUrlMixin):
+class ItemRead(BaseModel, CustomReadRelation, ImageUrlMixin):
     pass
 
 
