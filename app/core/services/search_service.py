@@ -141,11 +141,9 @@ class SearchService:
             
             search_results = await index.search(
                 query,
-                {
-                    'offset': (page - 1) * page_size,
-                    'limit': page_size,
-                    'showMatchesPosition': True
-                }
+                offset=(page - 1) * page_size,
+                limit=page_size,
+                show_matches_position=True
             )
             
             return {

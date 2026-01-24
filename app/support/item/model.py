@@ -1,12 +1,11 @@
 # app/support/Item/model.py
 
-import json
 from __future__ import annotations
+import json
 from typing import TYPE_CHECKING
-from sqlalchemy import ForeignKey, UniqueConstraint, event
+from sqlalchemy import ForeignKey, UniqueConstraint, event, Table
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.engine import Connection
-from sqlalchemy.sql import Table
 
 from app.core.models.base_model import Base, BaseAt, ion, money, volume
 from app.core.models.image_mixin import ImageMixin
