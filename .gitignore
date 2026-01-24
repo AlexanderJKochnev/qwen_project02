@@ -6,6 +6,7 @@ __pycache__/
 *$py.class
 *.so
 .Python
+meili_data/
 build/
 develop-eggs/
 dist/

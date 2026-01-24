@@ -4,9 +4,9 @@
 Background tasks for processing Meilisearch outbox
 """
 import asyncio
-from typing import Callable
+# from typing import Callable
 from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
+# from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.services.search_service import search_service
 from app.core.config.database.db_async import get_db
 
@@ -46,9 +46,8 @@ async def start_background_tasks():
     # Start the outbox processor as a background task
     outbox_processor_task = asyncio.create_task(process_meilisearch_outbox())
     logger.info("Started Meilisearch outbox processor background task")
-
     return [outbox_processor_task]
-
+    
 
 # Global variable to hold background tasks
 background_tasks = []

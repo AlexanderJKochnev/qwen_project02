@@ -1,6 +1,5 @@
 # app/main.py
 # from sqlalchemy.exc import SQLAlchemyError
-import logging
 
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -42,7 +41,7 @@ from app.support.parser.router import (StatusRouter, CodeRouter, NameRouter, Orc
 # Import background tasks
 from app.core.utils.background_tasks import init_background_tasks, stop_background_tasks
 
-logging.basicConfig(level=logging.WARNING)  # в начале main.py или conftest.py
+# logging.basicConfig(level=logging.WARNING)  # в начале main.py или conftest.py
 # logging.disable(logging.CRITICAL)
 
 

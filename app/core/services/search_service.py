@@ -3,10 +3,9 @@
 """
 Meilisearch synchronization service using Transactional Outbox pattern
 """
-import asyncio
 import json
-from typing import List, Optional, Any, Dict
-from datetime import datetime
+from typing import Any, Dict
+from datetime import datetime, timezone
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, and_
@@ -54,7 +53,7 @@ class SearchService:
         try:
             # Get unprocessed entries
             stmt = select(Outbox).where(
-                and_(Outbox.entity_type == 'item', Outbox.processed == False)
+                and_(Outbox.entity_type == 'item', Outbox.processed is False)
             ).limit(batch_size)
 
             result = await session.execute(stmt)
@@ -77,7 +76,7 @@ class SearchService:
 
                     # Mark as processed
                     update_stmt = update(Outbox).where(Outbox.id == entry.id).values(
-                        processed=True, processed_at=datetime.utcnow()
+                        processed=True, processed_at=datetime.now(timezone.utc)
                     )
                     await session.execute(update_stmt)
                     await session.commit()
@@ -87,7 +86,7 @@ class SearchService:
                 except Exception as e:
                     # Log error and mark as failed
                     update_stmt = update(Outbox).where(Outbox.id == entry.id).values(
-                        processed=True, processed_at=datetime.utcnow(), error_message=str(e)
+                        processed=True, processed_at=datetime.now(timezone.utc), error_message=str(e)
                     )
                     await session.execute(update_stmt)
                     await session.commit()
@@ -134,11 +133,8 @@ class SearchService:
         """Perform search in Meilisearch."""
         try:
             index = self.client.index(self.index_name)
-
-            search_results = await index.search(
-                query, {'offset': (page - 1) * page_size, 'limit': page_size, 'showMatchesPosition': True}
-            )
-
+            search_results = await index.search(query, offset=(page - 1) * page_size, limit=page_size,
+                                                show_matches_position=True)
             return {'results': search_results.hits, 'total': search_results.estimated_total_hits, 'page': page,
                     'page_size': page_size,
                     'total_pages': (search_results.estimated_total_hits + page_size - 1) // page_size}
