@@ -39,14 +39,8 @@ from app.support.parser.router import (StatusRouter, CodeRouter, NameRouter, Orc
 # from app.arq_worker_routes import router as ArqWorkerRouter
 # from app.support.warehouse.router import WarehouseRouter
 
-# from sqladmin import Admin
-# from app.middleware.auth_middleware import AuthMiddleware
-# from app.admin import sqladm
-
-# from app.core.routers.image_router import router as image_router
-# from app.core.security import get_current_active_user
-
-# from app.admin.auth import authentication_backend
+# Import background tasks
+from app.core.utils.background_tasks import init_background_tasks, stop_background_tasks
 
 logging.basicConfig(level=logging.WARNING)  # в начале main.py или conftest.py
 # logging.disable(logging.CRITICAL)
@@ -164,10 +158,14 @@ async def health_check(mongodb_instance: MongoDB = Depends(get_mongodb)):
 @app.on_event("startup")
 async def startup_event():
     await init_db_extensions()
+    # Initialize background tasks
+    await init_background_tasks()
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
+    # Stop background tasks
+    await stop_background_tasks()
     mongodb_instance = await get_mongodb()
     await mongodb_instance.disconnect()
     await engine.dispose()
