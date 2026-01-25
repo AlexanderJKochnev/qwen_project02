@@ -1,6 +1,7 @@
 # app/main.py
 # from sqlalchemy.exc import SQLAlchemyError
 import httpx
+
 from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,10 +10,10 @@ from loguru import logger
 import sys
 from time import perf_counter
 from app.auth.routers import auth_router, user_router
-from app.core.config.project_config import settings
-from app.core.config.database.db_async import engine, get_db, init_db_extensions
-# from app.mongodb.config import get_mongodb, MongoDB
-from app.core.config.database.db_mongo import MongoDBManager
+# from app.core.config.project_config import settings
+from app.core.config.database.db_async import engine, init_db_extensions
+from app.core.config.database.db_mongo import MongoDBManager, get_mongodb
+from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.mongodb.router import router as MongoRouter
 from app.preact.create.router import CreateRouter
 from app.preact.get.router import GetRouter
@@ -65,10 +66,11 @@ async def lifespan(app: FastAPI):
     await app.state.http_client.aclose()
     await stop_background_tasks()
     await MongoDBManager.disconnect()
-    # await engine.dispose()
+    await engine.dispose()
 
 
 app = FastAPI(title="Hybrid PostgreSQL-MongoDB API",
+              lifespan=lifespan,
               swagger_ui_parameters={
                   "docExpansion": "none",  # Сворачивает всё: и теги, и операции
                   "deepLinking": True,  # Позволяет копировать ссылки на конкретные методы
@@ -102,7 +104,8 @@ async def log_requests(request: Request, call_next):
 
     # Логируем завершение и время выполнения
     logger.info(
-        f"Завершено: {request.method} {request.url.path} | Статус: {response.status_code} | Время: {formatted_process_time}мс"
+        f"Завершено: {request.method} {request.url.path} | Статус: {response.status_code} | "
+        f"Время: {formatted_process_time}мс"
     )
 
     return response
@@ -162,36 +165,16 @@ async def read_root():
 
 
 @app.get("/health")
-async def health_check(mongodb_instance: MongoDB = Depends(get_mongodb)):
+async def health_check(mongo_db: AsyncIOMotorDatabase = Depends(get_mongodb)):
     status_info = {"status": "healthy",
-                   "mongo_connected": mongodb_instance.client is not None,
+                   "mongo_connected": mongo_db is not None,
                    "mongo_operational": False}
 
-    if mongodb_instance.client:
+    if mongo_db is not None:
         try:
-            await mongodb_instance.client.admin.command('ping')
+            await mongo_db.command('ping')
             status_info["mongo_operational"] = True
         except Exception:
             status_info["status"] = "degraded"
 
     return status_info
-
-""" see lifespan
-@app.on_event("startup")
-async def startup_event():
-    import os
-    await init_db_extensions()
-    # Initialize background tasks
-    # Check if we should populate the Meilisearch index with initial data
-    populate_meilisearch = os.getenv("POPULATE_MEILISEARCH_ON_STARTUP", "false").lower() == "true"
-    await init_background_tasks(populate_initial_data=populate_meilisearch)
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    # Stop background tasks
-    await stop_background_tasks()
-    mongodb_instance = await get_mongodb()
-    await mongodb_instance.disconnect()
-    await engine.dispose()
-"""

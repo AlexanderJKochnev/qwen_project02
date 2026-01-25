@@ -5,12 +5,12 @@ import motor.motor_asyncio
 from motor.motor_asyncio import AsyncIOMotorDatabase, AsyncIOMotorClient
 # from app.core.config.project_config import settings
 from app.mongodb.repository import ThumbnailImageRepository
-from app.mongodb.config import get_database
+from app.core.config.database.db_mongo import get_mongodb
 # from app.mongodb.config import settings
 from app.core.config.project_config import settings
 
 
-async def get_migration_database(database: AsyncIOMotorDatabase = Depends(get_database)):
+async def get_migration_database():
     """Создает прямое подключение к MongoDB для миграции"""
     #  client = motor.motor_asyncio.AsyncIOMotorClient(settings.mongo_url)
     #  return client[settings.MONGODB_DB]

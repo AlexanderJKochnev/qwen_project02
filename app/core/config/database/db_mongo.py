@@ -9,9 +9,10 @@ class MongoDBManager:
     @classmethod
     async def connect(cls):
         if cls.client is None:
+            # cls.client = AsyncIOMotorClient(settings.mongo_url)
             cls.client = AsyncIOMotorClient(
                 host=settings.MONGO_HOSTNAME,
-                port=settings.MONGO_OUT_PORT,
+                port=settings.MONGO_INN_PORT,
                 username=settings.MONGO_INITDB_ROOT_USERNAME,
                 password=settings.MONGO_INITDB_ROOT_PASSWORD,
                 authSource='admin',
