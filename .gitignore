@@ -1,60 +1,38 @@
-__pycache__/
+```
+# Compiled Python files
 *.pyc
-*.pyo
-*.pyd
-*.py[cod]
-*$py.class
-*.so
-.Python
-meili_data/
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+__pycache__/
 
-# Coverage
-.coverage
-.coverage.*
-htmlcov/
-.coverage.xml
-.pytest_cache/
-
-# Environment
-# .env
-# .env.local
-# .env.*
+# Dependencies
 .venv/
 venv/
-ENV/
-env.bak/
-venv.bak/
+node_modules/
 
-# IDE
+# Logs and temporary files
+*.log
+*.tmp
+*.swp
+
+# Environment files
+.env
+.env.local
+*.env.*
+
+# Editors
 .vscode/
 .idea/
-*.swp
-*.swo
-*.tmp
 
-# OS
-.DS_Store
-Thumbs.db
+# Build artifacts
+dist/
+build/
+target/
 
-TODO.md
-migration_volume
-mongodb_data
-pg_data
-pg_dump
-upload_volume
+# Coverage reports
+coverage/
+htmlcov/
+.coverage
+
+# Python cache
+.mypy_cache/
+.pytest_cache/
+```

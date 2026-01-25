@@ -117,6 +117,8 @@ class Base(AsyncAttrs, DeclarativeBase):
                 result[key] = [item.to_dict(seen) for item in value]
             elif hasattr(value, "__table__"):  # ORM-объект
                 result[key] = value.to_dict(seen)
+            elif isinstance(value, datetime):
+                result[key] = value.isoformat()
             else:
                 result[key] = value
         return result

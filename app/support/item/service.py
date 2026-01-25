@@ -363,7 +363,7 @@ class ItemService(Service):
             #     item_data['warehouse_id'] = result.id
             item = ItemCreate(**item_data)
             item_instance, new = await cls.get_or_create(item, ItemRepository, Item, session)
-            return item_instance, new
+            return item_instance
         except Exception as e:
             raise Exception(f'itemservice.create_relation. {e}')
 
@@ -381,7 +381,7 @@ class ItemService(Service):
             data_dict["drink_id"] = result.id
             item = ItemCreate(**data_dict)
             item_instance, new = await cls.get_or_create(item, ItemRepository, Item, session)
-            return item_instance, new
+            return item_instance
         except Exception as e:
             raise Exception(f'item_create_item_drink_error: {e}')
 
