@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from fastapi import Depends
 from typing import List, Tuple, Optional, Dict, Any
 from motor.motor_asyncio import AsyncIOMotorDatabase
-from app.mongodb.config import get_database
+from app.core.config.database.db_mongo import get_mongodb
 from app.mongodb.models import FileResponse  # , ImageResponse
 
 import io
@@ -12,7 +12,7 @@ from PIL import Image
 
 
 class ImageRepository:
-    def __init__(self, database: AsyncIOMotorDatabase = Depends(get_database)):
+    def __init__(self, database: AsyncIOMotorDatabase = Depends(get_mongodb)):
         self.db = database
         self.collection = self.db["images"]
         self._indexes_created = False
@@ -100,7 +100,7 @@ class ImageRepository:
 
 
 class ThumbnailImageRepository:
-    def __init__(self, database: AsyncIOMotorDatabase = Depends(get_database)):
+    def __init__(self, database: AsyncIOMotorDatabase = Depends(get_mongodb)):
         self.db = database
         self.collection = self.db["images"]
         self._indexes_created = False

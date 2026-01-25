@@ -11,8 +11,8 @@ from time import perf_counter
 from app.auth.routers import auth_router, user_router
 from app.core.config.project_config import settings
 from app.core.config.database.db_async import engine, get_db, init_db_extensions
-# from app.mongodb.config import get_mongodb, MongoDB
-from app.core.config.database.db_mongo import MongoDBManager
+from app.core.config.database.db_mongo import MongoDBManager, get_mongodb
+from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.mongodb.router import router as MongoRouter
 from app.preact.create.router import CreateRouter
 from app.preact.get.router import GetRouter
@@ -162,14 +162,14 @@ async def read_root():
 
 
 @app.get("/health")
-async def health_check(mongodb_instance: MongoDB = Depends(get_mongodb)):
+async def health_check(mongo_db: AsyncIOMotorDatabase = Depends(get_mongodb)):
     status_info = {"status": "healthy",
-                   "mongo_connected": mongodb_instance.client is not None,
+                   "mongo_connected": mongo_db is not None,
                    "mongo_operational": False}
 
-    if mongodb_instance.client:
+    if mongo_db:
         try:
-            await mongodb_instance.client.admin.command('ping')
+            await mongo_db.client.admin.command('ping')
             status_info["mongo_operational"] = True
         except Exception:
             status_info["status"] = "degraded"
