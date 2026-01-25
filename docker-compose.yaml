@@ -109,7 +109,7 @@ services:
     container_name: app
     build: .
     restart: unless-stopped
-    command: uvicorn app.main:app --host ${API_HOST} --port ${API_PORT}
+    command: uvicorn app.main:app --host ${API_HOST} --port ${API_PORT} --loop uvloop
     depends_on:
       wine_host:
         condition: service_healthy

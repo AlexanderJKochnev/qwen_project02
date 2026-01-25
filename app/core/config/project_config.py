@@ -139,6 +139,11 @@ class Settings(BaseSettings):
     MONGO_OUT_PORT: int = 27017
     MONGO_INN_PORT: int = 27017
 
+    # === MONGOBD настройки соединения
+    MAXPOOLSIZE: int = 50
+    MINPOOLSIZE: min = 5
+
+
     # mongo-express УДАЛИТЬ В PRODUCTION
     MONGO_EXPRESS_CONTAINER_NAME: str = "mongo-express"
     MONGO_EXPRESS_PORT: int = 8081

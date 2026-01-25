@@ -1,5 +1,6 @@
 fastapi[all]~=0.116.1
 httpx~=0.28.1
+uvloop
 sqladmin==0.21.0
 pydantic-settings==2.10.1
 email-validator
@@ -11,13 +12,14 @@ pytest~=8.4.1
 pytest-asyncio
 pytest-cov
 pillow~=11.3.0
-psycopg2-binary
+psycopg[binary,pool]
 python-jose[cryptography]
 passlib[bcrypt]
 python-multipart
 bcrypt==4.0.1
 sqlalchemy-utils
 motor==3.3.2
+zstandard
 pymongo==4.6.0
 python-dateutil~=2.9.0.post0
 # для считывания больших json кусками

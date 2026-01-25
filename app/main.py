@@ -10,8 +10,9 @@ import sys
 from time import perf_counter
 from app.auth.routers import auth_router, user_router
 from app.core.config.project_config import settings
-from app.core.config.database.db_async import engine, get_db, init_db_extensions  # noqa: F401
-from app.mongodb.config import get_mongodb, MongoDB  # close_mongo_connection, connect_to_mongo
+from app.core.config.database.db_async import engine, get_db, init_db_extensions
+# from app.mongodb.config import get_mongodb, MongoDB
+from app.core.config.database.db_mongo import MongoDBManager
 from app.mongodb.router import router as MongoRouter
 from app.preact.create.router import CreateRouter
 from app.preact.get.router import GetRouter
@@ -52,7 +53,8 @@ async def lifespan(app: FastAPI):
         http2=True, limits=limits, timeout=timeout, trust_env=False
         # Ускоряет работу, если не нужны системные прокси
     )
-
+    await MongoDBManager.connect()  # Подключаем Mongo
+    await init_db_extensions()  # подключение расщирений Postgresql
     # 3. Background tasks заполнение индексов перед запуском - переделать - с проверкой существования индексов
     # populate_meilisearch = os.getenv("POPULATE_MEILISEARCH_ON_STARTUP", "false").lower() == "true"
     # await init_background_tasks(populate_initial_data=populate_meilisearch)
@@ -62,9 +64,8 @@ async def lifespan(app: FastAPI):
     # --- SHUTDOWN ---
     await app.state.http_client.aclose()
     await stop_background_tasks()
-    mongodb_instance = await get_mongodb()
-    await mongodb_instance.disconnect()
-    await engine.dispose()
+    await MongoDBManager.disconnect()
+    # await engine.dispose()
 
 
 app = FastAPI(title="Hybrid PostgreSQL-MongoDB API",
@@ -175,7 +176,7 @@ async def health_check(mongodb_instance: MongoDB = Depends(get_mongodb)):
 
     return status_info
 
-
+""" see lifespan
 @app.on_event("startup")
 async def startup_event():
     import os
@@ -193,3 +194,4 @@ async def shutdown_event():
     mongodb_instance = await get_mongodb()
     await mongodb_instance.disconnect()
     await engine.dispose()
+"""

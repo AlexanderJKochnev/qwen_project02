@@ -22,8 +22,8 @@ from app.core.models.base_model import Base
 from app.core.utils.common_utils import jprint
 from app.main import app, get_db
 from app.depends import get_translator_func
-from app.mongodb.config import get_database, get_mongodb, MongoDB
-# from app.mongodb.router import get_mongodb
+# from app.mongodb.config import get_database, get_mongodb, MongoDB
+# from app.core.config.database.db_mongo import get_mongodb
 from tests.config import settings_db
 from tests.data_factory.fake_generator import generate_test_data
 from tests.data_factory.reader_json import JsonConverter
@@ -167,7 +167,7 @@ async def mongo_health_check(test_mongodb):
 async def test_client_with_mongo(test_mongodb):
     """Создает тестового клиента с переопределенными MongoDB зависимостями"""
     from app.main import app
-    from app.mongodb.config import get_mongodb, get_database
+    from app.core.config.database.db_mongo import get_mongodb
 
     # Переопределяем зависимости для тестов
     async def override_get_mongodb():
@@ -692,7 +692,8 @@ async def authenticated_client_with_db(test_db_session, super_user_data,
                                        override_app_dependencies, base_url, get_test_db, test_mongodb):
     """ Аутентифицированный клиент с тестовой базой данных """
     # from app.main import app
-    # from app.mongodb.config import get_mongodb, get_database
+    from app.core.config.database.db_mongo import get_mongodb
+    
     async def get_test_db():
         yield test_db_session
 

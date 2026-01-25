@@ -39,4 +39,6 @@ ENV APP_PORT=${WEB_PORT}
 ENV APP_HOST=${WEB_HOST}
 
 EXPOSE $APP_PORT
-CMD ["uvicorn", "app.main:app", "--host", "$APP_HOST", "--port", "$APP_PORT", "--reload"]
+# CMD ["uvicorn", "app.main:app", "--host", "$APP_HOST", "--port", "$APP_PORT", "--reload", "--loop", "uvloop"]
+CMD ["sh", "-c", "uvicorn app.main:app --host $APP_HOST --port $APP_PORT --reload --loop uvloop"]
+
