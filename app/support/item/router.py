@@ -181,7 +181,7 @@ class ItemRouter(BaseRouter):
                 image_dict = await image_service.upload_image(file, description=item_drink_data.title)
                 item_drink_data.image_path = image_dict.get('filename')
                 item_drink_data.image_id = image_dict.get('id')
-            result, _ = await self.service.create_item_drink(item_drink_data, ItemRepository, Item, session)
+            result = await self.service.create_item_drink(item_drink_data, ItemRepository, Item, session)
             return result
         except json.JSONDecodeError as e:
             raise HTTPException(status_code=422, detail=f"Invalid JSON: {e}")

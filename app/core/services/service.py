@@ -1,5 +1,6 @@
 # app.core.service/service.py
 from abc import ABCMeta
+
 from datetime import datetime
 from typing import List, Optional, Tuple, Type
 
@@ -137,7 +138,7 @@ class Service(metaclass=ServiceMeta):
     @classmethod
     async def get_all(cls, ater_date: datetime,
                       page: int, page_size: int, repository: Type[Repository], model: ModelType,
-                      session: AsyncSession ) -> List[dict]:
+                      session: AsyncSession) -> List[dict]:
         # Запрос с загрузкой связей и пагинацией
         skip = (page - 1) * page_size
         items, total = await repository.get_all(ater_date, skip, page_size, model, session)

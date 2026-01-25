@@ -24,6 +24,12 @@ class ConfigDataBase(BaseSettings):
     # probable secirity issue:
     SECRET_KEY: str
     ALGORITHM: str
+    # НАСТРОЙКИ СОЕДИНЕНИЯ
+    POOL_SIZE: int = 5
+    MAX_OVERFLOW: int = 10
+    DRIVER: str = 'psycopg_async'  # asyncpg
+    # закрывает зависшие соединения
+    POOL_RECYCLE: int = 3600
 
     @property
     def database_url(self) -> Optional[PostgresDsn]:
@@ -33,7 +39,7 @@ class ConfigDataBase(BaseSettings):
         :rtype:
         """
         return (
-            f"postgresql+asyncpg://{self.POSTGRES_USER}:"
+            f"postgresql+{self.DRIVER}://{self.POSTGRES_USER}:"
             f"{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:"
             f"{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
         )

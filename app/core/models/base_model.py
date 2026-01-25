@@ -3,7 +3,6 @@
 from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Annotated
-
 # from sqlalchemy.dialects.postgresql import MONEY
 from sqlalchemy import DateTime, DECIMAL, func, Integer, text, Text
 from sqlalchemy.ext.asyncio import AsyncAttrs
@@ -117,6 +116,10 @@ class Base(AsyncAttrs, DeclarativeBase):
                 result[key] = [item.to_dict(seen) for item in value]
             elif hasattr(value, "__table__"):  # ORM-объект
                 result[key] = value.to_dict(seen)
+            elif isinstance(value, datetime):
+                result[key] = value.isoformat()
+            elif isinstance(value, Decimal):
+                result[key] = float(value)
             else:
                 result[key] = value
         return result

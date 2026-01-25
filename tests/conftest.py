@@ -568,7 +568,10 @@ def mock_db_url():
     # return "sqlite+aiosqlite:///:memory:"
     # return "postgresql+asyncpg://test_user:test@localhost:2345/test_db" этот драйвер не походит для тестирования
     st = settings_db
-    se = (f"postgresql+psycopg_async://{st.POSTGRES_USER}:"
+    from app.core.config.database.db_config import settings_db as real_st
+    # se = (f"postgresql+psycopg_async://{st.POSTGRES_USER}:"
+    #       f"{st.POSTGRES_PASSWORD}@{st.POSTGRES_HOST}:{st.PG_PORT}/{st.POSTGRES_DB}")
+    se = (f"postgresql+{real_st.DRIVER}://{st.POSTGRES_USER}:"
           f"{st.POSTGRES_PASSWORD}@{st.POSTGRES_HOST}:{st.PG_PORT}/{st.POSTGRES_DB}")
     print(se)
     return (se)
@@ -583,7 +586,8 @@ async def mock_engine(mock_db_url):
         # pool_pre_ping=True
         pool_pre_ping=False,  # ❗️ Отключите для async
         pool_recycle=3600,  # Вместо этого используйте pool_recycle
-        pool_size=20, max_overflow=0  # !
+        pool_size=10,
+        max_overflow=5  # !
     )
     # Создает все таблицы в базе данных
     async with engine.begin() as conn:

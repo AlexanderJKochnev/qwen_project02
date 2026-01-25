@@ -2,6 +2,7 @@
 from deepdiff import DeepDiff
 from datetime import datetime
 from functools import reduce
+import json
 from decimal import Decimal
 from typing import Type, Optional, Dict, Any
 from pydantic import ValidationError
@@ -353,7 +354,6 @@ class ItemService(Service):
                 try:
                     result = await DrinkService.create_relation(data.drink, DrinkRepository, Drink, session)
                     await session.commit()
-                    # ошибка вот здесь.
                     item_data['drink_id'] = result.id
                 except Exception as e:
                     print('data.drink.error::', result, e)
@@ -363,7 +363,7 @@ class ItemService(Service):
             #     item_data['warehouse_id'] = result.id
             item = ItemCreate(**item_data)
             item_instance, new = await cls.get_or_create(item, ItemRepository, Item, session)
-            return item_instance, new
+            return item_instance  # new
         except Exception as e:
             raise Exception(f'itemservice.create_relation. {e}')
 
@@ -381,7 +381,7 @@ class ItemService(Service):
             data_dict["drink_id"] = result.id
             item = ItemCreate(**data_dict)
             item_instance, new = await cls.get_or_create(item, ItemRepository, Item, session)
-            return item_instance, new
+            return item_instance
         except Exception as e:
             raise Exception(f'item_create_item_drink_error: {e}')
 

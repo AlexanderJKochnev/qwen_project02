@@ -176,7 +176,7 @@ async def test_create_routers(authenticated_client_with_db, get_post_routes):
                     if response.status_code in [200, 201]:
                         good_nmbr += 1
                     else:
-                        print('==============')
+                        print(f'=============={response.status_code} {response.text}')
                         for key, val in data.items():
                             print(f'         {key}: {val}')
                         print('==============')

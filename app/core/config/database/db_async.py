@@ -10,7 +10,11 @@ from app.core.config.database.db_config import settings_db
 # 1.    Асинхронный двигатель
 engine: AsyncEngine = create_async_engine(settings_db.database_url,
                                           echo=settings_db.DB_ECHO_LOG,
-                                          pool_pre_ping=True,)
+                                          pool_pre_ping=True,
+                                          pool_size=settings_db.POOL_SIZE,
+                                          max_overflow=settings_db.MAX_OVERFLOW,
+                                          pool_recycle=settings_db.POOL_RECYCLE
+                                          )
 
 
 async def init_db_extensions():

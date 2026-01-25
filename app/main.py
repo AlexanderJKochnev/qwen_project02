@@ -1,13 +1,15 @@
 # app/main.py
 # from sqlalchemy.exc import SQLAlchemyError
-
+import httpx
+from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.gzip import GZipMiddleware
 from loguru import logger
 import sys
-import time
+from time import perf_counter
 from app.auth.routers import auth_router, user_router
+from app.core.config.project_config import settings
 from app.core.config.database.db_async import engine, get_db, init_db_extensions  # noqa: F401
 from app.mongodb.config import get_mongodb, MongoDB  # close_mongo_connection, connect_to_mongo
 from app.mongodb.router import router as MongoRouter
@@ -41,8 +43,28 @@ from app.support.parser.router import (StatusRouter, CodeRouter, NameRouter, Orc
 # Import background tasks
 from app.core.utils.background_tasks import init_background_tasks, stop_background_tasks
 
-# logging.basicConfig(level=logging.WARNING)  # в начале main.py или conftest.py
-# logging.disable(logging.CRITICAL)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    limits = httpx.Limits(max_keepalive_connections=20, max_connections=100)
+    timeout = httpx.Timeout(10.0, connect=5.0)
+    app.state.http_client = httpx.AsyncClient(
+        http2=True, limits=limits, timeout=timeout, trust_env=False
+        # Ускоряет работу, если не нужны системные прокси
+    )
+
+    # 3. Background tasks заполнение индексов перед запуском - переделать - с проверкой существования индексов
+    # populate_meilisearch = os.getenv("POPULATE_MEILISEARCH_ON_STARTUP", "false").lower() == "true"
+    # await init_background_tasks(populate_initial_data=populate_meilisearch)
+
+    yield
+
+    # --- SHUTDOWN ---
+    await app.state.http_client.aclose()
+    await stop_background_tasks()
+    mongodb_instance = await get_mongodb()
+    await mongodb_instance.disconnect()
+    await engine.dispose()
 
 
 app = FastAPI(title="Hybrid PostgreSQL-MongoDB API",
@@ -67,14 +89,14 @@ logger.add("logs/app.log", rotation="500 MB", retention="10 days", compression="
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
-    start_time = time.time()
+    start_time = perf_counter()
 
-    # Логируем начало запроса
+    # Логируем начало запроса {потом убрать из prod - bootleneck}
     logger.info(f"Начало запроса: {request.method} {request.url.path}")
 
     response = await call_next(request)
 
-    process_time = (time.time() - start_time) * 1000
+    process_time = (perf_counter() - start_time) * 1000
     formatted_process_time = "{0:.2f}".format(process_time)
 
     # Логируем завершение и время выполнения
@@ -156,9 +178,12 @@ async def health_check(mongodb_instance: MongoDB = Depends(get_mongodb)):
 
 @app.on_event("startup")
 async def startup_event():
+    import os
     await init_db_extensions()
     # Initialize background tasks
-    await init_background_tasks()
+    # Check if we should populate the Meilisearch index with initial data
+    populate_meilisearch = os.getenv("POPULATE_MEILISEARCH_ON_STARTUP", "false").lower() == "true"
+    await init_background_tasks(populate_initial_data=populate_meilisearch)
 
 
 @app.on_event("shutdown")
