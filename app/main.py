@@ -42,6 +42,8 @@ from app.support.parser.router import (StatusRouter, CodeRouter, NameRouter, Orc
 from app.core.config.database.meili_async import MeiliManager
 # Import background tasks
 from app.core.utils.background_tasks import init_background_tasks, stop_background_tasks
+from app.core.services.meili_service import ItemMeiliService
+from app.core.config.database.db_async import get_db
 
 
 @asynccontextmanager
@@ -60,9 +62,12 @@ async def lifespan(app: FastAPI):
     await MongoDBManager.connect()  # Подключаем Mongo
     # await init_db_extensions()  # подключение расщирений Postgresql
 
-    # 3. Background tasks заполнение индексов перед запуском - переделать - с проверкой существования индексов
-    # populate_meilisearch = os.getenv("POPULATE_MEILISEARCH_ON_STARTUP", "false").lower() == "true"
-    # await init_background_tasks(populate_initial_data=populate_meilisearch)
+    # Initialize Meilisearch indexes
+    async for db_session in get_db():
+        item_meili_service = ItemMeiliService()
+        meili_client = await MeiliManager.get_client()
+        await item_meili_service.init_index(meili_client, db_session)
+        break  # We just need one iteration to get the session
 
     yield
 

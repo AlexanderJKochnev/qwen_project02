@@ -8,10 +8,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from meilisearch_python_sdk import AsyncClient
 from meilisearch_python_sdk.index import Index
+from meilisearch_python_sdk.models.settings import MeilisearchSettings
 from app.core.utils.pydantic_utils import get_pyschema, get_repo
 from app.core.utils.pydantic_key_extractor import extract_keys_with_blacklist
 from app.core.config.database.db_async import get_db
 from app.support.item.service import ItemService
+from app.support.item.schemas import ItemReadRelation
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -35,7 +37,7 @@ class BaseMeiliService(Generic[T]):
         """Получает объект индекса без запроса к серверу."""
         return client.index(self.index_name)
 
-    async def init_index(self, client: AsyncClient, db_session: AsyncSession = Depends(get_db)):
+    async def init_index(self, client: AsyncClient, db_session: AsyncSession):
         """
         Проверяет наличие индекса. Если его нет — создает и заполняет.
         Вызывается в lifespan или при первом обращении.
@@ -61,7 +63,7 @@ class BaseMeiliService(Generic[T]):
 
         # 4. Выгружаем все данные из БД
         """  СЮДА ЗАГРУЖАЕМ ДАННЫЕ  """
-        db_objs = ItemService.get(self.after_date, self.repository, self.sqla_model, db_session)
+        db_objs = await ItemService.get(self.after_date, self.repository, self.sqla_model, db_session)
         # result = await db_session.execute(select(self.sqla_model))
         # db_objs = result.scalars().all()
 
@@ -90,3 +92,42 @@ class BaseMeiliService(Generic[T]):
         """Удаление записи из индекса"""
         index = client.index(self.index_name)
         await index.delete_document(str(document_id))
+
+
+class ItemMeiliService(BaseMeiliService[ItemReadRelation]):
+    def __init__(self):
+        from app.support.item.model import Item
+        super().__init__(Item, ItemReadRelation)
+        
+    async def search(self, client: AsyncClient, query: str, page: int = 1, page_size: int = 20, lang: str = 'en'):
+        """Поиск с пагинацией в Meilisearch"""
+        index = client.index(self.index_name)
+        offset = (page - 1) * page_size
+        search_results = await index.search(
+            query, 
+            offset=offset, 
+            limit=page_size,
+            show_matches_position=True
+        )
+        
+        total = search_results.estimated_total_hits or 0
+        total_pages = (total + page_size - 1) // page_size if total > 0 else 1
+        
+        return {
+            'results': search_results.hits,
+            'total': total,
+            'page': page,
+            'page_size': page_size,
+            'total_pages': total_pages
+        }
+    
+    async def search_all(self, client: AsyncClient, query: str, lang: str = 'en'):
+        """Поиск без пагинации в Meilisearch"""
+        index = client.index(self.index_name)
+        search_results = await index.search(
+            query,
+            limit=1000,  # Max reasonable limit for non-paginated results
+            show_matches_position=True
+        )
+        
+        return search_results.hits
