@@ -1,263 +1,392 @@
 # app/support/item/router_item_view.py
-"""
-    роутер для ListView и DetailView для модели Item
-    выводит плоские словари с локализованными полями
-    по языкам
-"""
-from typing import List, Annotated, Callable
-from fastapi import Depends, Path, Query, HTTPException
+import json
+from typing import Optional
+
+from fastapi import Depends, File, Form, HTTPException, Path, Query, status, UploadFile
+from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.dependencies import get_active_user_or_internal
 from app.core.config.database.db_async import get_db
+from app.core.config.project_config import get_paging
+from app.core.routers.base import BaseRouter
 from app.core.schemas.base import PaginatedResponse
-from app.depends import get_translator_func
+from app.core.services.meili_service import ItemMeiliService
+from app.mongodb.service import ThumbnailImageService
 from app.support.item.model import Item
 from app.support.item.repository import ItemRepository
-from app.support.item.schemas import ItemDetailView, ItemListView, ItemReadPreactForUpdate, ItemReadRelation
-from app.support.item.service import ItemService
-from app.core.services.search_service import search_service
+from app.support.item.schemas import (FileUpload, ItemCreate, ItemCreatePreact, ItemCreateRelation,
+                                      ItemCreateResponseSchema, ItemRead, ItemReadRelation, ItemUpdate, ItemUpdatePreact)
+
+paging = get_paging
 
 
-class ItemViewRouter:
-    def __init__(self, prefix: str = '/items_view', tags: List[str] = None):
-        from fastapi import APIRouter
-        self.prefix = prefix
-        self.tags = tags or ["items_view"]
-        # self.router = APIRouter()
-        self.router = APIRouter(dependencies=[Depends(get_active_user_or_internal)])
-        self.service = ItemService()
-        self.paginated_response = PaginatedResponse[ItemListView]
-        self.setup_routes()
+class ItemViewRouter(BaseRouter):
+    def __init__(self, prefix: str = '/items', **kwargs):
+        super().__init__(
+            model=Item,
+            prefix=prefix,
+            repo=ItemRepository
+        )
+        self.image_service: ThumbnailImageService = Depends()
+        self.meili_service = ItemMeiliService()
 
     def setup_routes(self):
-        """
+        super().setup_routes()
+        
+        # Add MeiliSearch routes
         self.router.add_api_route(
-            "/create",
-            self.create_item,
-            methods=['POST'],
-            response_model=ItemCreateResponseSchema,
-            tags=self.tags,
-            summary="Создание напитка в упаковке с этикеткой"
-        )
-        """
-        """Настройка маршрутов для ListView и DetailView"""
-        # Маршрут для получения списка элементов без пагинации
-        self.router.add_api_route(
-            "/list/{lang}",
-            self.get_list,
+            "/search_meilisearch/{lang}", 
+            self.search_meilisearch, 
+            status_code=status.HTTP_200_OK, 
             methods=["GET"],
-            response_model=List[ItemListView],
-            tags=self.tags,
-            summary="Получить список элементов с локализацией",
-            openapi_extra={'x-request-schema': None}
+            response_model=PaginatedResponse
         )
-
-        # Маршрут для получения списка элементов с пагинацией
+        
         self.router.add_api_route(
-            "/list_paginated/{lang}",
-            self.get_list_paginated,
+            "/search_meilisearch_no_pagination/{lang}", 
+            self.search_meilisearch_no_pagination, 
+            status_code=status.HTTP_200_OK, 
             methods=["GET"],
-            response_model=PaginatedResponse[ItemListView],
-            tags=self.tags,
-            summary="Получить список элементов с пагинацией и локализацией",
-            openapi_extra={'x-request-schema': None}
+            response_model=list
         )
-
-        # Маршрут для получения одного элемента по id с локализацией
+        
         self.router.add_api_route(
-            "/detail/{lang}/{id}",
-            self.get_detail,
+            "/api/search", 
+            self.api_search, 
+            status_code=status.HTTP_200_OK, 
             methods=["GET"],
-            response_model=ItemDetailView,
-            tags=self.tags,
-            summary="Получить детальную информацию по элементу с локализацией",
-            openapi_extra={'x-request-schema': None}
+            response_model=PaginatedResponse
         )
-
-        # 2 Маршрут для поиска элементов по полям title* и subtitle* связанной модели Drink
+        
         self.router.add_api_route(
-            "/search_by_drink/{lang}",
-            self.search_by_drink_title_subtitle_paginated,
+            "/api/search_all", 
+            self.api_search_all, 
+            status_code=status.HTTP_200_OK, 
             methods=["GET"],
-            response_model=PaginatedResponse[ItemListView],
-            tags=self.tags,
-            summary="Поиск элементов по полям title* и subtitle* связанной модели Drink",
-            openapi_extra={'x-request-schema': None}
+            response_model=list
         )
 
-        # Маршрут для поиска элементов с использованием триграммного индекса
-        self.router.add_api_route(
-            "/search_trigram/{lang}",
-            self.search_by_trigram_index,
-            methods=["GET"],
-            response_model=PaginatedResponse[ItemListView],
-            tags=self.tags,
-            summary="Поиск элементов по триграммному индексу в связанной модели Drink",
-            openapi_extra={'x-request-schema': None}
-        )
-
-        # Маршрут для поиска элементов с использованием Meilisearch с пагинацией
-        self.router.add_api_route(
-            "/search_meilisearch/{lang}",
-            self.search_meilisearch_paginated,
-            methods=["GET"],
-            response_model=PaginatedResponse[ItemReadRelation],
-            tags=self.tags,
-            summary="Поиск элементов с использованием Meilisearch",
-            openapi_extra={'x-request-schema': None}
-        )
-
-        # Маршрут для поиска элементов с использованием Meilisearch без пагинации
-        self.router.add_api_route(
-            "/search_meilisearch_no_pagination/{lang}",
-            self.search_meilisearch_no_pagination,
-            methods=["GET"],
-            response_model=List[ItemReadRelation],
-            tags=self.tags,
-            summary="Поиск элементов с использованием Meilisearch без пагинации",
-            openapi_extra={'x-request-schema': None}
-        )
-
-        self.router.add_api_route(
-            "/preact/{id}",
-            self.get_one,
-            methods=["GET"],
-            response_model=ItemReadPreactForUpdate,
-            tags=self.tags,
-            summary="Получить детальную информацию по элементу со всеми локализациями",
-            openapi_extra={'x-request-schema': None}
-        )
-
-    async def get_one(self,
-                      id: int,
-                      translation: Annotated[Callable, Depends(get_translator_func)],
-                      session: AsyncSession = Depends(get_db)
-                      ) -> ItemReadPreactForUpdate:
-        """
-            Получение одной записи по ID
-            используется для загрузки данных в preact for update
-            сюда вставляетсяя перевод
-        """
-        # repo = ItemRepository
-        item_dict = await self.service.get_one(id, session)
-        # item_py = ItemReadPreactForUpdate.validate(item_dict)
-        # item_dict = item_py.model_dump(exclude_unset=False, exclude_none=False)
-        translated_dict = await translation(item_dict)
-        return translated_dict
-
-    async def get_list(self, lang: str = Path(..., description="Язык локализации"),
-                       session: AsyncSession = Depends(get_db)):
+    async def get_list_view(self, lang: str = Path(..., description="Язык локализации"),
+                            session: AsyncSession = Depends(get_db)):
         """Получить список элементов с локализацией"""
-        result = await self.service.get_list_view(lang, ItemRepository, Item, session)
 
-        return result
+        items = await self.service.get_list_view(lang, ItemRepository, Item, session)
+        return items
 
-    async def get_list_paginated(self,
-                                 lang: str = Path(..., description="Язык локализации"),
-                                 page: int = Query(1, ge=1, description="Номер страницы"),
-                                 page_size: int = Query(20, ge=1, le=100, description="Размер страницы"),
-                                 session: AsyncSession = Depends(get_db)):
+    async def get_list_view_paginated(self,
+                                      lang: str = Path(..., description="Язык локализации"),
+                                      page: int = Query(1, ge=1, description="Номер страницы"),
+                                      page_size: int = Query(20, ge=1, le=100, description="Размер страницы"),
+                                      session: AsyncSession = Depends(get_db)):
         """Получить список элементов с пагинацией и локализацией"""
-        result = await self.service.get_list_view_page(page, page_size, ItemRepository, Item, session, lang)
-        # self.paginated_response
 
+        result = await self.service.get_list_view_page(page, page_size, ItemRepository, Item, session)
         return result
 
-    async def get_detail(self, lang: str = Path(..., description="Язык локализации"),
-                         id: int = Path(..., description="ID элемента"),
-                         session: AsyncSession = Depends(get_db)):
+    async def get_detail_view(self, lang: str = Path(..., description="Язык локализации"),
+                              id: int = Path(..., description="ID элемента"),
+                              session: AsyncSession = Depends(get_db)):
         """Получить детальную информацию по элементу с локализацией"""
+
         item = await self.service.get_detail_view(lang, id, ItemRepository, Item, session)
         if not item:
             raise HTTPException(status_code=404, detail=f"Item with id {id} not found")
-        # Create ItemDetailView instance
-        result = ItemDetailView(**item)
+        return item
 
-        # Return the model dump with empty values removed
-        return result.model_dump(exclude_none=True, exclude_unset=True)
+    async def create(self, data: ItemCreate,
+                     session: AsyncSession = Depends(get_db)) -> ItemCreateResponseSchema:
+        return await super().create(data, session)
 
-    async def search_by_drink_title_subtitle_paginated(self,
-                                                       lang: str = Path(..., description="Язык локализации"),
-                                                       search: str = Query(
-                                                           ..., description="Строка для поиска в полях title* "
-                                                                            "и subtitle* модели Drink"),
-                                                       page: int = Query(1, ge=1, description="Номер страницы"),
-                                                       page_size: int = Query(
-                                                           20, ge=1, le=100, description="Размер страницы"),
-                                                       session: AsyncSession = Depends(get_db)):
-        """
-            Поиск элементов по полям title* и subtitle* связанной модели Drink с пагинацией
-            оатсется для совместимости (сравнить скорость поиска обычного (этого) и триграмм/FTS
-        """
-        result = await self.service.search_by_drink_title_subtitle(
-            search, lang, ItemRepository, Item, session, page, page_size
-        )
+    async def patch(self, id: int, data: ItemUpdate,
+                    session: AsyncSession = Depends(get_db)) -> ItemCreateResponseSchema:
+        return await super().patch(id, data, session)
+
+    async def create_relation(self, data: ItemCreateRelation,
+                              session: AsyncSession = Depends(get_db)) -> ItemCreateResponseSchema:
+        result = await super().create_relation(data, session)
         return result
 
-    async def search_by_trigram_index(self,
-                                      lang: str = Path(..., description="Язык локализации"),
-                                      search_str: str = Query(
-                                          None, description="Поисковый запрос "
-                                                            "(при отсутствии значения - выдает все записи)"),
-                                      page: int = Query(1, ge=1, description="Номер страницы"),
-                                      page_size: int = Query(15, ge=1, le=100, description="Размер страницы"),
-                                      session: AsyncSession = Depends(get_db)):
-        """Поиск элементов с использованием триграммного индекса в связанной модели Drink"""
-        result = await self.service.search_by_trigram_index(
-            search_str, lang, ItemRepository, Item, session, page, page_size
-        )
-
+    async def direct_import_data(self, data: FileUpload,
+                                 session: AsyncSession = Depends(get_db),
+                                 image_service: ThumbnailImageService = Depends()) -> dict:   # DirectUploadSchema:
+        """
+        Импорт записей с зависимостями. Для того что бы выполнить импорт нужно
+        на сервере поместить файл data.json в директорию UPLOAD_DIR,
+        в ту же директорию разместить файлы с изображениями.
+        - если в таблице есть зависимости они будут рекурсивно найдены в связанных таблицах (или добавлены при
+        отсутсвии), кроме того будет добавлено изображение по его имени
+        операция длительная - наберитесь терпения
+        """
+        # добавление изображений  images={'number of images': 150, 'loaded images': 149}
+        _ = await image_service.direct_upload_image()
+        # имя json файла для импорта
+        file_name = data.filename
+        result = await self.service.direct_upload(file_name, session, image_service)
         return result
 
-    async def search_meilisearch_paginated(self,
-                                           lang: str = Path(..., description="Язык локализации"),
-                                           query: str = Query(..., description="Поисковый запрос для Meilisearch"),
-                                           page: int = Query(1, ge=1, description="Номер страницы"),
-                                           page_size: int = Query(20, ge=1, le=100, description="Размер страницы"),
-                                           session: AsyncSession = Depends(get_db)
-                                           ):
-        """Поиск элементов с использованием Meilisearch с пагинацией"""
+    async def create_relation_image(self,
+                                    data: str = Form(..., description="JSON string of DrinkCreateRelation"),
+                                    file: UploadFile = File(...),
+                                    session: AsyncSession = Depends(get_db),
+                                    image_service: ThumbnailImageService = Depends()
+                                    ) -> ItemCreateResponseSchema:
+        """
+        Создание одной записи с зависимостями - если в таблице есть зависимости
+        они будут рекурсивно найдены в связанных таблицах (или добавлены при отсутсвии),
+        кроме того будет добавлено изображение.
+        перед этим нужно импортировать изображения
+        POST mongodb/images/direct
+        """
         try:
-            search_result = await search_service.search(query, page, page_size, lang)
-
-            # Convert the search results to ItemReadRelation models
-            items = []
-            for hit in search_result['results']:
-                # Validate and convert each result to ItemReadRelation
-                item_data = ItemReadRelation.model_validate(hit)
-                items.append(item_data)
-
-            # Create paginated response
-            total = search_result.get('total', len(items))
-            total_pages = search_result.get('total_pages', 1)
-
-            return {
-                'items': items,
-                'total': total,
-                'page': page,
-                'page_size': page_size,
-                'total_pages': total_pages
-            }
+            data_dict = json.loads(data)
+            item_data = ItemCreateRelation(**data_dict)
+            # load image to database, get image_id & image_path
+            image_dict = await image_service.upload_image(file, description=item_data.drink.title)
+            item_data.image_path = image_dict.get('filename')
+            item_data.image_id = image_dict.get('id')
+            result = await super().create_relation(item_data, session)
+            return result
+        except json.JSONDecodeError as e:
+            raise HTTPException(status_code=422, detail=f"Invalid JSON: {e}")
+        except ValidationError as exc:
+            """
+            ValidationError_handler(exc)
+            detail = (f'ошибка создания записи {exc}, model = {self.model}, '
+                      f'create_schema = {self.create_schema}, '
+                      f'service = {self.service} ,'
+                      f'repository = {self.repo} ,'
+                      f'create_response_schema = {self.create_response_schema}')
+            print(detail)
+            """
+            raise HTTPException(status_code=501, detail=exc)
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
+            await session.rollback()
+            detail = (f'ошибка создания записи {e}, model = {self.model}, '
+                      f'create_schema = {self.create_schema}, '
+                      f'service = {self.service} ,'
+                      f'repository = {self.repo}')
+            print(detail)
+            raise HTTPException(status_code=500, detail=detail)
+
+    async def create_item_drink(self,
+                                data: str = Form(..., description="JSON string of ItemCreatePreact"),
+                                file: UploadFile = File(None),
+                                session: AsyncSession = Depends(get_db),
+                                image_service: ThumbnailImageService = Depends()
+                                ) -> ItemCreateResponseSchema:
+        """
+        Создание записи Item & Drink и всеми связями
+        Принимает JSON строку и файл изображения
+        Валидирует схемой ItemCreatePreact
+        Сохраняет в порядке: Drink -> DrinkVarietal -> DrinkFood -> Item
+        """
+        try:
+            data_dict = json.loads(data)
+            item_drink_data = ItemCreatePreact(**data_dict)
+            # load image to database, get image_id & image_path
+            if file:
+                image_dict = await image_service.upload_image(file, description=item_drink_data.title)
+                item_drink_data.image_path = image_dict.get('filename')
+                item_drink_data.image_id = image_dict.get('id')
+            result = await self.service.create_item_drink(item_drink_data, ItemRepository, Item, session)
+            return result
+        except json.JSONDecodeError as e:
+            raise HTTPException(status_code=422, detail=f"Invalid JSON: {e}")
+        except ValidationError as exc:
+            # ValidationError_handler(exc)
+            detail = (f'ошибка создания записи {exc}, model = {self.model}, '
+                      f'create_schema = {self.create_schema}, '
+                      f'service = {self.service} ,'
+                      f'repository = {self.repo} ,'
+                      f'create_response_schema = {self.create_response_schema}, '
+                      f'{data=}')
+            print(detail)
+            raise HTTPException(status_code=501, detail=exc)
+        except Exception as e:
+            await session.rollback()
+            detail = f'{str(e)}, {data=}'
+            print(f'=========={data}')
+            raise HTTPException(status_code=500, detail=detail)
+
+    async def update_item_drink(self,
+                                id: int,
+                                data: str = Form(..., description="JSON string of ItemUpdatePreact"),
+                                file: UploadFile = File(None),
+                                session: AsyncSession = Depends(get_db),
+                                image_service: ThumbnailImageService = Depends()
+                                ) -> ItemRead:  # ItemCreateResponseSchema:
+        """
+        Обновление записи Item & Drink и всеми связями
+        Принимает JSON строку и файл изображения
+        Валидирует схемой ItemUpdatePreact
+        Обновляет или создает Drink в зависимости от drink_action
+        """
+        try:
+            data_dict = json.loads(data)
+            # drink_action = data_dict.get('drink_action')
+            item_drink_data = ItemUpdatePreact(**data_dict)
+            # load image to database, get image_id & image_path
+            isfile: bool = False
+            if file:
+                image_dict = await image_service.upload_image(file, description=item_drink_data.title)
+                item_drink_data.image_path = image_dict.get('filename')
+                item_drink_data.image_id = image_dict.get('id')
+                isfile = True
+            # item_drink_data.drink_action = drink_action
+            # Find the existing item to update
+            result = await self.service.update_item_drink(id, item_drink_data, isfile,
+                                                          ItemRepository, Item, session)
+            if not result.get('success'):
+                print(result, 'ошибка обновления')
+                raise HTTPException(status_code=500, detail=result.get('message', 'ошибка обновления'))
+            return result.get('data')
+        except json.JSONDecodeError as e:
+            if file and image_dict:
+                image_id = image_dict.get('id')
+                await image_service.delete_image(image_id)
+            raise HTTPException(status_code=422, detail=f"Invalid JSON: {e}")
+        except ValidationError as exc:
+            # ValidationError_handler(exc)
+            if file and image_dict:
+                image_id = image_dict.get('id')
+                await image_service.delete_image(image_id)
+            detail = (f'ошибка обновления записи {exc}, model = {self.model}, '
+                      f'create_schema = {self.create_schema}, '
+                      f'service = {self.service} ,'
+                      f'repository = {self.repo} ,'
+                      f'create_response_schema = {self.create_response_schema}, '
+                      f'{data=}')
+            print(detail)
+            raise HTTPException(status_code=501, detail=exc)
+        except Exception as e:
+            if file and image_dict:
+                image_id = image_dict.get('id')
+                await image_service.delete_image(image_id)
+            await session.rollback()
+            detail = f'{str(e)}, {data=}'
+            print('3rd error', detail)
+            raise HTTPException(status_code=500, detail=detail)
+
+    async def direct_import_single_data(self, id: str = Path(..., description="ID элемента"),
+                                        session: AsyncSession = Depends(get_db),
+                                        image_service: ThumbnailImageService = Depends()) -> dict:
+        """
+        Импорт записей с зависимостями. Для того что бы выполнить импорт нужно
+        на сервере поместить файл data.json в директорию UPLOAD_DIR, в ту же директорию разместить файлы с
+        изображениями.
+        - если в таблице есть зависимости они будут рекурсивно найдены в связанных таблицах (или добавлены при
+        отсутсвии), кроме того будет добавлено изображение по его имени (перед этим выполнить импорт изображений
+        /mongodb/images/direct.
+        операция длительная - наберитесь терпения
+        """
+        try:
+            id = id.strop('.png')
+            result = await self.service.direct_single_upload(id, session)
+            # if result.get('error_nmbr', 0) > 0:
+            #     raise HTTPException(status_code=423, detail=result)
+            return result
+        except Exception as e:
+            raise HTTPException(status_code=422, detail=e)
+
+    async def search(self,
+                     search: Optional[str] = None,
+                     country_enum: Optional[str] = None,
+                     category_enum: Optional[str] = None,
+                     page: int = Query(1, ge=1),
+                     page_size: int = Query(paging.get('def', 20),
+                                            ge=paging.get('min', 1),
+                                            le=paging.get('max', 1000)),
+                     session: AsyncSession = Depends(get_db)) -> PaginatedResponse:
+        """
+            Поиск по всем текстовым полям основной таблицы
+            с постраничным выводом результата
+        """
+        kwargs: str = {'page': page, 'page_size': page_size}
+        if search:
+            kwargs['search_str'] = search
+        if country_enum:
+            kwargs['country_enum'] = country_enum
+        if category_enum:
+            kwargs['category_enum'] = category_enum
+        return await self.service.search(self.repo, self.model, session,
+                                         **kwargs)
+
+    async def search_all(self,
+                         search_str: Optional[str] = None,
+                         session: AsyncSession = Depends(get_db)):
+        """
+            Поиск по всем текстовым полям основной таблицы
+            с постраничным выводом результата
+        """
+        result = await self.service.search_all(search_str, self.repo, self.model, session)
+
+        return result
+
+    # MeiliSearch endpoints
+    async def search_meilisearch(self,
+                                lang: str = Path(..., description="Язык локализации"),
+                                q: Optional[str] = Query(None, alias="query", description="Поисковый запрос"),
+                                page: int = Query(1, ge=1, description="Номер страницы"),
+                                page_size: int = Query(20, ge=1, le=100, description="Размер страницы"),
+                                session: AsyncSession = Depends(get_db)) -> PaginatedResponse:
+        """
+        MeiliSearch endpoint with pagination
+        """
+        if not q:
+            raise HTTPException(status_code=400, detail="Query parameter 'q' is required")
+            
+        result = await self.meili_service.search_with_pagination(
+            query=q,
+            lang=lang,
+            page=page,
+            page_size=page_size
+        )
+        return result
 
     async def search_meilisearch_no_pagination(self,
-                                               lang: str = Path(..., description="Язык локализации"),
-                                               query: str = Query(..., description="Поисковый запрос для Meilisearch"),
-                                               session: AsyncSession = Depends(get_db)):
-        """Поиск элементов с использованием Meilisearch без пагинации"""
-        try:
-            # Perform search with a large page size to get all results
-            search_result = await search_service.search(query, page=1, page_size=1000, lang=lang)
+                                              lang: str = Path(..., description="Язык локализации"),
+                                              q: Optional[str] = Query(None, alias="query", description="Поисковый запрос"),
+                                              session: AsyncSession = Depends(get_db)) -> list:
+        """
+        MeiliSearch endpoint without pagination
+        """
+        if not q:
+            raise HTTPException(status_code=400, detail="Query parameter 'q' is required")
+            
+        result = await self.meili_service.search_without_pagination(
+            query=q,
+            lang=lang
+        )
+        return result
 
-            # Convert the search results to ItemReadRelation models
-            items = []
-            for hit in search_result['results']:
-                # Validate and convert each result to ItemReadRelation
-                item_data = ItemReadRelation.model_validate(hit)
-                items.append(item_data)
+    async def api_search(self,
+                        q: Optional[str] = Query(None, alias="query", description="Поисковый запрос"),
+                        page: int = Query(1, ge=1, description="Номер страницы"),
+                        page_size: int = Query(20, ge=1, le=100, description="Размер страницы"),
+                        session: AsyncSession = Depends(get_db)) -> PaginatedResponse:
+        """
+        API search endpoint with pagination
+        """
+        if not q:
+            raise HTTPException(status_code=400, detail="Query parameter 'q' is required")
+            
+        result = await self.meili_service.search_with_pagination(
+            query=q,
+            page=page,
+            page_size=page_size
+        )
+        return result
 
-            return items
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
+    async def api_search_all(self,
+                            q: Optional[str] = Query(None, alias="query", description="Поисковый запрос"),
+                            session: AsyncSession = Depends(get_db)) -> list:
+        """
+        API search endpoint without pagination
+        """
+        if not q:
+            raise HTTPException(status_code=400, detail="Query parameter 'q' is required")
+            
+        result = await self.meili_service.search_without_pagination(
+            query=q
+        )
+        return result

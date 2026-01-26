@@ -1,12 +1,14 @@
 # app/support/Item/repository.py
 
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
+import json
 
 from sqlalchemy import func, literal_column, or_, select, Select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlalchemy.types import String
 
+from app.core.models.outbox import Outbox
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.utils.alchemy_utils import create_enum_conditions, create_search_conditions2, ModelType
 from app.support.category.model import Category
@@ -115,6 +117,69 @@ class ItemRepository(Repository):
                 selectinload(Drink.sweetness)
             )
         )
+
+    @classmethod
+    async def create(cls, model: ModelType, session: AsyncSession, **kwargs) -> ModelType:
+        """Create a new record and add an outbox entry for Meilisearch synchronization"""
+        # Create the item in the database
+        item = await super().create(model, session, **kwargs)
+        
+        # Serialize the created item to JSON
+        item_dict = item.to_dict()
+        payload = json.dumps(item_dict, ensure_ascii=False)
+        
+        # Create an outbox entry for Meilisearch synchronization
+        stmt = Outbox.create_entry(
+            entity_type='item',
+            entity_id=item.id,
+            operation='INSERT',
+            payload=payload
+        )
+        await session.execute(stmt)
+        
+        return item
+
+    @classmethod
+    async def update(cls, id: int, model: ModelType, session: AsyncSession, **kwargs) -> ModelType:
+        """Update a record and add an outbox entry for Meilisearch synchronization"""
+        # Update the item in the database
+        updated_item = await super().update(id, model, session, **kwargs)
+        
+        # Serialize the updated item to JSON
+        item_dict = updated_item.to_dict()
+        payload = json.dumps(item_dict, ensure_ascii=False)
+        
+        # Create an outbox entry for Meilisearch synchronization
+        stmt = Outbox.create_entry(
+            entity_type='item',
+            entity_id=updated_item.id,
+            operation='UPDATE',
+            payload=payload
+        )
+        await session.execute(stmt)
+        
+        return updated_item
+
+    @classmethod
+    async def delete(cls, id: int, model: ModelType, session: AsyncSession) -> bool:
+        """Delete a record and add an outbox entry for Meilisearch synchronization"""
+        # Get the item before deletion to serialize it
+        existing_item = await cls.get_by_id(id, model, session)
+        if existing_item:
+            item_dict = existing_item.to_dict()
+            payload = json.dumps(item_dict, ensure_ascii=False)
+            
+            # Create an outbox entry for Meilisearch synchronization
+            stmt = Outbox.create_entry(
+                entity_type='item',
+                entity_id=id,
+                operation='DELETE',
+                payload=payload
+            )
+            await session.execute(stmt)
+        
+        # Delete the item from the database
+        return await super().delete(id, model, session)
 
     @classmethod
     async def search_in_main_table(cls,
