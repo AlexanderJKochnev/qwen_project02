@@ -141,8 +141,7 @@ class Settings(BaseSettings):
 
     # === MONGOBD настройки соединения
     MAXPOOLSIZE: int = 50
-    MINPOOLSIZE: min = 5
-
+    MINPOOLSIZE: int = 5
 
     # mongo-express УДАЛИТЬ В PRODUCTION
     MONGO_EXPRESS_CONTAINER_NAME: str = "mongo-express"

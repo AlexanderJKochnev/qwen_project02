@@ -126,13 +126,14 @@ async def test_mongodb(clean_database):
     test_mongo = MongoDBManager()
     test_url = f'{settings_db.mongo_url}'
     await test_mongo.connect(test_url, settings_db.MONGO_DATABASE)
-    yield test_mongo
+    # yield test_mongo
+    yield MongoDBManager.client[settings_db.MONGO_DATABASE]
     await test_mongo.disconnect()
 
 
 @pytest.fixture(scope="session")  # , autouse=True)
 async def clean_database():
-    """Очищает базу данных перед каждой сессией"""
+    # Очищает базу данных перед каждой сессией
     test_mongo = MongoDBManager()
     test_url = f'{settings_db.mongo_url}'
     await test_mongo.connect(test_url, settings_db.MONGO_DATABASE)
@@ -140,6 +141,13 @@ async def clean_database():
         await test_mongo.client.drop_database(settings_db.MONGO_DATABASE)
         test_mongo.database = test_mongo.client[settings_db.MONGO_DATABASE]
     await test_mongo.disconnect()
+    """
+    client = AsyncIOMotorClient(settings_db.mongo_url)
+    try:
+        await client.drop_database(settings_db.MONGO_DATABASE)
+    finally:
+        client.close()
+    """
 
 
 @pytest.fixture(scope="function")
