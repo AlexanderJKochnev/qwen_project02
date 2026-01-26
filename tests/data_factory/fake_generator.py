@@ -333,8 +333,9 @@ def generate_test_data(
                 decimal_range[field_name] = global_decimal_range
 
     # Добавляем обработку Decimal по умолчанию
-    default_providers = {Decimal: lambda: Decimal(round(random.uniform(1, 1000), 2))}
-
+    #  default_providers = {Decimal: lambda: Decimal(round(random.uniform(1, 1000), 2))}
+    default_providers = {Decimal: lambda: Decimal(random.getrandbits(64)) / Decimal(10 ** 6)}
+    
     # Объединяем с пользовательскими провайдерами
     custom_providers = factory_kwargs.pop('providers', {})
     providers = {**default_providers, **custom_providers}

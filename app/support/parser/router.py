@@ -13,7 +13,7 @@ from app.support.parser import schemas
 from app.support.parser.service import RawdataService
 from app.support.parser.orchestrator import ParserOrchestrator
 from app.support.parser.repository import StatusRepository, RawdataRepository
-from app.core.config.database.db_async import AsyncSessionLocal
+from app.core.config.database.db_async import DatabaseManager
 from app.core.utils.exception_handler import ValidationError_handler
 
 background_tasks = set()  # чтобы ссылка не удалилась
@@ -144,7 +144,7 @@ class OrchestratorRouter(LightRouter):
         from arq.connections import RedisSettings
         from app.core.config.project_config import settings
         redis = await create_pool(RedisSettings(host=settings.REDIS_HOST, port=settings.REDIS_PORT))
-        async with AsyncSessionLocal() as session:
+        async with DatabaseManager.session_maker() as session:
             status_completed = await session.execute(select(Status).where(Status.status == "completed"))
             status_completed = status_completed.scalar_one_or_none()
             query = select(Name.id)
@@ -163,7 +163,7 @@ class OrchestratorRouter(LightRouter):
         from arq.connections import RedisSettings
         from app.core.config.project_config import settings
         redis = await create_pool(RedisSettings(host=settings.REDIS_HOST, port=settings.REDIS_PORT))
-        async with AsyncSessionLocal() as session:
+        async with DatabaseManager.session_maker() as session:
             # Get the completed status ID properly
             status_completed = await session.execute(select(Status).where(Status.status == "completed"))
             status_completed = status_completed.scalar_one_or_none()

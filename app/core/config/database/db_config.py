@@ -38,9 +38,6 @@ class ConfigDataBase(BaseSettings):
         :return:
         :rtype:
         """
-        print(f"postgresql+{self.DRIVER}://{self.POSTGRES_USER}:"
-            f"{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:"
-            f"{self.POSTGRES_PORT}/{self.POSTGRES_DB}")
         return (
             f"postgresql+{self.DRIVER}://{self.POSTGRES_USER}:"
             f"{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:"

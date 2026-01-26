@@ -1,7 +1,5 @@
 # app/main.py
-# from sqlalchemy.exc import SQLAlchemyError
 import httpx
-
 from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,7 +9,7 @@ import sys
 from time import perf_counter
 from app.auth.routers import auth_router, user_router
 # from app.core.config.project_config import settings
-from app.core.config.database.db_async import engine, init_db_extensions
+from app.core.config.database.db_async import DatabaseManager, init_db_extensions
 from app.core.config.database.db_mongo import MongoDBManager, get_mongodb
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.mongodb.router import router as MongoRouter
@@ -41,7 +39,7 @@ from app.support.parser.router import (StatusRouter, CodeRouter, NameRouter, Orc
                                        ImageRouter, RawdataRouter, RegistryRouter)
 # from app.arq_worker_routes import router as ArqWorkerRouter
 # from app.support.warehouse.router import WarehouseRouter
-
+from app.core.config.database.meili_async import MeiliManager
 # Import background tasks
 from app.core.utils.background_tasks import init_background_tasks, stop_background_tasks
 
@@ -54,8 +52,14 @@ async def lifespan(app: FastAPI):
         http2=True, limits=limits, timeout=timeout, trust_env=False
         # Ускоряет работу, если не нужны системные прокси
     )
+    DatabaseManager.init()
+    await MeiliManager.get_client()
+    # Можно сразу проверить соединение (healthcheck)
+    await (await MeiliManager.get_client()).health()
+
     await MongoDBManager.connect()  # Подключаем Mongo
-    await init_db_extensions()  # подключение расщирений Postgresql
+    # await init_db_extensions()  # подключение расщирений Postgresql
+
     # 3. Background tasks заполнение индексов перед запуском - переделать - с проверкой существования индексов
     # populate_meilisearch = os.getenv("POPULATE_MEILISEARCH_ON_STARTUP", "false").lower() == "true"
     # await init_background_tasks(populate_initial_data=populate_meilisearch)
@@ -65,8 +69,9 @@ async def lifespan(app: FastAPI):
     # --- SHUTDOWN ---
     await app.state.http_client.aclose()
     await stop_background_tasks()
+    await DatabaseManager.close()
+    await MeiliManager.disconnect()
     await MongoDBManager.disconnect()
-    await engine.dispose()
 
 
 app = FastAPI(title="Hybrid PostgreSQL-MongoDB API",

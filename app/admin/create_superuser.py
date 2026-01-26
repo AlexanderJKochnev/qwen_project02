@@ -1,7 +1,7 @@
 # app/admin/create_superuser.py
 import asyncio
 import getpass
-from app.core.config.database.db_async import AsyncSessionLocal
+from app.core.config.database.db_async import DatabaseManager
 from app.auth.models import User
 from app.auth.repository import UserRepository
 from sqlalchemy import select
@@ -34,7 +34,7 @@ async def create_superuser_interactive():
             continue
         break
 
-    async with AsyncSessionLocal() as session:
+    async with DatabaseManager.session_maker() as session:
         # Проверяем, существует ли уже пользователь с таким именем
         stmt = select(User).where(User.username == username)
         result = await session.execute(stmt)

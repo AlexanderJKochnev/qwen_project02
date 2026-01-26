@@ -5,23 +5,28 @@ from app.core.config.project_config import settings
 
 class MongoDBManager:
     client: AsyncIOMotorClient = None
+    database: AsyncIOMotorDatabase = None
 
     @classmethod
-    async def connect(cls):
+    async def connect(cls, mongo_url: None, mongo_database: None):
         if cls.client is None:
-            # cls.client = AsyncIOMotorClient(settings.mongo_url)
-            cls.client = AsyncIOMotorClient(
-                host=settings.MONGO_HOSTNAME,
-                port=settings.MONGO_INN_PORT,
-                username=settings.MONGO_INITDB_ROOT_USERNAME,
-                password=settings.MONGO_INITDB_ROOT_PASSWORD,
-                authSource='admin',
-                directConnection=True,
-                maxPoolSize=settings.MAXPOOLSIZE,  # Увеличено
-                minPoolSize=settings.MINPOOLSIZE,
-                uuidRepresentation="standard",
-                compressors='zstd'
-            )
+            if mongo_database:
+                cls.database = mongo_database
+            if mongo_url:
+                cls.client = AsyncIOMotorClient(mongo_url)
+            else:
+                cls.client = AsyncIOMotorClient(
+                    host=settings.MONGO_HOSTNAME,
+                    port=settings.MONGO_INN_PORT,
+                    username=settings.MONGO_INITDB_ROOT_USERNAME,
+                    password=settings.MONGO_INITDB_ROOT_PASSWORD,
+                    authSource='admin',
+                    directConnection=True,
+                    maxPoolSize=settings.MAXPOOLSIZE,  # Увеличено
+                    minPoolSize=settings.MINPOOLSIZE,
+                    uuidRepresentation="standard",
+                    compressors='zstd'
+                )
             await cls.client.admin.command("ping")
 
     @classmethod

@@ -20,8 +20,10 @@ from app.auth.models import User
 from app.auth.utils import create_access_token, get_password_hash
 from app.core.models.base_model import Base
 from app.core.utils.common_utils import jprint
-from app.main import app, get_db
+from app.main import app
+from app.core.config.database.db_async import get_db
 from app.depends import get_translator_func
+from app.core.config.database.db_mongo import MongoDBManager
 # from app.mongodb.config import get_database, get_mongodb, MongoDB
 # from app.core.config.database.db_mongo import get_mongodb
 from tests.config import settings_db
@@ -121,7 +123,7 @@ def sample_image_jpg(test_images_dir):
 @pytest.fixture(scope="session")
 async def test_mongodb(clean_database):
     """Создает тестовый экземпляр MongoDB"""
-    test_mongo = MongoDB()
+    test_mongo = MongoDBManager()
     test_url = f'{settings_db.mongo_url}'
     await test_mongo.connect(test_url, settings_db.MONGO_DATABASE)
     yield test_mongo
@@ -131,7 +133,7 @@ async def test_mongodb(clean_database):
 @pytest.fixture(scope="session")  # , autouse=True)
 async def clean_database():
     """Очищает базу данных перед каждой сессией"""
-    test_mongo = MongoDB()
+    test_mongo = MongoDBManager()
     test_url = f'{settings_db.mongo_url}'
     await test_mongo.connect(test_url, settings_db.MONGO_DATABASE)
     if hasattr(test_mongo, 'database'):
@@ -177,7 +179,7 @@ async def test_client_with_mongo(test_mongodb):
         return test_mongodb.database
 
     app.dependency_overrides[get_mongodb] = override_get_mongodb
-    app.dependency_overrides[get_database] = override_get_database
+    # app.dependency_overrides[get_database] = override_get_database
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         yield client
@@ -693,7 +695,7 @@ async def authenticated_client_with_db(test_db_session, super_user_data,
     """ Аутентифицированный клиент с тестовой базой данных """
     # from app.main import app
     from app.core.config.database.db_mongo import get_mongodb
-    
+
     async def get_test_db():
         yield test_db_session
 
@@ -715,7 +717,7 @@ async def authenticated_client_with_db(test_db_session, super_user_data,
     # override_app_dependencies[app.dependency_overrides] = get_test_db
     app.dependency_overrides[get_db] = get_test_db
     app.dependency_overrides[get_mongodb] = override_get_mongodb
-    app.dependency_overrides[get_database] = override_get_database
+    # app.dependency_overrides[get_database] = override_get_database
     app.dependency_overrides[get_translator_func] = lambda: override_get_translator_func
 
     # Создаем JWT токен для тестового пользователя
