@@ -1,39 +1,43 @@
 # app/core/config/database/db_amongo.py
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from app.core.config.project_config import settings
+import asyncio
 
 
 class MongoDBManager:
     client: AsyncIOMotorClient = None
     database: AsyncIOMotorDatabase = None
+    _lock = asyncio.Lock()
 
     @classmethod
     async def connect(cls, mongo_url: str = None, mongo_database: str = None):
-        if cls.client is None:
-            if mongo_database:
-                cls.database = mongo_database
-            if mongo_url:
-                cls.client = AsyncIOMotorClient(mongo_url)
-            else:
-                cls.client = AsyncIOMotorClient(
-                    host=settings.MONGO_HOSTNAME,
-                    port=settings.MONGO_INN_PORT,
-                    username=settings.MONGO_INITDB_ROOT_USERNAME,
-                    password=settings.MONGO_INITDB_ROOT_PASSWORD,
-                    authSource='admin',
-                    directConnection=True,
-                    maxPoolSize=settings.MAXPOOLSIZE,  # Увеличено
-                    minPoolSize=settings.MINPOOLSIZE,
-                    uuidRepresentation="standard",
-                    compressors='zstd'
-                )
-            await cls.client.admin.command("ping")
+        async with cls._lock:
+            if cls.client is None:
+                if mongo_database:
+                    cls.database = mongo_database
+                if mongo_url:
+                    cls.client = AsyncIOMotorClient(mongo_url)
+                else:
+                    cls.client = AsyncIOMotorClient(
+                        host=settings.MONGO_HOSTNAME,
+                        port=settings.MONGO_INN_PORT,
+                        username=settings.MONGO_INITDB_ROOT_USERNAME,
+                        password=settings.MONGO_INITDB_ROOT_PASSWORD,
+                        authSource='admin',
+                        directConnection=True,
+                        maxPoolSize=settings.MAXPOOLSIZE,  # Увеличено
+                        minPoolSize=settings.MINPOOLSIZE,
+                        uuidRepresentation="standard",
+                        compressors='zstd'
+                    )
+                await cls.client.admin.command("ping")
 
     @classmethod
     async def disconnect(cls):
-        if cls.client:
-            cls.client.close()
-            cls.client = None
+        async with cls._lock:
+            if cls.client:
+                cls.client.close()
+                cls.client = None
 
 
 async def get_mongodb() -> AsyncIOMotorDatabase:

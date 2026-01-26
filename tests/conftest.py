@@ -123,31 +123,22 @@ def sample_image_jpg(test_images_dir):
 @pytest.fixture(scope="session")
 async def test_mongodb(clean_database):
     """Создает тестовый экземпляр MongoDB"""
-    test_mongo = MongoDBManager()
-    test_url = f'{settings_db.mongo_url}'
-    await test_mongo.connect(test_url, settings_db.MONGO_DATABASE)
-    # yield test_mongo
-    yield MongoDBManager.client[settings_db.MONGO_DATABASE]
-    await test_mongo.disconnect()
+    from motor.motor_asyncio import AsyncIOMotorClient
+    client = AsyncIOMotorClient(settings_db.mongo_url)
+    db = client[settings_db.MONGO_DATABASE]
+    yield db
+    client.close()
 
 
 @pytest.fixture(scope="session")  # , autouse=True)
 async def clean_database():
     # Очищает базу данных перед каждой сессией
-    test_mongo = MongoDBManager()
-    test_url = f'{settings_db.mongo_url}'
-    await test_mongo.connect(test_url, settings_db.MONGO_DATABASE)
-    if hasattr(test_mongo, 'database'):
-        await test_mongo.client.drop_database(settings_db.MONGO_DATABASE)
-        test_mongo.database = test_mongo.client[settings_db.MONGO_DATABASE]
-    await test_mongo.disconnect()
-    """
+    from motor.motor_asyncio import AsyncIOMotorClient
     client = AsyncIOMotorClient(settings_db.mongo_url)
     try:
         await client.drop_database(settings_db.MONGO_DATABASE)
     finally:
         client.close()
-    """
 
 
 @pytest.fixture(scope="function")
@@ -177,20 +168,37 @@ async def mongo_health_check(test_mongodb):
 async def test_client_with_mongo(test_mongodb):
     """Создает тестового клиента с переопределенными MongoDB зависимостями"""
     from app.main import app
-    from app.core.config.database.db_mongo import get_mongodb
+    from app.core.config.database.db_mongo import get_mongodb, MongoDBManager
+    from motor.motor_asyncio import AsyncIOMotorClient
 
-    # Переопределяем зависимости для тестов
-    async def override_get_mongodb():
+    # Store original MongoDBManager state
+    original_client = MongoDBManager.client
+    original_database = MongoDBManager.database
+
+    # Create a temporary client for the MongoDBManager to reference the test database
+    temp_client = AsyncIOMotorClient(settings_db.mongo_url)
+    temp_client_db = temp_client[settings_db.MONGO_DATABASE]
+
+    # Set up test MongoDB client for the duration of this test
+    MongoDBManager.client = temp_client
+    MongoDBManager.database = test_mongodb
+
+    def override_get_mongodb():
         return test_mongodb
 
-    async def override_get_database():
-        return test_mongodb.database
-
     app.dependency_overrides[get_mongodb] = override_get_mongodb
-    # app.dependency_overrides[get_database] = override_get_database
 
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        yield client
+    try:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            yield client
+    finally:
+        # Clean up overrides
+        app.dependency_overrides.clear()
+        # Close the temporary client
+        temp_client.close()
+        # Restore original MongoDBManager state
+        MongoDBManager.client = original_client
+        MongoDBManager.database = original_database
 
 # ---------------mongo db end ----------
 
