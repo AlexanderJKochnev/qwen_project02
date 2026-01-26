@@ -8,7 +8,7 @@ class MongoDBManager:
     database: AsyncIOMotorDatabase = None
 
     @classmethod
-    async def connect(cls, mongo_url: None, mongo_database: None):
+    async def connect(cls, mongo_url: str = None, mongo_database: str = None):
         if cls.client is None:
             if mongo_database:
                 cls.database = mongo_database
