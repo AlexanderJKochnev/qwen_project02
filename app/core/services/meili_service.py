@@ -131,3 +131,27 @@ class ItemMeiliService(BaseMeiliService[ItemReadRelation]):
         )
         
         return search_results.hits
+    
+    async def search_with_pagination(self, query: str, lang: str = 'en', page: int = 1, page_size: int = 20, session: AsyncSession = None):
+        """Search method with pagination for the router"""
+        from app.core.config.database.meili_async import get_meili_client
+        async with get_meili_client() as client:
+            result = await self.search(client, query, page, page_size, lang)
+            
+            # Convert results to PaginatedResponse format
+            from app.core.schemas.base import PaginatedResponse
+            paginated_result = PaginatedResponse(
+                results=result['results'],
+                total=result['total'],
+                page=result['page'],
+                page_size=result['page_size'],
+                total_pages=result['total_pages']
+            )
+            return paginated_result
+    
+    async def search_without_pagination(self, query: str, lang: str = 'en', session: AsyncSession = None):
+        """Search method without pagination for the router"""
+        from app.core.config.database.meili_async import get_meili_client
+        async with get_meili_client() as client:
+            result = await self.search_all(client, query, lang)
+            return result

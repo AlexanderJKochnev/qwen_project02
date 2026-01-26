@@ -69,11 +69,14 @@ async def lifespan(app: FastAPI):
         await item_meili_service.init_index(meili_client, db_session)
         break  # We just need one iteration to get the session
 
+    # Initialize background tasks including MeiliSearch sync
+    await init_background_tasks()
+
     yield
 
     # --- SHUTDOWN ---
-    await app.state.http_client.aclose()
     await stop_background_tasks()
+    await app.state.http_client.aclose()
     await DatabaseManager.close()
     await MeiliManager.disconnect()
     await MongoDBManager.disconnect()
