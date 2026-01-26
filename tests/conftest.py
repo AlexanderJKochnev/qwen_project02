@@ -126,20 +126,19 @@ async def test_mongodb(clean_database):
     test_mongo = MongoDBManager()
     test_url = f'{settings_db.mongo_url}'
     await test_mongo.connect(test_url, settings_db.MONGO_DATABASE)
-    yield test_mongo
+    # Yield the actual database, not the manager
+    yield MongoDBManager.client[settings_db.MONGO_DATABASE]
     await test_mongo.disconnect()
 
 
 @pytest.fixture(scope="session")  # , autouse=True)
 async def clean_database():
-    """Очищает базу данных перед каждой сессией"""
-    test_mongo = MongoDBManager()
-    test_url = f'{settings_db.mongo_url}'
-    await test_mongo.connect(test_url, settings_db.MONGO_DATABASE)
-    if hasattr(test_mongo, 'database'):
-        await test_mongo.client.drop_database(settings_db.MONGO_DATABASE)
-        test_mongo.database = test_mongo.client[settings_db.MONGO_DATABASE]
-    await test_mongo.disconnect()
+    """Очищает базуу данных перед каждой сессией"""
+    client = AsyncIOMotorClient(settings_db.mongo_url)
+    try:
+        await client.drop_database(settings_db.MONGO_DATABASE)
+    finally:
+        client.close()
 
 
 @pytest.fixture(scope="function")
@@ -175,11 +174,7 @@ async def test_client_with_mongo(test_mongodb):
     async def override_get_mongodb():
         return test_mongodb
 
-    async def override_get_database():
-        return test_mongodb.database
-
     app.dependency_overrides[get_mongodb] = override_get_mongodb
-    # app.dependency_overrides[get_database] = override_get_database
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         yield client
@@ -701,9 +696,6 @@ async def authenticated_client_with_db(test_db_session, super_user_data,
 
     async def override_get_mongodb():
         return test_mongodb
-
-    async def override_get_database():
-        return test_mongodb.database
 
     async def override_get_translator_func(data: Dict[str, Any], flag: Optional[bool] = None):
         result: dict = {}
