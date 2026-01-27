@@ -234,8 +234,11 @@ class Service(metaclass=ServiceMeta):
     async def delete(cls, id: int, model: ModelType, repository: Type[Repository],
                      session: AsyncSession) -> bool:
         instance = await repository.get_by_id(id, model, session)
-        if instance:
-            result, obj = await repository.delete(instance, session)
+        if instance is not None:
+            try:
+                result, _ = await repository.delete(instance, session)
+            except Exception as e:
+                print(f'=============================={e}')
             if isinstance(result, str):
                 await session.rollback()
                 if result == "foreign_key_violation":

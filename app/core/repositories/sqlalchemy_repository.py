@@ -186,7 +186,7 @@ class Repository(metaclass=RepositoryMeta):
                 return "foreign_key_violation"
             return f"integrity_error: {error_str}"
         except Exception as e:
-            return f"database_error: {str(e)}"
+            return f"database_error: {str(e)}", None
 
     @classmethod
     async def get_by_id(cls, id: int, model: ModelType, session: AsyncSession) -> Optional[ModelType]:
