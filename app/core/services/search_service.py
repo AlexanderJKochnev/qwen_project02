@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, and_
 from meilisearch_python_sdk import AsyncClient
 from meilisearch_python_sdk.models.settings import MeilisearchSettings
-from app.core.models.outbox import Outbox
+# from app.core.models.outbox import Outbox
 from app.core.config.project_config import settings
 from app.support.item.schemas import ItemReadRelation
 from app.support.drink.model import DrinkVarietal
