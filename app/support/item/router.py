@@ -153,7 +153,6 @@ class ItemRouter(BaseRouter):
             """
             raise HTTPException(status_code=501, detail=exc)
         except Exception as e:
-            await session.rollback()
             detail = (f'ошибка создания записи {e}, model = {self.model}, '
                       f'create_schema = {self.create_schema}, '
                       f'service = {self.service} ,'
@@ -196,7 +195,6 @@ class ItemRouter(BaseRouter):
             print(detail)
             raise HTTPException(status_code=501, detail=exc)
         except Exception as e:
-            await session.rollback()
             detail = f'{str(e)}, {data=}'
             print(f'=========={data}')
             raise HTTPException(status_code=500, detail=detail)
@@ -255,7 +253,6 @@ class ItemRouter(BaseRouter):
             if file and image_dict:
                 image_id = image_dict.get('id')
                 await image_service.delete_image(image_id)
-            await session.rollback()
             detail = f'{str(e)}, {data=}'
             print('3rd error', detail)
             raise HTTPException(status_code=500, detail=detail)

@@ -79,7 +79,7 @@ class Repository(metaclass=RepositoryMeta):
     async def create(cls, obj: ModelType, model: ModelType, session: AsyncSession) -> ModelType:
         """ создание записи """
         session.add(obj)
-        await session.commit()
+        await session.flush()
         await session.refresh(obj)
         return obj
 
@@ -96,10 +96,10 @@ class Repository(metaclass=RepositoryMeta):
             for k, v in data.items():
                 if hasattr(obj, k):
                     setattr(obj, k, v)
-            await session.commit()
+            await session.flush()
+            # await session.refresh(data) - не надо - дает ошибки
             return {"success": True, "data": obj}
         except IntegrityError as e:
-            await session.rollback()
             error_str = str(e.orig).lower()
             original_error_str = str(e.orig)
 
@@ -127,7 +127,6 @@ class Repository(metaclass=RepositoryMeta):
                 "message": f"Ошибка целостности данных: {original_error_str}"
             }
         except Exception as e:
-            await session.rollback()
             return {
                 "success": False,
                 "error_type": "database_error",
@@ -175,10 +174,10 @@ class Repository(metaclass=RepositoryMeta):
         try:
             async with session.begin_nested():
                 await session.delete(obj)
-            await session.commit()
-            return True
+                await session.expunge(obj)
+                # можно вренуть удаленный объект и проделать с ним вские штуки - например записать заново с новым ID
+            return True, obj
         except IntegrityError as e:
-            await session.rollback()
             # Проверяем, является ли ошибка Foreign Key violation
             error_str = str(e.orig)
             if ("foreign key constraint" in error_str.lower() or
@@ -187,7 +186,6 @@ class Repository(metaclass=RepositoryMeta):
                 return "foreign_key_violation"
             return f"integrity_error: {error_str}"
         except Exception as e:
-            await session.rollback()
             return f"database_error: {str(e)}"
 
     @classmethod
