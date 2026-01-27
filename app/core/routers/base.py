@@ -127,7 +127,6 @@ class BaseRouter:
             obj, created = await self.service.get_or_create(data, self.repo, self.model, session)
             return obj
         except Exception as e:
-            await session.rollback()
             detail = (f'ошибка создания записи {e}, model = {self.model}, '
                       f'create_schema = {self.create_schema}, '
                       f'service = {self.service} ,'
@@ -150,7 +149,6 @@ class BaseRouter:
             # return obj
             return await self.service.get_by_id(obj.id, self.repo, self.model, session)
         except Exception as e:
-            await session.rollback()
             raise exception_to_http(e)
 
     async def update_or_create(self, id: int, data: TCreateSchema,
@@ -164,7 +162,6 @@ class BaseRouter:
             obj, created = await self.service.update_or_create(id, data, self.repo, self.model, session)
             return obj
         except Exception as e:
-            await session.rollback()
             detail = (f'ошибка обновления записи {e}, model = {self.model}, '
                       f'create_schema = {self.create_schema}, '
                       f'service = {self.service} ,'
