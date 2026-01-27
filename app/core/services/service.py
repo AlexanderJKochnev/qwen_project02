@@ -57,6 +57,7 @@ class Service(metaclass=ServiceMeta):
         data_dict = data.model_dump(exclude_unset=True)
         obj = model(**data_dict)
         result = await repository.create(obj, model, session)
+        await session.commit()
         return result
 
     @classmethod
@@ -80,12 +81,14 @@ class Service(metaclass=ServiceMeta):
             # запись не найдена
             obj = model(**data_dict)
             instance = await repository.create(obj, model, session)
-            await session.flush()
+            await session.commit()
             await session.refresh(instance)
             return instance, True
         except IntegrityError as e:
+            await session.rollback()
             raise Exception(f'Integrity error: {e}')
         except Exception as e:
+            await session.rollback()
             raise Exception(f"UNKNOWN_ERROR: {str(e)}") from e
 
     @classmethod
@@ -105,16 +108,19 @@ class Service(metaclass=ServiceMeta):
             if instance:
                 # запись найдена, обновляем
                 result = await repository.patch(instance, data_dict, session)
-                return result, False
+                await session.commit()
+                return result['data'], False
             # запись не найдена
             obj = model(**data_dict)
             instance = await repository.create(obj, model, session)
-            await session.flush()
+            await session.commit()
             await session.refresh(instance)
             return instance, True
         except IntegrityError as e:
+            await session.rollback()
             raise Exception(f'Integrity error: {e}')
         except Exception as e:
+            await session.rollback()
             raise Exception(f"UNKNOWN_ERROR: {str(e)}") from e
 
     @classmethod
@@ -132,6 +138,7 @@ class Service(metaclass=ServiceMeta):
             obj = model(**data_dict)
 
             result = await repository.create(obj, model, session)
+            await session.commit()
             # тут можно добавить преобразования результата потом commit в роутере
             return result
 
@@ -188,6 +195,10 @@ class Service(metaclass=ServiceMeta):
             return {'success': False, 'message': 'Нет данных для обновления', 'error_type': 'no_data'}
         # Выполняем обновление
         result = await repository.patch(existing_item, data_dict, session)
+        if result.get('success'):
+            await session.commit()
+        else:
+            await session.rollback()
         # Обрабатываем результат
         if isinstance(result, dict):
             if result.get('success'):
@@ -225,14 +236,18 @@ class Service(metaclass=ServiceMeta):
         instance = await repository.get_by_id(id, model, session)
         if instance:
             result = await repository.delete(instance, session)
-
-            if result == "foreign_key_violation":
-                return {'success': False, 'deleted_count': 0,
-                        'message': 'Невозможно удалить запись: на неё ссылаются другие объекты'}
-            elif isinstance(result, str) and result.startswith(('integrity_error:', 'database_error:')):
-                return {'success': False, 'deleted_count': 0,
-                        'message': f'Ошибка базы данных при удалении: {result.split(":", 1)[1]}'}
+            if isinstance(result, str):
+                await session.rollback()
+                if result == "foreign_key_violation":
+                    return {'success': False, 'deleted_count': 0,
+                            'message': 'Невозможно удалить запись: на неё ссылаются другие объекты'}
+                elif result.startswith(('integrity_error:', 'database_error:')):
+                    return {'success': False, 'deleted_count': 0,
+                            'message': f'Ошибка базы данных при удалении: {result.split(":", 1)[1]}'}
+                else:
+                    return {'success': False, 'deleted_count': 0, 'message': result}
             elif result is True:
+                await session.commit()
                 return {'success': True, 'deleted_count': 1, 'message': f'Запись {id} удалена'}
             else:
                 return {'success': False, 'deleted_count': 0, 'message': f'Запись {id} обнаружена, но не удалена.'}

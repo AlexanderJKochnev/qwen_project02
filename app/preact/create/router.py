@@ -52,7 +52,6 @@ class CreateRouter(PreactRouter):
             # print(f'{result=}')
             return obj
         except Exception as e:
-            await session.rollback()
             raise HTTPException(
                 status_code=500,
                 detail=f'Create Fault, {e}'

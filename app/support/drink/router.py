@@ -72,7 +72,6 @@ class DrinkRouter(BaseRouter):
                       )
             print(detail)
         except Exception as e:
-            await session.rollback()
             detail = (f'ошибка создания записи {e}, model = {self.model}, '
                       f'create_schema = {self.create_schema}, '
                       f'service = {self.service} ,'
