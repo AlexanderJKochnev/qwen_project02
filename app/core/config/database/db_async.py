@@ -41,7 +41,7 @@ async def get_db():
     async with DatabaseManager.session_maker() as session:
         try:
             yield session
-            # await session.commit()  # Опционально: автокоммит при успехе
+            await session.commit()  # Опционально: автокоммит при успехе
         except Exception:
             await session.rollback()
             raise

@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 # from sqlalchemy.orm import Session
-
+import asyncio
 from app.core.config.project_config import settings
 from app.core.repositories.sqlalchemy_repository import ModelType, Repository
 from app.core.utils.alchemy_utils import get_models
@@ -16,6 +16,7 @@ from app.core.utils.common_utils import flatten_dict_with_localized_fields
 from app.core.utils.pydantic_utils import make_paginated_response
 from app.service_registry import register_service
 from app.core.models.outbox_model import OutboxAction, MeiliOutbox, OutboxStatus
+from app.core.services.meili_service import MeiliSyncManager
 from app.core.utils.pydantic_utils import get_pyschema
 
 joint = '. '
@@ -219,6 +220,7 @@ class Service(metaclass=ServiceMeta):
         if result.get('success'):
             await cls._queue_meili_sync(session, model, repository, OutboxAction.UPDATE, result.get('data'))
             await session.commit()
+            asyncio.create_task(MeiliSyncManager.run_sync(session))
         else:
             await session.rollback()
         # Обрабатываем результат
@@ -262,7 +264,9 @@ class Service(metaclass=ServiceMeta):
             await repository.delete(instance, session)
             await session.flush()
             await cls._queue_meili_sync(session, model, repository, OutboxAction.DELETE, id)
-            session.commit()
+            await session.commit()
+            await MeiliSyncManager.run_sync(session)
+            # asyncio.create_task(MeiliSyncManager.run_sync(session))
         except IntegrityError:
             await session.rollback()  # Откат при конфликте связей
             raise PermissionError(f"Cannot delete record {id} of {model.__name__}: related data exists")

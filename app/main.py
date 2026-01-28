@@ -1,10 +1,12 @@
 # app/main.py
 import httpx
+from meilisearch_python_sdk import AsyncClient
 from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.gzip import GZipMiddleware
 from loguru import logger
+from fastapi import BackgroundTasks
 import sys
 from time import perf_counter
 from app.auth.routers import auth_router, user_router
@@ -39,9 +41,11 @@ from app.support.parser.router import (StatusRouter, CodeRouter, NameRouter, Orc
                                        ImageRouter, RawdataRouter, RegistryRouter)
 # from app.arq_worker_routes import router as ArqWorkerRouter
 # from app.support.warehouse.router import WarehouseRouter
-from app.core.config.database.meili_async import MeiliManager
+from app.core.config.database.meili_async import MeiliManager, get_meili_client
+from app.support.outbox.router import router as MeiliRouter
 # Import background tasks
-from app.core.utils.background_tasks import init_background_tasks, stop_background_tasks
+# from app.core.utils.background_tasks import init_background_tasks, stop_background_tasks
+from app.core.services.meili_service import MeiliSyncManager
 
 
 @asynccontextmanager
@@ -53,6 +57,10 @@ async def lifespan(app: FastAPI):
         # Ускоряет работу, если не нужны системные прокси
     )
     DatabaseManager.init()
+
+    if not DatabaseManager.session_maker:
+        logger.error("MeiliSync: 000 session_maker не инициализирован!")
+
     await MeiliManager.get_client()
     # Можно сразу проверить соединение (healthcheck)
     await (await MeiliManager.get_client()).health()
@@ -60,15 +68,13 @@ async def lifespan(app: FastAPI):
     await MongoDBManager.connect()  # Подключаем Mongo
     # await init_db_extensions()  # подключение расщирений Postgresql
 
-    # 3. Background tasks заполнение индексов перед запуском - переделать - с проверкой существования индексов
-    # populate_meilisearch = os.getenv("POPULATE_MEILISEARCH_ON_STARTUP", "false").lower() == "true"
-    # await init_background_tasks(populate_initial_data=populate_meilisearch)
+    # await MeiliSyncManager.run_sync()
 
     yield
 
     # --- SHUTDOWN ---
     await app.state.http_client.aclose()
-    await stop_background_tasks()
+    # await stop_background_tasks()
     await DatabaseManager.close()
     await MeiliManager.disconnect()
     await MongoDBManager.disconnect()
@@ -162,6 +168,7 @@ app.include_router(OrchestratorRouter().router)
 # app.include_router(ArqWorkerRouter)
 app.include_router(auth_router)
 app.include_router(user_router)
+app.include_router(MeiliRouter)
 
 
 @app.get("/")
@@ -171,7 +178,7 @@ async def read_root():
 
 @app.get("/health")
 async def health_check(mongo_db: AsyncIOMotorDatabase = Depends(get_mongodb)):
-    status_info = {"status": "healthy",
+    status_info = {"status": "mongodb healthy",
                    "mongo_connected": mongo_db is not None,
                    "mongo_operational": False}
 
@@ -181,5 +188,23 @@ async def health_check(mongo_db: AsyncIOMotorDatabase = Depends(get_mongodb)):
             status_info["mongo_operational"] = True
         except Exception:
             status_info["status"] = "degraded"
+
+    return status_info
+
+
+@app.get("/meilihealth")
+async def meili_health_check(client: AsyncClient = Depends(get_meili_client)):
+    status_info = {"status": "meili healthy",
+                   "meilisearch_connected": client is not None,
+                   "meilisearch_operational": False,
+                   "Health": None}
+
+    if client is not None:
+        try:
+            health = await (await MeiliManager.get_client()).health()
+            status_info['meilisearch_operational'] = True
+            status_info['Healt'] = health
+        except Exception:
+            status_info["status"] = "bad"
 
     return status_info

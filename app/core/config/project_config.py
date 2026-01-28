@@ -211,6 +211,9 @@ class Settings(BaseSettings):
     MEILISEARCH_URL: str = "http://meilisearch:7700"  # ← имя сервиса в docker-compose
     MEILISEARCH_MASTER_KEY: str = "your_strong_master_key_here"
     MEILISEARCH_MODELS: str = 'item'  # список моделей по кторым осуществлется meilisearch
+    TOLERANCE_TIME: int = 2
+    # задержка при обновлении индекса meilisearch (обработка нескольких записей за раз,
+    # быстрее чем обрабатывать каждую друг за другом
 
     model_config = SettingsConfigDict(env_file=get_path_to_root(),
                                       env_file_encoding='utf-8',

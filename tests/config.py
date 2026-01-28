@@ -45,6 +45,10 @@ class ConfigDataBase(BaseSettings):
     ME_CONFIG_BASICAUTH_PASSWORD: str
     ME_OUT_PORT: int
     ME_INN_PORT: int
+    MEILISEARCH_URL: str
+    MEILISEARCH_MASTER_KEY: str = "your_strong_master_key_here"
+    MEILISEARCH_MODELS: str = 'item,drink,rawdata'
+    TOLERANCE_TIME: int = 2
 
     @property
     def database_url(self) -> Optional[PostgresDsn]:

@@ -2,7 +2,7 @@
 from deepdiff import DeepDiff
 from datetime import datetime
 from functools import reduce
-# import json
+import asyncio
 from decimal import Decimal
 from typing import Type, Optional, Dict, Any
 from pydantic import ValidationError
@@ -29,6 +29,7 @@ from app.support.item.schemas import (ItemCreate, ItemCreateRelation, ItemRead, 
                                       ItemDetailNonLocalized, ItemDetailLocalized, ItemDetailForeignLocalized,
                                       ItemDetailManyToManyLocalized, ItemListView,
                                       ItemApiLangNonLocalized, ItemApiLangLocalized, ItemApiLang, ItemApi)
+from app.core.services.meili_service import MeiliSyncManager
 
 
 class ItemService(Service):
@@ -367,11 +368,8 @@ class ItemService(Service):
             # id = item_instance.id
             # await session.commit()
             await cls._queue_meili_sync(session, model, repository, OutboxAction.CREATE, item_instance)
-            if kwargs.get('commit'):
-                await session.commit()
-            else:
-                await session.flush()
-                await session.refresh(item_instance)
+            await session.commit()
+            asyncio.create_task(MeiliSyncManager.run_sync(session))
             return item_instance  # new
         except Exception as e:
             raise Exception(f'itemservice.create_relation. {e}')

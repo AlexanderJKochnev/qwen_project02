@@ -3,15 +3,17 @@
 from meilisearch_python_sdk import AsyncClient
 from meilisearch_python_sdk.models.settings import MeilisearchSettings
 from app.core.config.project_config import settings
+from loguru import logger
 
 
 class MeiliManager:
     # Изначально клиент не инициализирован
-    client: AsyncClient = None
+    client: AsyncClient | None = None
 
     @classmethod
     async def get_client(cls) -> AsyncClient:
         if cls.client is None:
+            logger.debug(f"Инициализация Meilisearch по адресу: {settings.MEILISEARCH_URL}")
             cls.client = AsyncClient(
                 url=settings.MEILISEARCH_URL,
                 api_key=settings.MEILISEARCH_MASTER_KEY
