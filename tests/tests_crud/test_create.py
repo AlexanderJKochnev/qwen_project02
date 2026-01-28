@@ -160,7 +160,7 @@ async def test_create_routers(authenticated_client_with_db, get_post_routes):
                 continue
             # генерация данных
             test_data = generate_test_data(request_model, test_number,
-                                           {'int_range': (1, test_number),
+                                           {'int_range': (1, test_number - 1),
                                             'decimal_range': (0.01, 10),
                                             'float_range': (0.01, 100.0),
                                             # 'field_overrides': {'name': 'Special Product'},

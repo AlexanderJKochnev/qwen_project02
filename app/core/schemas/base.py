@@ -192,8 +192,8 @@ class PaginatedResponse(BaseOrigin, Generic[T]):
 
 class DeleteResponse(BaseModel):
     success: bool
-    deleted_count: int = 1
-    message: str
+    deleted_count: Optional[int] = 1
+    message: Optional[str] = None
 
 
 class UpdateResponse(BaseModel):

@@ -207,21 +207,15 @@ class BaseRouter:
             input_valudation_chema No
             response_model <>DeleteResponse
         """
-        result = await self.service.delete(id, self.model, self.repo, session)
-        if not result.get('success'):
-            error_message = result.get('message', 'Unknown error')
-            # Для Foreign Key violation возвращаем 400 Bad Request
-            if 'невозможно удалить запись: на неё ссылаются другие объекты' in error_message:
-                raise HTTPException(status_code=400, detail=f'{self.model.__name__} {error_message}')
-            # Для других ошибок базы данных возвращаем 500
-            elif 'ошибка базы данных' in error_message.lower():
-                raise HTTPException(status_code=500, detail=f'{self.model.__name__} {error_message}')
-            # Для "не найдена" возвращаем 404
-            elif 'не найдена' in error_message:
-                raise HTTPException(status_code=404, detail=f'{self.model.__name__} {error_message}')
-            else:
-                raise HTTPException(status_code=500, detail=f'{self.model.__name__} {error_message}')
-        return DeleteResponse(**result)
+        try:
+            await self.service.delete(id, self.model, self.repo, session)
+            return DeleteResponse(success=True, deleted_count=1, message=f'record with {id=}')
+        except ValueError:
+            raise HTTPException(status_code=404, detail=f"record with {id=} not found")
+        except PermissionError as e:
+            raise HTTPException(status_code=409, detail=f'{id=}, {str(e)}')
+        except Exception as e:
+            raise HTTPException(status_code=409, detail=f'{id=}, {str(e)}')
 
     async def get_one(self,
                       id: int,

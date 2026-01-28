@@ -171,22 +171,11 @@ class Repository(metaclass=RepositoryMeta):
         удаление записи
         :param obj: instance
         """
-        try:
-            async with session.begin_nested():
-                await session.delete(obj)
-                await session.expunge(obj)
-                # можно вренуть удаленный объект и проделать с ним вские штуки - например записать заново с новым ID
-            return True, obj
-        except IntegrityError as e:
-            # Проверяем, является ли ошибка Foreign Key violation
-            error_str = str(e.orig)
-            if ("foreign key constraint" in error_str.lower() or
-                    "violates foreign key constraint" in error_str.lower() or
-                    "violates not-null constraint" in error_str.lower()):
-                return "foreign_key_violation"
-            return f"integrity_error: {error_str}"
-        except Exception as e:
-            return f"database_error: {str(e)}", None
+        # async with session.begin_nested():
+        await session.delete(obj)
+        # await session.expunge(obj)
+        # можно отвязать и вернуть удаленный объект и проделать с ним вские штуки - например записать заново с новым ID
+        return True, None  # , obj
 
     @classmethod
     async def get_by_id(cls, id: int, model: ModelType, session: AsyncSession) -> Optional[ModelType]:

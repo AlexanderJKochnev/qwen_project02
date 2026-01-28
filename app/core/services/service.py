@@ -1,6 +1,6 @@
 # app.core.service/service.py
 from abc import ABCMeta
-
+# from fastapi import HTTPException
 from datetime import datetime
 from typing import List, Optional, Tuple, Type, Any
 from loguru import logger
@@ -17,7 +17,6 @@ from app.core.utils.pydantic_utils import make_paginated_response
 from app.service_registry import register_service
 from app.core.models.outbox_model import OutboxAction, MeiliOutbox, OutboxStatus
 from app.core.utils.pydantic_utils import get_pyschema
-from app.core.utils.common_utils import jprint
 
 joint = '. '
 
@@ -257,32 +256,19 @@ class Service(metaclass=ServiceMeta):
     async def delete(cls, id: int, model: ModelType, repository: Type[Repository],
                      session: AsyncSession) -> bool:
         instance = await repository.get_by_id(id, model, session)
-        if instance is not None:
-            try:
-                result, _ = await repository.delete(instance, session)
-                if result:
-                    await cls._queue_meili_sync(session, model, repository, OutboxAction.DELETE, id)
-                    await session.flush()
-                # await session.refresh()
-            except Exception as e:
-                print(f'=============================={e}')
-            if isinstance(result, str):
-                await session.rollback()
-                if result == "foreign_key_violation":
-                    return {'success': False, 'deleted_count': 0,
-                            'message': 'Невозможно удалить запись: на неё ссылаются другие объекты'}
-                elif result.startswith(('integrity_error:', 'database_error:')):
-                    return {'success': False, 'deleted_count': 0,
-                            'message': f'Ошибка базы данных при удалении: {result.split(":", 1)[1]}'}
-                else:
-                    return {'success': False, 'deleted_count': 0, 'message': result}
-            elif result is True:
-                await session.commit()
-                return {'success': True, 'deleted_count': 1, 'message': f'Запись {id} удалена'}
-            else:
-                return {'success': False, 'deleted_count': 0, 'message': f'Запись {id} обнаружена, но не удалена.'}
-        else:
-            return {'success': False, 'deleted_count': 0, 'message': f'Запись {id} не найдена'}
+        if instance is None:
+            raise ValueError(f'instanse with {id=} not found')
+        try:
+            await repository.delete(instance, session)
+            await session.flush()
+            await cls._queue_meili_sync(session, model, repository, OutboxAction.DELETE, id)
+            session.commit()
+        except IntegrityError:
+            await session.rollback()  # Откат при конфликте связей
+            raise PermissionError(f"Cannot delete record {id} of {model.__name__}: related data exists")
+        except Exception as e:
+            await session.rollback()
+            raise Exception(f'{model.__name__}, {id}, {e}')
 
     @classmethod
     async def search(cls,
@@ -404,14 +390,14 @@ class Service(metaclass=ServiceMeta):
                 payload=meili_data,
                 status=OutboxStatus.PENDING
             )
-            jprint(outbox_entry.to_dict())
+            # jprint(outbox_entry.to_dict())
             session.add(outbox_entry)
             # flush гарантирует, что если с таблицей Outbox что-то не так,
             # мы узнаем об этом до основного commit
             await session.flush()
-            print('0--------------------')
-            jprint(outbox_entry.to_dict())
-            print('1--------------------')
+            # print('0--------------------')
+            # jprint(outbox_entry.to_dict())
+            # print('1--------------------')
             if action == OutboxAction.DELETE:
                 await session.commit()
         except Exception as e:
