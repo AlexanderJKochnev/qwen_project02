@@ -2,7 +2,7 @@
 # асинхронный драйвер
 from sqlalchemy.ext.asyncio import (create_async_engine,
                                     async_sessionmaker,
-                                    AsyncEngine,
+                                    # AsyncEngine,
                                     AsyncSession)
 from sqlalchemy import text
 from app.core.config.database.db_config import settings_db
@@ -27,7 +27,8 @@ class DatabaseManager:
         cls.session_maker = async_sessionmaker(
             bind=cls.engine,
             expire_on_commit=False,
-            class_=AsyncSession, autoflush=False
+            class_=AsyncSession,
+            autoflush=False
         )
 
     @classmethod
@@ -40,7 +41,7 @@ async def get_db():
     async with DatabaseManager.session_maker() as session:
         try:
             yield session
-            await session.commit()  # Опционально: автокоммит при успехе
+            # await session.commit()  # Опционально: автокоммит при успехе
         except Exception:
             await session.rollback()
             raise

@@ -1,8 +1,10 @@
-# app/support/outbox/model.py
+# app/support/outbox/outbox_model.py
 
 import enum
 from sqlalchemy import Column, Integer, String, JSON, DateTime, Enum, func
+from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase
+from app.core.models.base_model import Base
 
 
 class OutboxStatus(enum.Enum):
@@ -17,10 +19,6 @@ class OutboxAction(enum.Enum):
     DELETE = "delete"
 
 
-class Base(DeclarativeBase):
-    pass
-
-
 class MeiliOutbox(Base):
     __tablename__ = "meili_outbox"
 
@@ -32,3 +30,9 @@ class MeiliOutbox(Base):
     status = Column(Enum(OutboxStatus), default=OutboxStatus.PENDING)
     retry_count = Column(Integer, default=0)
     created_at = Column(DateTime, server_default=func.now())
+
+    def __str__(self):
+        return self.index_name or ""
+
+    def __repr__(self):
+        return str(self)

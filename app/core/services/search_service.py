@@ -2,6 +2,7 @@
 
 """
 Meilisearch synchronization service using Transactional Outbox pattern
+interim
 """
 
 import json

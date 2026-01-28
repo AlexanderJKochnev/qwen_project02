@@ -2,7 +2,7 @@
 from deepdiff import DeepDiff
 from datetime import datetime
 from functools import reduce
-import json
+# import json
 from decimal import Decimal
 from typing import Type, Optional, Dict, Any
 from pydantic import ValidationError
@@ -16,6 +16,7 @@ from app.core.utils.pydantic_utils import get_field_name
 from app.core.utils.common_utils import flatten_dict_with_localized_fields, camel_to_enum, jprint
 from app.core.utils.converters import read_convert_json, list_move, lang_suffix_list, lang_suffix_dict
 from app.core.utils.pydantic_utils import make_paginated_response
+from app.core.models.outbox_model import OutboxAction
 from app.mongodb.service import ThumbnailImageService
 from app.support.drink.model import Drink
 from app.support.drink.repository import DrinkRepository
@@ -346,14 +347,14 @@ class ItemService(Service):
     @classmethod
     async def create_relation(cls, data: ItemCreateRelation,
                               repository: ItemRepository, model: Item,
-                              session: AsyncSession) -> ItemRead:
+                              session: AsyncSession, **kwargs) -> ItemReadRelation:
         try:
             item_data: dict = data.model_dump(exclude={'drink', 'warehouse'},
                                               exclude_unset=True)
             if data.drink:
                 try:
                     result = await DrinkService.create_relation(data.drink, DrinkRepository, Drink, session)
-                    await session.commit()
+                    # await session.commit()
                     item_data['drink_id'] = result.id
                 except Exception as e:
                     print('data.drink.error::', result, e)
@@ -363,6 +364,14 @@ class ItemService(Service):
             #     item_data['warehouse_id'] = result.id
             item = ItemCreate(**item_data)
             item_instance, new = await cls.get_or_create(item, ItemRepository, Item, session)
+            # id = item_instance.id
+            # await session.commit()
+            await cls._queue_meili_sync(session, model, repository, OutboxAction.CREATE, item_instance)
+            if kwargs.get('commit'):
+                await session.commit()
+            else:
+                await session.flush()
+                await session.refresh(item_instance)
             return item_instance  # new
         except Exception as e:
             raise Exception(f'itemservice.create_relation. {e}')

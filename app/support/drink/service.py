@@ -63,7 +63,7 @@ class DrinkService(Service):
     @classmethod
     async def create_relation(cls, data: DrinkCreateRelation,
                               repository: DrinkRepository, model: Drink,
-                              session: AsyncSession) -> DrinkRead:
+                              session: AsyncSession, **kwargs) -> DrinkRead:
         # pydantic model -> dict
         try:
             drink_data: dict = data.model_dump(exclude={'subregion', 'subcategory', 'color',
@@ -117,6 +117,7 @@ class DrinkService(Service):
                 # 3. set up percentage
                 for key, val in varietal_percentage.items():
                     await DrinkVarietalRepository.update_percentage(drink_id, key, val, session)
+            await session.flush()
             await session.refresh(drink_instance)
             return drink_instance
         except Exception as e:
@@ -151,6 +152,7 @@ class DrinkService(Service):
                 # add drink_id, varietal.ids to DrinkVarietal
                 for key, val in varietal_percentage.items():
                     await DrinkVarietalRepository.add_varietal_to_drink(drink_id, key, val, session)
+            await session.flush()
             await session.refresh(drink_instance)
             return drink_instance, created
         except Exception as e:
@@ -168,7 +170,7 @@ class DrinkService(Service):
         data_dict = data.model_dump()
         varietals = data_dict.pop('varietals', None)
         foods = data_dict.pop('foods', None)
-        
+
         # Filter out None values for required fields to prevent NOT NULL constraint violations
         # These fields are required in the database but optional in the schema
         filtered_data_dict = {}
@@ -177,7 +179,7 @@ class DrinkService(Service):
             if key in ['subcategory_id', 'subregion_id'] and value is None:
                 continue
             filtered_data_dict[key] = value
-        
+
         if varietals and isinstance(varietals, list):
             #  обновляем varietals
             #  заодно проверим правильность процентов (дополнить)

@@ -210,10 +210,15 @@ class Settings(BaseSettings):
     # === ПОИСКОВЫЙ СЕРВИС
     MEILISEARCH_URL: str = "http://meilisearch:7700"  # ← имя сервиса в docker-compose
     MEILISEARCH_MASTER_KEY: str = "your_strong_master_key_here"
+    MEILISEARCH_MODELS: str = 'item'  # список моделей по кторым осуществлется meilisearch
 
     model_config = SettingsConfigDict(env_file=get_path_to_root(),
                                       env_file_encoding='utf-8',
                                       extra='ignore')
+
+    @property
+    def meilisearch(self) -> list:
+        return strtolist(self.MEILISEARCH_MODELS)
 
     @property
     def redundant(self) -> list:

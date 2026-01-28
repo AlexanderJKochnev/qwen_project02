@@ -1,4 +1,6 @@
 # app.core.services.meili_service.py
+"""  INTERIM """
+
 from fastapi import Depends
 from typing import Type, TypeVar, List, Any, Generic
 from datetime import datetime, timezone

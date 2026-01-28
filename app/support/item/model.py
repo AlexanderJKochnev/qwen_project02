@@ -9,8 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.models.base_model import Base, BaseAt, ion, money, volume
 from app.core.models.image_mixin import ImageMixin
-# from app.support.item.schemas import ItemReadRelation
-# from app.core.models.outbox import Outbox
+
 
 if TYPE_CHECKING:
     from app.support.drink.model import Drink
