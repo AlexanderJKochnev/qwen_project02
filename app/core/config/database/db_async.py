@@ -1,6 +1,6 @@
 # app/core/config/database/db_async.py
 # асинхронный драйвер
-    from sqlalchemy.ext.asyncio import (create_async_engine,
+from sqlalchemy.ext.asyncio import (create_async_engine,
                                     async_sessionmaker,
                                     # AsyncEngine,
                                     AsyncSession)

@@ -46,11 +46,10 @@ def register_service(name: str, cls):
 
 def get_service(name: str):
     # Lazy load search service if not already loaded
-    if name.lower() == 'search_service' and 'search_service' not in _SERVICE_REGISTRY:
+    """if name.lower() == 'search_service' and 'search_service' not in _SERVICE_REGISTRY:
         # Import here to avoid circular imports
         from app.core.services.search_service import search_service
-        _SERVICE_REGISTRY['search_service'] = search_service
-
+        _SERVICE_REGISTRY['search_service'] = search_service"""
     return _SERVICE_REGISTRY.get(name.lower())
 
 

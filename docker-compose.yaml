@@ -1,34 +1,5 @@
 # docker-compose.yaml
 services:
-  meilisearch:
-    # --- НАСТРОЙКИ ЛОГИРОВАНИЯ ---
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"   # Максимальный размер файла лога: 10 МБ
-        max-file: "3"     # Количество хранимых файлов ротации: 3
-    # -----------------------------
-    container_name: meilisearch
-    image: getmeili/meilisearch:v1.10
-    restart: unless-stopped
-    environment:
-      - MEILI_MASTER_KEY=${MEILISEARCH_MASTER_KEY}
-      - MEILI_NO_ANALYTICS=true
-      - MEILI_MAX_INDEXING_THREADS=2  # Ограничение до 2 потоков
-      - MEILI_MAX_INDEXING_MEMORY=1GiB # Ограничение оперативной памяти
-    expose:
-      - "7700"
-    volumes:
-      - ./meili_data:/meili_data
-    deploy:
-      resources:
-        limits:
-          cpus: '1'
-          memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 256M
-
   wine_host: # this is the name of the service and name of the host (POSTGRES_HOST)
     # --- НАСТРОЙКИ ЛОГИРОВАНИЯ ---
     logging:
@@ -262,4 +233,3 @@ volumes:
   pg_dump: # postgres dump/restore
   mongodb_data:
   upload_volume:
-  meili_data:

@@ -29,7 +29,6 @@ from app.support.item.schemas import (ItemCreate, ItemCreateRelation, ItemRead, 
                                       ItemDetailNonLocalized, ItemDetailLocalized, ItemDetailForeignLocalized,
                                       ItemDetailManyToManyLocalized, ItemListView,
                                       ItemApiLangNonLocalized, ItemApiLangLocalized, ItemApiLang, ItemApi)
-from app.core.services.meili_service import MeiliSyncManager
 
 
 class ItemService(Service):
@@ -365,11 +364,7 @@ class ItemService(Service):
             #     item_data['warehouse_id'] = result.id
             item = ItemCreate(**item_data)
             item_instance, new = await cls.get_or_create(item, ItemRepository, Item, session)
-            # id = item_instance.id
-            # await session.commit()
-            await cls._queue_meili_sync(session, model, repository, OutboxAction.CREATE, item_instance)
             await session.commit()
-            asyncio.create_task(MeiliSyncManager.run_sync(session))
             return item_instance  # new
         except Exception as e:
             raise Exception(f'itemservice.create_relation. {e}')

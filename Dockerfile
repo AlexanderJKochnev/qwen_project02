@@ -31,7 +31,6 @@ ENV PATH="/root/.local/bin:$PATH"
 COPY ./app ./app
 COPY alembic.ini .
 COPY .env .
-COPY populate_meilisearch.py .
 
 ARG APP_PORT
 ARG APP_HOST

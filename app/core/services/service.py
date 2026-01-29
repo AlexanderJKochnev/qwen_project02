@@ -1,23 +1,16 @@
 # app.core.service/service.py
 from abc import ABCMeta
-# from fastapi import HTTPException
 from datetime import datetime
-from typing import List, Optional, Tuple, Type, Any
-from loguru import logger
-from pydantic import BaseModel
+from typing import List, Optional, Tuple, Type
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
-# from sqlalchemy.orm import Session
-import asyncio
 from app.core.config.project_config import settings
 from app.core.repositories.sqlalchemy_repository import ModelType, Repository
 from app.core.utils.alchemy_utils import get_models
 from app.core.utils.common_utils import flatten_dict_with_localized_fields
 from app.core.utils.pydantic_utils import make_paginated_response
 from app.service_registry import register_service
-from app.core.models.outbox_model import OutboxAction, MeiliOutbox, OutboxStatus
-from app.core.services.meili_service import MeiliSyncManager
-from app.core.utils.pydantic_utils import get_pyschema
+
 
 joint = '. '
 
@@ -218,9 +211,7 @@ class Service(metaclass=ServiceMeta):
         # Выполняем обновление
         result = await repository.patch(existing_item, data_dict, session)
         if result.get('success'):
-            await cls._queue_meili_sync(session, model, repository, OutboxAction.UPDATE, result.get('data'))
             await session.commit()
-            asyncio.create_task(MeiliSyncManager.run_sync(session))
         else:
             await session.rollback()
         # Обрабатываем результат
@@ -263,10 +254,7 @@ class Service(metaclass=ServiceMeta):
         try:
             await repository.delete(instance, session)
             await session.flush()
-            await cls._queue_meili_sync(session, model, repository, OutboxAction.DELETE, id)
             await session.commit()
-            await MeiliSyncManager.run_sync(session)
-            # asyncio.create_task(MeiliSyncManager.run_sync(session))
         except IntegrityError:
             await session.rollback()  # Откат при конфликте связей
             raise PermissionError(f"Cannot delete record {id} of {model.__name__}: related data exists")
@@ -352,59 +340,3 @@ class Service(metaclass=ServiceMeta):
             return None
         result = flatten_dict_with_localized_fields(obj.to_dict(), detail_fields, lang)
         return result
-
-    @classmethod
-    async def _queue_meili_sync(
-            cls,
-            session: AsyncSession,
-            model: ModelType,
-            repository: Type[Repository],
-            # index_name: str,
-            action: OutboxAction,
-            data: Any,
-            # schema: Type[BaseModel]
-    ):
-        """
-        Внутренний метод для постановки задачи в Outbox.
-        Вызывается ВНУТРИ метода create/update ДО коммита.
-        не сработает если имя модели не внесено в переменную MEILISEARCH
-        использование:
-        await cls._queue_meili_sync(session, model, OutboxAction.CREATE, instance)
-        """
-        try:
-            # 1. Ищем модель в списке Meilisearch
-            if model.__name__.lower() not in settings.meilisearch:
-                return
-            index_name: str = model.__name__.lower()
-            schema: Type[BaseModel] = get_pyschema(model, 'ReadRelation')
-            if action in (OutboxAction.CREATE, OutboxAction.UPDATE):
-                # Получаем полный instance с зависимостями
-                full_instance = await repository.get_by_id(data.id, model, session)
-                # Валидируем данные через Pydantic-контракт Meilisearch
-                meili_data = schema.model_validate(full_instance, from_attributes=True).model_dump(mode='json')
-                id = str(meili_data.get("id"))
-            elif action in [OutboxAction.DELETE]:
-                id = str(data)
-                meili_data = None
-
-            outbox_entry = MeiliOutbox(
-                index_name=index_name,
-                action=action,
-                record_id=id,
-                payload=meili_data,
-                status=OutboxStatus.PENDING
-            )
-            # jprint(outbox_entry.to_dict())
-            session.add(outbox_entry)
-            # flush гарантирует, что если с таблицей Outbox что-то не так,
-            # мы узнаем об этом до основного commit
-            await session.flush()
-            # print('0--------------------')
-            # jprint(outbox_entry.to_dict())
-            # print('1--------------------')
-            if action == OutboxAction.DELETE:
-                await session.commit()
-        except Exception as e:
-            logger.error(f"Meili Outbox Error: {e}")
-            # Здесь не делаем raise, если хотим, чтобы БД сохранилась
-            # даже если поиск временно не работает

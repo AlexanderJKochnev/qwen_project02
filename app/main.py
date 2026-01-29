@@ -1,7 +1,5 @@
 # app/main.py
 # import httpx
-import asyncio
-from meilisearch_python_sdk import AsyncClient
 from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -42,11 +40,6 @@ from app.support.parser.router import (StatusRouter, CodeRouter, NameRouter, Orc
                                        ImageRouter, RawdataRouter, RegistryRouter)
 # from app.arq_worker_routes import router as ArqWorkerRouter
 # from app.support.warehouse.router import WarehouseRouter
-from app.core.config.database.meili_async import MeiliManager, get_meili_client
-from app.support.outbox.router import router as MeiliRouter
-# Import background tasks
-# from app.core.utils.background_tasks import init_background_tasks, stop_background_tasks
-from app.core.services.meili_service import MeiliSyncManager
 
 
 @asynccontextmanager
@@ -66,27 +59,7 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.critical(
             f"Lifespan: ОШИБКА ПОДКЛЮЧЕНИЯ К БД: {e}"
-            )  # Если БД не отвечает, часто нет смысла запускать приложение  # raise e
-
-    # 2. Инициализация Meilisearch
-    logger.info("Lifespan: Подключение к Meilisearch...")
-    client = await MeiliManager.get_client()
-
-    try:
-        # Проверка связи с таймаутом
-        health = await asyncio.wait_for(client.health(), timeout=5.0)
-        if health.status == "available":
-            logger.success("Lifespan: Meilisearch доступен и готов к работе")
-
-        # 3. Коробочный момент: Гарантируем наличие индекса при старте
-        # Это предотвратит ошибки 404 при первых запросах
-        await client.get_or_create_index("item", primary_key="id")
-        logger.info("Lifespan: Индекс 'item' проверен/создан")
-
-    except asyncio.TimeoutError:
-        logger.error("Lifespan: Meilisearch не ответил за 5 секунд. Проверьте нагрузку!")
-    except Exception as e:
-        logger.warning(f"Lifespan: Ошибка при проверке Meilisearch: {e}")
+        )  # Если БД не отвечает, часто нет смысла запускать приложение  # raise e
 
     await MongoDBManager.connect()  # Подключаем Mongo
     # await init_db_extensions()  # подключение расщирений Postgresql
@@ -96,11 +69,9 @@ async def lifespan(app: FastAPI):
     yield
 
     # --- SHUTDOWN ---
-    await app.state.http_client.aclose()
+    # await app.state.http_client.aclose()
     # await stop_background_tasks()
     await DatabaseManager.engine.dispose()
-    await MeiliManager.disconnect()
-    logger.info("Lifespan: Соединение с Meilisearch закрыто")
     await MongoDBManager.disconnect()
 
 
@@ -192,7 +163,6 @@ app.include_router(OrchestratorRouter().router)
 # app.include_router(ArqWorkerRouter)
 app.include_router(auth_router)
 app.include_router(user_router)
-app.include_router(MeiliRouter)
 
 
 @app.get("/")
@@ -212,23 +182,5 @@ async def health_check(mongo_db: AsyncIOMotorDatabase = Depends(get_mongodb)):
             status_info["mongo_operational"] = True
         except Exception:
             status_info["status"] = "degraded"
-
-    return status_info
-
-
-@app.get("/meilihealth")
-async def meili_health_check(client: AsyncClient = Depends(get_meili_client)):
-    status_info = {"status": "meili healthy",
-                   "meilisearch_connected": client is not None,
-                   "meilisearch_operational": False,
-                   "Health": None}
-
-    if client is not None:
-        try:
-            health = await (await MeiliManager.get_client()).health()
-            status_info['meilisearch_operational'] = True
-            status_info['Healt'] = health
-        except Exception:
-            status_info["status"] = "bad"
 
     return status_info

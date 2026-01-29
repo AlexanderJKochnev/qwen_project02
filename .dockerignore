@@ -6,7 +6,6 @@
 !/Dockerfile
 !/docker-compose.yaml
 !/.env
-!/populate_meilisearch.py
 !/alembic.ini
 !/alembic.sh
 !/streamlit_app
