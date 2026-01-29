@@ -10,7 +10,7 @@ import sys
 from time import perf_counter
 from app.auth.routers import auth_router, user_router
 # from app.core.config.project_config import settings
-from app.core.config.database.db_async import DatabaseManager  # , init_db_extensions
+from app.core.config.database.db_async import DatabaseManager, init_db_extensions
 from app.core.config.database.db_mongo import MongoDBManager, get_mongodb
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.mongodb.router import router as MongoRouter
@@ -62,7 +62,7 @@ async def lifespan(app: FastAPI):
         )  # Если БД не отвечает, часто нет смысла запускать приложение  # raise e
 
     await MongoDBManager.connect()  # Подключаем Mongo
-    # await init_db_extensions()  # подключение расщирений Postgresql
+    await init_db_extensions()  # подключение расщирений Postgresql
 
     # await MeiliSyncManager.run_sync()
 

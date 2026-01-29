@@ -2,11 +2,11 @@
 
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Annotated
+from typing import Annotated, Optional
 # from sqlalchemy.dialects.postgresql import MONEY
-from sqlalchemy import DateTime, DECIMAL, func, Integer, text, Text
+from sqlalchemy import DateTime, DECIMAL, func, Integer, text, Text, Column
 from sqlalchemy.ext.asyncio import AsyncAttrs
-from sqlalchemy.orm import DeclarativeBase, declared_attr, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, declared_attr, deferred, Mapped, mapped_column
 # from app.core.config.project_config import settings
 
 langs = ['en', 'ru', 'fr']
@@ -190,6 +190,15 @@ class BaseFullFree(Base, BaseIntFree, BaseAt, BaseLang):
             if val := getattr(self, f"name{lang}", None):
                 return val
         return ""
+
+
+class Search:
+    """ поисковое поле для триграммного индекса """
+    __abstract__ = True
+
+    @declared_attr
+    def search_content(cls) -> Mapped[Optional[str]]:
+        return mapped_column(Text, deferred=True, nullable=True)
 
 
 def plural(single: str) -> str:

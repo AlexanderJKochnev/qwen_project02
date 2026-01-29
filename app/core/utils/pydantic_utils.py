@@ -175,34 +175,49 @@ class PyUtils:
                             __base__=List[schema])
 
 
+import re
+from typing import Any, Set
+
+# 1. Регулярка для поиска ISO дат/таймстампов целиком, чтобы удалить их до парсинга слов
+RE_ISO_DATE = re.compile(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z?', re.I)
+# 2. Регулярка для обычных слов
+RE_WORDS = re.compile(r'[a-zа-яё0-9]+')
+
+
+def is_garbage(word: str) -> bool:
+    # Удаляем слова, где букв и цифр поровну или это явные ID/хеши (длиннее 10-12 символов)
+    if len(word) > 10 and any(c.isdigit() for c in word) and any(c.isalpha() for c in word):
+        return True
+
+    # Удаляем года (2014, 2025) если они не нужны в поиске.
+    # Если поиск по годам нужен — просто закомментируй это условие.
+    if word.isdigit() and len(word) == 4 and (word.startswith('19') or word.startswith('20')):
+        return True
+
+    return False
+
+
 def prepare_search_string(data: Any, seen_words: Set[str] = None) -> str:
-    """
-    Рекурсивно извлекает уникальные слова из словаря/списка,
-    удаляя пунктуацию, ключи и нетекстовые значения.
-    """
     if seen_words is None:
         seen_words = set()
 
     if isinstance(data, dict):
-        # Обходим только значения (value), игнорируя ключи (key)
         for value in data.values():
             prepare_search_string(value, seen_words)
-
     elif isinstance(data, (list, set, tuple)):
         for item in data:
             prepare_search_string(item, seen_words)
-
     elif isinstance(data, (str, int, float)) and data is not None:
-        # Превращаем в строку, убираем знаки препинания и делим на слова
-        # Оставляем только буквы и цифры
-        text_value = str(data).lower()
-        words = re.findall(r'[a-zа-яё0-9]+', text_value)
+        val_str = str(data)
+
+        # ШАГ 1: Если это строка, вырезаем из нее ISO даты полностью
+        if isinstance(data, str):
+            val_str = RE_ISO_DATE.sub(' ', val_str)
+
+        # ШАГ 2: Разбиваем на слова
+        words = RE_WORDS.findall(val_str.lower())
         for word in words:
-            if len(word) > 1:  # Игнорируем предлоги и одиночные символы
+            if len(word) > 2 and not is_garbage(word):
                 seen_words.add(word)
 
     return " ".join(sorted(list(seen_words)))
-
-# --- Пример использования с Pydantic ---
-# doc = product_schema.model_dump()
-# search_string = prepare_search_string(doc)

@@ -7,7 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 # from sqlalchemy.engine import Connection
 # from sqlalchemy.sql import Table
 
-from app.core.models.base_model import Base, BaseAt, ion, money, volume
+from app.core.models.base_model import Base, BaseAt, ion, money, volume, Search
 from app.core.models.image_mixin import ImageMixin
 
 
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from app.support.drink.model import Drink
 
 
-class Item(Base, BaseAt, ImageMixin):
+class Item(Base, BaseAt, ImageMixin, Search):
     __table_args__ = (UniqueConstraint('vol', 'drink_id', name='uq_items_unique'),)
     vol: Mapped[volume]  # объем тары
     price: Mapped[money]    # цена
