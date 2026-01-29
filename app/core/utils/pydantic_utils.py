@@ -1,8 +1,8 @@
 # app/core/utils/pydantic_utils.py
 # from pydantic import create_model, BaseModel
 from decimal import Decimal
-from typing import List, Optional, Type, Union, Dict, Any
-
+from typing import List, Optional, Type, Union, Dict, Any, Set
+import re
 from pydantic import BaseModel, create_model
 from sqlalchemy import Float, inspect, Integer, Numeric, String, Text
 from sqlalchemy.orm import DeclarativeBase
@@ -173,3 +173,36 @@ class PyUtils:
     def non_paginated_response(cls, schema: Type[BaseModel]) -> Type[List]:
         return create_model(f'NonPaginated{schema.__name__}',
                             __base__=List[schema])
+
+
+def prepare_search_string(data: Any, seen_words: Set[str] = None) -> str:
+    """
+    Рекурсивно извлекает уникальные слова из словаря/списка,
+    удаляя пунктуацию, ключи и нетекстовые значения.
+    """
+    if seen_words is None:
+        seen_words = set()
+
+    if isinstance(data, dict):
+        # Обходим только значения (value), игнорируя ключи (key)
+        for value in data.values():
+            prepare_search_string(value, seen_words)
+
+    elif isinstance(data, (list, set, tuple)):
+        for item in data:
+            prepare_search_string(item, seen_words)
+
+    elif isinstance(data, (str, int, float)) and data is not None:
+        # Превращаем в строку, убираем знаки препинания и делим на слова
+        # Оставляем только буквы и цифры
+        text_value = str(data).lower()
+        words = re.findall(r'[a-zа-яё0-9]+', text_value)
+        for word in words:
+            if len(word) > 1:  # Игнорируем предлоги и одиночные символы
+                seen_words.add(word)
+
+    return " ".join(sorted(list(seen_words)))
+
+# --- Пример использования с Pydantic ---
+# doc = product_schema.model_dump()
+# search_string = prepare_search_string(doc)
