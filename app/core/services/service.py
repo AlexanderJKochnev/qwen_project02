@@ -340,3 +340,13 @@ class Service(metaclass=ServiceMeta):
             return None
         result = flatten_dict_with_localized_fields(obj.to_dict(), detail_fields, lang)
         return result
+
+    @classmethod
+    async def fill_index(cls, repository: Type[Repository], model: ModelType,
+                         session: AsyncSession, **kwargs) -> Optional[int]:
+        """
+            заполнение/обновление поля search_content для индекса
+            для заполнения индекса установить kwargs['search_content'] = None
+            для обновления индекса этого ключа быть не должно
+        """
+        result = await repository.get(after_date, model, session)

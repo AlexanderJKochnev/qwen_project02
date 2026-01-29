@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, List
 
-from sqlalchemy import (CheckConstraint, Column, DDL, event, ForeignKey, Integer, UniqueConstraint)
+from sqlalchemy import (CheckConstraint, Column, ForeignKey, Integer, UniqueConstraint)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import DECIMAL
 
@@ -148,38 +148,6 @@ class Drink(Base, BaseAt, Lang):
 
     def __str__(self):
         return f"{self.title}"
-
-
-create_gin_index_sql = DDL("""
-    CREATE INDEX drink_trigram_idx_combined ON drinks
-        USING gin (
-            (coalesce(title, '') || ' ' ||
-             coalesce(title_ru, '') || ' ' ||
-             coalesce(title_fr, '') || ' ' ||
-             coalesce(subtitle, '') || ' ' ||
-             coalesce(subtitle_ru, '') || ' ' ||
-             coalesce(subtitle_fr, '') || ' ' ||
-             coalesce(description, '') || ' ' ||
-             coalesce(description_ru, '') || ' ' ||
-             coalesce(description_fr, '') || ' ' ||
-             coalesce(recommendation, '') || ' ' ||
-             coalesce(recommendation_ru, '') || ' ' ||
-             coalesce(recommendation_fr, '') || ' ' ||
-             coalesce(madeof, '') || ' ' ||
-             coalesce(madeof_ru, '') || ' ' ||
-             coalesce(madeof_fr, ''))
-            gin_trgm_ops
-        );
-    """)
-
-# Привязываем этот DDL к событию создания таблицы Drink
-# Это гарантирует, что индекс будет создан сразу после создания таблицы
-# если индекс добавлен после создания таблицы - запустить create_trigram.sh
-event.listen(
-    Drink.__table__,
-    'after_create',
-    create_gin_index_sql
-)
 
 
 class DrinkFood(Base):

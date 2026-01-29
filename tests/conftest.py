@@ -616,6 +616,8 @@ async def mock_engine(mock_db_url):
         await conn.execute(text("GRANT ALL ON SCHEMA public TO public;"))
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS pg_trgm;"))
         await conn.run_sync(Base.metadata.create_all)
+        await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_items_search_trgm ON items "
+                                "USING GIN (search_content gin_trgm_ops);"))
     yield engine
     await engine.dispose()
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from sqlalchemy import ForeignKey, UniqueConstraint
+from sqlalchemy import ForeignKey, Index, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 # from sqlalchemy.engine import Connection
 # from sqlalchemy.sql import Table
@@ -16,7 +16,12 @@ if TYPE_CHECKING:
 
 
 class Item(Base, BaseAt, ImageMixin, Search):
-    __table_args__ = (UniqueConstraint('vol', 'drink_id', name='uq_items_unique'),)
+    __table_args__ = (UniqueConstraint('vol', 'drink_id', name='uq_items_unique'),
+                      Index('idx_items_search_trgm',
+                            'search_content', postgresql_using='gin',
+                            postgresql_ops={'search_content': 'gin_trgm_ops'}),
+                      )
+
     vol: Mapped[volume]  # объем тары
     price: Mapped[money]    # цена
     count: Mapped[ion]      # количество

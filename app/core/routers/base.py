@@ -1,7 +1,7 @@
 # app/core/routers/base.py
 
 from typing import Any, List, Type, TypeVar
-from dateutil.relativedelta import relativedelta
+# from dateutil.relativedelta import relativedelta
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.dependencies import get_active_user_or_internal
 from app.core.config.database.db_async import get_db
 from app.core.config.project_config import get_paging, settings
-from app.core.utils.common_utils import back_to_the_future
+from app.core.utils.common_utils import back_to_the_future, delta_data
 from app.core.services.service import Service
 from app.core.schemas.base import (DeleteResponse, PaginatedResponse, ReadSchema,
                                    CreateResponse, UpdateSchema, CreateSchema)
@@ -26,7 +26,7 @@ TUpdateSchema = TypeVar("TUpdateSchema", bound=UpdateSchema)
 TService = TypeVar("TService", bound=Service)
 
 dev = settings.DEV
-delta = (datetime.now(timezone.utc) - relativedelta(years=2)).isoformat()
+delta = delta_data(2)    # (datetime.now(timezone.utc) - relativedelta(years=2)).isoformat()
 
 
 class BaseRouter:
@@ -251,15 +251,16 @@ class BaseRouter:
         result = self.paginated_response(**response)
         return result
 
-    async def get_all(self, after_date: datetime = Query(
-        (datetime.now(timezone.utc) - relativedelta(years=2)).isoformat(),
-        description="Дата в формате ISO 8601 (например, 2024-01-01T00:00:00Z)"
-    ), session: AsyncSession = Depends(get_db)) -> List[TReadSchema]:
+    async def get_all(self, after_date: datetime = Query(delta,
+                                                         # (datetime.now(timezone.utc) - relativedelta(years=2)).isoformat(),
+                                                         description="Дата в формате ISO 8601 (например, 2024-01-01T00:00:00Z)"
+                                                         ), session: AsyncSession = Depends(get_db)) -> List[TReadSchema]:
         """
             Получение все записей одним списком после указанной даты.
             По умолчанию задана дата - 2 года от сейчас
             input_valudation_chema <>CreateRelation
             response_model <>ReadRelatio
+
         """
         try:
             after_date = back_to_the_future(after_date)

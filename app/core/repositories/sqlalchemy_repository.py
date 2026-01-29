@@ -417,3 +417,19 @@ class Repository(metaclass=RepositoryMeta):
         result = await session.execute(stmt)
         res: List[ModelType] = result.scalars().all()
         return res
+
+    @classmethod
+    async def fill_index(cls, model: ModelType, session: AsyncSession, **kwargs) -> int:
+        """
+        заполнение поля search_content, по которому будет индексирование проводиться
+        kwargs: {имя поля: значение, ...
+        + search_content: True}
+        если search_content: True - все записи
+        если search_content: False - только пустые поля search_content (initial filing)
+        """
+        # 1. собираем фильтр из kwargs
+        query = cls.get_query(model)
+        valid_fields = {key: value for key, value in kwargs.items() if hasattr(model, key)}
+        stmt = select(func.count()).select(query).filter_by(**valid_fields)
+        count = session.execute(stmt)
+        return count

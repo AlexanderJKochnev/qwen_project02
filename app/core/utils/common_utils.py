@@ -11,8 +11,16 @@ from sqlalchemy import Boolean, inspect, String, Text, Unicode, UnicodeText
 from sqlalchemy.dialects.postgresql import CITEXT  # если используешь PostgreSQL
 from sqlalchemy.orm import DeclarativeMeta, RelationshipProperty, selectinload
 from sqlalchemy.sql.selectable import Select
+from dateutil.relativedelta import relativedelta
+from datetime import datetime, timezone
+
 
 ModelType = TypeVar("ModelType", bound=DeclarativeMeta)
+
+
+def delta_data(shift: int = 2) -> str:
+    """ возвращает дату отстоящую от now() на shift лет (отрицательные числа - вперед)"""
+    return (datetime.now(timezone.utc) - relativedelta(years=shift)).isoformat()
 
 
 def sort_strings_by_alphabet_and_length(strings: List[str]) -> List[str]:
