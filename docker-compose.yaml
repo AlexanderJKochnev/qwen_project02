@@ -14,6 +14,8 @@ services:
     environment:
       - MEILI_MASTER_KEY=${MEILISEARCH_MASTER_KEY}
       - MEILI_NO_ANALYTICS=true
+      - MEILI_MAX_INDEXING_THREADS=2  # Ограничение до 2 потоков
+      - MEILI_MAX_INDEXING_MEMORY=1GiB # Ограничение оперативной памяти
     expose:
       - "7700"
     volumes:

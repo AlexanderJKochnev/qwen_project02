@@ -1,17 +1,18 @@
 # app/main.py
-import httpx
+# import httpx
+import asyncio
 from meilisearch_python_sdk import AsyncClient
 from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.gzip import GZipMiddleware
 from loguru import logger
-from fastapi import BackgroundTasks
+# from fastapi import BackgroundTasks
 import sys
 from time import perf_counter
 from app.auth.routers import auth_router, user_router
 # from app.core.config.project_config import settings
-from app.core.config.database.db_async import DatabaseManager, init_db_extensions
+from app.core.config.database.db_async import DatabaseManager  # , init_db_extensions
 from app.core.config.database.db_mongo import MongoDBManager, get_mongodb
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.mongodb.router import router as MongoRouter
@@ -50,20 +51,42 @@ from app.core.services.meili_service import MeiliSyncManager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    limits = httpx.Limits(max_keepalive_connections=20, max_connections=100)
-    timeout = httpx.Timeout(10.0, connect=5.0)
-    app.state.http_client = httpx.AsyncClient(
-        http2=True, limits=limits, timeout=timeout, trust_env=False
-        # Ускоряет работу, если не нужны системные прокси
-    )
-    DatabaseManager.init()
+    # limits = httpx.Limits(max_keepalive_connections=20, max_connections=100)
+    # timeout = httpx.Timeout(10.0, connect=5.0)
+    # app.state.http_client = httpx.AsyncClient(
+    #     http2=True, limits=limits, timeout=timeout, trust_env=False
+    #     Ускоряет работу, если не нужны системные прокси
+    # )
+    DatabaseManager.__init__()
+    logger.info("Lifespan: Инициализация ресурсов...")
 
-    if not DatabaseManager.session_maker:
-        logger.error("MeiliSync: 000 session_maker не инициализирован!")
+    try:
+        await DatabaseManager.check_connection()
+        logger.success("Lifespan: PostgreSQL соединение установлено (OK)")
+    except Exception as e:
+        logger.critical(
+            f"Lifespan: ОШИБКА ПОДКЛЮЧЕНИЯ К БД: {e}"
+            )  # Если БД не отвечает, часто нет смысла запускать приложение  # raise e
 
-    await MeiliManager.get_client()
-    # Можно сразу проверить соединение (healthcheck)
-    await (await MeiliManager.get_client()).health()
+    # 2. Инициализация Meilisearch
+    logger.info("Lifespan: Подключение к Meilisearch...")
+    client = await MeiliManager.get_client()
+
+    try:
+        # Проверка связи с таймаутом
+        health = await asyncio.wait_for(client.health(), timeout=5.0)
+        if health.status == "available":
+            logger.success("Lifespan: Meilisearch доступен и готов к работе")
+
+        # 3. Коробочный момент: Гарантируем наличие индекса при старте
+        # Это предотвратит ошибки 404 при первых запросах
+        await client.get_or_create_index("item", primary_key="id")
+        logger.info("Lifespan: Индекс 'item' проверен/создан")
+
+    except asyncio.TimeoutError:
+        logger.error("Lifespan: Meilisearch не ответил за 5 секунд. Проверьте нагрузку!")
+    except Exception as e:
+        logger.warning(f"Lifespan: Ошибка при проверке Meilisearch: {e}")
 
     await MongoDBManager.connect()  # Подключаем Mongo
     # await init_db_extensions()  # подключение расщирений Postgresql
@@ -75,8 +98,9 @@ async def lifespan(app: FastAPI):
     # --- SHUTDOWN ---
     await app.state.http_client.aclose()
     # await stop_background_tasks()
-    await DatabaseManager.close()
+    await DatabaseManager.engine.dispose()
     await MeiliManager.disconnect()
+    logger.info("Lifespan: Соединение с Meilisearch закрыто")
     await MongoDBManager.disconnect()
 
 

@@ -1,10 +1,11 @@
 # app/core/config/database/db_async.py
 # асинхронный драйвер
-from sqlalchemy.ext.asyncio import (create_async_engine,
+    from sqlalchemy.ext.asyncio import (create_async_engine,
                                     async_sessionmaker,
                                     # AsyncEngine,
                                     AsyncSession)
 from sqlalchemy import text
+from loguru import logger
 from app.core.config.database.db_config import settings_db
 
 
@@ -13,7 +14,7 @@ class DatabaseManager:
     session_maker = None
 
     @classmethod
-    def init(cls):
+    def __init__(cls):
         # Создаем Engine (Singleton)
         cls.engine = create_async_engine(settings_db.database_url,
                                          echo=settings_db.DB_ECHO_LOG,
@@ -35,6 +36,21 @@ class DatabaseManager:
     async def close(cls):
         if cls.engine:
             await cls.engine.dispose()
+
+    @classmethod
+    async def check_connection(cls):
+        """Проверка физического соединения с БД"""
+        if cls.session_maker is None:
+            raise RuntimeError("DatabaseManager не инициализирован! Вызовите init() сначала.")
+
+        async with cls.session_maker() as session:
+            try:
+                # Выполняем простейший запрос
+                await session.execute(text("SELECT 1"))
+                return True
+            except Exception as e:
+                logger.error(f"PostgreSQL Connection Error: {e}")
+                raise e
 
 
 async def get_db():
