@@ -6,11 +6,13 @@ from typing import List, TYPE_CHECKING
 from sqlalchemy.orm import Mapped, relationship
 from app.core.config.project_config import settings
 from app.core.models.base_model import BaseFull, plural
+from app.service_registry import registers_search_update
 
 if TYPE_CHECKING:
     from app.support.drink.model import DrinkVarietal
 
 
+@registers_search_update("drinks.items")
 class Varietal(BaseFull):
     lazy = settings.LAZY
     cascade = settings.CASCADE

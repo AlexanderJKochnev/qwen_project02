@@ -9,7 +9,7 @@ from sqlalchemy.types import DECIMAL
 
 from app.core.config.project_config import settings
 from app.core.models.base_model import (Base, BaseAt, boolnone, descr, plural, str_null_false, str_null_true)
-# from app.core.models.image_mixin import ImageMixin
+from app.service_registry import registers_search_update
 
 if TYPE_CHECKING:
     from app.support.sweetness.model import Sweetness
@@ -73,6 +73,7 @@ class Lang:
     madeof_zh: Mapped[descr]
 
 
+@registers_search_update("items")
 class Drink(Base, BaseAt, Lang):
     lazy = settings.LAZY
     cascade = settings.CASCADE
@@ -150,6 +151,7 @@ class Drink(Base, BaseAt, Lang):
         return f"{self.title}"
 
 
+@registers_search_update("drinks.items")
 class DrinkFood(Base):
     __tablename__ = "drink_food_associations"
     drink_id: Mapped[int] = mapped_column(ForeignKey("drinks.id"), primary_key=True)
@@ -171,6 +173,7 @@ class DrinkFood(Base):
         return f"Drink {self.drink_id} - Food {self.food_id}"
 
 
+@registers_search_update("drinks.items")
 class DrinkVarietal(Base):
     __tablename__ = "drink_varietal_associations"
     __table_args__ = (CheckConstraint('percentage >= 0 AND percentage <= 100.00',

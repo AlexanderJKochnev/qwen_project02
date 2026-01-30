@@ -8,11 +8,13 @@ from sqlalchemy.orm import (Mapped, mapped_column, relationship)
 
 from app.core.config.project_config import settings
 from app.core.models.base_model import BaseFullFree, plural
+from app.service_registry import registers_search_update
 
 if TYPE_CHECKING:
     from app.support.country.model import Region
 
 
+@registers_search_update("drinks.items")
 class Subregion(BaseFullFree):
     lazy = settings.LAZY
     cascade = settings.CASCADE

@@ -5,6 +5,7 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, relationship, mapped_column
 from app.core.config.project_config import settings
 from app.core.models.base_model import BaseFull, plural
+from app.service_registry import registers_search_update
 
 if TYPE_CHECKING:
     from app.support.drink.model import DrinkFood
@@ -12,6 +13,7 @@ if TYPE_CHECKING:
     from app.support.drink.model import Drink
 
 
+@registers_search_update("drinks.items")
 class Food(BaseFull):
     lazy = settings.LAZY
     cascade = settings.CASCADE

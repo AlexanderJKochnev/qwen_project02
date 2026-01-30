@@ -16,9 +16,24 @@
    4. как проверить что поиск идет с триграммным индексом
       1. EXPLAIN ANALYZE 
          SELECT id FROM items 
-         WHERE search_content ILIKE '%зам%';
+         WHERE search_content ILIKE '%vin%';
       2. Если видишь Bitmap Heap Scan или Bitmap Index Scan с упоминанием idx_products_search_trgm — всё супер, 
       3. индекс работает. Если видишь Seq Scan — значит, база сканирует всю таблицу целиком. 
       4. Причина: либо в таблице слишком мало записей (до пары тысяч Postgres проще прочитать всё подряд), 
       5. либо подстрока поиска слишком короткая.
-2. Как вообще устроен индекс:
+2. выполни 1 раз в postgresql
+CREATE OR REPLACE FUNCTION notify_reindex() 
+RETURNS TRIGGER AS $$
+BEGIN
+    NOTIFY search_reindex;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Повесь этот триггер на основную таблицу
+CREATE TRIGGER trg_items_notify
+AFTER UPDATE OF search_content ON items
+FOR EACH ROW
+WHEN (NEW.search_content IS NULL)
+EXECUTE FUNCTION notify_reindex();
+3. Как вообще устроен индекс:

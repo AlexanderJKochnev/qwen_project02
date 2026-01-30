@@ -5,8 +5,10 @@ from sqlalchemy.orm import relationship
 
 from app.core.config.project_config import settings
 from app.core.models.base_model import BaseFull, plural
+from app.service_registry import registers_search_update
 
 
+@registers_search_update("subcategory.drinks.items")
 class Category(BaseFull):
     lazy = settings.LAZY
     single_name = 'category'

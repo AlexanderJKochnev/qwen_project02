@@ -12,7 +12,6 @@ from sqlalchemy.dialects.postgresql import CITEXT  # если используе
 from sqlalchemy.orm import DeclarativeMeta, RelationshipProperty, selectinload
 from sqlalchemy.sql.selectable import Select
 from dateutil.relativedelta import relativedelta
-from datetime import datetime, timezone
 
 
 ModelType = TypeVar("ModelType", bound=DeclarativeMeta)
@@ -859,3 +858,26 @@ def localized_field_with_replacement(source: Dict[str, Any], key: str,
             return {target_key or key: res}
     else:
         return {target_key or key: None}
+
+
+def get_owners_by_path(obj, path: str):
+    """
+    Рекурсивно проходит по строковому пути 'attr1.attr2'
+    Поддерживает списки (many-to-many, one-to-many).
+    """
+    parts = path.split(".")
+    current_targets = [obj]
+
+    for part in parts:
+        next_targets = []
+        for target in current_targets:
+            value = getattr(target, part, None)
+            if value is None:
+                continue
+            if isinstance(value, list):
+                next_targets.extend(value)
+            else:
+                next_targets.append(value)
+        current_targets = next_targets
+
+    return current_targets  # Вернет список объектов (например, [Item, Item...])

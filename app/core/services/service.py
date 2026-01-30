@@ -1,19 +1,26 @@
 # app.core.service/service.py
+import asyncio
 from abc import ABCMeta
 from datetime import datetime
 from fastapi import HTTPException
 from typing import List, Optional, Tuple, Type
+from loguru import logger
+from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.config.database.db_async import DatabaseManager
 from app.core.config.project_config import settings
+from app.core.models.base_model import Base
 from app.core.repositories.sqlalchemy_repository import ModelType, Repository
 from app.core.utils.alchemy_utils import get_models
 from app.core.utils.common_utils import flatten_dict_with_localized_fields
-from app.core.utils.pydantic_utils import make_paginated_response, prepare_search_string, get_data_for_search
+from app.core.utils.pydantic_utils import make_paginated_response, prepare_search_string, get_data_for_search, get_repo
 from app.service_registry import register_service
 from app.core.schemas.base import IndexFillResponse
 
 joint = '. '
+_reindex_task_lock = asyncio.Lock()
 
 
 class ServiceMeta(ABCMeta):
@@ -55,12 +62,7 @@ class Service(metaclass=ServiceMeta):
         data_dict = data.model_dump(exclude_unset=True)
         obj = model(**data_dict)
         result = await repository.create(obj, model, session)
-        # await session.commit()
-        if kwargs.get('commit'):
-            await session.commit()
-        else:
-            await session.flush()
-            await session.refresh(obj)
+        await session.commit()
         return result
 
     @classmethod
@@ -84,11 +86,7 @@ class Service(metaclass=ServiceMeta):
             # запись не найдена
             obj = model(**data_dict)
             instance = await repository.create(obj, model, session)
-            if kwargs.get('commit'):
-                await session.commit()
-            else:
-                await session.flush()
-                await session.refresh(instance)
+            await session.commit()
             return instance, True
         except IntegrityError as e:
             await session.rollback()
@@ -119,13 +117,7 @@ class Service(metaclass=ServiceMeta):
             # запись не найдена
             obj = model(**data_dict)
             instance = await repository.create(obj, model, session)
-            #  await session.commit()
-            # await session.refresh(instance)
-            if kwargs.get('commit'):
-                await session.commit()
-            else:
-                await session.flush()
-                await session.refresh(instance)
+            await session.commit()
             return instance, True
         except IntegrityError as e:
             await session.rollback()
@@ -150,11 +142,7 @@ class Service(metaclass=ServiceMeta):
             obj = model(**data_dict)
 
             result = await repository.create(obj, model, session)
-            if kwargs.get('commit'):
-                await session.commit()
-            else:
-                await session.flush()
-                await session.refresh(obj)
+            await session.commit()
             # тут можно добавить преобразования результата потом commit в роутере
             return result
 
@@ -381,3 +369,56 @@ class Service(metaclass=ServiceMeta):
         # from app.core.utils.common_utils import jprint
         # jprint(data)
         # return response
+
+    @classmethod
+    async def reindex_all_searchable_models(cls, batch_size: int = 1000):
+        if _reindex_task_lock.locked():
+            logger.debug("Переиндексация уже идет, запрос поставлен в очередь (проигнорирован)")
+            return
+
+        async with _reindex_task_lock:
+            start_time = asyncio.get_event_loop().time()
+            logger.info("--- НАЧАЛО полной переиндексации ---")
+            total_updated = 0
+            async with DatabaseManager.session_maker() as session:
+                # 1. Находим все классы, унаследованные от SearchableMixin
+                # (Или просто сканируем Base.metadata)
+                searchable_models = [mapper.class_ for mapper in Base.registry.mappers if
+                                     "search_content" in mapper.attrs]
+
+                for model in searchable_models:
+                    # 2. Ищем записи с пустым индексом для конкретной модели
+                    stmt = (select(model.id).where(model.search_content == None).limit(batch_size))
+                    result = await session.execute(stmt)
+                    ids_to_update = result.scalars().all()
+
+                    if not ids_to_update:
+                        continue
+
+                    print(f"[DEBUG] Переиндексация {model.__name__}: {len(ids_to_update)} записей")
+
+                    # 3. Обработка батча
+                    for obj_id in ids_to_update:
+                        # Вызываем твою логику загрузки "матрешки" (нужно сделать её тоже универсальной)
+                        # Если у моделей разные схемы, можно добавить метод в Mixin
+                        repo: Type[Repository] = get_repo(model)
+                        item = await repo.get_by_id(obj_id, model, session)
+                        # item = await get_data_by_id_and_model(obj_id, model, session)
+                        search_str = prepare_search_string(get_data_for_search(item))
+                        await session.execute(
+                            update(model).where(model.id == obj_id).values(search_content=search_str)
+                        )
+                    await session.commit()
+                    count = len(ids_to_update)
+                    if count > 0:
+                        total_updated += count
+                        logger.info(f"Обновлено {count} записей для модели {model.__name__}")
+            end_time = asyncio.get_event_loop().time()
+            duration = round(end_time - start_time, 2)
+
+            # ФИНАЛЬНЫЙ СИГНАЛ
+            logger.success(
+
+                f"--- ЗАВЕРШЕНО: переиндексация окончена --- "
+                f"Всего обновлено: {total_updated} | Время: {duration} сек."
+            )

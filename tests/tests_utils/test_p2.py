@@ -2,6 +2,13 @@
 """ тестирования метода подготовки индекса """
 from app.core.utils.common_utils import jprint
 
+import pytest
+from rich.progress import track
+from rich.console import Console
+from rich.table import Table
+from tests.data_factory.fake_generator import generate_test_data
+from tests.conftest import get_model_by_name
+pytestmark = pytest.mark.asyncio
 
 items = {
     "image_id": "68e7f8002dc65c2a1d0a3241",
@@ -347,7 +354,6 @@ items = {
 
 def test_prepare_search_string():
     from app.core.utils.pydantic_utils import prepare_search_string
-    from app.support.item.schemas import ItemReadRelation
     # 1. валидируем исходные данные
     try:
         # item = ItemReadRelation.validate(items)
@@ -356,3 +362,31 @@ def test_prepare_search_string():
         print(result)
     except Exception as e:
         assert False, e
+
+
+def test_registers_search_update(authenticated_client_with_db):
+    """ проверка как регистрируются пути для обновленияя индекса vs зависимых моделей"""
+    # from app.support.varietal.model import Varietal
+    # from app.support.food.model import Food
+    # from app.support.country.model import Country
+    from app.core.utils.common_utils import get_owners_by_path
+    from app.service_registry import _SEARCH_DEPENDENCIES
+
+    console = Console()
+
+    table = Table(title="Отчет по тестированию get_owners_by_path")
+
+    table.add_column("MODEL", style="cyan", no_wrap=True)
+    table.add_column("PATH", justify="right", style="magenta")
+    table.add_column("owners", justify="right", style="green")
+    # table.add_column('error', justify = "right", style = "red")
+    for key, val in _SEARCH_DEPENDENCIES.items():
+        owners = get_owners_by_path(key, val)
+        if owners:
+            owner_ids = [o.id for o in owners if hasattr(o, 'id')]
+            print(key.__name__, owners, owner_ids)
+        else:
+            print(
+                key.__name__, owners)
+        table.add_row(key.__name__, val)
+    console.print(table)

@@ -352,7 +352,7 @@ class ItemService(Service):
             if data.drink:
                 try:
                     result = await DrinkService.create_relation(data.drink, DrinkRepository, Drink, session)
-                    # await session.commit()
+                    await session.commit()
                     item_data['drink_id'] = result.id
                 except Exception as e:
                     print('data.drink.error::', result, e)
