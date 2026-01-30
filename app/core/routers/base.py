@@ -2,7 +2,7 @@
 
 from typing import Any, List, Type, TypeVar
 # from dateutil.relativedelta import relativedelta
-from datetime import datetime, timezone
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 # from loguru import logger
@@ -15,6 +15,7 @@ from app.core.schemas.base import (DeleteResponse, PaginatedResponse, ReadSchema
                                    CreateResponse, UpdateSchema, CreateSchema)
 from app.core.exceptions import exception_to_http
 from app.core.utils.pydantic_utils import get_repo, get_service, get_pyschema
+from app.core.schemas.base import IndexFillResponse
 
 
 paging = get_paging
@@ -101,6 +102,10 @@ class BaseRouter:
                                   self.get_all, methods=["GET"],
                                   response_model=self.nonpaginated_response,  # List[self.read_response])
                                   openapi_extra={'x-request-schema': None})
+        self.router.add_api_route("/fill_index",
+                                  self.fill_index, methods=["GET"],
+                                  response_model=IndexFillResponse,
+                                  openapi_extra={'x-request-schema': None})
         # get one buy id
         self.router.add_api_route("/{id}",
                                   self.get_one, methods=["GET"],
@@ -115,6 +120,7 @@ class BaseRouter:
                                   self.delete, methods=["DELETE"],
                                   response_model=self.delete_response,
                                   openapi_extra={'x-request-schema': None})
+
 
     async def create(self, data: TCreateSchema, session: AsyncSession = Depends(get_db)) -> TReadSchema:
         """
@@ -251,10 +257,12 @@ class BaseRouter:
         result = self.paginated_response(**response)
         return result
 
-    async def get_all(self, after_date: datetime = Query(delta,
-                                                         # (datetime.now(timezone.utc) - relativedelta(years=2)).isoformat(),
-                                                         description="Дата в формате ISO 8601 (например, 2024-01-01T00:00:00Z)"
-                                                         ), session: AsyncSession = Depends(get_db)) -> List[TReadSchema]:
+    async def get_all(
+            self,
+            after_date: datetime = Query(delta,
+                                         # (datetime.now(timezone.utc) - relativedelta(years=2)).isoformat(),
+                                         description="Дата в формате ISO 8601 (например, 2024-01-01T00:00:00Z)"
+                                         ), session: AsyncSession = Depends(get_db)) -> List[TReadSchema]:
         """
             Получение все записей одним списком после указанной даты.
             По умолчанию задана дата - 2 года от сейчас
@@ -300,6 +308,19 @@ class BaseRouter:
             response_model <>ReadRelatio
         """
         return await self.service.search_all(search, self.repo, self.model, session)
+
+    async def fill_index(self, session: AsyncSession = Depends(get_db)):
+        """
+            "ручное" заполнение поля 'search_content'
+        """
+        try:
+            # delta = delta_data(100)
+            # result = await self.service.get(delta, self.repo, self.model)
+            result = await self.service.fill_index(self.repo, self.model, session)  # , search_content=None)
+            return result
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail=f"Internal server error. {e}")
 
 
 class LightRouter:

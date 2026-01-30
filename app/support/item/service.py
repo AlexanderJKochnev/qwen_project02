@@ -615,7 +615,7 @@ class ItemService(Service):
         if not item:
             return None
         result = cls.__api_view__(item)
-        jprint(result)
+        # jprint(result)
         return result
 
     @classmethod

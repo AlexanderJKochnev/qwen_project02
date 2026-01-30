@@ -1,6 +1,7 @@
 # app.core.service/service.py
 from abc import ABCMeta
 from datetime import datetime
+from fastapi import HTTPException
 from typing import List, Optional, Tuple, Type
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,9 +9,9 @@ from app.core.config.project_config import settings
 from app.core.repositories.sqlalchemy_repository import ModelType, Repository
 from app.core.utils.alchemy_utils import get_models
 from app.core.utils.common_utils import flatten_dict_with_localized_fields
-from app.core.utils.pydantic_utils import make_paginated_response
+from app.core.utils.pydantic_utils import make_paginated_response, prepare_search_string, get_data_for_search
 from app.service_registry import register_service
-
+from app.core.schemas.base import IndexFillResponse
 
 joint = '. '
 
@@ -343,10 +344,40 @@ class Service(metaclass=ServiceMeta):
 
     @classmethod
     async def fill_index(cls, repository: Type[Repository], model: ModelType,
-                         session: AsyncSession, **kwargs) -> Optional[int]:
+                         session: AsyncSession, **kwargs) -> Type[IndexFillResponse]:
         """
             заполнение/обновление поля search_content для индекса
             для заполнения индекса установить kwargs['search_content'] = None
             для обновления индекса этого ключа быть не должно
+            RESPONSE_MODEL:
+            model: str
+            index: bool
+            number_of_records: Optional[int] = 0
+            number_of_indexed_records: Optional[int] = 0
         """
-        result = await repository.get(after_date, model, session)
+        result = IndexFillResponse(model=model.__name__)
+        if not hasattr(model, 'search_content'):
+            result.index = False
+            result.message = f'Model "{model.__name__}" has no trigramm index'
+            return result
+        # получаем записи
+        items = await repository.get_index(model, session, search_content=None)
+        # schema = get_pyschema(model, 'ReadRelation')
+        data: list = []
+        for item in items:
+            data.append({'id': item.id,
+                         'search_content': prepare_search_string(get_data_for_search(item))})
+            # prepare_search_string(schema.validate(item).model_dump(mode='json'))
+            # prepare_search_string(get_data_for_search(item))
+            # если не работает второй вариант, применяй первый выше
+        result.number_of_records = len(data)
+        try:
+            await repository.bulk_update(data, model, session)
+            result.index = True
+            result.message = 'индекс успешно создан'
+            return result
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f'Ошибка при сохранении в базу данных: {e}')
+        # from app.core.utils.common_utils import jprint
+        # jprint(data)
+        # return response

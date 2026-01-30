@@ -200,6 +200,13 @@ class UpdateResponse(BaseModel):
     success: bool
     updated_id: int
     message: str
+
+
+class IndexFillResponse(BaseModel):
+    model: str
+    index: Optional[bool] = False
+    number_of_records: Optional[int] = 0
+    message: Optional[str] = None
 # ---------------------NEW VIEWS--------------------------
 
 

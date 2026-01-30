@@ -8,7 +8,7 @@ from abc import ABCMeta
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
 # from sqlalchemy.dialects import postgresql
-from sqlalchemy import and_, func, select, Select
+from sqlalchemy import and_, func, select, Select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 # from sqlalchemy.sql.elements import ColumnElement
@@ -419,17 +419,25 @@ class Repository(metaclass=RepositoryMeta):
         return res
 
     @classmethod
-    async def fill_index(cls, model: ModelType, session: AsyncSession, **kwargs) -> int:
+    async def get_index(cls, model: ModelType, session: AsyncSession, **kwargs) -> int:
         """
-        заполнение поля search_content, по которому будет индексирование проводиться
+        получение записей для
+        заполнения поля search_content, по которому будет индексирование проводиться
         kwargs: {имя поля: значение, ...
         + search_content: True}
         если search_content: True - все записи
         если search_content: False - только пустые поля search_content (initial filing)
         """
         # 1. собираем фильтр из kwargs
-        query = cls.get_query(model)
         valid_fields = {key: value for key, value in kwargs.items() if hasattr(model, key)}
-        stmt = select(func.count()).select(query).filter_by(**valid_fields)
-        count = session.execute(stmt)
-        return count
+        stmt = cls.get_query(model).filter_by(**valid_fields)
+        result = await session.execute(stmt)
+        items = result.scalars().all()
+        return items
+
+    @classmethod
+    async def bulk_update(cls, data: List[Dict[str, Any]], model: ModelType, session: AsyncSession):
+        """
+        массовове обновление данных. аждый словарь длджен содержать 'id': int
+        """
+        await session.execute(update(model), data)

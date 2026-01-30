@@ -175,9 +175,6 @@ class PyUtils:
                             __base__=List[schema])
 
 
-import re
-from typing import Any, Set
-
 # 1. Регулярка для поиска ISO дат/таймстампов целиком, чтобы удалить их до парсинга слов
 RE_ISO_DATE = re.compile(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z?', re.I)
 # 2. Регулярка для обычных слов
@@ -201,7 +198,13 @@ def prepare_search_string(data: Any, seen_words: Set[str] = None) -> str:
     if seen_words is None:
         seen_words = set()
 
-    if isinstance(data, dict):
+    # Если это объект SQLAlchemy, а не словарь
+    if hasattr(data, '__table__'):
+        # Проходим по всем колонкам и загруженным связям
+        for key in inspect(data).mapper.attrs.keys():
+            value = getattr(data, key)
+            prepare_search_string(value, seen_words)
+    elif isinstance(data, dict):
         for value in data.values():
             prepare_search_string(value, seen_words)
     elif isinstance(data, (list, set, tuple)):
@@ -221,3 +224,29 @@ def prepare_search_string(data: Any, seen_words: Set[str] = None) -> str:
                 seen_words.add(word)
 
     return " ".join(sorted(list(seen_words)))
+
+
+def get_data_for_search(obj):
+    """
+    Безопасное извлечение данных из уже загруженного ORM-объекта.
+    """
+    if obj is None:
+        return ""
+
+    res = []
+    # Берем только то, что уже загружено в __dict__
+    for key, value in obj.__dict__.items():
+        if key.startswith('_'):  # Пропускаем внутренние поля SQLAlchemy (_sa_instance_state)
+            continue
+
+        if isinstance(value, (str, int, float)):
+            res.append(str(value))
+        elif isinstance(value, list):
+            # Рекурсивно заходим в списки (foods, varietals)
+            for item in value:
+                res.append(get_data_for_search(item))
+        elif hasattr(value, '__dict__'):
+            # Рекурсивно заходим во вложенные объекты (drink, subregion)
+            res.append(get_data_for_search(value))
+
+    return " ".join(res)
