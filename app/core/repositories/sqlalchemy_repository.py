@@ -438,6 +438,6 @@ class Repository(metaclass=RepositoryMeta):
     @classmethod
     async def bulk_update(cls, data: List[Dict[str, Any]], model: ModelType, session: AsyncSession):
         """
-        массовове обновление данных. аждый словарь длджен содержать 'id': int
+        массовове обновление данных. каждый словарь длджен содержать 'id': int
         """
         await session.execute(update(model), data)

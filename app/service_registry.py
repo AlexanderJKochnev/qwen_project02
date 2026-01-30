@@ -11,7 +11,7 @@
 _SERVICE_REGISTRY: dict = {}
 _REPOSITORY_REGISTRY: dict = {}
 _PYSCHEMA_REGISTRY: dict = {}
-
+_SEARCH_DEPENDENCIES: dict = {}
 
 def register_pyschema(name: str, cls):
     _PYSCHEMA_REGISTRY[name.lower()] = cls
@@ -55,3 +55,19 @@ def get_service(name: str):
 
 def get_all_services():
     return _SERVICE_REGISTRY.copy()
+
+
+def registers_search_update(owner_path: str):
+    """
+    Декоратор для моделей-справочников.
+    owner_path: строка, как добраться до модели с индексом (например, 'items' или 'drink.item')
+    использование:
+    вешаешь декоратор на модель
+    @registers_search_update("drinks.items")
+    drinks.items: путь к основной таблие через точечную нотацию
+    ЭТО НУЖНО ДЛЯ ОБЕСПЕЧЕНИЯ ПОИСКА ПО trgm ИНДЕКСУ
+    """
+    def wrapper(cls):
+        _SEARCH_DEPENDENCIES[cls] = owner_path
+        return cls
+    return wrapper
