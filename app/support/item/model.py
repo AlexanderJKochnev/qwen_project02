@@ -26,7 +26,7 @@ class Item(Base, BaseAt, ImageMixin, Search):
     price: Mapped[money]    # цена
     count: Mapped[ion]      # количество
 
-    drink_id: Mapped[int] = mapped_column(ForeignKey("drinks.id"), nullable=False)
+    drink_id: Mapped[int] = mapped_column(ForeignKey("drinks.id"), nullable=False, index=True)
     # warehouse_id: Mapped[int] = mapped_column(ForeignKey("warehouses.id"), nullable=True)
 
     # warehouse: Mapped["Warehouse"] = relationship(back_populates="items")

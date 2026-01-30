@@ -88,9 +88,9 @@ class Drink(Base, BaseAt, Lang):
     age: Mapped[str_null_true]
     sparkling: Mapped[boolnone]
     # Foreign Keys on-to-many
-    subcategory_id: Mapped[int] = mapped_column(ForeignKey("subcategories.id"), nullable=False)
-    subregion_id: Mapped[int] = mapped_column(ForeignKey("subregions.id"), nullable=False)
-    sweetness_id: Mapped[int] = mapped_column(ForeignKey("sweetness.id"), nullable=True)
+    subcategory_id: Mapped[int] = mapped_column(ForeignKey("subcategories.id"), nullable=False, index=True)
+    subregion_id: Mapped[int] = mapped_column(ForeignKey("subregions.id"), nullable=False, index=True)
+    sweetness_id: Mapped[int] = mapped_column(ForeignKey("sweetness.id"), nullable=True, index=True)
 
     # Relationships fields (
     subcategory: Mapped["Subcategory"] = relationship(back_populates="drinks")

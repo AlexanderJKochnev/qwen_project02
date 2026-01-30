@@ -390,3 +390,10 @@ def test_registers_search_update(authenticated_client_with_db):
                 key.__name__, owners)
         table.add_row(key.__name__, val)
     console.print(table)
+
+
+if __name__ == "__main__":
+    import pytest
+    import sys
+
+    sys.exit(pytest.main(["-s", "-vvv", __file__]))

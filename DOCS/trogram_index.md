@@ -22,18 +22,5 @@
       4. Причина: либо в таблице слишком мало записей (до пары тысяч Postgres проще прочитать всё подряд), 
       5. либо подстрока поиска слишком короткая.
 2. выполни 1 раз в postgresql
-CREATE OR REPLACE FUNCTION notify_reindex() 
-RETURNS TRIGGER AS $$
-BEGIN
-    NOTIFY search_reindex;
-    RETURN NULL;
-END;
-$$ LANGUAGE plpgsql;
 
--- Повесь этот триггер на основную таблицу
-CREATE TRIGGER trg_items_notify
-AFTER UPDATE OF search_content ON items
-FOR EACH ROW
-WHEN (NEW.search_content IS NULL)
-EXECUTE FUNCTION notify_reindex();
 3. Как вообще устроен индекс:
