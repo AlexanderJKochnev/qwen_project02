@@ -20,7 +20,7 @@ class Food(BaseFull):
     single_name = 'food'
     plural_name = plural(single_name)
 
-    superfood_id: Mapped[int] = mapped_column(ForeignKey("superfoods.id"), nullable=True)
+    superfood_id: Mapped[int] = mapped_column(ForeignKey("superfoods.id"), nullable=True, index=True)
     superfood: Mapped["Superfood"] = relationship(back_populates=plural_name, lazy=lazy)
 
     # Связь с промежуточной таблицей

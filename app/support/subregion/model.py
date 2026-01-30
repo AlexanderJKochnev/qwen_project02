@@ -20,7 +20,7 @@ class Subregion(BaseFullFree):
     cascade = settings.CASCADE
     single_name = 'subregion'
     plural_name = plural(single_name)
-    region_id: Mapped[int] = mapped_column(ForeignKey("regions.id"), nullable=False)
+    region_id: Mapped[int] = mapped_column(ForeignKey("regions.id"), nullable=False, index=True)
     region: Mapped["Region"] = relationship(back_populates=plural_name, lazy=lazy)
 
     drinks = relationship("Drink", back_populates=single_name,

@@ -21,7 +21,7 @@ class Region(BaseFullFree):
     single = 'region'
     plural_name = plural(single)
     name: Mapped[str_null_false]
-    country_id: Mapped[int] = mapped_column(ForeignKey("countries.id"), nullable=False)
+    country_id: Mapped[int] = mapped_column(ForeignKey("countries.id"), nullable=False, index=True)
     country: Mapped["Country"] = relationship(back_populates=plural_name, lazy=lazy)
 
     subregions = relationship("Subregion", back_populates=single,

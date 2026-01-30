@@ -13,6 +13,7 @@ _REPOSITORY_REGISTRY: dict = {}
 _PYSCHEMA_REGISTRY: dict = {}
 _SEARCH_DEPENDENCIES: dict = {}
 
+
 def register_pyschema(name: str, cls):
     _PYSCHEMA_REGISTRY[name.lower()] = cls
 

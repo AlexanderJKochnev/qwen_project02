@@ -118,19 +118,7 @@ class Drink(Base, BaseAt, Lang):
         viewonly=True
         # Загрузит список объектов Food автоматически
     )
-    """
-    # Прямые связи с промежуточной таблицей
-    food_associations = relationship("DrinkFood",
-                                     back_populates="drink",
-                                     cascade="all, delete-orphan",
-                                     overlaps="foods")
-    foods = relationship("Food",
-                         secondary="drink_food_associations",
-                         back_populates="drinks",
-                         lazy="selectin",
-                         viewonly=False,  # чтобы можно было использовать в form
-                         overlaps="food_associations,drink")
-    """
+
     varietal_associations = relationship(
         "DrinkVarietal",
         back_populates="drink",

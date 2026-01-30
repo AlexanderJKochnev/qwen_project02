@@ -2,13 +2,22 @@
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from app.support.varietal.model import Varietal
-from app.support.drink.model import DrinkVarietal
+from app.support.drink.model import DrinkVarietal, Drink
+from app.support.item.model import Item
 from app.core.repositories.sqlalchemy_repository import Repository, ModelType
 
 
 # VarietalRepository = RepositoryFactory.get_repository(Varietal)
 class VarietalRepository(Repository):
     model = Varietal
+
+    @classmethod
+    def get_query_back(cls, id: int):
+        """Returns a query to select Item IDs related to this model"""
+        return (select(Item.id)
+                .join(Item.drink)
+                .join(Drink.varietal_associations)
+                .where(DrinkVarietal.varietal_id == id))
 
     @classmethod
     def get_query(cls, model: ModelType):

@@ -15,7 +15,7 @@ class CategoryRepository(Repository):
     model = Category
 
     @classmethod
-    def get_query_back(cls, category_id: int):
+    def get_query_back(cls, id: int):
         """ получаем список Item.id """
         return (select(Item.id).join(Item.drink)  # SQLAlchemy сама поймет связь, если есть ForeignKey
-                               .join(Drink.subcategory).where(Subcategory.category_id == category_id))
+                               .join(Drink.subcategory).where(Subcategory.category_id == id))

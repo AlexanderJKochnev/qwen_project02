@@ -15,7 +15,7 @@ class CountryRepository(Repository):
     @classmethod
     def get_query_back(cls, id: int):
         """Returns a query to select Item IDs related to this model"""
-        return (select(Item.id).join(Drink)
-                .join(Subregion)
-                .join(Region)
+        return (select(Item.id).join(Item.drink)
+                .join(Drink.subregion)
+                .join(Subregion.region)
                 .where(Region.country_id == id))

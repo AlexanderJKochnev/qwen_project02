@@ -21,7 +21,7 @@ class Subcategory(BaseFullFree):
     cascade = settings.CASCADE
     single_name = 'subcategory'
     plural_name = plural(single_name)
-    category_id: Mapped[int] = mapped_column(ForeignKey("categories.id"), nullable=False)
+    category_id: Mapped[int] = mapped_column(ForeignKey("categories.id"), nullable=False, index=True)
     category: Mapped["Category"] = relationship(back_populates=plural_name, lazy=lazy)
     drinks = relationship("Drink", back_populates=single_name,
                           cascade=cascade,
