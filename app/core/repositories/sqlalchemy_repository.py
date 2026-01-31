@@ -16,6 +16,7 @@ from app.core.utils.alchemy_utils import (create_enum_conditions,
                                           create_search_conditions2, ModelType)
 from app.core.utils.alchemy_utils import get_sqlalchemy_fields
 from app.service_registry import register_repo
+from loguru import logger
 # from app.support.item.model import Item
 
 
@@ -55,9 +56,14 @@ class Repository(metaclass=RepositoryMeta):
     async def invalidate_search_index(cls, id: int, item: ModelType, session: AsyncSession):
         """ обнуление item.search_content в записях у которых child records updated"""
         try:
-            stmp = update(item).where(cls.item_exists(id)).values({'search_content': None})
-            await session.execute(stmp)
+            # Only proceed if the id is valid (positive integer)
+            if id is None or id <= 0:
+                return
+            stmt = update(item).where(cls.item_exists(id)).values({'search_content': None})
+            await session.execute(stmt)
+            logger.debug(f'Successfully invalidated search index for {item.__name__} records related to id {id}')
         except Exception as e:
+            logger.error(f'invalidate_search_index failed for {item.__name__} with id {id}. Error: {e}')
             raise Exception(f'fault of invalidate_search_index. {e}')
 
     @classmethod

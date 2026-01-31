@@ -443,9 +443,26 @@ class Service(metaclass=ServiceMeta):
         if not cls.is_dependencies(model):
             logger.info(f'{model.__name__} has no relationships with Items')
             return
+        
+        # Only proceed if the id is valid (positive integer)
+        if id is None or id <= 0:
+            logger.warning(f'Invalid id {id} for model {model.__name__}, skipping search index invalidation')
+            return
+            
         try:
             item = get_model_by_name('Item')
+            if item is None:
+                logger.warning(f'Item model not found, unable to invalidate search index for {model.__name__}')
+                return
+                
             repo: Type[Repository] = get_repo(item)
+            if repo is None:
+                logger.warning(f'Repository for Item model not found, unable to invalidate search index for {model.__name__}')
+                return
+                
             await repo.invalidate_search_index(id, item, session)
+            logger.debug(f'Successfully invalidated search index for {model.__name__} with id {id}')
         except Exception as e:
             logger.error(f'{model.__name__} invalidate_search_index error: {e}')
+            # Don't raise the exception to avoid affecting the main operation
+            # The search index will be regenerated during next search operation if needed
