@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from app.support.country.model import Country
 
 
-@registers_search_update("subregion.drinks.items")
+@registers_search_update("subregion.drink.item")
 class Region(BaseFullFree):
     lazy = settings.LAZY
     cascade = settings.CASCADE

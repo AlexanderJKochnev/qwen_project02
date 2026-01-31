@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from app.support.drink.model import Drink
 
 
-@registers_search_update("drinks.items")
+@registers_search_update("drink.item")
 class Food(BaseFull):
     lazy = settings.LAZY
     cascade = settings.CASCADE

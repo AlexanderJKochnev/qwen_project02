@@ -392,6 +392,28 @@ def test_registers_search_update(authenticated_client_with_db):
     console.print(table)
 
 
+def test_is_dependencies(authenticated_client_with_db):
+    """ проверка функции is_dependencies """
+    from app.core.services.service import Service
+    from app.support.country.model import Country
+    from app.support.parser.model import Rawdata
+    from app.support.item.model import Item
+    from app.service_registry import _SEARCH_DEPENDENCIES, get_search_dependencies
+    console = Console()
+
+    table = Table(title="Отчет по тестированию is dependencies")
+
+    table.add_column("MODEL", style="cyan", no_wrap=True)
+    table.add_column("PATH", justify="right", style="magenta")
+    table.add_column("owners", justify="right", style="green")
+    for key, val in _SEARCH_DEPENDENCIES.items():
+        table.add_row(key.__name__, val)
+    console.print(table)
+    positive_result = Service.is_dependencies(Country)
+    assert positive_result
+    negative_result = Service.is_dependencies(Rawdata)
+    assert negative_result is False
+
 if __name__ == "__main__":
     import pytest
     import sys

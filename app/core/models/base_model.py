@@ -2,11 +2,11 @@
 
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Annotated, Optional
+from typing import Annotated, Optional, Type
 # from sqlalchemy.dialects.postgresql import MONEY
-from sqlalchemy import DateTime, DECIMAL, func, Integer, text, Text, Column
+from sqlalchemy import DateTime, DECIMAL, func, Integer, text, Text
 from sqlalchemy.ext.asyncio import AsyncAttrs
-from sqlalchemy.orm import DeclarativeBase, declared_attr, deferred, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, declared_attr, Mapped, mapped_column
 # from app.core.config.project_config import settings
 
 langs = ['en', 'ru', 'fr']
@@ -218,3 +218,27 @@ def plural(single: str) -> str:
         else:
             name = f'{name}s'
     return name
+
+
+def get_model_by_name(model_name: str) -> Type[Base]:
+    """
+        быстрый способ получить модель по имени
+    """
+    # registry._class_map содержит пары {'ИмяКласса': КлассМодели}
+    # return Base.registry._class_map.get(model_name)
+    for mapper in Base.registry.mappers:
+        if mapper.class_.__name__ == model_name:
+            return mapper.class_
+    return None
+
+
+def get_model_by_name_stable(model_name):
+    """
+       стабильный способ получить модель по имени
+       если и когда get_model_by_name перестанет работать - использовать этот
+    """
+    # .mappers — это итератор по всем мапперам в реестре
+    for mapper in Base.registry.mappers:
+        if mapper.class_.__name__ == model_name:
+            return mapper.class_
+    return None

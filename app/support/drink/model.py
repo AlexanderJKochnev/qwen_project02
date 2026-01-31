@@ -73,7 +73,7 @@ class Lang:
     madeof_zh: Mapped[descr]
 
 
-@registers_search_update("items")
+@registers_search_update("item")
 class Drink(Base, BaseAt, Lang):
     lazy = settings.LAZY
     cascade = settings.CASCADE
@@ -139,7 +139,7 @@ class Drink(Base, BaseAt, Lang):
         return f"{self.title}"
 
 
-@registers_search_update("drinks.items")
+@registers_search_update("drink.item")
 class DrinkFood(Base):
     __tablename__ = "drink_food_associations"
     drink_id: Mapped[int] = mapped_column(ForeignKey("drinks.id"), primary_key=True)
@@ -161,7 +161,7 @@ class DrinkFood(Base):
         return f"Drink {self.drink_id} - Food {self.food_id}"
 
 
-@registers_search_update("drinks.items")
+@registers_search_update("drink.item")
 class DrinkVarietal(Base):
     __tablename__ = "drink_varietal_associations"
     __table_args__ = (CheckConstraint('percentage >= 0 AND percentage <= 100.00',

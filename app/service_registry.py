@@ -72,3 +72,7 @@ def registers_search_update(owner_path: str):
         _SEARCH_DEPENDENCIES[cls] = owner_path
         return cls
     return wrapper
+
+
+def get_search_dependencies(model):
+    return _SEARCH_DEPENDENCIES.get(model)

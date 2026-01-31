@@ -44,6 +44,13 @@ class Repository(metaclass=RepositoryMeta):
         return select(model)
 
     @classmethod
+    def get_query_back(cls, id: int):
+        """
+            переопределеяемый метод, для получения списка ids of Item отфильтрованного по id в связанной таблице
+        """
+        pass
+
+    @classmethod
     def get_short_query(cls, model: ModelType):
         """
             Переопределяемый метод.
@@ -438,6 +445,16 @@ class Repository(metaclass=RepositoryMeta):
     @classmethod
     async def bulk_update(cls, data: List[Dict[str, Any]], model: ModelType, session: AsyncSession):
         """
-        массовове обновление данных. каждый словарь длджен содержать 'id': int
+        массовове обновление данных. каждый словарь должен содержать 'id': int
+        запускается через роутер
         """
         await session.execute(update(model), data)
+
+    @classmethod
+    async def invalidate_search_content(cls, id: int, session: AsyncSession):
+        """
+        очищает поле serach_content в индексированной таблице
+        в случае изменений в связанных таблицах.
+        это поле только в одной таблие Item
+        """
+        smtp = cls.get_query_back(id)

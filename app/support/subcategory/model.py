@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from app.support.category.model import Category
 
 
-@registers_search_update("drinks.items")
+@registers_search_update("drink.item")
 class Subcategory(BaseFullFree):
 
     lazy = settings.LAZY

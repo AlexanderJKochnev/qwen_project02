@@ -3,7 +3,7 @@ import asyncio
 from abc import ABCMeta
 from datetime import datetime
 from fastapi import HTTPException
-from typing import List, Optional, Tuple, Type
+from typing import List, Optional, Tuple, Type, Union
 from loguru import logger
 from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
@@ -11,12 +11,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config.database.db_async import DatabaseManager
 from app.core.config.project_config import settings
-from app.core.models.base_model import Base
+from app.core.models.base_model import Base, get_model_by_name
 from app.core.repositories.sqlalchemy_repository import ModelType, Repository
-from app.core.utils.alchemy_utils import get_models
+# from app.core.utils.alchemy_utils import get_models
 from app.core.utils.common_utils import flatten_dict_with_localized_fields
 from app.core.utils.pydantic_utils import make_paginated_response, prepare_search_string, get_data_for_search, get_repo
-from app.service_registry import register_service
+from app.service_registry import register_service, get_search_dependencies
 from app.core.schemas.base import IndexFillResponse
 
 joint = '. '
@@ -47,12 +47,6 @@ class Service(metaclass=ServiceMeta):
     #  список уникальных полей по которым будет осуществляться поиск в методах
     #  get_or_create, update_or_create
     default: list = ['name']
-
-    @classmethod
-    def get_model_by_name(cls, name: str) -> ModelType:
-        for mode in get_models():
-            if any((mode.__name__.lower() == name, mode.__tablename__.lower() == name)):
-                return mode
 
     @classmethod
     async def create(cls, data: ModelType, repository: Type[Repository], model: ModelType,
@@ -422,3 +416,26 @@ class Service(metaclass=ServiceMeta):
                 f"--- ЗАВЕРШЕНО: переиндексация окончена --- "
                 f"Всего обновлено: {total_updated} | Время: {duration} сек."
             )
+
+    @classmethod
+    def is_dependencies(cls, model: ModelType) -> bool:
+        """
+              проверяет, входит ли эта модель в реестр зависимых от индексируемой модели
+              и если входит - возвращает индексируемую (главную) модель
+        """
+        path: str = get_search_dependencies(model)
+        if not path:
+            return False
+        res = path.split('.')[-1].capitalize()
+        return res == 'Item'
+
+    @classmethod
+    def invalidate_search_index(cls, id: int, model: ModelType, session: AsyncSession, **kwargs):
+        """
+        сбрасывает значение поля search_content основной таблиы в случае изменений в зависимых таблицах
+        это часть стратегии поиска
+        """
+        item = cls.is_dependencies(model)
+        if not item:
+            return
+        

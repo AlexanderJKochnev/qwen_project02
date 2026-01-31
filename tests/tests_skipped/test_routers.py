@@ -12,6 +12,7 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 import json
 from app.core.utils.common_utils import jprint
+from app.core.models.base_model import get_model_by_name
 
 
 pytestmark = pytest.mark.asyncio
@@ -223,7 +224,7 @@ async def test_get_relation(authenticated_client_with_db, test_db_session):
         assert True
     except ValidationError as e:
         assert False, f"Ошибка валидации входных данных. Errors: {e.errors()}"
-    main_dict = {key: service.get_model_by_name(val) for key, val in get_all_dict_paths(data).items()}
+    main_dict = {key: get_model_by_name(val) for key, val in get_all_dict_paths(data).items()}
     for key, val in main_dict.items():
         subdata = pop_nested(data, key)
         try:
