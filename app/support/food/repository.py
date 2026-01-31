@@ -1,5 +1,5 @@
 # app/support/food/repository.py
-from sqlalchemy import select
+from sqlalchemy import select, exists
 from sqlalchemy.orm import selectinload
 from app.support.food.model import Food
 from app.support.drink.model import DrinkFood, Drink
@@ -12,12 +12,15 @@ class FoodRepository(Repository):
     model = Food
 
     @classmethod
-    def get_query_back(cls, id: int):
-        """Returns a query to select Item IDs related to this model"""
-        return (select(Item.id)
-                .join(Item.drink)
-                .join(Drink.food_associations)  # Используем Mapped[List["DrinkFood"]]
-                .where(DrinkFood.food_id == id))
+    def item_exists(cls, id: int):
+        """
+        good for update or delete
+        """
+        return exists().where(
+            Drink.id == Item.drink_id,
+            Drink.id == DrinkFood.drink_id,
+            DrinkFood.food_id == id
+        )
 
     @classmethod
     def get_query(cls, model: ModelType):

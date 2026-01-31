@@ -1,5 +1,5 @@
 # app/support/country/repository.py
-from sqlalchemy import select
+from sqlalchemy import exists
 
 from app.support.country.model import Country
 from app.support.region.model import Region
@@ -13,9 +13,10 @@ class CountryRepository(Repository):
     model = Country
 
     @classmethod
-    def get_query_back(cls, id: int):
-        """Returns a query to select Item IDs related to this model"""
-        return (select(Item.id).join(Item.drink)
-                .join(Drink.subregion)
-                .join(Subregion.region)
-                .where(Region.country_id == id))
+    def item_exists(cls, id: int):
+        return exists().where(
+            Drink.id == Item.drink_id,
+            Subregion.id == Drink.subregion_id,
+            Region.id == Subregion.region_id,
+            Region.country_id == id
+        )

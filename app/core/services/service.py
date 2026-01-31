@@ -3,7 +3,7 @@ import asyncio
 from abc import ABCMeta
 from datetime import datetime
 from fastapi import HTTPException
-from typing import List, Optional, Tuple, Type, Union
+from typing import List, Optional, Tuple, Type
 from loguru import logger
 from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
@@ -194,12 +194,14 @@ class Service(metaclass=ServiceMeta):
         # Выполняем обновление
         result = await repository.patch(existing_item, data_dict, session)
         if result.get('success'):
+            await cls.invalidate_search_index(id, repository, model, session)
             await session.commit()
         else:
             await session.rollback()
         # Обрабатываем результат
         if isinstance(result, dict):
             if result.get('success'):
+                await cls.invalidate_search_index(id, repository, model, session)
                 return {'success': True, 'data': result.get('data'), 'message': f'Запись {id} успешно обновлена'}
             else:
                 error_type = result.get('error_type')
@@ -237,6 +239,7 @@ class Service(metaclass=ServiceMeta):
         try:
             await repository.delete(instance, session)
             await session.flush()
+            await cls.invalidate_search_index(id, repository, model, session)
             await session.commit()
         except IntegrityError:
             await session.rollback()  # Откат при конфликте связей
@@ -366,6 +369,7 @@ class Service(metaclass=ServiceMeta):
 
     @classmethod
     async def reindex_all_searchable_models(cls, batch_size: int = 1000):
+        """ заполнение Item.search_content  """
         if _reindex_task_lock.locked():
             logger.debug("Переиндексация уже идет, запрос поставлен в очередь (проигнорирован)")
             return
@@ -430,12 +434,18 @@ class Service(metaclass=ServiceMeta):
         return res == 'Item'
 
     @classmethod
-    def invalidate_search_index(cls, id: int, model: ModelType, session: AsyncSession, **kwargs):
+    async def invalidate_search_index(cls, id: int, repository: Type[Repository],
+                                      model: ModelType, session: AsyncSession, **kwargs):
         """
         сбрасывает значение поля search_content основной таблиы в случае изменений в зависимых таблицах
         это часть стратегии поиска
         """
-        item = cls.is_dependencies(model)
-        if not item:
+        if not cls.is_dependencies(model):
+            logger.info(f'{model.__name__} has no relationships with Items')
             return
-        
+        try:
+            item = get_model_by_name('Item')
+            repo: Type[Repository] = get_repo(item)
+            await repo.invalidate_search_index(id, item, session)
+        except Exception as e:
+            logger.error(f'{model.__name__} invalidate_search_index error: {e}')

@@ -1,8 +1,8 @@
 # app/main.py
 # import httpx
-import asyncio
+# import asyncio
 
-from app.events import event, pg_listen_worker  # noqa: F401
+# from app.events import event, pg_listen_worker  # noqa: F401
 from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -67,7 +67,7 @@ async def lifespan(app: FastAPI):
     await MongoDBManager.connect()  # Подключаем Mongo
     await init_db_extensions()  # подключение расщирений Postgresql
     logger.info("Lifespan: Инициализация pg_listen_worker...")
-    listen_task = asyncio.create_task(pg_listen_worker())
+    # listen_task = asyncio.create_task(pg_listen_worker())
     logger.success("Lifespan: Инициализация pg_listen_worker...")
     # await MeiliSyncManager.run_sync()
 
@@ -77,10 +77,10 @@ async def lifespan(app: FastAPI):
     # await app.state.http_client.aclose()
     # await stop_background_tasks()
     # listen_task.cancel()
-    try:
-        await listen_task
-    except asyncio.CancelledError:
-        pass
+    # try:
+    #     await listen_task
+    # except asyncio.CancelledError:
+    #     pass
     await DatabaseManager.engine.dispose()
     await MongoDBManager.disconnect()
 

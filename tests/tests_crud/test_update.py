@@ -38,7 +38,7 @@ async def test_patch_routers(authenticated_client_with_db, get_patch_routes):
             response = await client.get(get_path)
             if response.status_code in [200, 201]:
                 result = response.json()
-                instance = result[-1]        # берем последнюю запись
+                instance = result[-2]        # берем предпоследнюю запись
                 id = instance.get('id')
                 path = route.path.replace('{id}', f'{id}')
                 if path.startswith('/items'):

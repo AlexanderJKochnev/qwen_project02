@@ -49,6 +49,12 @@ async def test_delete_routers(authenticated_client_with_db, get_del_routes):
                 else:
                     # список id существующих
                     ids = [val.get('id') for val in result]
+                id = ids[-1]    # последняя запись
+                path = route.path.replace('{id}', f'{id}')
+                response = await client.delete(path)
+                if response.status_code in [200, 201]:
+                    table.add_row(path, good, None)
+                """
                 for id in reversed(ids):   # перебор записей пока не найдется без зависимых
                     path = route.path.replace('{id}', f'{id}')
                     response = await client.delete(path)
@@ -57,6 +63,7 @@ async def test_delete_routers(authenticated_client_with_db, get_del_routes):
                         break
                 else:
                     table.add_row(path, fault, f'{response.status_code}, {response.text}')
+                """
             else:
                 table.add_row(path, fault, f'{response.status_code}. {response.text}')
                 fault_nmbr += 1

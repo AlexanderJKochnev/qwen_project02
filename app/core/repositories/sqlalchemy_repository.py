@@ -16,6 +16,7 @@ from app.core.utils.alchemy_utils import (create_enum_conditions,
                                           create_search_conditions2, ModelType)
 from app.core.utils.alchemy_utils import get_sqlalchemy_fields
 from app.service_registry import register_repo
+# from app.support.item.model import Item
 
 
 class RepositoryMeta(ABCMeta):
@@ -44,11 +45,20 @@ class Repository(metaclass=RepositoryMeta):
         return select(model)
 
     @classmethod
-    def get_query_back(cls, id: int):
+    def item_exists(cls, id: int):
         """
             переопределеяемый метод, для получения списка ids of Item отфильтрованного по id в связанной таблице
         """
         pass
+
+    @classmethod
+    async def invalidate_search_index(cls, id: int, item: ModelType, session: AsyncSession):
+        """ обнуление item.search_content в записях у которых child records updated"""
+        try:
+            stmp = update(item).where(cls.item_exists(id)).values({'search_content': None})
+            await session.execute(stmp)
+        except Exception as e:
+            raise Exception(f'fault of invalidate_search_index. {e}')
 
     @classmethod
     def get_short_query(cls, model: ModelType):
@@ -449,12 +459,3 @@ class Repository(metaclass=RepositoryMeta):
         запускается через роутер
         """
         await session.execute(update(model), data)
-
-    @classmethod
-    async def invalidate_search_content(cls, id: int, session: AsyncSession):
-        """
-        очищает поле serach_content в индексированной таблице
-        в случае изменений в связанных таблицах.
-        это поле только в одной таблие Item
-        """
-        smtp = cls.get_query_back(id)

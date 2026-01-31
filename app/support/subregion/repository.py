@@ -1,6 +1,6 @@
 # app/support/subregion/repository.py
 
-from sqlalchemy import select
+from sqlalchemy import select, exists
 from sqlalchemy.orm import selectinload
 from app.core.repositories.sqlalchemy_repository import ModelType, Repository
 from app.support.drink.model import Drink
@@ -13,11 +13,11 @@ class SubregionRepository(Repository):
     model = Subregion
 
     @classmethod
-    def get_query_back(cls, id):
-        """Returns a query to select Item IDs related to this model"""
-        return (select(Item.id)
-                .join(Item.drink)
-                .where(Drink.subregion_id == id))
+    def item_exists(cls, id: int):
+        return exists().where(
+            Drink.id == Item.drink_id,
+            Drink.subregion_id == id
+        )
 
     @classmethod
     def get_query(cls, model: ModelType):

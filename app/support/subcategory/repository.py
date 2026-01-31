@@ -1,5 +1,5 @@
 # app/support/subcategory/repository.py
-from sqlalchemy import select
+from sqlalchemy import select, exists
 from sqlalchemy.orm import selectinload
 
 from app.core.repositories.sqlalchemy_repository import ModelType, Repository
@@ -17,6 +17,8 @@ class SubcategoryRepository(Repository):
         return select(Subcategory).options(selectinload(Subcategory.category))
 
     @classmethod
-    def get_query_back(cls, subcategory_id: int):
-        """ получаем список Item.id """
-        return (select(Item.id).join(Drink).where(Drink.subcategory_id == subcategory_id))
+    def item_exists(cls, id: int):
+        return exists().where(
+            Drink.id == Item.drink_id,
+            Drink.subcategory_id == id
+        )

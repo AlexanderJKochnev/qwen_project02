@@ -1,7 +1,7 @@
 # app/support/drink/repository.py
 from typing import List, Optional, Type
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, exists
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -10,16 +10,17 @@ from app.support.drink.model import Drink
 from app.support.region.model import Region
 from app.support.subcategory.model import Subcategory
 from app.support.subregion.model import Subregion
-from app.support.item.model import Item
+# from app.support.item.model import Item
 
 
 class DrinkRepository(Repository):
     model = Drink
 
     @classmethod
-    def get_query_back(cls, id: int):
-        """Returns a query to select Item IDs related to this model"""
-        return (select(Item.id).where(Item.drink_id == id))
+    def item_exists(cls, id: int):
+        return exists().where(
+            Drink.id == id
+        )
 
     @classmethod
     def get_query(csl, model: ModelType):
