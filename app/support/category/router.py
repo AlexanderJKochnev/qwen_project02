@@ -1,5 +1,5 @@
 # app/support/category/router.py
-from fastapi import Depends
+from fastapi import Depends, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config.database.db_async import get_db
@@ -22,9 +22,9 @@ class CategoryRouter(BaseRouter):  # [CategoryCreate, CategoryUpdate, CategoryRe
                      session: AsyncSession = Depends(get_db)) -> CategoryCreateResponseSchema:
         return await super().create(data, session)
 
-    async def patch(self, id: int, data: CategoryUpdate,
+    async def patch(self, id: int, data: CategoryUpdate, background_tasks: BackgroundTasks,
                     session: AsyncSession = Depends(get_db)) -> CategoryCreateResponseSchema:
-        return await super().patch(id, data, session)
+        return await super().patch(id, data, background_tasks, session)
 
     async def create_relation(self, data: CategoryCreate,
                               session: AsyncSession = Depends(get_db)) -> CategoryRead:

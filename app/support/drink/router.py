@@ -1,7 +1,7 @@
 # app/support/drink/router.py
 import json
 
-from fastapi import Depends, File, Form, HTTPException, UploadFile
+from fastapi import Depends, File, Form, HTTPException, UploadFile, BackgroundTasks
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -86,9 +86,9 @@ class DrinkRouter(BaseRouter):
         result = await super().create_relation(data, session)
         return result
 
-    async def patch(self, id: int, data: DrinkUpdate,
+    async def patch(self, id: int, data: DrinkUpdate, background_tasks: BackgroundTasks,
                     session: AsyncSession = Depends(get_db)) -> DrinkRead:
-        return await super().patch(id, data, session)
+        return await super().patch(id, data, background_tasks, session)
 
     async def create_relation_image(self,
                                     data: str = Form(..., description="JSON string of DrinkCreateRelation"),

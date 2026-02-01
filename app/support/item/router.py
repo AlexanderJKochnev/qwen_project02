@@ -2,7 +2,7 @@
 import json
 from typing import Optional
 
-from fastapi import Depends, File, Form, HTTPException, Path, Query, status, UploadFile
+from fastapi import Depends, File, Form, HTTPException, Path, Query, status, UploadFile, BackgroundTasks
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -90,9 +90,10 @@ class ItemRouter(BaseRouter):
                      session: AsyncSession = Depends(get_db)) -> ItemCreateResponseSchema:
         return await super().create(data, session)
 
-    async def patch(self, id: int, data: ItemUpdate,
+    async def patch(self, id: int, data: ItemUpdate, background_tasks: BackgroundTasks,
                     session: AsyncSession = Depends(get_db)) -> ItemCreateResponseSchema:
-        return await super().patch(id, data, session)
+        return await super().patch(id, data, background_tasks,
+                                   session)
 
     async def create_relation(self, data: ItemCreateRelation,
                               session: AsyncSession = Depends(get_db)) -> ItemCreateResponseSchema:

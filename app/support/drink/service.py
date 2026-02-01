@@ -1,6 +1,6 @@
 # app.support.drink.service.py
 from typing import Optional, Type
-from fastapi import HTTPException
+from fastapi import HTTPException, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.repositories.sqlalchemy_repository import Repository
@@ -162,7 +162,7 @@ class DrinkService(Service):
     async def patch(cls, id: int,
                     data: DrinkUpdate,
                     repository: Type[Repository],
-                    model: ModelType,
+                    model: ModelType, background_tasks: BackgroundTasks,
                     session: AsyncSession) -> dict:
         obj = await repository.get_by_id(id, model, session)
         if not obj:

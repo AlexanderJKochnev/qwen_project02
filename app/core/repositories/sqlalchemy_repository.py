@@ -6,11 +6,13 @@
 """
 from abc import ABCMeta
 from datetime import datetime
+from loguru import logger
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
 # from sqlalchemy.dialects import postgresql
 from sqlalchemy import and_, func, select, Select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
+# from sqlalchemy.dialects import postgresql
 # from sqlalchemy.sql.elements import ColumnElement
 from app.core.utils.alchemy_utils import (create_enum_conditions,
                                           create_search_conditions2, ModelType)
@@ -46,16 +48,16 @@ class Repository(metaclass=RepositoryMeta):
 
     @classmethod
     def item_exists(cls, id: int):
-        """
-            переопределеяемый метод, для получения списка ids of Item отфильтрованного по id в связанной таблице
-        """
-        pass
+        # переопределеяемый метод, для получения списка ids of Item отфильтрованного по id в связанной таблице
+        return None
 
     @classmethod
-    async def invalidate_search_index(cls, id: int, item: ModelType, session: AsyncSession):
+    async def invalidate_search_index(cls, id: int, item: ModelType, model: ModelType, session: AsyncSession):
         """ обнуление item.search_content в записях у которых child records updated"""
         try:
             stmp = update(item).where(cls.item_exists(id)).values({'search_content': None})
+            # Компилируем специально для PostgreSQL
+            # compiled = stmp.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
             await session.execute(stmp)
         except Exception as e:
             raise Exception(f'fault of invalidate_search_index. {e}')
@@ -453,9 +455,12 @@ class Repository(metaclass=RepositoryMeta):
         return items
 
     @classmethod
-    async def bulk_update(cls, data: List[Dict[str, Any]], model: ModelType, session: AsyncSession):
+    async def my_bulk_updates(cls, data: List[Dict[str, Any]], model: ModelType, session: AsyncSession):
         """
         массовове обновление данных. каждый словарь должен содержать 'id': int
         запускается через роутер
         """
-        await session.execute(update(model), data)
+        try:
+            await session.execute(update(model), data)
+        except Exception as e:
+            logger.error(f'bulf_update.error: {model.__name__}. {e}')

@@ -2,7 +2,7 @@
 import asyncio
 from abc import ABCMeta
 from datetime import datetime
-from fastapi import HTTPException
+from fastapi import HTTPException, BackgroundTasks
 from typing import List, Optional, Tuple, Type
 from loguru import logger
 from sqlalchemy import select, update
@@ -20,6 +20,8 @@ from app.service_registry import register_service, get_search_dependencies
 from app.core.schemas.base import IndexFillResponse
 
 joint = '. '
+_REINDEX_LOCK = asyncio.Lock()
+
 _reindex_task_lock = asyncio.Lock()
 
 
@@ -177,11 +179,14 @@ class Service(metaclass=ServiceMeta):
     @classmethod
     async def patch(cls, id: int, data: ModelType,
                     repository: Type[Repository],
-                    model: ModelType, session: AsyncSession) -> dict:
+                    model: ModelType,
+                    background_tasks: BackgroundTasks,
+                    session: AsyncSession) -> dict:
         """
         Редактирование записи по ID
         Возвращает dict с результатом операции
         """
+
         # Получаем существующую запись
         existing_item = await repository.get_by_id(id, model, session)
         if not existing_item:
@@ -196,12 +201,15 @@ class Service(metaclass=ServiceMeta):
         if result.get('success'):
             await cls.invalidate_search_index(id, repository, model, session)
             await session.commit()
+            background_tasks.add_task(cls.run_reindex_worker, model.__name__, DatabaseManager.session_maker)
         else:
             await session.rollback()
         # Обрабатываем результат
         if isinstance(result, dict):
             if result.get('success'):
                 await cls.invalidate_search_index(id, repository, model, session)
+                session.commit()
+                background_tasks.add_task(cls.run_reindex_worker, model.__name__, DatabaseManager.session_maker)
                 return {'success': True, 'data': result.get('data'), 'message': f'Запись {id} успешно обновлена'}
             else:
                 error_type = result.get('error_type')
@@ -232,6 +240,7 @@ class Service(metaclass=ServiceMeta):
 
     @classmethod
     async def delete(cls, id: int, model: ModelType, repository: Type[Repository],
+                     background_tasks: BackgroundTasks,
                      session: AsyncSession) -> bool:
         instance = await repository.get_by_id(id, model, session)
         if instance is None:
@@ -241,6 +250,7 @@ class Service(metaclass=ServiceMeta):
             await session.flush()
             await cls.invalidate_search_index(id, repository, model, session)
             await session.commit()
+            background_tasks.add_task(cls.run_reindex_worker, model.__name__, DatabaseManager.session_maker)
         except IntegrityError:
             await session.rollback()  # Откат при конфликте связей
             raise PermissionError(f"Cannot delete record {id} of {model.__name__}: related data exists")
@@ -340,36 +350,38 @@ class Service(metaclass=ServiceMeta):
             number_of_records: Optional[int] = 0
             number_of_indexed_records: Optional[int] = 0
         """
-        result = IndexFillResponse(model=model.__name__)
-        if not hasattr(model, 'search_content'):
-            result.index = False
-            result.message = f'Model "{model.__name__}" has no trigramm index'
-            return result
-        # получаем записи
-        items = await repository.get_index(model, session, search_content=None)
-        # schema = get_pyschema(model, 'ReadRelation')
-        data: list = []
-        for item in items:
-            data.append({'id': item.id,
-                         'search_content': prepare_search_string(get_data_for_search(item))})
-            # prepare_search_string(schema.validate(item).model_dump(mode='json'))
-            # prepare_search_string(get_data_for_search(item))
-            # если не работает второй вариант, применяй первый выше
-        result.number_of_records = len(data)
         try:
-            await repository.bulk_update(data, model, session)
+            result = IndexFillResponse(model=model.__name__)
+            if not hasattr(model, 'search_content'):
+                result.index = False
+                result.message = f'Model "{model.__name__}" has no trigramm index'
+                return result
+            # получаем записи
+            items = await repository.get_index(model, session, search_content=None)
+            # schema = get_pyschema(model, 'ReadRelation')
+            data: list = []
+            for item in items:
+                data.append({'id': item.id,
+                             'search_content': prepare_search_string(get_data_for_search(item))})
+                # prepare_search_string(schema.validate(item).model_dump(mode='json'))
+                # prepare_search_string(get_data_for_search(item))
+                # если не работает второй вариант, применяй первый выше
+            result.number_of_records = len(data)
+            await repository.my_bulk_updates(data, model, session)
             result.index = True
             result.message = 'индекс успешно создан'
             return result
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f'Ошибка при сохранении в базу данных: {e}')
+            raise HTTPException(status_code=500, detail=f'fill_index.error: {e}')
         # from app.core.utils.common_utils import jprint
         # jprint(data)
         # return response
 
     @classmethod
     async def reindex_all_searchable_models(cls, batch_size: int = 1000):
-        """ заполнение Item.search_content  """
+        """ заполнение Item.search_content
+            УДАЛИТЬ ?
+        """
         if _reindex_task_lock.locked():
             logger.debug("Переиндексация уже идет, запрос поставлен в очередь (проигнорирован)")
             return
@@ -445,7 +457,22 @@ class Service(metaclass=ServiceMeta):
             return
         try:
             item = get_model_by_name('Item')
-            repo: Type[Repository] = get_repo(item)
-            await repo.invalidate_search_index(id, item, session)
+            await repository.invalidate_search_index(id, item, model, session)
         except Exception as e:
             logger.error(f'{model.__name__} invalidate_search_index error: {e}')
+
+    @classmethod
+    async def run_reindex_worker(cls, model_name: str, session_factory):
+        if _REINDEX_LOCK.locked():
+            return  # Уже работает, новый запуск не нужен
+
+        async with _REINDEX_LOCK:
+            # Небольшая пауза (дебаунс), чтобы подождать,
+            # если идет серия мелких правок в справочниках
+            model = get_model_by_name(model_name)
+            if cls.is_dependencies(model):
+                await asyncio.sleep(2)
+                async with session_factory() as new_session:
+                    repository = get_repo(model)
+                    logger.info("Авто-подметатель: обнаружены пустые индексы, начинаю сборку...")
+                    await cls.fill_index(repository, model, new_session)

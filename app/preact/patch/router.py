@@ -1,5 +1,5 @@
 # app/preact/path/router.py
-from fastapi import Request, Depends, Body, HTTPException
+from fastapi import Request, Depends, Body, HTTPException, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.preact.core.router import PreactRouter
 from app.core.config.database.db_async import get_db
@@ -34,7 +34,8 @@ class PatchRouter(PreactRouter):
                  get_pyschema(val, 'Read'),) for key, val in source.items())
         # return ((f'/{key}' + '/{id}', get_pyschema(val, 'Update')) for key, val in source.items())
 
-    async def endpoint(self, request: Request, id: int, data: Dict[str, Any] = Body(...),
+    async def endpoint(self, request: Request, id: int, background_tasks: BackgroundTasks,
+                       data: Dict[str, Any] = Body(...),
                        session: AsyncSession = Depends(get_db)):
         current_path = request.url.path
         _, tmp = self.__path_decoder__(current_path, self.tier)
@@ -44,7 +45,7 @@ class PatchRouter(PreactRouter):
         repo = self.get_repo(model)
         service = self.get_service(model)
         model_data = schema(**data)
-        result = await service.patch(id, model_data, repo, model, session)
+        result = await service.patch(id, model_data, repo, model, background_tasks, session)
         if not result.get('success'):
             error_type = result.get('error_type')
             error_message = result.get('message', 'Неизвестная ошибка')

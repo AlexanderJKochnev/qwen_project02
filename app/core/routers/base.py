@@ -3,7 +3,7 @@
 from typing import Any, List, Type, TypeVar
 # from dateutil.relativedelta import relativedelta
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, Query, status, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Request, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 # from loguru import logger
 from app.auth.dependencies import get_active_user_or_internal
@@ -175,13 +175,15 @@ class BaseRouter:
             raise HTTPException(status_code=405, detail=detail)
 
     async def patch(self, id: int,
-                    data: TUpdateSchema, session: AsyncSession = Depends(get_db)) -> TReadSchema:
+                    data: TUpdateSchema, background_tasks: BackgroundTasks,
+                    session: AsyncSession = Depends(get_db)) -> TReadSchema:
         """
             Изменение одной записи по id
             input_valudation_chema <>Update
             response_model <>Read
         """
-        result = await self.service.patch(id, data, self.repo, self.model, session)
+        result = await self.service.patch(id, data, self.repo, self.model, background_tasks,
+                                          session)
         if not result.get('success'):
             error_type = result.get('error_type')
             error_message = result.get('message', 'Неизвестная ошибка')
@@ -205,7 +207,7 @@ class BaseRouter:
         return result['data']
 
     # @logger.catch(reraise=True)
-    async def delete(self, id: int,
+    async def delete(self, id: int, background_tasks: BackgroundTasks,
                      session: AsyncSession = Depends(get_db)) -> DeleteResponse:
         """
             Удаление одной записи по id
@@ -213,7 +215,7 @@ class BaseRouter:
             response_model <>DeleteResponse
         """
         try:
-            await self.service.delete(id, self.model, self.repo, session)
+            await self.service.delete(id, self.model, self.repo, background_tasks, session)
             return DeleteResponse(success=True, deleted_count=1, message=f'record with {id=}')
         except ValueError:
             raise HTTPException(status_code=404, detail=f"record with {id=} not found")

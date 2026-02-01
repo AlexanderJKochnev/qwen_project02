@@ -1,7 +1,7 @@
 # app/support/country/auth.py
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import Depends
+from fastapi import Depends, BackgroundTasks
 from app.core.config.database.db_async import get_db
 from app.core.routers.base import BaseRouter
 from app.support.country.model import Country
@@ -20,9 +20,9 @@ class CountryRouter(BaseRouter):
     async def create(self, data: CountryCreate, session: AsyncSession = Depends(get_db)) -> CountryCreateResponseSchema:
         return await super().create(data, session)
 
-    async def patch(self, id: int, data: CountryUpdate,
+    async def patch(self, id: int, data: CountryUpdate, background_tasks: BackgroundTasks,
                     session: AsyncSession = Depends(get_db)) -> CountryCreateResponseSchema:
-        return await super().patch(id, data, session)
+        return await super().patch(id, data, background_tasks, session)
 
     async def create_relation(self, data: CountryCreateRelation,
                               session: AsyncSession = Depends(get_db)) -> CountryRead:

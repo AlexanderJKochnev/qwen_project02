@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Annotated, Optional, Type
 # from sqlalchemy.dialects.postgresql import MONEY
-from sqlalchemy import DateTime, DECIMAL, func, Integer, text, Text
+from sqlalchemy import DateTime, DECIMAL, func, Integer, text, Text, Index
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, declared_attr, Mapped, mapped_column
 # from app.core.config.project_config import settings
@@ -199,6 +199,12 @@ class Search:
     @declared_attr
     def search_content(cls) -> Mapped[Optional[str]]:
         return mapped_column(Text, deferred=True, nullable=True)
+
+    __table_args__ = (Index(
+        "idx_search_content_null_only",  # Название индекса
+        "id",  # Колонка, которую индексируем
+        postgresql_where=(search_content == None),  # Условие: только NULL
+    ),)
 
 
 def plural(single: str) -> str:

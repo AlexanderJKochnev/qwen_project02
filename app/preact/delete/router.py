@@ -1,5 +1,5 @@
 # app/preact/delete/router.py
-from fastapi import Request, Depends, HTTPException
+from fastapi import Request, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.preact.core.router import PreactRouter
 from app.core.config.database.db_async import get_db
@@ -16,7 +16,7 @@ class DeleteRouter(PreactRouter):
         """
         return ((f'/{key}' + '/{id}', DeleteResponse, None) for key, val in source.items())
 
-    async def endpoint(self, request: Request, id: int,
+    async def endpoint(self, request: Request, id: int, background_tasks: BackgroundTasks,
                        session: AsyncSession = Depends(get_db)) -> DeleteResponse:
         """
             Удаление одной записи по id
@@ -26,7 +26,7 @@ class DeleteRouter(PreactRouter):
         model = self.source.get(pref)
         repo = self.get_repo(model)
         service = self.get_service(model)
-        result = await service.delete(id, model, repo, session)
+        result = await service.delete(id, model, repo, background_tasks, session)
         if not result.get('success'):
             error_message = result.get('message', 'Unknown error')
             # Для Foreign Key violation возвращаем 400 Bad Request
