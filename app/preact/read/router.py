@@ -8,7 +8,7 @@ from typing import Callable, Annotated
 from fastapi import Request, Depends, HTTPException
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.depends import get_translator_func
+from app.dependencies import get_translator_func
 from app.preact.core.router import PreactRouter
 from app.core.config.database.db_async import get_db
 from app.core.utils.pydantic_utils import get_pyschema

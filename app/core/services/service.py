@@ -462,6 +462,7 @@ class Service(metaclass=ServiceMeta):
             logger.error(f'{model.__name__} invalidate_search_index error: {e}')
 
     @classmethod
+    @logger.catch(message = "Ошибка в фоновом воркере переиндексации")
     async def run_reindex_worker(cls, model_name: str, session_factory):
         if _REINDEX_LOCK.locked():
             return  # Уже работает, новый запуск не нужен

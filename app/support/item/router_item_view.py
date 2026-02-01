@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.dependencies import get_active_user_or_internal
 from app.core.config.database.db_async import get_db
 from app.core.schemas.base import PaginatedResponse
-from app.depends import get_translator_func
+from app.dependencies import get_translator_func
 from app.support.item.model import Item
 from app.support.item.repository import ItemRepository
 from app.support.item.schemas import ItemDetailView, ItemListView, ItemReadPreactForUpdate

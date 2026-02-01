@@ -22,7 +22,7 @@ from app.core.models.base_model import Base
 from app.core.utils.common_utils import jprint
 from app.main import app
 from app.core.config.database.db_async import get_db
-from app.depends import get_translator_func
+from app.dependencies import get_translator_func
 from app.core.config.database.db_mongo import MongoDBManager
 # from app.mongodb.config import get_database, get_mongodb, MongoDB
 # from app.core.config.database.db_mongo import get_mongodb
