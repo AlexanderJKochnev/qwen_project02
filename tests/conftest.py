@@ -12,7 +12,7 @@ from fastapi.routing import APIRoute
 from httpx import ASGITransport, AsyncClient
 from motor.motor_asyncio import AsyncIOMotorClient
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import sessionmaker
 from loguru import logger
 import logging
@@ -21,7 +21,7 @@ from app.auth.utils import create_access_token, get_password_hash
 from app.core.models.base_model import Base
 from app.core.utils.common_utils import jprint
 from app.main import app
-from app.core.config.database.db_async import get_db
+from app.core.config.database.db_async import get_db, DatabaseManager
 from app.dependencies import get_translator_func
 from app.core.config.database.db_mongo import MongoDBManager
 # from app.mongodb.config import get_database, get_mongodb, MongoDB
@@ -32,6 +32,7 @@ from tests.data_factory.reader_json import JsonConverter
 from tests.utility.assertion import assertions
 from tests.utility.data_generators import FakeData
 from tests.utility.find_models import discover_models, discover_schemas2
+from unittest.mock import patch, AsyncMock, Mock
 
 # from tests.data_factory.fake_generator import generate_test_data
 
@@ -625,7 +626,7 @@ async def mock_engine(mock_db_url):
 @pytest.fixture(scope=scope2)
 async def test_db_session(mock_engine):
     """Создает сессию для тестовой базы данных"""
-    AsyncSessionLocal = sessionmaker(
+    AsyncSessionLocal = async_sessionmaker(
         bind=mock_engine,
         class_=AsyncSession,
         expire_on_commit=False,
@@ -642,6 +643,52 @@ async def test_db_session(mock_engine):
         except Exception:
             await session.rollback()  # Откат при ошибках
             raise
+
+
+@pytest.fixture(scope=scope2)
+def test_sessionmaker():
+    """Создает фабрику сессий для тестовой базы данных - очень тормозная - проверить """
+    st = settings_db
+    from app.core.config.database.db_config import settings_db as real_st
+    # se = (f"postgresql+psycopg_async://{st.POSTGRES_USER}:"
+    #       f"{st.POSTGRES_PASSWORD}@{st.POSTGRES_HOST}:{st.PG_PORT}/{st.POSTGRES_DB}")
+    db_url = (f"postgresql+{real_st.DRIVER}://{st.POSTGRES_USER}:"
+              f"{st.POSTGRES_PASSWORD}@{st.POSTGRES_HOST}:{st.PG_PORT}/{st.POSTGRES_DB}")
+
+    engine = create_async_engine(
+        db_url, echo=False,  # pool_pre_ping=True
+        pool_pre_ping=False,  # ❗️ Отключите для async
+        pool_recycle=3600,  # Вместо этого используйте pool_recycle
+        pool_size=10, max_overflow=5  # !
+    )
+
+    return async_sessionmaker(
+        bind=engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+        autoflush=False
+    )
+
+
+@pytest.fixture
+def mock_async_session():
+    return AsyncMock(spec=AsyncSession)
+
+
+@pytest.fixture(autouse=True)
+def mock_db_manager(mock_async_session):
+    # session_maker — это callable, НЕ async def!
+    mock_session_maker = Mock()  # ← обычный Mock!
+
+    # session_maker() должен вернуть объект, поддерживающий async with
+    mock_context_mgr = AsyncMock()
+    mock_context_mgr.__aenter__.return_value = mock_async_session
+    mock_context_mgr.__aexit__.return_value = None
+
+    mock_session_maker.return_value = mock_context_mgr
+
+    with patch("app.core.config.database.db_async.DatabaseManager.session_maker", new=mock_session_maker):
+        yield
 
 
 @pytest.fixture(scope=scope2)

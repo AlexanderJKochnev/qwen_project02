@@ -5,12 +5,12 @@ from datetime import datetime
 from fastapi import HTTPException, BackgroundTasks
 from typing import List, Optional, Tuple, Type
 from loguru import logger
-from sqlalchemy import select, update
+from sqlalchemy import select, update, text, func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.core.config.database.db_async import DatabaseManager
+from sqlalchemy.sql.elements import Label
 from app.core.config.project_config import settings
+from app.core.config.database.db_async import DatabaseManager
 from app.core.models.base_model import Base, get_model_by_name
 from app.core.repositories.sqlalchemy_repository import ModelType, Repository
 # from app.core.utils.alchemy_utils import get_models
@@ -259,47 +259,33 @@ class Service(metaclass=ServiceMeta):
             raise Exception(f'{model.__name__}, {id}, {e}')
 
     @classmethod
-    async def search(cls,
-                     repository: Type[Repository],
-                     model: ModelType,
-                     session: AsyncSession,
-                     **kwargs) -> List[ModelType]:
+    async def search(cls, search: str, page: int, page_size: int,
+                     repository: Type[Repository], model: ModelType,
+                     session: AsyncSession
+                     ) -> dict:
         """
             базовый поиск
         """
-        paging = False
-        if not kwargs:
-            kwargs: dict = {}
-        else:
-            if kwargs.get('page') and kwargs.get('page_size'):
-                limit = kwargs.pop('page_size')
-                skip = (kwargs.pop('page') - 1) * limit
-                kwargs['limit'], kwargs['skip'] = limit, skip
-                paging = True
-        if paging:
-            items, total = await repository.search(model, session, **kwargs)
-            result = {"items": items,
-                      "total": total,
-                      "page": skip,
-                      "page_size": limit,
-                      "has_next": skip + len(items) < total,
-                      "has_prev": skip > 1}
-        else:
-            result = await repository.search_all(model, session, **kwargs)
+        skip = (page - 1) * page_size
+        items, total = await repository.search(search, skip, page_size, model, session)
+        result = {"items": items,
+                  "total": total,
+                  "page": skip,
+                  "page_size": page_size,
+                  "has_next": skip + len(items) < total,
+                  "has_prev": skip > 1}
         return result
 
     @classmethod
     async def search_all(cls,
-                         search_str: str,
+                         search: str,
                          repository: Type[Repository],
                          model: ModelType,
-                         session: AsyncSession,
-                         **kwargs) -> List[ModelType]:
+                         session: AsyncSession) -> List[ModelType]:
         """
             базовый поиск без пагинации
         """
-        kwargs = {'search_str': search_str}
-        result = await repository.search_all(model, session, **kwargs)
+        result = await repository.search_all(search, model, session)
         return result
 
     @classmethod
@@ -461,8 +447,8 @@ class Service(metaclass=ServiceMeta):
         except Exception as e:
             logger.error(f'{model.__name__} invalidate_search_index error: {e}')
 
+    # @logger.catch(message = "Ошибка в фоновом воркере переиндексации")
     @classmethod
-    @logger.catch(message = "Ошибка в фоновом воркере переиндексации")
     async def run_reindex_worker(cls, model_name: str, session_factory):
         if _REINDEX_LOCK.locked():
             return  # Уже работает, новый запуск не нужен
@@ -477,3 +463,34 @@ class Service(metaclass=ServiceMeta):
                     repository = get_repo(model)
                     logger.info("Авто-подметатель: обнаружены пустые индексы, начинаю сборку...")
                     await cls.fill_index(repository, model, new_session)
+
+    @classmethod
+    async def search_geans(cls, search: str, page: int, page_size: int,
+                           repository: Type[Repository], model: ModelType,
+                           session: AsyncSession
+                           ) -> List[dict]:
+        try:
+            # Запрос с загрузкой связей и пагинацией
+            skip = (page - 1) * page_size
+            # определаяем тип поиска (geans OR b-tree
+            if hasattr(model, 'search_content'):
+                #  задаем порог толерантности к опечаткам/ошибкам ЕСЛИ что меняй в .env
+                logger.info(f'1. {model.__name__}, geans')
+                similarity_threshold = settings.SIMILARITY_THRESHOLD
+                logger.info(f'2. {model.__name__}, geans similarity_threshold')
+                await session.execute(text(f"SET LOCAL pg_trgm.similarity_threshold = {similarity_threshold}"))
+                logger.info(f'3. {model.__name__}, geans similarity_threshold')
+                # 2. Формируем расчет веса (релевантности)
+                relevance: Label = func.similarity(model.search_content, search).label("rank")
+                logger.info(f'4. {model.__name__}, geans similarity_threshold')
+                items, total = await repository.search_geans(search, relevance, skip, page_size, model, session)
+            else:
+                logger.info(f'{model.__name__}, simple')
+                items, total = await repository.search(search, skip, page_size, model, session)
+            logger.info(f'5. {model.__name__}, geans similarity_threshold, {total=}')
+            result = make_paginated_response(items, total, page, page_size)
+            logger.info(f'6. {model.__name__}, geans similarity_threshold')
+            return result
+        except Exception as e:
+            logger.error(f'search_geans.error: {e}')
+            raise HTTPException(status_code=501, detail=f'{e}')

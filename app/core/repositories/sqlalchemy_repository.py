@@ -8,10 +8,12 @@ from abc import ABCMeta
 from datetime import datetime
 from loguru import logger
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
-# from sqlalchemy.dialects import postgresql
-from sqlalchemy import and_, func, select, Select, update
+from sqlalchemy import literal
+from sqlalchemy.dialects import postgresql
+from sqlalchemy import and_, func, select, Select, update, desc, cast, Text, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.sql.elements import Label
 # from sqlalchemy.dialects import postgresql
 # from sqlalchemy.sql.elements import ColumnElement
 from app.core.utils.alchemy_utils import (create_enum_conditions,
@@ -339,10 +341,9 @@ class Repository(metaclass=RepositoryMeta):
         return query
 
     @classmethod
-    async def search(cls,
-                     model: Type[ModelType],
-                     session: AsyncSession,
-                     **kwargs) -> Optional[List[ModelType]]:
+    async def search(cls, search: str,
+                     skip: int, limit: int,
+                     model: ModelType, session: AsyncSession, ) -> tuple:
         """
         Поиск по всем заданным текстовым полям основной таблицы
         если указана pagination - возвращвет pagination
@@ -362,32 +363,25 @@ class Repository(metaclass=RepositoryMeta):
         :rtype:                 Optional[List[ModelType]]
         """
         try:
+            kwargs: dict = {}
+            kwargs['search_str'] = search
             query = cls.apply_search_filter(cls.get_query(model), **kwargs)
             total = 0
-            # Добавляем пагинацию если указано и общее кол-во записей
-            limit, skip = kwargs.get('limit'), kwargs.get('skip')
-            if limit is not None:
-                # общее кол-во записей удовлетворяющих условию
-                count_stmt = cls.apply_search_filter(select(func.count()).select_from(cls.get_query(model)),
-                                                     **kwargs)
-                result = await session.execute(count_stmt)
-                total = result.scalar()     # ok
-                query = query.limit(limit)
-                if skip is not None:
-                    query = query.offset(skip)
-                result = await session.execute(query)
-                records = result.scalars().all()
-                return (records if records else [], total)
-            else:
-                result = await session.execute(query)
-                records = result.scalars().all()
-                return records
+            # общее кол-во записей удовлетворяющих условию
+            count_stmt = cls.apply_search_filter(select(func.count()).select_from(cls.get_query(model)),
+                                                 **kwargs)
+            result = await session.execute(count_stmt)
+            total = result.scalar()     # ok
+            query = query.limit(limit).offset(skip)
+            result = await session.execute(query)
+            records = result.scalars().all()
+            return (records if records else [], total)
         except Exception as e:
-            print(f'ошибка search: {e}')
+            logger.error(f'ошибка search: {e}')
 
     @classmethod
     async def search_all(
-            cls, model: Type[ModelType], session: AsyncSession, **kwargs) -> Optional[List[ModelType]]:
+            cls, search: str, model: Type[ModelType], session: AsyncSession) -> Optional[List[ModelType]]:
         """
         Поиск по всем заданным текстовым полям основной таблицы
         если указана pagination - возвращвет pagination
@@ -407,6 +401,8 @@ class Repository(metaclass=RepositoryMeta):
         :rtype:                 Optional[List[ModelType]]
         """
         try:
+            kwargs: dict = {}
+            kwargs['search_str'] = search
             query = cls.apply_search_filter(cls.get_query(model), **kwargs)
             result = await session.execute(query)
             records = result.scalars().all()
@@ -464,3 +460,58 @@ class Repository(metaclass=RepositoryMeta):
             await session.execute(update(model), data)
         except Exception as e:
             logger.error(f'bulf_update.error: {model.__name__}. {e}')
+
+    @classmethod
+    async def search_geans(cls, search: str, relevance: Label,
+                           skip: int, limit: int,
+                           model: ModelType, session: AsyncSession, ) -> tuple:
+        """
+            Поисковый запрос
+        """
+        total_count = 0
+        stmt = (select(model.id, relevance)
+                # .where(cast(search_param, Text).op("<%")(model.search_content))
+                .where(cast(literal(search), Text).op("<%")(model.search_content))
+                # .where(model.search_content.op("%")(search))
+                .order_by(desc(text("rank")))
+                .offset(skip)
+                .limit(limit))
+        result = await session.execute(stmt)
+        matching_drink_ids = [row[0] for row in result.fetchall()]
+        if not matching_drink_ids:
+            return [], 0
+        if len(matching_drink_ids) <= limit:
+            total_count = len(matching_drink_ids)
+        else:
+            # 2. Считаем общее количество подходящих записей
+            count_stmt = (select(func.count())
+                          .select_from(model)
+                          .where(cast(literal(search), Text).op("<%")(model.search_content)))
+            total_count = await session.scalar(count_stmt) or 0
+        # 3. load all greenlets
+        stmt = cls.get_query(model).where(model.id.in_(matching_drink_ids))
+        final_result = await session.execute(stmt)
+        items = final_result.scalars().all()
+        items_map = {item.id: item for item in items}
+        return [items_map[id_] for id_ in matching_drink_ids if id_ in items_map], total_count
+
+    @classmethod
+    async def search_geans_all(
+            cls, search: str, relevance: Label, model: ModelType,
+            session: AsyncSession, ) -> tuple:
+        """
+            Поисковый запрос
+        """
+        # search_param = bindparam("search", value = search, type_ = Text)
+        stmt = (select(model, relevance)
+                # .where(cast(search_param, Text).op("<%")(model.search_content))
+                .where(cast(literal(search), Text).op("<%")(model.search_content))
+                # .where(model.search_content.op("%")(search))
+                .order_by(desc("rank")))
+
+        compiled = stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
+        logger.warning(compiled)
+        result = await session.execute(stmt)
+        items_with_rank = result.all()
+        # Возвращаем объекты моделей (схема подхватит данные из Item)
+        return [row[0] for row in items_with_rank]

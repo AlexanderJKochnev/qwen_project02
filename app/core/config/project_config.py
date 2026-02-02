@@ -208,6 +208,7 @@ class Settings(BaseSettings):
     HF_REQUESTS_PER_MINUTE: int = 5  # Rate limit for HuggingFace API
     HF_REQUESTS_PER_DAY: int = 100   # Daily limit for HuggingFace API
     # === ПОИСКОВЫЙ СЕРВИС
+    SIMILARITY_THRESHOLD: float = 0.2  # толерантность поиска от 0 (мусор) до 1 (строго)
 
     model_config = SettingsConfigDict(env_file=get_path_to_root(),
                                       env_file_encoding='utf-8',

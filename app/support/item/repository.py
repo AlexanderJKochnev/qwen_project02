@@ -1,12 +1,12 @@
 # app/support/Item/repository.py
 
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
-
+from loguru import logger
 from sqlalchemy import func, literal_column, or_, select, Select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlalchemy.types import String
-
+from sqlalchemy.dialects import postgresql
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.utils.alchemy_utils import create_enum_conditions, create_search_conditions2, ModelType
 from app.support.category.model import Category
@@ -317,7 +317,8 @@ class ItemRepository(Repository):
             drink_search_query = drink_search_query.offset(skip)
         if limit is not None:
             drink_search_query = drink_search_query.limit(limit)
-
+        # compiled = drink_search_query.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
+        # logger.info(compiled)
         result = await session.execute(drink_search_query)
         matching_drink_ids = [row[0] for row in result.fetchall()]
 

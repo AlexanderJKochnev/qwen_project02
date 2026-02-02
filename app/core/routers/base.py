@@ -5,7 +5,7 @@ from typing import Any, List, Type, TypeVar
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Request, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
-# from loguru import logger
+from loguru import logger
 from app.auth.dependencies import get_active_user_or_internal
 from app.core.config.database.db_async import get_db
 from app.core.config.project_config import get_paging, settings
@@ -89,8 +89,8 @@ class BaseRouter:
                                   response_model=self.paginated_response,
                                   openapi_extra={'x-request-schema': None})
         # search с пагинацией
-        self.router.add_api_route("/search", self.search, methods=["GET"],
-                                  response_model=self.paginated_response,
+        self.router.add_api_route("/search", self.search_geans, methods=["GET"],
+                                  # response_model=self.paginated_response,
                                   openapi_extra={'x-request-schema': None})
         # search без пагинации
         self.router.add_api_route("/search_all",
@@ -293,10 +293,7 @@ class BaseRouter:
             input_valudation_chema None
             response_model PaginatedResponse[<>ReadRelation>]
         """
-        kwargs: str = {'page': page, 'page_size': page_size}
-        if search:
-            kwargs['search_str'] = search
-        return await self.service.search(self.repo, self.model, session, **kwargs)
+        return await self.service.search(search, page, page_size, self.repo, self.model, session)
 
     async def search_all(self,
                          search: str = Query(None, description="Поисковый запрос. "
@@ -322,6 +319,39 @@ class BaseRouter:
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                 detail=f"Internal server error. {e}")
+
+    async def search_geans(self, search: str = Query(None,
+                                                     min_length=3, max_length=50,
+                                                     description="Не менее 3-х знаков"
+                                                     "Поисковый запрос. "
+                                                     "В случае пустого запроса будут "
+                                                     "выведены все данные "),
+                           page: int = Query(1, ge=1),
+                           page_size: int = Query(paging.get('def', 20),
+                                                  ge=paging.get('min', 1),
+                                                  le=paging.get('max', 1000)),
+                           session: AsyncSession = Depends(get_db),
+                           ) -> PaginatedResponse:
+        """
+            Поиск по всем текстовым полям основной таблицы
+            с постраничным выводом результата
+            input_valudation_chema None
+            response_model PaginatedResponse[<>ReadRelation>]
+        """
+        result = await self.service.search_geans(search, page, page_size, self.repo, self.model, session)
+        return result
+
+    async def search_geans_all(self,
+                               search: str = Query(None, description="Поисковый запрос. "
+                                                   "В случае пустого запроса будут "
+                                                   "выведены все данные "),
+                               session: AsyncSession = Depends(get_db)) -> List[TReadSchema]:
+        """
+            Поиск по всем текстовым полям основной таблицы БЕЗ пагинации
+            input_valudation_chema <>CreateRelation
+            response_model <>ReadRelatio
+        """
+        return await self.service.search_all(search, self.repo, self.model, session)
 
 
 class LightRouter:

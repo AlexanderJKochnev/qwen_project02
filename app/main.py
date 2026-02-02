@@ -58,7 +58,7 @@ async def lifespan(app: FastAPI):
 
     try:
         await DatabaseManager.check_connection()
-        logger.success("Lifespan: PostgreSQL соединение установлено (OK)")
+        logger.success(f"Lifespan: PostgreSQL соединение установлено (OK) {DatabaseManager.connection_string}")
     except Exception as e:
         logger.critical(
             f"Lifespan: ОШИБКА ПОДКЛЮЧЕНИЯ К БД: {e}"
@@ -66,9 +66,9 @@ async def lifespan(app: FastAPI):
 
     await MongoDBManager.connect()  # Подключаем Mongo
     await init_db_extensions()  # подключение расщирений Postgresql
-    logger.info("Lifespan: Инициализация pg_listen_worker...")
+    # logger.info("Lifespan: Инициализация pg_listen_worker...")
     # listen_task = asyncio.create_task(pg_listen_worker())
-    logger.success("Lifespan: Инициализация pg_listen_worker...")
+    # logger.success("Lifespan: Инициализация pg_listen_worker...")
     # await MeiliSyncManager.run_sync()
 
     yield

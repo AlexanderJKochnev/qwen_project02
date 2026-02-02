@@ -12,9 +12,11 @@ from app.core.config.database.db_config import settings_db
 class DatabaseManager:
     engine = None
     session_maker = None
+    connection_string = None
 
     @classmethod
     def __init__(cls):
+        cls.connection_string = settings_db.database_url
         # Создаем Engine (Singleton)
         cls.engine = create_async_engine(settings_db.database_url,
                                          echo=settings_db.DB_ECHO_LOG,

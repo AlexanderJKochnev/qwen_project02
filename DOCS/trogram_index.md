@@ -33,7 +33,7 @@
       2. app.core.service/service.py::fill_index, далее смотри в функции
          1. вручную выполнить запрос в swagger /items/fill_index
          2. автоматически - app.core.service/service.py::run_reindex_worker
-         3. 
+         3. реально работает - тесты пока нет
 4. Удаление данных в случае изменений в любых свзанных записях: 
    1. app.core.service/service.py::invalidate_search_index: повешено на delete и update
 5. 
