@@ -13,7 +13,7 @@ from httpx import ASGITransport, AsyncClient
 from motor.motor_asyncio import AsyncIOMotorClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.orm import sessionmaker
+# from sqlalchemy.orm import sessionmaker
 from loguru import logger
 import logging
 from app.auth.models import User
@@ -169,7 +169,7 @@ async def mongo_health_check(test_mongodb):
 async def test_client_with_mongo(test_mongodb):
     """Создает тестового клиента с переопределенными MongoDB зависимостями"""
     from app.main import app
-    from app.core.config.database.db_mongo import get_mongodb, MongoDBManager
+    from app.core.config.database.db_mongo import get_mongodb
     from motor.motor_asyncio import AsyncIOMotorClient
 
     # Store original MongoDBManager state
@@ -588,10 +588,10 @@ def mock_db_url():
     # return "postgresql+asyncpg://test_user:test@localhost:2345/test_db" этот драйвер не походит для тестирования
     st = settings_db
     from app.core.config.database.db_config import settings_db as real_st
-    # se = (f"postgresql+psycopg_async://{st.POSTGRES_USER}:"
-    #       f"{st.POSTGRES_PASSWORD}@{st.POSTGRES_HOST}:{st.PG_PORT}/{st.POSTGRES_DB}")
-    se = (f"postgresql+{real_st.DRIVER}://{st.POSTGRES_USER}:"
+    se = (f"postgresql+psycopg_async://{st.POSTGRES_USER}:"
           f"{st.POSTGRES_PASSWORD}@{st.POSTGRES_HOST}:{st.PG_PORT}/{st.POSTGRES_DB}")
+    # se = (f"postgresql+{real_st.DRIVER}://{st.POSTGRES_USER}:"
+    #       f"{st.POSTGRES_PASSWORD}@{st.POSTGRES_HOST}:{st.PG_PORT}/{st.POSTGRES_DB}")
     print(se)
     return (se)
 
@@ -599,12 +599,14 @@ def mock_db_url():
 @pytest.fixture(scope=scope)
 async def mock_engine(mock_db_url):
     """Создает асинхронный движок для тестовой базы данных"""
+    from sqlalchemy.pool import NullPool
     engine = create_async_engine(
         mock_db_url,
         echo=False,
         # pool_pre_ping=True
         pool_pre_ping=False,  # ❗️ Отключите для async
         pool_recycle=3600,  # Вместо этого используйте pool_recycle
+        # poolclass=NullPool,
         pool_size=10,
         max_overflow=5  # !
     )
@@ -626,33 +628,34 @@ async def mock_engine(mock_db_url):
 @pytest.fixture(scope=scope2)
 async def test_db_session(mock_engine):
     """Создает сессию для тестовой базы данных"""
-    AsyncSessionLocal = async_sessionmaker(
-        bind=mock_engine,
-        class_=AsyncSession,
-        expire_on_commit=False,
-        autoflush=False
-    )
-    # async with mock_engine.connect() as session:
-    async with AsyncSessionLocal() as session:
-        try:  # !
+    # Создаем соединение вручную, чтобы контролировать транзакцию
+    async with mock_engine.connect() as conn:
+        # Начинаем внешнюю транзакцию
+        trans = await conn.begin()
+
+        # Привязываем сессию к конкретному соединению
+        async with AsyncSession(
+                bind=conn, expire_on_commit=False, autoflush=False
+        ) as session:
+            # ВАЖНО: оборачиваем в еще одну транзакцию,
+            # чтобы session.commit() внутри кода не закрывал соединение
+            # await session.begin_nested()
+
             yield session
-            await session.commit()   # !
-            # await session.close()
-        except ForeignKeyViolation:
-            pass
-        except Exception:
-            await session.rollback()  # Откат при ошибках
-            raise
+            if trans.is_active:
+                await trans.rollback()
+            # После выхода из теста откатываем все изменения
+            # await conn.rollback()
 
 
 @pytest.fixture(scope=scope2)
 def test_sessionmaker():
     """Создает фабрику сессий для тестовой базы данных - очень тормозная - проверить """
     st = settings_db
-    from app.core.config.database.db_config import settings_db as real_st
-    # se = (f"postgresql+psycopg_async://{st.POSTGRES_USER}:"
-    #       f"{st.POSTGRES_PASSWORD}@{st.POSTGRES_HOST}:{st.PG_PORT}/{st.POSTGRES_DB}")
-    db_url = (f"postgresql+{real_st.DRIVER}://{st.POSTGRES_USER}:"
+    # from app.core.config.database.db_config import settings_db as real_st
+    # db_url = (f"postgresql+{real_st.DRIVER}://{st.POSTGRES_USER}:"
+    #           f"{st.POSTGRES_PASSWORD}@{st.POSTGRES_HOST}:{st.PG_PORT}/{st.POSTGRES_DB}")
+    db_url = (f"postgresql+psycopg://{st.POSTGRES_USER}:"
               f"{st.POSTGRES_PASSWORD}@{st.POSTGRES_HOST}:{st.PG_PORT}/{st.POSTGRES_DB}")
 
     engine = create_async_engine(
@@ -780,8 +783,10 @@ async def authenticated_client_with_db(test_db_session, super_user_data,
         return result
 
     # override_app_dependencies[app.dependency_overrides] = get_test_db
-    app.dependency_overrides[get_db] = get_test_db
-    app.dependency_overrides[get_mongodb] = override_get_mongodb
+    app.dependency_overrides[get_db] = lambda: test_db_session
+    # app.dependency_overrides[get_db] = get_test_db
+    # app.dependency_overrides[get_mongodb] = override_get_mongodb
+    app.dependency_overrides[get_mongodb] = lambda: test_mongodb
     # app.dependency_overrides[get_database] = override_get_database
     app.dependency_overrides[get_translator_func] = lambda: override_get_translator_func
 
