@@ -58,14 +58,15 @@ class ApiRouter(ItemRouter):
                                   # response_model=List[self.read_schema],
                                   openapi_extra={'x-request-schema': None})
         self.router.add_api_route("/search", self.search, methods=["GET"],
-                                  response_model=self.paginated_response,
+                                  response_model=PaginatedResponse[ItemApi],
                                   openapi_extra={'x-request-schema': None})
         self.router.add_api_route(
-            "/search_geans", self.search_geans, methods=["GET"], # response_model = self.paginated_response,
+            "/search_geans", self.search_geans, methods=["GET"],
+            # response_model = self.paginated_response,
             openapi_extra={'x-request-schema': None}
         )
         self.router.add_api_route("/search_all", self.search_all, methods=["GET"],
-                                  response_model=self.nonpaginated_response,
+                                  response_model=List[ItemApi],
                                   openapi_extra={'x-request-schema': None})
         self.router.add_api_route("/mongo", self.get_images_after_date, methods=["GET"],
                                   response_model=FileListResponse,

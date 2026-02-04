@@ -44,9 +44,9 @@ async def test_get_routers(authenticated_client_with_db, get_get_routes):
             if '{lang}' in path:
                 path = path.replace('{lang}', f'{lang}')
             # if path.endswith('search') or path.endswith('search_all'):
-            if path.endswith('search'):
+            if path.endswith('search') or path.endswith('search_geans'):
                 path = f'{path}?search={search}&page=1&page_size=20'
-            if path.endswith('search_all'):
+            if path.endswith('search_all') or path.endswith('search_geans_all'):
                 path = f'{path}?search={search}'
             if 'search_by_drink' in path:
                 path = f'{path}?search={search}&page=1&page_size=20'

@@ -279,7 +279,7 @@ class ItemRouter(BaseRouter):
         except Exception as e:
             raise HTTPException(status_code=422, detail=e)
 
-    async def search(self,
+    async def searchX(self,
                      search: Optional[str] = None,
                      country_enum: Optional[str] = None,
                      category_enum: Optional[str] = None,
@@ -302,7 +302,7 @@ class ItemRouter(BaseRouter):
         return await self.service.search(self.repo, self.model, session,
                                          **kwargs)
 
-    async def search_all(self,
+    async def search_allX(self,
                          search_str: Optional[str] = None,
                          session: AsyncSession = Depends(get_db)):
         """

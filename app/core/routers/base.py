@@ -89,7 +89,7 @@ class BaseRouter:
                                   response_model=self.paginated_response,
                                   openapi_extra={'x-request-schema': None})
         # search с пагинацией
-        self.router.add_api_route("/search", self.search_geans, methods=["GET"],
+        self.router.add_api_route("/search", self.search, methods=["GET"],
                                   # response_model=self.paginated_response,
                                   openapi_extra={'x-request-schema': None})
         # search без пагинации
@@ -97,6 +97,11 @@ class BaseRouter:
                                   self.search_all, methods=["GET"],
                                   # response_model=self.nonpaginated_response,
                                   openapi_extra={'x-request-schema': None})
+        self.router.add_api_route(
+            "/search_geans", self.search_geans, methods=["GET"],
+            # response_model=self.paginated_response,
+            openapi_extra={'x-request-schema': None}
+        )
         # get without pagination
         self.router.add_api_route("/all",
                                   self.get_all, methods=["GET"],
@@ -338,8 +343,11 @@ class BaseRouter:
             input_valudation_chema None
             response_model PaginatedResponse[<>ReadRelation>]
         """
-        result = await self.service.search_geans(search, page, page_size, self.repo, self.model, session)
-        return result
+        try:
+            result = await self.service.search_geans(search, page, page_size, self.repo, self.model, session)
+            return result
+        except Exception as e:
+            logger.error(f'{await self.service.search_geans}, {e}')
 
     async def search_geans_all(self,
                                search: str = Query(None, description="Поисковый запрос. "

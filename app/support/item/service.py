@@ -15,6 +15,7 @@ from app.core.utils.pydantic_utils import get_field_name
 from app.core.utils.common_utils import flatten_dict_with_localized_fields, camel_to_enum, jprint
 from app.core.utils.converters import read_convert_json, list_move, lang_suffix_list, lang_suffix_dict
 from app.core.utils.pydantic_utils import make_paginated_response
+# from app.core.schemas.base import PaginatedResponse
 from app.mongodb.service import ThumbnailImageService
 from app.support.drink.model import Drink
 from app.support.drink.repository import DrinkRepository
@@ -640,3 +641,34 @@ class ItemService(Service):
             if item_dict := item.to_dict():
                 result.append(cls.__api_view__(item_dict))
         return make_paginated_response(result, total, page, page_size)
+
+    @classmethod
+    async def search(cls, search: str, page: int, page_size: int,
+                     repository: Type[ItemRepository], model: Item,
+                     session: AsyncSession
+                     ) -> dict:
+        result: dict = await super().search(search, page, page_size, repository, model, session)
+        if result and result.get('total', 0) == 0:
+            return result
+        # jprint(result)
+        items = []
+        tmp = result.get('items')
+        for item in tmp:
+            if item_dict := item.to_dict():
+                items.append(cls.__api_view__(item_dict))
+        result['items'] = items
+        return result
+
+    @classmethod
+    async def search_all(
+        cls, search: str, repository: Type[ItemRepository], model: Item,
+        session: AsyncSession
+    ) -> dict:
+        result: list = await super().search_all(search, repository, model, session)
+        if len(result) == 0:
+            return result
+        items = []
+        for item in result:
+            if item_dict := item.to_dict():
+                items.append(cls.__api_view__(item_dict))
+        return items

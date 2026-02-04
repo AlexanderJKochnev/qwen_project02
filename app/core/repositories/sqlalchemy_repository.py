@@ -468,32 +468,38 @@ class Repository(metaclass=RepositoryMeta):
         """
             Поисковый запрос
         """
-        total_count = 0
-        stmt = (select(model.id, relevance)
-                # .where(cast(search_param, Text).op("<%")(model.search_content))
-                .where(cast(literal(search), Text).op("<%")(model.search_content))
-                # .where(model.search_content.op("%")(search))
-                .order_by(desc(text("rank")))
-                .offset(skip)
-                .limit(limit))
-        result = await session.execute(stmt)
-        matching_drink_ids = [row[0] for row in result.fetchall()]
-        if not matching_drink_ids:
-            return [], 0
-        if len(matching_drink_ids) <= limit:
-            total_count = len(matching_drink_ids)
-        else:
-            # 2. Считаем общее количество подходящих записей
-            count_stmt = (select(func.count())
-                          .select_from(model)
-                          .where(cast(literal(search), Text).op("<%")(model.search_content)))
-            total_count = await session.scalar(count_stmt) or 0
-        # 3. load all greenlets
-        stmt = cls.get_query(model).where(model.id.in_(matching_drink_ids))
-        final_result = await session.execute(stmt)
-        items = final_result.scalars().all()
-        items_map = {item.id: item for item in items}
-        return [items_map[id_] for id_ in matching_drink_ids if id_ in items_map], total_count
+        try:
+            total_count = 0
+            stmt = (select(model.id, relevance)
+                    # .where(cast(search_param, Text).op("<%")(model.search_content))
+                    .where(cast(literal(search), Text).op("<%")(model.search_content))
+                    # .where(model.search_content.op("%")(search))
+                    .order_by(desc(text("rank")))
+                    .offset(skip)
+                    .limit(limit))
+            result = await session.execute(stmt)
+            # get list of ids
+            matching_drink_ids = [row[0] for row in result.fetchall()]
+            if not matching_drink_ids:
+                return [], 0
+            if len(matching_drink_ids) <= limit:
+                total_count = len(matching_drink_ids)
+            else:
+                # 2. Считаем общее количество подходящих записей
+                count_stmt = (select(func.count())
+                              .select_from(model)
+                              .where(cast(literal(search), Text).op("<%")(model.search_content)))
+                total_count = await session.scalar(count_stmt) or 0
+            # 3. load all greenlets
+            stmt = cls.get_query(model).where(model.id.in_(matching_drink_ids))
+            final_result = await session.execute(stmt)
+            items = final_result.scalars().all()
+            return items, total_count
+            items_map = {item.id: item for item in items}
+            return [items_map[id_] for id_ in matching_drink_ids if id_ in items_map], total_count
+        except Exception as e:
+            logger.error(f'search_geans.error: {e}')
+            raise Exception(f'search_geans.error: {e}')
 
     @classmethod
     async def search_geans_all(

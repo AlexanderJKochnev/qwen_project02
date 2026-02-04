@@ -149,14 +149,6 @@ class Service(metaclass=ServiceMeta):
         # Запрос с загрузкой связей и пагинацией
         skip = (page - 1) * page_size
         items, total = await repository.get_all(ater_date, skip, page_size, model, session)
-        """
-            result = {"items": items,
-                  "total": total,
-                  "page": page,
-                  "page_size": page_size,
-                  "has_next": skip + len(items) < total,
-                  "has_prev": page > 1}
-        """
         result = make_paginated_response(items, total, page, page_size)
         return result
 
@@ -268,12 +260,7 @@ class Service(metaclass=ServiceMeta):
         """
         skip = (page - 1) * page_size
         items, total = await repository.search(search, skip, page_size, model, session)
-        result = {"items": items,
-                  "total": total,
-                  "page": skip,
-                  "page_size": page_size,
-                  "has_next": skip + len(items) < total,
-                  "has_prev": skip > 1}
+        result = make_paginated_response(items, total, page, page_size)
         return result
 
     @classmethod
@@ -293,13 +280,8 @@ class Service(metaclass=ServiceMeta):
                                  repository: Type[Repository], model: ModelType, session: AsyncSession, ) -> List[dict]:
         # Запрос с загрузкой связей и пагинацией
         skip = (page - 1) * page_size
-        rows, total = await repository.get_list_view_page(skip, page_size, model, session)
-        result = {"rows": rows,
-                  "total": total,
-                  "page": page,
-                  "page_size": page_size,
-                  "has_next": skip + len(rows) < total,
-                  "has_prev": page > 1}
+        items, total = await repository.get_list_view_page(skip, page_size, model, session)
+        result = make_paginated_response(items, total, page, page_size)
         return result
 
     @classmethod
@@ -465,6 +447,7 @@ class Service(metaclass=ServiceMeta):
                     await cls.fill_index(repository, model, new_session)
 
     @classmethod
+    @logger.catch(message='ошибка в core.service.service.search_geans', reraise=True)
     async def search_geans(cls, search: str, page: int, page_size: int,
                            repository: Type[Repository], model: ModelType,
                            session: AsyncSession
@@ -485,6 +468,7 @@ class Service(metaclass=ServiceMeta):
                 logger.info(f'4. {model.__name__}, geans similarity_threshold')
                 items, total = await repository.search_geans(search, relevance, skip, page_size, model, session)
             else:
+                # model is not indexed by GIN
                 logger.info(f'{model.__name__}, simple')
                 items, total = await repository.search(search, skip, page_size, model, session)
             logger.info(f'5. {model.__name__}, geans similarity_threshold, {total=}')
