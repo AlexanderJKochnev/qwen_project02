@@ -19,7 +19,7 @@ ModelType = TypeVar("ModelType", bound=DeclarativeMeta)
 
 def delta_data(shift: int = 2) -> str:
     """ возвращает дату отстоящую от now() на shift лет (отрицательные числа - вперед)"""
-    return (datetime.now(timezone.utc) - relativedelta(years=shift)).isoformat()
+    return (datetime.now(timezone.utc) - relativedelta(days=shift)).isoformat()
 
 
 def sort_strings_by_alphabet_and_length(strings: List[str]) -> List[str]:

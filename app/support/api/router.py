@@ -3,16 +3,15 @@ import io
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.responses import StreamingResponse
-from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import List
 from dateutil.relativedelta import relativedelta
 from fastapi import Depends, Query, Path
-from app.core.utils.common_utils import back_to_the_future
 from app.core.config.project_config import settings, get_paging
 from app.core.schemas.base import PaginatedResponse
 from app.mongodb import router as mongorouter
 from app.core.config.database.db_async import get_db
+from app.core.utils.common_utils import back_to_the_future, delta_data
 from app.mongodb.models import FileListResponse
 from app.mongodb.service import ImageService
 from app.support.item.router import ItemRouter
@@ -20,30 +19,13 @@ from app.support.item.schemas import ItemApi
 from app.support.item.service import ItemService
 from app.support.item.repository import ItemRepository
 
-delta = (datetime.now(timezone.utc) - relativedelta(years=2)).isoformat()
+delta = delta_data(settings.DATA_DELTA)
 paging = get_paging
-
-
-@dataclass
-class Data:
-    prefix: str
-    delta: str
-    mongo: str
-    drink: str
-
-
-data = Data(prefix=settings.API_PREFIX,
-            delta=(datetime.now(timezone.utc) - relativedelta(years=2)).isoformat(),
-            mongo='mongo',
-            drink='drink'
-            )
 
 
 class ApiRouter(ItemRouter):
     def __init__(self):
         super().__init__(prefix='/api')
-        # self.prefix = data.prefix
-        # self.tags = data.prefix
         self.paginated_response = PaginatedResponse[ItemApi]
         self.nonpaginated_response = List[self.read_schema]
 
@@ -82,9 +64,9 @@ class ApiRouter(ItemRouter):
         self.router.add_api_route("/file/{file}", self.download_file, methods=["GET"],
                                   openapi_extra={'x-request-schema': None})
 
-    async def get_images_after_date(self, after_date: datetime = Query(data.delta, description="Дата в формате ISO "
-                                                                                               "8601 (например, "
-                                                                                               "2024-01-01T00:00:00Z)"),
+    async def get_images_after_date(self, after_date: datetime = Query(delta, description="Дата в формате ISO "
+                                                                                          "8601 (например, "
+                                                                                          "2024-01-01T00:00:00Z)"),
                                     page: int = Query(1, ge=1, description="Номер страницы"),
                                     per_page: int = Query(100, ge=1, le=1000,
                                                           description="Количество элементов на странице"),
@@ -101,7 +83,7 @@ class ApiRouter(ItemRouter):
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
 
-    async def get_images_list_after_date(self, after_date: datetime = Query(data.delta,
+    async def get_images_list_after_date(self, after_date: datetime = Query(delta,
                                                                             description="Дата в формате ISO "
                                                                                         "8601 (например, "
                                                                                         "2024-01-01T00:00:00Z)"),

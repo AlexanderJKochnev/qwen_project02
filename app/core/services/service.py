@@ -260,6 +260,8 @@ class Service(metaclass=ServiceMeta):
         """
         skip = (page - 1) * page_size
         items, total = await repository.search(search, skip, page_size, model, session)
+        for item in items:
+            print(type(item), 'search')
         result = make_paginated_response(items, total, page, page_size)
         return result
 
@@ -447,7 +449,6 @@ class Service(metaclass=ServiceMeta):
                     await cls.fill_index(repository, model, new_session)
 
     @classmethod
-    @logger.catch(message='ошибка в core.service.service.search_geans', reraise=True)
     async def search_geans(cls, search: str, page: int, page_size: int,
                            repository: Type[Repository], model: ModelType,
                            session: AsyncSession
@@ -458,22 +459,15 @@ class Service(metaclass=ServiceMeta):
             # определаяем тип поиска (geans OR b-tree
             if hasattr(model, 'search_content'):
                 #  задаем порог толерантности к опечаткам/ошибкам ЕСЛИ что меняй в .env
-                logger.info(f'1. {model.__name__}, geans')
                 similarity_threshold = settings.SIMILARITY_THRESHOLD
-                logger.info(f'2. {model.__name__}, geans similarity_threshold')
                 await session.execute(text(f"SET LOCAL pg_trgm.similarity_threshold = {similarity_threshold}"))
-                logger.info(f'3. {model.__name__}, geans similarity_threshold')
                 # 2. Формируем расчет веса (релевантности)
                 relevance: Label = func.similarity(model.search_content, search).label("rank")
-                logger.info(f'4. {model.__name__}, geans similarity_threshold')
                 items, total = await repository.search_geans(search, relevance, skip, page_size, model, session)
             else:
                 # model is not indexed by GIN
-                logger.info(f'{model.__name__}, simple')
                 items, total = await repository.search(search, skip, page_size, model, session)
-            logger.info(f'5. {model.__name__}, geans similarity_threshold, {total=}')
             result = make_paginated_response(items, total, page, page_size)
-            logger.info(f'6. {model.__name__}, geans similarity_threshold')
             return result
         except Exception as e:
             logger.error(f'search_geans.error: {e}')

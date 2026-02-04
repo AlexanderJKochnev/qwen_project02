@@ -30,6 +30,15 @@ dev = settings.DEV
 delta = delta_data(2)    # (datetime.now(timezone.utc) - relativedelta(years=2)).isoformat()
 
 
+def type_checking(result, func_name):
+    logger.info(f'{type(result)}, {func_name}')
+    if isinstance(result, dict):
+        if items := result.get('items'):
+            logger.info(f'    {type(items[0])}, {func_name}')
+    elif isinstance(result, list):
+        logger.info(f'    {type(result[0])}, {func_name}')
+
+
 class BaseRouter:
     """
     Базовый роутер с общими CRUD-методами.
@@ -90,18 +99,23 @@ class BaseRouter:
                                   openapi_extra={'x-request-schema': None})
         # search с пагинацией
         self.router.add_api_route("/search", self.search, methods=["GET"],
-                                  # response_model=self.paginated_response,
+                                  response_model=self.paginated_response,
                                   openapi_extra={'x-request-schema': None})
         # search без пагинации
         self.router.add_api_route("/search_all",
                                   self.search_all, methods=["GET"],
-                                  # response_model=self.nonpaginated_response,
+                                  response_model=self.nonpaginated_response,
                                   openapi_extra={'x-request-schema': None})
-        self.router.add_api_route(
-            "/search_geans", self.search_geans, methods=["GET"],
-            # response_model=self.paginated_response,
-            openapi_extra={'x-request-schema': None}
-        )
+        self.router.add_api_route("/search_geans",
+                                  self.search_geans, methods=["GET"],
+                                  response_model=self.paginated_response,
+                                  openapi_extra={'x-request-schema': None}
+                                  )
+        self.router.add_api_route("/search_geans_all",
+                                  self.search_geans_all, methods=["GET"],
+                                  response_model=self.nonpaginated_response,
+                                  openapi_extra={'x-request-schema': None}
+                                  )
         # get without pagination
         self.router.add_api_route("/all",
                                   self.get_all, methods=["GET"],
@@ -260,6 +274,7 @@ class BaseRouter:
         # print(f"📥 GET request for {self.model.__name__} from")
         after_date = back_to_the_future(after_date)
         response = await self.service.get_all(after_date, page, page_size, self.repo, self.model, session)
+        # type_checking(response, 'get')
         result = self.paginated_response(**response)
         return result
 
@@ -278,7 +293,9 @@ class BaseRouter:
         """
         try:
             after_date = back_to_the_future(after_date)
-            return await self.service.get(after_date, self.repo, self.model, session)
+            result = await self.service.get(after_date, self.repo, self.model, session)
+            # type_checking(result, 'get_all')
+            return result
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                 detail=f"Internal server error. {e}")
@@ -298,7 +315,9 @@ class BaseRouter:
             input_valudation_chema None
             response_model PaginatedResponse[<>ReadRelation>]
         """
-        return await self.service.search(search, page, page_size, self.repo, self.model, session)
+        result = await self.service.search(search, page, page_size, self.repo, self.model, session)
+        # type_checking(result, 'search')
+        return result
 
     async def search_all(self,
                          search: str = Query(None, description="Поисковый запрос. "
@@ -310,7 +329,9 @@ class BaseRouter:
             input_valudation_chema <>CreateRelation
             response_model <>ReadRelatio
         """
-        return await self.service.search_all(search, self.repo, self.model, session)
+        result = await self.service.search_all(search, self.repo, self.model, session)
+        # type_checking(result, 'search_all')
+        return result
 
     async def fill_index(self, session: AsyncSession = Depends(get_db)):
         """

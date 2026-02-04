@@ -8,9 +8,8 @@ from abc import ABCMeta
 from datetime import datetime
 from loguru import logger
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
-from sqlalchemy import literal
 from sqlalchemy.dialects import postgresql
-from sqlalchemy import and_, func, select, Select, update, desc, cast, Text, text
+from sqlalchemy import and_, func, select, Select, update, desc, cast, Text, text, literal
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql.elements import Label
@@ -40,13 +39,67 @@ class Repository(metaclass=RepositoryMeta):
     model: ModelType
 
     @classmethod
-    def get_query(cls, model: ModelType):
+    def get_query(cls, model: ModelType) -> Select:
         """
             Переопределяемый метод.
             Возвращает select() с полными selectinload.
             По умолчанию — без связей.
         """
         return select(model)
+
+    @classmethod
+    async def pagination(cls, stmt: Select, skip: int, limit: int, session: AsyncSession):
+        """
+            получает запрос, сдвиг и размер страницы, сессию
+            возвращает список instances и кол-во записей
+        """
+        count_stmt = select(func.count()).select_from(stmt)
+        total = await session.scalar(count_stmt) or 0
+        stmt = stmt.offset(skip).limit(limit)
+        result = await session.execute(stmt)
+        items = result.scalars().all()
+        return items, total
+
+    @classmethod
+    async def nonpagination(cls, stmt: Select, session: AsyncSession):
+        """
+            получает запрос, сдвиг и размер страницы, сессию
+            возвращает список instances и кол-во записей
+        """
+        result = await session.execute(stmt)
+        items = result.scalars().all()
+        return items
+
+    @classmethod
+    async def get_match(cls, model: ModelType, relevance, search: str,
+                        session: AsyncSession,
+                        skip: Union[int, None] = None,
+                        limit: Union[int, None] = None) -> list:
+        """
+            получение ранжированного списка по поиску search_content
+            если есть пагинация - только для заданной страницы
+        """
+        stmt = (select(model.id, relevance)
+                .where(cast(literal(search), Text).op("<%")(model.search_content))
+                .order_by(desc(text("rank"))))
+        if skip:
+            stmt.offset(skip).limit(limit)
+        response = await session.execute(stmt)
+        matching_ids = [row[0] for row in response.fetchall()]
+        return matching_ids
+
+    @classmethod
+    async def get_greenlet(cls, model: ModelType, matching: List, session: AsyncSession) -> List[ModelType]:
+        """
+            загрузка связей по списку ids,
+            возвращает ранжированный список instances
+        """
+        stmt = cls.get_query(model).where(model.id.in_(matching))
+        result = await session.execute(stmt)
+        items = result.scalars().all()
+        items_map = {item.id: item for item in items}
+        items = [items_map[id_] for id_ in matching if id_ in items_map]
+        return items
 
     @classmethod
     def item_exists(cls, id: int):
@@ -238,12 +291,17 @@ class Repository(metaclass=RepositoryMeta):
             return Tuple[List[instances], int]
         """
         stmt = (cls.get_query(model).where(model.updated_at > after_date)
-                .order_by(model.id.asc()).offset(skip).limit(limit))
-        total = await cls.get_count(after_date, model, session)
+                .order_by(model.id.asc()))
+        result = await cls.pagination(stmt, skip, limit, session)
+        return result
+        """
+        count_stmt = select(func.count()).select_from(stmt)
+        total = await session.scalar(count_stmt) or 0
+        stmt = stmt.offset(skip).limit(limit)
         result = await session.execute(stmt)
         items = result.scalars().all()
-        # items = result.mappings().all()
         return items, total
+        """
 
     @classmethod
     async def get(cls, after_date: datetime, model: ModelType, session: AsyncSession, ) -> list:
@@ -252,9 +310,10 @@ class Repository(metaclass=RepositoryMeta):
             return List[instance]
         """
         stmt = cls.get_query(model).where(model.updated_at > after_date).order_by(model.id.asc())
-        result = await session.execute(stmt)
-        items = result.scalars().all()
-        return items
+        result = await cls.nonpagination(stmt, session)
+        # result = await session.execute(stmt)
+        # items = result.scalars().all()
+        return result
 
     @classmethod
     async def get_by_field(cls, field_name: str, field_value: Any, model: ModelType, session: AsyncSession):
@@ -303,7 +362,7 @@ class Repository(metaclass=RepositoryMeta):
 
     @classmethod
     async def get_all_count(cls, model: ModelType, session: AsyncSession) -> int:
-        """ колитчество всех записей в таблице """
+        """ колитчество всех записей в таблице DELETE """
         count_stmt = select(func.count()).select_from(model)
         result = await session.execute(count_stmt).scalar()
         return result
@@ -470,16 +529,37 @@ class Repository(metaclass=RepositoryMeta):
         """
         try:
             total_count = 0
+            # получение ранжированного списка id
+            matching = await cls.get_match(model, relevance, search, session, skip, limit)
+            if not matching:
+                return [], 0
+            if len(matching) <= limit:
+                total_count = len(matching)
+            else:
+                # 2. Считаем общее количество подходящих записей
+                count_stmt = (select(func.count())
+                              .select_from(model)
+                              .where(cast(literal(search), Text).op("<%")(model.search_content)))
+                total_count = await session.scalar(count_stmt) or 0
+            # 3. load all greenlets
+            items = await cls.get_greenlet(model, matching, session)
+            return items, total_count
+            """
+            stmt = cls.get_query(model).where(model.id.in_(matching))
+            final_result = await session.execute(stmt)
+            items = final_result.scalars().all()
+            items_map = {item.id: item for item in items}
+            items = [items_map[id_] for id_ in matching if id_ in items_map]
+            return items, total_count
+
             stmt = (select(model.id, relevance)
-                    # .where(cast(search_param, Text).op("<%")(model.search_content))
                     .where(cast(literal(search), Text).op("<%")(model.search_content))
-                    # .where(model.search_content.op("%")(search))
                     .order_by(desc(text("rank")))
                     .offset(skip)
                     .limit(limit))
             result = await session.execute(stmt)
-            # get list of ids
             matching_drink_ids = [row[0] for row in result.fetchall()]
+
             if not matching_drink_ids:
                 return [], 0
             if len(matching_drink_ids) <= limit:
@@ -494,9 +574,10 @@ class Repository(metaclass=RepositoryMeta):
             stmt = cls.get_query(model).where(model.id.in_(matching_drink_ids))
             final_result = await session.execute(stmt)
             items = final_result.scalars().all()
-            return items, total_count
             items_map = {item.id: item for item in items}
-            return [items_map[id_] for id_ in matching_drink_ids if id_ in items_map], total_count
+            items = [items_map[id_] for id_ in matching_drink_ids if id_ in items_map]
+            return items, total_count
+            """
         except Exception as e:
             logger.error(f'search_geans.error: {e}')
             raise Exception(f'search_geans.error: {e}')
@@ -508,12 +589,18 @@ class Repository(metaclass=RepositoryMeta):
         """
             Поисковый запрос
         """
-        # search_param = bindparam("search", value = search, type_ = Text)
-        stmt = (select(model, relevance)
-                # .where(cast(search_param, Text).op("<%")(model.search_content))
+        matchnig = await cls.get_match(model, relevance, search, session)
+        items = await cls.get_greenlet(model, matchnig, session)
+        return items
+        """
+        stmt = (select(model.id, relevance)
                 .where(cast(literal(search), Text).op("<%")(model.search_content))
-                # .where(model.search_content.op("%")(search))
-                .order_by(desc("rank")))
+                .order_by(desc(text("rank"))))
+        result = await session.execute(stmt)
+        matching_drink_ids = [row[0] for row in result.fetchall()]
+        stmt = cls.get_query(model).where(model.id.in_(matching_drink_ids))
+
+
 
         compiled = stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
         logger.warning(compiled)
@@ -521,3 +608,4 @@ class Repository(metaclass=RepositoryMeta):
         items_with_rank = result.all()
         # Возвращаем объекты моделей (схема подхватит данные из Item)
         return [row[0] for row in items_with_rank]
+        """

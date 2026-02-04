@@ -643,7 +643,7 @@ class ItemService(Service):
         return make_paginated_response(result, total, page, page_size)
 
     @classmethod
-    async def search(cls, search: str, page: int, page_size: int,
+    async def searchxxx(cls, search: str, page: int, page_size: int,
                      repository: Type[ItemRepository], model: Item,
                      session: AsyncSession
                      ) -> dict:
@@ -660,7 +660,7 @@ class ItemService(Service):
         return result
 
     @classmethod
-    async def search_all(
+    async def search_allxxx(
         cls, search: str, repository: Type[ItemRepository], model: Item,
         session: AsyncSession
     ) -> dict:
