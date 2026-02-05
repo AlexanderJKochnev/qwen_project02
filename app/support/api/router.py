@@ -16,7 +16,7 @@ from app.mongodb.models import FileListResponse
 from app.mongodb.service import ImageService
 from app.support.item.router import ItemRouter
 from app.support.item.schemas import ItemApi
-from app.support.item.service import ItemService
+from app.support.api.service import ApiService
 from app.support.item.repository import ItemRepository
 
 delta = delta_data(settings.DATA_DELTA)
@@ -28,11 +28,13 @@ class ApiRouter(ItemRouter):
         super().__init__(prefix='/api')
         self.paginated_response = PaginatedResponse[ItemApi]
         self.nonpaginated_response = List[self.read_schema]
+        self.repo = ItemRepository
+        self.service = ApiService
 
     def setup_routes(self):
         # self.router.add_api_route("", self.get, methods=["GET"], response_model=self.paginated_response)
         self.router.add_api_route("", self.get, methods=["GET"],
-                                  # response_model=PaginatedResponse[self.read_schema],
+                                  # get -> service.get_list_api_view_page -> repository.get_all
                                   response_model=PaginatedResponse[ItemApi],
                                   openapi_extra={'x-request-schema': None})
         self.router.add_api_route("/all", self.get_all, methods=["GET"],
@@ -40,16 +42,21 @@ class ApiRouter(ItemRouter):
                                   # response_model=List[self.read_schema],
                                   openapi_extra={'x-request-schema': None})
         self.router.add_api_route("/search", self.search, methods=["GET"],
+                                  # search ->
                                   response_model=PaginatedResponse[ItemApi],
                                   openapi_extra={'x-request-schema': None})
-        self.router.add_api_route(
-            "/search_geans", self.search_geans, methods=["GET"],
-            # response_model = self.paginated_response,
-            openapi_extra={'x-request-schema': None}
-        )
+        self.router.add_api_route("/search_geans", self.search_geans, methods=["GET"],
+                                  response_model=PaginatedResponse[ItemApi],
+                                  openapi_extra={'x-request-schema': None}
+                                  )
         self.router.add_api_route("/search_all", self.search_all, methods=["GET"],
                                   response_model=List[ItemApi],
                                   openapi_extra={'x-request-schema': None})
+        self.router.add_api_route("/search_geans_all", self.search_geans_all,
+                                  methods=["GET"],
+                                  response_model=List[ItemApi],
+                                  openapi_extra={'x-request-schema': None}
+                                  )
         self.router.add_api_route("/mongo", self.get_images_after_date, methods=["GET"],
                                   response_model=FileListResponse,
                                   openapi_extra={'x-request-schema': None})
@@ -125,7 +132,7 @@ class ApiRouter(ItemRouter):
         """
              ItemApi
         """
-        service = ItemService
+        service = ApiService
         result = await service.get_item_api_view(id, session)
         return result
 
@@ -140,7 +147,7 @@ class ApiRouter(ItemRouter):
         """
         try:
             after_date = back_to_the_future(after_date)
-            service = ItemService
+            service = ApiService
             repository = ItemRepository
             result = await service.get_list_api_view(after_date, repository, self.model, session)
             return result
@@ -166,7 +173,39 @@ class ApiRouter(ItemRouter):
         """
         # print(f"📥 GET request for {self.model.__name__} from")
         after_date = back_to_the_future(after_date)
-        service = ItemService
+        service = ApiService
         response = await service.get_list_api_view_page(after_date, page, page_size, self.repo, self.model, session)
         result = self.paginated_response(**response)
+        return result
+
+    async def searchxx(self, search: str = Query(None, description="Поисковый запрос. "
+                                               "В случае пустого запроса будут "
+                                               "выведены все данные "),
+                     page: int = Query(1, ge=1),
+                     page_size: int = Query(paging.get('def', 20),
+                                            ge=paging.get('min', 1),
+                                            le=paging.get('max', 1000)),
+                     session: AsyncSession = Depends(get_db),
+                     ) -> PaginatedResponse:
+        """
+            Поиск по всем текстовым полям основной таблицы
+            с постраничным выводом результата
+            input_valudation_chema None
+            response_model PaginatedResponse[<>ReadRelation>]
+        """
+        result = await self.service.search(search, page, page_size, self.repo, self.model, session)
+        return result
+
+    async def search_allxx(self,
+                         search: str = Query(None, description="Поисковый запрос. "
+                                             "В случае пустого запроса будут "
+                                             "выведены все данные "),
+                         session: AsyncSession = Depends(get_db)):
+        """
+            Поиск по всем текстовым полям основной таблицы БЕЗ пагинации
+            input_valudation_chema <>CreateRelation
+            response_model <>ReadRelatio
+        """
+        result = await self.service.search_all(search, self.repo, self.model, session)
+        # type_checking(result, 'search_all')
         return result

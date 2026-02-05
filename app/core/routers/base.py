@@ -315,8 +315,8 @@ class BaseRouter:
             input_valudation_chema None
             response_model PaginatedResponse[<>ReadRelation>]
         """
+        logger.warning(f'search {self.model.__name__}')
         result = await self.service.search(search, page, page_size, self.repo, self.model, session)
-        # type_checking(result, 'search')
         return result
 
     async def search_all(self,
@@ -369,6 +369,7 @@ class BaseRouter:
             return result
         except Exception as e:
             logger.error(f'{await self.service.search_geans}, {e}')
+            raise HTTPException(status_code=501, detail=f'search_geans, {self.model.__name__}, e')
 
     async def search_geans_all(self,
                                search: str = Query(None, description="Поисковый запрос. "
@@ -380,7 +381,10 @@ class BaseRouter:
             input_valudation_chema <>CreateRelation
             response_model <>ReadRelatio
         """
-        return await self.service.search_all(search, self.repo, self.model, session)
+        try:
+            return await self.service.search_geans_all(search, self.repo, self.model, session)
+        except Exception as e:
+            raise HTTPException(status_code=501, detail=f'search_geans_all, {self.model.__name__}, {e}')
 
 
 class LightRouter:

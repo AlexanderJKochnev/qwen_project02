@@ -258,11 +258,12 @@ class Service(metaclass=ServiceMeta):
         """
             базовый поиск
         """
+        logger.error('this is core service')
         skip = (page - 1) * page_size
         items, total = await repository.search(search, skip, page_size, model, session)
-        for item in items:
-            print(type(item), 'search')
+        logger.error('this is core service after')
         result = make_paginated_response(items, total, page, page_size)
+        logger.error('this is core service after pagination')
         return result
 
     @classmethod
@@ -449,6 +450,17 @@ class Service(metaclass=ServiceMeta):
                     await cls.fill_index(repository, model, new_session)
 
     @classmethod
+    async def get_relevance(cls, search: str, model: ModelType, session: AsyncSession) -> Label:
+        """
+            задаем порог толерантности к опечаткам/ошибкам ЕСЛИ что меняй в .env
+            чем меньше тем терпимее к ошибкам
+        """
+        similarity_threshold = settings.SIMILARITY_THRESHOLD
+        await session.execute(text(f"SET LOCAL pg_trgm.similarity_threshold = {similarity_threshold}"))
+        # 2. Формируем расчет веса (релевантности)
+        return func.similarity(model.search_content, search).label("rank")
+
+    @classmethod
     async def search_geans(cls, search: str, page: int, page_size: int,
                            repository: Type[Repository], model: ModelType,
                            session: AsyncSession
@@ -458,17 +470,31 @@ class Service(metaclass=ServiceMeta):
             skip = (page - 1) * page_size
             # определаяем тип поиска (geans OR b-tree
             if hasattr(model, 'search_content'):
-                #  задаем порог толерантности к опечаткам/ошибкам ЕСЛИ что меняй в .env
-                similarity_threshold = settings.SIMILARITY_THRESHOLD
-                await session.execute(text(f"SET LOCAL pg_trgm.similarity_threshold = {similarity_threshold}"))
                 # 2. Формируем расчет веса (релевантности)
-                relevance: Label = func.similarity(model.search_content, search).label("rank")
+                relevance: Label = await cls.get_relevance(search, model, session)
                 items, total = await repository.search_geans(search, relevance, skip, page_size, model, session)
             else:
                 # model is not indexed by GIN
                 items, total = await repository.search(search, skip, page_size, model, session)
-            result = make_paginated_response(items, total, page, page_size)
+            result: dict = make_paginated_response(items, total, page, page_size)
             return result
         except Exception as e:
             logger.error(f'search_geans.error: {e}')
+            raise HTTPException(status_code=501, detail=f'{e}')
+
+    @classmethod
+    async def search_geans_all(cls, search: str, repository: Type[Repository],
+                               model: ModelType, session: AsyncSession) -> List[dict]:
+        try:
+            # Запрос с загрузкой связей без пагинации
+            # определаяем тип поиска (geans OR b-tree
+            if hasattr(model, 'search_content'):
+                relevance: Label = await cls.get_relevance(search, model, session)
+                items = await repository.search_geans_all(search, relevance, model, session)
+            else:
+                # model is not indexed by GIN
+                items = await repository.search_all(search, model, session)
+            return items
+        except Exception as e:
+            logger.error(f'search_geans_all.error: {e}')
             raise HTTPException(status_code=501, detail=f'{e}')

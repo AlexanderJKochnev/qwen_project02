@@ -8,7 +8,6 @@ from abc import ABCMeta
 from datetime import datetime
 from loguru import logger
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
-from sqlalchemy.dialects import postgresql
 from sqlalchemy import and_, func, select, Select, update, desc, cast, Text, text, literal
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
@@ -311,8 +310,6 @@ class Repository(metaclass=RepositoryMeta):
         """
         stmt = cls.get_query(model).where(model.updated_at > after_date).order_by(model.id.asc())
         result = await cls.nonpagination(stmt, session)
-        # result = await session.execute(stmt)
-        # items = result.scalars().all()
         return result
 
     @classmethod
@@ -592,20 +589,3 @@ class Repository(metaclass=RepositoryMeta):
         matchnig = await cls.get_match(model, relevance, search, session)
         items = await cls.get_greenlet(model, matchnig, session)
         return items
-        """
-        stmt = (select(model.id, relevance)
-                .where(cast(literal(search), Text).op("<%")(model.search_content))
-                .order_by(desc(text("rank"))))
-        result = await session.execute(stmt)
-        matching_drink_ids = [row[0] for row in result.fetchall()]
-        stmt = cls.get_query(model).where(model.id.in_(matching_drink_ids))
-
-
-
-        compiled = stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
-        logger.warning(compiled)
-        result = await session.execute(stmt)
-        items_with_rank = result.all()
-        # Возвращаем объекты моделей (схема подхватит данные из Item)
-        return [row[0] for row in items_with_rank]
-        """

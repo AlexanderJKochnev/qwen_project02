@@ -54,7 +54,7 @@ class ItemService(Service):
         return item
 
     @classmethod
-    def __add_manytomany_fields__(cls, item: dict, lang_prefixes: list) -> dict:
+    def add_manytomany_fields(cls, item: dict, lang_prefixes: list) -> dict:
         """
         добавляет foods и varietals в api и detail views
         items.keys():
@@ -126,71 +126,10 @@ class ItemService(Service):
                         pass  # do nothing
             return dict_lang
         except Exception as e:
-            print(f'__add_manytomany_fields__.{e}')
+            print(f'add_manytomany_fields.{e}')
             print(f"{item.get('foods')=} food")
             print(f"{item.get('varietal_associations')=} varietalds")
             return None
-
-    @classmethod
-    def __api_view__(cls, item: dict) -> dict:
-        """ логика метода get_api_view """
-        # задаем порядок замещения пустых полей
-        language: list = settings.LANGUAGES
-        # список языковых суффиксов
-        lang_prefixes: list = lang_suffix_list(language)
-        # словарь {'en': ['', '_ru': '_fr'],...}
-        # списки языков отсортированы в порядке очередности замены для каждого языка
-        lang_dict = lang_suffix_dict(language)
-        # перенос вложенных словарей на верхний уровень (drink -> root)
-        item = cls._level_up_(lang_prefixes, item)
-        item['changed_at'] = item.pop('updated_at')
-        result: dict = {}
-        # добавление корневых не локализованных полей
-        # country enum - только на англ enum
-        # category - только на англ enum
-        root_fields = settings.api_root_fields
-        # add root fields
-        for key in root_fields:
-            if val := item.get(key):
-                if key == 'category' and val == 'Wine':
-                    val = item.get('subcategory')
-                if isinstance(val, (float, Decimal)):
-                    val = f"{val:.03g}"
-                elif isinstance(val, dict):
-                    val = camel_to_enum(val.get('name'))
-                result[key] = val
-        try:
-            # add localized fields:
-            for key, lang_suff in lang_dict.items():
-                dict_lang = {}
-                # add non-localized subfields to localized fields
-                for k in get_field_name(ItemApiLangNonLocalized):
-                    v = item.get(k)
-                    if isinstance(v, (float, Decimal)):
-                        v = f"{v:.03g}"
-                    dict_lang[k] = v
-                # add localized subfields to localized fields
-                for k in get_field_name(ItemApiLangLocalized):
-                    if k == 'region':   # вложенные сущности
-                        subregion = item.get('subregion')
-                        region = subregion.get('region')
-                        lf = localized_field_with_replacement(region, 'name', lang_suff, k)
-                        lt = localized_field_with_replacement(subregion, 'name', lang_suff)
-                        lf['region'] = f"{lf['region']}. {lt['name']}".replace('None', '').replace('..', '.')
-                    else:
-                        lf = localized_field_with_replacement(item, k, lang_suff)
-                    if lf:
-                        dict_lang.update(lf)
-                # add many-to-many fields
-                many_to_many = cls.__add_manytomany_fields__(item, lang_suff)
-                dict_lang.update(many_to_many)
-                validated_result = ItemApiLang.model_validate(dict_lang)
-                result[key] = validated_result.model_dump(exclude_none=True)
-            validated_result = ItemApi.model_validate(result)
-            return validated_result
-        except Exception as e:
-            print(f'__api_view__.error {e} {item.get("id")=}')
-            raise HTTPException(status_code=500, detail=f'error.__api_view__.{e}')
 
     @classmethod
     def _process_item_localization(cls, item: dict, lang: str, fields_to_localize: list = None):
@@ -312,7 +251,7 @@ class ItemService(Service):
                 if lf := localized_field_with_replacement(root, 'name', lang_prefixes, field):
                     result.update(lf)
         # добавление manytomany fields
-        many_to_many = cls.__add_manytomany_fields__(item, lang_prefixes)
+        many_to_many = cls.add_manytomany_fields(item, lang_prefixes)
         """
         for field in get_field_name(ItemDetailManyToManyLocalized):
             match field:
@@ -581,94 +520,3 @@ class ItemService(Service):
         item_dict.update(drink_dict)
         return item_dict
 
-    @classmethod
-    async def get_item_api_view(cls, id: int, session: AsyncSession):
-        """
-            Получение представления элемента с локализацией by lang
-            {
-              "image_id": "string",
-              "image_path": "string",
-              "id": 0,
-              "vol": 0,
-              "changed_at": "2026-01-16T19:17:33.245Z",
-              "country": "string",
-              "category": "string",
-              "en": {
-                "description": "string",
-                "title": "string",
-                "subtitle": "string",
-                "alc": "13.5%",
-                "pairing": [
-                  "string",
-                  "string"
-                ],
-                "varietal": [
-                  "Cabernet Sauvignon 85%",
-                  "Cabernet Franc 15%"
-                ]
-              },
-            }
-        """
-        repository = ItemRepository
-        model = Item
-        item_instance = await repository.get_detail_view(id, model, session)
-        item: dict = item_instance.to_dict()
-        if not item:
-            return None
-        result = cls.__api_view__(item)
-        # jprint(result)
-        return result
-
-    @classmethod
-    async def get_list_api_view(cls, after_date: datetime, repository, model,
-                                session: AsyncSession,):
-        """ Получение списка элементов для api view """
-        items = await repository.get(after_date, model, session)
-        result = []
-        for item in items:
-            if item_dict := item.to_dict():
-                result.append(cls.__api_view__(item_dict))
-        return result
-
-    @classmethod
-    async def get_list_api_view_page(cls, ater_date: datetime, page: int, page_size: int,
-                                     repository: ItemRepository, model: Item, session: AsyncSession):
-        """Получение списка элементов для ListView с пагинацией и локализацией"""
-        skip = (page - 1) * page_size
-        items, total = await repository.get_all(ater_date, skip, page_size, model, session)
-        result = []
-        for item in items:
-            if item_dict := item.to_dict():
-                result.append(cls.__api_view__(item_dict))
-        return make_paginated_response(result, total, page, page_size)
-
-    @classmethod
-    async def searchxxx(cls, search: str, page: int, page_size: int,
-                     repository: Type[ItemRepository], model: Item,
-                     session: AsyncSession
-                     ) -> dict:
-        result: dict = await super().search(search, page, page_size, repository, model, session)
-        if result and result.get('total', 0) == 0:
-            return result
-        # jprint(result)
-        items = []
-        tmp = result.get('items')
-        for item in tmp:
-            if item_dict := item.to_dict():
-                items.append(cls.__api_view__(item_dict))
-        result['items'] = items
-        return result
-
-    @classmethod
-    async def search_allxxx(
-        cls, search: str, repository: Type[ItemRepository], model: Item,
-        session: AsyncSession
-    ) -> dict:
-        result: list = await super().search_all(search, repository, model, session)
-        if len(result) == 0:
-            return result
-        items = []
-        for item in result:
-            if item_dict := item.to_dict():
-                items.append(cls.__api_view__(item_dict))
-        return items

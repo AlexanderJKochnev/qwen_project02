@@ -44,17 +44,18 @@ async def test_get_routers(authenticated_client_with_db, get_get_routes):
             if '{lang}' in path:
                 path = path.replace('{lang}', f'{lang}')
             # if path.endswith('search') or path.endswith('search_all'):
-            if path.endswith('search') or path.endswith('search_geans'):
+            if path.endswith('search'):
                 path = f'{path}?search={search}&page=1&page_size=20'
+            if path.endswith('search_geans'):
+                path = f'{path}?search_geans={search}&page=1&page_size=20'
             if path.endswith('search_all') or path.endswith('search_geans_all'):
                 path = f'{path}?search={search}'
+            if path.endswith('search_geans_all'):
+                path = f'{path}?search_geans_all={search}'
             if 'search_by_drink' in path:
                 path = f'{path}?search={search}&page=1&page_size=20'
             if 'search_trigram' in path:
                 path = f'{path}?search_str={search}&page=1&page_size=15'
-
-            # if any((path.endswith('{file}'), path.endswith('{file_id}'), path.endswith('{filename}'))):
-            #     continue3
             if path in ['/detail/en/2', '/api/2']:  # '/api/all']
                 path = path.replace('2', '3')
             response = await client.get(path)
@@ -62,10 +63,11 @@ async def test_get_routers(authenticated_client_with_db, get_get_routes):
                 table.add_row(path, good, None)
                 good_nmbr += 1
             else:
+                # assert False, response.text
                 table.add_row(path, fault, f"{response.status_code} {response.text}")
                 fault_nmbr += 1
         except Exception as e:
-            table.add_row(path, fault, f"{e}")
+            table.add_row(path, fault, f"common error {path} {response.status_code=} {e}")
             # print(f'ОШИБКА {e}')
             fault_nmbr += 1
 
