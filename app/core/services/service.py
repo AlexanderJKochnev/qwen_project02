@@ -258,12 +258,9 @@ class Service(metaclass=ServiceMeta):
         """
             базовый поиск
         """
-        logger.error('this is core service')
         skip = (page - 1) * page_size
         items, total = await repository.search(search, skip, page_size, model, session)
-        logger.error('this is core service after')
         result = make_paginated_response(items, total, page, page_size)
-        logger.error('this is core service after pagination')
         return result
 
     @classmethod

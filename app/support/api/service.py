@@ -8,7 +8,7 @@ from sqlalchemy.sql.elements import Label
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.utils.alchemy_utils import ModelType
 from app.core.utils.pydantic_utils import get_field_name, make_paginated_response
-from app.core.utils.common_utils import camel_to_enum, jprint
+from app.core.utils.common_utils import camel_to_enum
 from app.support.item.service import ItemService
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.support.item.repository import ItemRepository
@@ -129,8 +129,6 @@ class ApiService(ItemService):
                                 session: AsyncSession,):
         """ Получение списка элементов для api view """
         items = await repository.get(after_date, model, session)
-        # logger.error(f'{type(items[0])=}')
-        # return items
         result = []
         for item in items:
             item_dict = item.to_dict()
@@ -155,17 +153,13 @@ class ApiService(ItemService):
                      session: AsyncSession
                      ) -> PaginatedResponse[ItemApi]:
         """Поиск с пагинацией и локализацией"""
-        logger.error('this is api service')
         skip = (page - 1) * page_size
         items, total = await repository.search(search, skip, page_size, model, session)
-        logger.error('this is api service after')
         result = []
         for item in items:
             if item_dict := item.to_dict():
                 result.append(cls.__api_view__(item_dict))
-        logger.error('this is api service after api_view')
         result = make_paginated_response(result, total, page, page_size)
-        logger.error('this is api service after pagination')
         return result
 
     @classmethod
@@ -202,19 +196,12 @@ class ApiService(ItemService):
         try:
             relevance: Label = await cls.get_relevance(search, model, session)
             items = await repository.search_geans_all(search, relevance, model, session)
-            logger.error(f'{type(items[0])=}')
             return items
             result = []
-            i = 0
             for item in items:
                 if item_dict := item.to_dict():
                     x = cls.__api_view__(item_dict)
                     result.append(x)
-                    # result.append(cls.__api_view__(item_dict))
-                    if i == 1:
-                        logger.error(f'{x=}')
-                        jprint(x)
-                    i += 1
             return result
         except Exception as e:
             logger.error(f'search_gens_all. {e}')

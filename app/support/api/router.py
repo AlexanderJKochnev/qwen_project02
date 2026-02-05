@@ -32,7 +32,6 @@ class ApiRouter(ItemRouter):
         self.service = ApiService
 
     def setup_routes(self):
-        # self.router.add_api_route("", self.get, methods=["GET"], response_model=self.paginated_response)
         self.router.add_api_route("", self.get, methods=["GET"],
                                   # get -> service.get_list_api_view_page -> repository.get_all
                                   response_model=PaginatedResponse[ItemApi],
@@ -41,18 +40,11 @@ class ApiRouter(ItemRouter):
                                   response_model=List[ItemApi],
                                   # response_model=List[self.read_schema],
                                   openapi_extra={'x-request-schema': None})
-        self.router.add_api_route("/search", self.search, methods=["GET"],
-                                  # search ->
-                                  response_model=PaginatedResponse[ItemApi],
-                                  openapi_extra={'x-request-schema': None})
-        self.router.add_api_route("/search_geans", self.search_geans, methods=["GET"],
+        self.router.add_api_route("/search", self.search_geans, methods=["GET"],
                                   response_model=PaginatedResponse[ItemApi],
                                   openapi_extra={'x-request-schema': None}
                                   )
-        self.router.add_api_route("/search_all", self.search_all, methods=["GET"],
-                                  response_model=List[ItemApi],
-                                  openapi_extra={'x-request-schema': None})
-        self.router.add_api_route("/search_geans_all", self.search_geans_all,
+        self.router.add_api_route("/search_all", self.search_geans_all,
                                   methods=["GET"],
                                   response_model=List[ItemApi],
                                   openapi_extra={'x-request-schema': None}
