@@ -11,5 +11,5 @@ class ImageMixin:
     """Mixin для добавления функционала изображений к моделям"""
     # image file name (оставлено для обратной совместимости - потом удалить
     image_path: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    # image id
+    # image id - ИМЯ НЕ МЕНЯТЬ
     image_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)

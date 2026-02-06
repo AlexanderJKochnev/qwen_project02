@@ -18,6 +18,7 @@ from app.core.utils.converters import lang_suffix_list, lang_suffix_dict
 from app.core.config.project_config import settings
 from app.core.schemas.base import PaginatedResponse
 from app.support.item.schemas import ItemApiLangNonLocalized, ItemApiLangLocalized, ItemApiLang, ItemApi
+from app.mongodb.service import ImageService
 
 
 class ApiService(ItemService):

@@ -13,7 +13,7 @@ from app.mongodb import router as mongorouter
 from app.core.config.database.db_async import get_db
 from app.core.utils.common_utils import back_to_the_future, delta_data
 from app.mongodb.models import FileListResponse
-from app.mongodb.service import ImageService
+from app.mongodb.service import ImageService, ThumbnailImageService
 from app.support.item.router import ItemRouter
 from app.support.item.schemas import ItemApi
 from app.support.api.service import ApiService
@@ -170,34 +170,13 @@ class ApiRouter(ItemRouter):
         result = self.paginated_response(**response)
         return result
 
-    async def searchxx(self, search: str = Query(None, description="Поисковый запрос. "
-                                               "В случае пустого запроса будут "
-                                               "выведены все данные "),
-                     page: int = Query(1, ge=1),
-                     page_size: int = Query(paging.get('def', 20),
-                                            ge=paging.get('min', 1),
-                                            le=paging.get('max', 1000)),
-                     session: AsyncSession = Depends(get_db),
-                     ) -> PaginatedResponse:
+    async def get_image_by_id(self, id: int, session: AsyncSession = Depends(get_db),
+                              image_service: ImageService = Depends()):
         """
-            Поиск по всем текстовым полям основной таблицы
-            с постраничным выводом результата
-            input_valudation_chema None
-            response_model PaginatedResponse[<>ReadRelation>]
+        получение изображения по id напитка
         """
-        result = await self.service.search(search, page, page_size, self.repo, self.model, session)
-        return result
+        pass
 
-    async def search_allxx(self,
-                         search: str = Query(None, description="Поисковый запрос. "
-                                             "В случае пустого запроса будут "
-                                             "выведены все данные "),
-                         session: AsyncSession = Depends(get_db)):
-        """
-            Поиск по всем текстовым полям основной таблицы БЕЗ пагинации
-            input_valudation_chema <>CreateRelation
-            response_model <>ReadRelatio
-        """
-        result = await self.service.search_all(search, self.repo, self.model, session)
-        # type_checking(result, 'search_all')
-        return result
+    async def get_thumbnail_by_id(self, id: int, session: AsyncSession = Depends(get_db),
+                                  image_service: ImageService = Depends()):
+        pass

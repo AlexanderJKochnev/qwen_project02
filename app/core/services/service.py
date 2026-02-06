@@ -13,7 +13,7 @@ from app.core.config.project_config import settings
 from app.core.config.database.db_async import DatabaseManager
 from app.core.models.base_model import Base, get_model_by_name
 from app.core.repositories.sqlalchemy_repository import ModelType, Repository
-# from app.core.utils.alchemy_utils import get_models
+from app.core.utils.alchemy_utils import has_column
 from app.core.utils.common_utils import flatten_dict_with_localized_fields
 from app.core.utils.pydantic_utils import make_paginated_response, prepare_search_string, get_data_for_search, get_repo
 from app.service_registry import register_service, get_search_dependencies
@@ -495,3 +495,21 @@ class Service(metaclass=ServiceMeta):
         except Exception as e:
             logger.error(f'search_geans_all.error: {e}')
             raise HTTPException(status_code=501, detail=f'{e}')
+
+    @classmethod
+    async def get_image_by_id(self, id: int,
+                              repository: Repository,
+                              model: ModelType,
+                              session: AsyncSession, image_service: ImageService
+            ):
+        """
+            получение изображения по id напитка
+        """
+        #  ПОИСК КОЛОНКИ image_id
+        if not has_column(model, 'image_id'):
+            return None
+        # 1. получение image_id by id
+        image_id = repository.get_image_id(id, model, session)
+        if not image_id:
+            return None
+        # 2. получение image by image_id

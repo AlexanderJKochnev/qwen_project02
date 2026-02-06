@@ -10,7 +10,6 @@ from sqlalchemy import and_, Column, ColumnElement, func, inspect, or_, String, 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import DeclarativeBase, DeclarativeMeta, MapperProperty
 from sqlalchemy.orm.attributes import QueryableAttribute
-
 from app.core.models.base_model import Base
 from app.core.utils.common_utils import clean_string, enum_to_camel
 from app.core.config.project_config import get_path_to_root
@@ -794,3 +793,12 @@ def get_id_field(model: TypeVar, supermodel: TypeVar, suffix: str = '_id'):
     :rtype:
     """
     return getattr(model, field_naming(supermodel))
+
+
+def has_column(model: TypeVar, col_name: str) -> bool:
+    """
+        проверяет наличие колонки в sqlalchemy модели
+        по имени колонки
+    """
+    mapper = inspect(model).mapper
+    return col_name in mapper.column_attrs
