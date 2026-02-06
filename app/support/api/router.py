@@ -4,16 +4,17 @@ from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.responses import StreamingResponse
 from datetime import datetime, timezone
-from loguru import logger
+# from loguru import logger
 from typing import List
 from dateutil.relativedelta import relativedelta
-from fastapi import Depends, Query, Path
+from fastapi import Depends, Query
 from app.core.config.project_config import settings, get_paging
 from app.core.schemas.base import PaginatedResponse
-from app.mongodb import router as mongorouter
+# from app.mongodb import router as mongorouter
 from app.core.config.database.db_async import get_db
 from app.core.utils.common_utils import back_to_the_future, delta_data
-from app.mongodb.models import FileListResponse
+from app.core.utils.converters import raw_image_response
+# from app.mongodb.models import FileListResponse
 from app.mongodb.service import ThumbnailImageService
 from app.support.item.router import ItemRouter
 from app.support.item.schemas import ItemApi
@@ -50,12 +51,12 @@ class ApiRouter(ItemRouter):
                                   response_model=List[ItemApi],
                                   openapi_extra={'x-request-schema': None}
                                   )
-        self.router.add_api_route("/mongo", self.get_images_after_date, methods=["GET"],
+        """self.router.add_api_route("/mongo", self.get_images_after_date, methods=["GET"],
                                   response_model=FileListResponse,
                                   openapi_extra={'x-request-schema': None})
         self.router.add_api_route("/mongo_all", self.get_images_list_after_date, methods=["GET"],
                                   response_model=dict,
-                                  openapi_extra={'x-request-schema': None})
+                                  openapi_extra={'x-request-schema': None})"""
         self.router.add_api_route("/{id}", self.get_api, methods=["GET"],
                                   response_model=ItemApi,
                                   openapi_extra={'x-request-schema': None})
@@ -64,8 +65,10 @@ class ApiRouter(ItemRouter):
                                   )
         self.router.add_api_route("/thumbnail/{id}", self.get_thumbnail_by_id, methods=["GET"],
                                   openapi_extra={'x-request-schema': None}, )
-        # self.router.add_api_route("/file/{file}", self.download_file, methods=["GET"],
-        #                           openapi_extra={'x-request-schema': None})
+        self.router.add_api_route("/image_png/{id}", self.get_image_png_by_id, methods=["GET"],
+                                  openapi_extra={'x-request-schema': None}, )
+        self.router.add_api_route("/thumbnail_png/{id}", self.get_thumbnail_png_by_id, methods=["GET"],
+                                  openapi_extra={'x-request-schema': None}, )
 
     async def get_images_after_date(
         self,
@@ -79,10 +82,7 @@ class ApiRouter(ItemRouter):
         по умолчанию за 2 года но сейчас
         """
         try:
-            logger.error(f'1.{after_date=}')
-            logger.error(f'{delta}, {delta_data(settings.DATA_DELTA)}')
             after_date = back_to_the_future(after_date)
-            logger.error(f'2.{after_date=}')
             return await image_service.get_images_after_date(after_date, page, per_page)
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
@@ -104,30 +104,9 @@ class ApiRouter(ItemRouter):
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
 
-    async def download_image(self,
-                             file_id: str = Path(..., description="ID файла"),
-                             image_service: ThumbnailImageService = Depends()):
-        """
-            Получение одного изображения по _id
-        """
-        return await mongorouter.download_image(file_id, image_service)
-
-    async def download_file(self,
-                            filename: str = Path(..., description="Имя файла"),
-                            image_service: ThumbnailImageService = Depends()):
-        """
-            Получение одного изображения по имени файла
-        """
-        image_data = await image_service.get_image_by_filename(filename)
-
-        return StreamingResponse(
-            io.BytesIO(image_data["content"]), media_type=image_data['content_type'],
-            headers={"Content-Disposition": f"attachment; filename={image_data['filename']}"}
-        )
-
     async def get_api(self, id: int, session: AsyncSession = Depends(get_db)) -> ItemApi:
         """
-             ItemApi
+             Получение одной записи по id.
         """
         service = ApiService
         result = await service.get_item_api_view(id, session)
@@ -139,8 +118,7 @@ class ApiRouter(ItemRouter):
     ), session: AsyncSession = Depends(get_db)):
         """
             Получение всех записей одним списком после указанной даты.
-            По умолчанию задана дата - 2 года от сейчас
-            Очень тяжелый запрос
+            Может быть очень тяжелым запросом
         """
         try:
             after_date = back_to_the_future(after_date)
@@ -164,9 +142,6 @@ class ApiRouter(ItemRouter):
                   ) -> PaginatedResponse:
         """
             Получение постранично всех записей после заданной даты.
-            По умолчанию задана дата - 2 года от сейчас
-            input_valudation_chema None
-            response_model PaginatedResponse[<>ReadRelation>]
         """
         # print(f"📥 GET request for {self.model.__name__} from")
         after_date = back_to_the_future(after_date)
@@ -178,7 +153,7 @@ class ApiRouter(ItemRouter):
     async def get_image_by_id(self, id: int, session: AsyncSession = Depends(get_db),
                               image_service: ThumbnailImageService = Depends()):
         """
-        получение изображения по id напитка
+            получение изображения по id напитка. Версия 1  (StreamingResponse)
         """
         image_data = await self.service.get_image_by_id(id, self.repo, self.model, session, image_service)
         headers = {"Content-Disposition": f"inline; filename={image_data['filename']}", "X-Image-Type": "full",
@@ -194,7 +169,7 @@ class ApiRouter(ItemRouter):
     async def get_thumbnail_by_id(self, id: int, session: AsyncSession = Depends(get_db),
                                   image_service: ThumbnailImageService = Depends()):
         """
-            получение thumbnail by id
+            получение thumbnail по id напитка. Версия 1 (StreamingResponse)
         """
         image_data = await self.service.get_thumbnail_by_id(id, self.repo, self.model, session, image_service)
         headers = {"Content-Disposition": f"inline; filename={image_data['filename']}", "X-Image-Type": "thumbnail",
@@ -206,3 +181,19 @@ class ApiRouter(ItemRouter):
         return StreamingResponse(
             io.BytesIO(image_data["content"]), media_type=image_data['content_type'], headers=headers
         )
+
+    async def get_image_png_by_id(self, id: int, session: AsyncSession = Depends(get_db),
+                                  image_service: ThumbnailImageService = Depends()):
+        """
+        получение изображения по id напитка. Версия 2 (Response)
+        """
+        image_data = await self.service.get_image_by_id(id, self.repo, self.model, session, image_service)
+        return raw_image_response(image_data)
+
+    async def get_thumbnail_png_by_id(self, id: int, session: AsyncSession = Depends(get_db),
+                                      image_service: ThumbnailImageService = Depends()):
+        """
+            получение thumbnail by id. Версия 2 (Response)
+        """
+        image_data = await self.service.get_thumbnail_by_id(id, self.repo, self.model, session, image_service)
+        return raw_image_response(image_data)

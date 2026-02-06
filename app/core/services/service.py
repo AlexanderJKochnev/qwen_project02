@@ -516,7 +516,7 @@ class Service(metaclass=ServiceMeta):
         # 2. получение image by image_id
         image = await image_service.get_full_image(image_id)
         return image
-    
+
     @classmethod
     async def get_thumbnail_by_id(
         self, id: int, repository: Repository, model: ModelType, session: AsyncSession,
@@ -527,7 +527,7 @@ class Service(metaclass=ServiceMeta):
         """
         #  ПОИСК КОЛОНКИ image_id
         if not has_column(model, 'image_id'):
-            raise HTTPException(status_code = 422, detail = f'{model.__name__} model has no images at all')
+            raise HTTPException(status_code=422, detail=f'{model.__name__} model has no images at all')
         # 1. получение image_id by id
         image_id = await repository.get_image_id(id, model, session)
         if not image_id:

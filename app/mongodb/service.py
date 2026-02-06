@@ -4,7 +4,7 @@ import io
 from datetime import datetime, timezone
 from typing import List, Tuple, Optional, Dict, Any
 from pathlib import Path
-from loguru import logger
+# from loguru import logger
 # from dateutil.relativedelta import relativedelta
 from fastapi import Depends, HTTPException, status, UploadFile
 from PIL import Image
@@ -24,6 +24,9 @@ delta = delta_data(settings.DATA_DELTA)
 
 
 class ImageService:
+    """
+    CHECK AND DELETE
+    """
     def __init__(self, image_repository: ImageRepository = Depends()):
         self.image_repository = image_repository
 

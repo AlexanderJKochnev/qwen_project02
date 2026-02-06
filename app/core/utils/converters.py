@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Union
 from app.core.utils.morphology import to_nominative
 import ijson
 from pydantic import ValidationError
-
+from fastapi import Response, HTTPException
 from app.core.config.project_config import settings
 from app.core.utils.io_utils import get_filepath_from_dir_by_name
 from app.support.item.schemas import ItemCreateRelation
@@ -158,8 +158,8 @@ def get_varietal(drink_dict: dict, language_key: dict) -> bool:
         return False
 
 
-def get_pairingX(drink_dict: dict, language_key: dict,
-                 delim: str) -> bool:
+def get_pairing(drink_dict: dict, language_key: dict,
+                delim: str) -> bool:
     """ DELETE ?"""
     try:
         pair: dict = {}
@@ -639,3 +639,18 @@ def lang_suffix_dict(source: list) -> Dict[str, tuple]:
          {'en': ('', ('en', 'ru', 'fr'), ),...}
     """
     return {key: (lang_suffix_list(list_move(source, key))) for key in source}
+
+
+def raw_image_response(result: dict, content: str = 'content', mime: str = "image/png"):
+    """
+        получает обернутый файл с изображением и преобразует его в чистый bytes, упаковывает в Response
+        result: dict    данные
+        content: str    имя ключа под которым хранятся данные
+        mime: str       тип файла (если в result неокажется
+    """
+    try:
+        if file_bytes := result.get(content):
+            return Response(content=file_bytes,
+                            media_type=result.get("mime_type", mime))
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=f'error.raw_image_response: {e}')

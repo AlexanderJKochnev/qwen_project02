@@ -25,7 +25,6 @@ class ImageRepository:
             await self.collection.create_index([("created_at", -1)])
             await self.collection.create_index([("filename", "text")])  # Текстовый поиск
             self._indexes_created = True
-            # print("Image repository indexes ensured")
 
     async def create_image(self, filename: str, content: bytes, content_type: str, description: str) -> str:
         """ сохранение изображения в базе данных"""
@@ -125,7 +124,6 @@ class ThumbnailImageRepository:
                 index_name = required_index["name"]
                 if index_name not in existing_indexes:
                     indexes_to_create.append(required_index)
-                    # print(f"Index {index_name} will be created")
                 else:
                     pass
                     # print(f"Index {index_name} already exists")
@@ -228,7 +226,6 @@ class ThumbnailImageRepository:
             if result and "content" in result:
                 # Конвертируем Binary обратно в bytes
                 result["content"] = result["content"]
-
             return result
         except Exception as e:
             print(f"Error getting image by ID {image_id}: {e}")
@@ -241,9 +238,9 @@ class ThumbnailImageRepository:
             result = await self.collection.find_one(
                 {"_id": ObjectId(image_id)}, {"thumbnail": 1, "filename": 1, "thumbnail_type": 1}
             )
-
             if result and "thumbnail" in result:
                 # Конвертируем Binary обратно в bytes
+                # данные находятся в thumbnail
                 result["thumbnail"] = result["thumbnail"]
 
             return result
