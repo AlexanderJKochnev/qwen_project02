@@ -1,7 +1,6 @@
 import pytest
 from app.core.utils.alchemy_utils import JsonConverter
 from app.core.utils.io_utils import get_filepath_from_dir_by_name
-from app.mongodb.service import ImageService
 from app.core.utils.common_utils import jprint
 
 

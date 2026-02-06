@@ -9,7 +9,7 @@ from app.core.config.database.db_async import get_db
 # from app.core.config.project_config import settings
 from app.core.utils.exception_handler import ValidationError_handler
 from app.core.routers.base import BaseRouter
-from app.mongodb.service import ImageService
+from app.mongodb.service import ThumbnailImageService
 from app.support.drink.drink_food_repo import DrinkFoodRepository
 from app.support.drink.drink_food_service import DrinkFoodService
 from app.support.drink.model import Drink
@@ -28,7 +28,7 @@ class DrinkRouter(BaseRouter):
             model=Drink,
             prefix=prefix,
             include_in_schema=True)
-        # self.image_service: ImageService = Depends()
+        # self.image_service: ThumbnailImageService = Depends()
 
     def setup_routes(self):
         super().setup_routes()
@@ -94,7 +94,7 @@ class DrinkRouter(BaseRouter):
                                     data: str = Form(..., description="JSON string of DrinkCreateRelation"),
                                     file: UploadFile = File(...),
                                     session: AsyncSession = Depends(get_db),
-                                    image_service: ImageService = Depends()
+                                    image_service: ThumbnailImageService = Depends()
                                     ) -> DrinkCreateResponseSchema:
         """
         Создание одной записи с зависимостями - если в таблице есть зависимости

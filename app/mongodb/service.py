@@ -4,12 +4,13 @@ import io
 from datetime import datetime, timezone
 from typing import List, Tuple, Optional, Dict, Any
 from pathlib import Path
-
-from dateutil.relativedelta import relativedelta
+from loguru import logger
+# from dateutil.relativedelta import relativedelta
 from fastapi import Depends, HTTPException, status, UploadFile
 from PIL import Image
 
 # from app.mongodb.config import settings
+from app.core.utils.common_utils import delta_data
 from app.core.config.project_config import settings
 from app.core.utils.io_utils import get_filepath_from_dir
 from app.mongodb.models import FileListResponse, FileResponse
@@ -18,7 +19,8 @@ from app.mongodb.repository import ImageRepository, ThumbnailImageRepository
 from app.mongodb.utils import (file_name, image_aligning, make_transparent_white_bg, read_image_generator, )
 
 # delta = (datetime.now(timezone.utc) - relativedelta(years=2)).isoformat()
-delta = datetime.now(timezone.utc) - relativedelta(years=100)
+# delta = datetime.now(timezone.utc) - relativedelta(years=100)
+delta = delta_data(settings.DATA_DELTA)
 
 
 class ImageService:

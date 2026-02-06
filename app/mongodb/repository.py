@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from fastapi import Depends
 from typing import List, Tuple, Optional, Dict, Any
 from motor.motor_asyncio import AsyncIOMotorDatabase
+from loguru import logger
 from app.core.config.database.db_mongo import get_mongodb
 from app.mongodb.models import FileResponse  # , ImageResponse
 
@@ -303,8 +304,8 @@ class ThumbnailImageRepository:
                 images.append(image)
             return images
         except Exception as e:
-            print(f"Error getting images after date: {e}")
-            return []
+            logger.error(f"Error getting images after date: {e}")
+            raise Exception(f'get_images_after_date_nopage: {e}')
 
     async def get_id_by_filename(self, filename: str) -> Optional[ObjectId]:
         await self.ensure_indexes()

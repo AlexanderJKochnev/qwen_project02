@@ -4,6 +4,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.responses import StreamingResponse
 from datetime import datetime, timezone
+from loguru import logger
 from typing import List
 from dateutil.relativedelta import relativedelta
 from fastapi import Depends, Query, Path
@@ -13,7 +14,7 @@ from app.mongodb import router as mongorouter
 from app.core.config.database.db_async import get_db
 from app.core.utils.common_utils import back_to_the_future, delta_data
 from app.mongodb.models import FileListResponse
-from app.mongodb.service import ImageService, ThumbnailImageService
+from app.mongodb.service import ThumbnailImageService
 from app.support.item.router import ItemRouter
 from app.support.item.schemas import ItemApi
 from app.support.api.service import ApiService
@@ -58,26 +59,30 @@ class ApiRouter(ItemRouter):
         self.router.add_api_route("/{id}", self.get_api, methods=["GET"],
                                   response_model=ItemApi,
                                   openapi_extra={'x-request-schema': None})
-        self.router.add_api_route("/mongo/{id}", self.download_image, methods=["GET"],
-                                  openapi_extra={'x-request-schema': None})
-        self.router.add_api_route("/file/{file}", self.download_file, methods=["GET"],
-                                  openapi_extra={'x-request-schema': None})
+        self.router.add_api_route("/image/{id}", self.get_image_by_id, methods=["GET"],
+                                  openapi_extra={'x-request-schema': None},
+                                  )
+        self.router.add_api_route("/thumbnail/{id}", self.get_thumbnail_by_id, methods=["GET"],
+                                  openapi_extra={'x-request-schema': None}, )
+        # self.router.add_api_route("/file/{file}", self.download_file, methods=["GET"],
+        #                           openapi_extra={'x-request-schema': None})
 
-    async def get_images_after_date(self, after_date: datetime = Query(delta, description="Дата в формате ISO "
-                                                                                          "8601 (например, "
-                                                                                          "2024-01-01T00:00:00Z)"),
-                                    page: int = Query(1, ge=1, description="Номер страницы"),
-                                    per_page: int = Query(100, ge=1, le=1000,
-                                                          description="Количество элементов на странице"),
-                                    image_service: ImageService = Depends()
-                                    ):
+    async def get_images_after_date(
+        self,
+        after_date: datetime = Query(delta, description="Дата в формате ISO 8601 (например, 2024-01-01T00:00:00Z)"),
+        page: int = Query(1, ge=1, description="Номер страницы"),
+        per_page: int = Query(10, ge=1, le=1000, description="Количество элементов на страницу"),
+        image_service: ThumbnailImageService = Depends()
+    ):
         """
         Получение постраничного списка id изображений, созданных после заданной даты.
         по умолчанию за 2 года но сейчас
         """
         try:
-            # Проверяем, что дата не в будущем
+            logger.error(f'1.{after_date=}')
+            logger.error(f'{delta}, {delta_data(settings.DATA_DELTA)}')
             after_date = back_to_the_future(after_date)
+            logger.error(f'2.{after_date=}')
             return await image_service.get_images_after_date(after_date, page, per_page)
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
@@ -86,7 +91,7 @@ class ApiRouter(ItemRouter):
                                                                             description="Дата в формате ISO "
                                                                                         "8601 (например, "
                                                                                         "2024-01-01T00:00:00Z)"),
-                                         image_service: ImageService = Depends()) -> dict:
+                                         image_service: ThumbnailImageService = Depends()) -> dict:
         """
         список всех изображений в базе данных без страниц
         :return: возвращает список кортежей (id файла, имя файла)
@@ -101,7 +106,7 @@ class ApiRouter(ItemRouter):
 
     async def download_image(self,
                              file_id: str = Path(..., description="ID файла"),
-                             image_service: ImageService = Depends()):
+                             image_service: ThumbnailImageService = Depends()):
         """
             Получение одного изображения по _id
         """
@@ -109,7 +114,7 @@ class ApiRouter(ItemRouter):
 
     async def download_file(self,
                             filename: str = Path(..., description="Имя файла"),
-                            image_service: ImageService = Depends()):
+                            image_service: ThumbnailImageService = Depends()):
         """
             Получение одного изображения по имени файла
         """
@@ -171,12 +176,33 @@ class ApiRouter(ItemRouter):
         return result
 
     async def get_image_by_id(self, id: int, session: AsyncSession = Depends(get_db),
-                              image_service: ImageService = Depends()):
+                              image_service: ThumbnailImageService = Depends()):
         """
         получение изображения по id напитка
         """
-        pass
+        image_data = await self.service.get_image_by_id(id, self.repo, self.model, session, image_service)
+        headers = {"Content-Disposition": f"inline; filename={image_data['filename']}", "X-Image-Type": "full",
+                   "X-File-Size": str(len(image_data["content"]))}
+        if image_data.get("from_cache"):
+            headers["X-Cache"] = "HIT"
+        else:
+            headers["X-Cache"] = "MISS"
+        return StreamingResponse(
+            io.BytesIO(image_data["content"]), media_type=image_data['content_type'], headers=headers
+        )
 
     async def get_thumbnail_by_id(self, id: int, session: AsyncSession = Depends(get_db),
-                                  image_service: ImageService = Depends()):
-        pass
+                                  image_service: ThumbnailImageService = Depends()):
+        """
+            получение thumbnail by id
+        """
+        image_data = await self.service.get_thumbnail_by_id(id, self.repo, self.model, session, image_service)
+        headers = {"Content-Disposition": f"inline; filename={image_data['filename']}", "X-Image-Type": "thumbnail",
+                   "X-File-Size": str(len(image_data["content"]))}
+        if image_data.get("from_cache"):
+            headers["X-Cache"] = "HIT"
+        else:
+            headers["X-Cache"] = "MISS"
+        return StreamingResponse(
+            io.BytesIO(image_data["content"]), media_type=image_data['content_type'], headers=headers
+        )
