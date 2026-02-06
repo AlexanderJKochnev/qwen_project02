@@ -1,0 +1,4 @@
+Contact: mailto:akochnev66@gmail.com
+Expires: 2026-12-31T23:59:59z
+Policy:
+Preferred-Languages: ru, en

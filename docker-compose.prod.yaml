@@ -33,6 +33,7 @@ services:
       - "443:443"
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/static:/etc/nginx/static:ro
       # - ./nginx/certs:/etc/letsencrypt:ro
       - certs_data:/etc/letsencrypt       # Сертификаты сохраняются тут
       - certbot_www:/var/www/certbot      # Для проверки Let's Encrypt
