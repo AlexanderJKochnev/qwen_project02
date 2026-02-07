@@ -48,6 +48,7 @@ class DrinkRouter(BaseRouter):
 
     async def update_drink_foods(self, id: int,
                                  data: DrinkFoodLinkUpdate,
+                                 background_tasks: BackgroundTasks,
                                  session: AsyncSession = Depends(get_db)):
         """ обновление many to many """
         service = self.get_drink_food_service(session)

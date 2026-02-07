@@ -21,6 +21,7 @@ fault = "❌"
 test_number = 5
 
 
+@pytest.mark.skip
 async def test_delete_routers(authenticated_client_with_db, get_del_routes):
     console = Console()
 

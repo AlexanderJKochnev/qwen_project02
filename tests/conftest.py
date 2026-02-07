@@ -599,7 +599,6 @@ def mock_db_url():
 @pytest.fixture(scope=scope)
 async def mock_engine(mock_db_url):
     """Создает асинхронный движок для тестовой базы данных"""
-    from sqlalchemy.pool import NullPool
     engine = create_async_engine(
         mock_db_url,
         echo=False,
@@ -630,22 +629,21 @@ async def test_db_session(mock_engine):
     """Создает сессию для тестовой базы данных"""
     # Создаем соединение вручную, чтобы контролировать транзакцию
     async with mock_engine.connect() as conn:
-        # Начинаем внешнюю транзакцию
-        trans = await conn.begin()
+        # Начинаем внешнюю транзакцию (в этом случае по окончании тестов в базе данных ничего не сохранится
+        #  trans = await conn.begin()
 
         # Привязываем сессию к конкретному соединению
         async with AsyncSession(
                 bind=conn, expire_on_commit=False, autoflush=False
         ) as session:
-            # ВАЖНО: оборачиваем в еще одну транзакцию,
+            # ВАЖНО: оборачиваем в еще одну транзакцию, (
             # чтобы session.commit() внутри кода не закрывал соединение
             # await session.begin_nested()
 
             yield session
-            if trans.is_active:
-                await trans.rollback()
-            # После выхода из теста откатываем все изменения
-            # await conn.rollback()
+            await session.commit()
+            # if trans.is_active:
+            #     await trans.rollback()
 
 
 @pytest.fixture(scope=scope2)

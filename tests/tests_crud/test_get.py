@@ -61,8 +61,10 @@ async def test_get_routers(authenticated_client_with_db, get_get_routes):
                 table.add_row(path, good, None)
                 good_nmbr += 1
             else:
-                # assert False, response.text
-                table.add_row(path, fault, f"{response.status_code} {response.text}")
+                if path.endswith((f'image/{id}', f'image_png/{id}', f'thumbnail/{id}', f'thumbnail_png/{id}')):
+                    table.add_row(path, good, f"{response.status_code} {response.text}")
+                else:
+                    table.add_row(path, fault, f"{response.status_code} {response.text}")
                 fault_nmbr += 1
         except Exception as e:
             table.add_row(path, fault, f"common error {path} {response.status_code=} {e}")

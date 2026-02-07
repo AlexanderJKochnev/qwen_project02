@@ -204,6 +204,8 @@ class ItemRouter(BaseRouter):
                                 id: int,
                                 data: str = Form(..., description="JSON string of ItemUpdatePreact"),
                                 file: UploadFile = File(None),
+
+                                # background_tasks: BackgroundTasks,
                                 session: AsyncSession = Depends(get_db),
                                 image_service: ThumbnailImageService = Depends()
                                 ) -> ItemRead:  # ItemCreateResponseSchema:
@@ -280,14 +282,14 @@ class ItemRouter(BaseRouter):
             raise HTTPException(status_code=422, detail=e)
 
     async def searchX(self,
-                     search: Optional[str] = None,
-                     country_enum: Optional[str] = None,
-                     category_enum: Optional[str] = None,
-                     page: int = Query(1, ge=1),
-                     page_size: int = Query(paging.get('def', 20),
-                                            ge=paging.get('min', 1),
-                                            le=paging.get('max', 1000)),
-                     session: AsyncSession = Depends(get_db)) -> PaginatedResponse:
+                      search: Optional[str] = None,
+                      country_enum: Optional[str] = None,
+                      category_enum: Optional[str] = None,
+                      page: int = Query(1, ge=1),
+                      page_size: int = Query(paging.get('def', 20),
+                                             ge=paging.get('min', 1),
+                                             le=paging.get('max', 1000)),
+                      session: AsyncSession = Depends(get_db)) -> PaginatedResponse:
         """
             Поиск по всем текстовым полям основной таблицы
             с постраничным выводом результата
@@ -303,8 +305,8 @@ class ItemRouter(BaseRouter):
                                          **kwargs)
 
     async def search_allX(self,
-                         search_str: Optional[str] = None,
-                         session: AsyncSession = Depends(get_db)):
+                          search_str: Optional[str] = None,
+                          session: AsyncSession = Depends(get_db)):
         """
             Поиск по всем текстовым полям основной таблицы
             с постраничным выводом результата

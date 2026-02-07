@@ -192,17 +192,19 @@ class Service(metaclass=ServiceMeta):
         # Выполняем обновление
         result = await repository.patch(existing_item, data_dict, session)
         if result.get('success'):
-            await cls.invalidate_search_index(id, repository, model, session)
-            await session.commit()
-            background_tasks.add_task(cls.run_reindex_worker, model.__name__, DatabaseManager.session_maker)
+            await cls.run_backgound_task(id, background_tasks, False, repository, model, session)
+            # await cls.invalidate_search_index(id, repository, model, session)
+            # await session.commit()
+            # background_tasks.add_task(cls.run_reindex_worker, model.__name__, DatabaseManager.session_maker)
         else:
             await session.rollback()
         # Обрабатываем результат
         if isinstance(result, dict):
             if result.get('success'):
-                await cls.invalidate_search_index(id, repository, model, session)
-                await session.commit()
-                background_tasks.add_task(cls.run_reindex_worker, model.__name__, DatabaseManager.session_maker)
+                await cls.run_backgound_task(id, background_tasks, False, repository, model, session)
+                # await cls.invalidate_search_index(id, repository, model, session)
+                # await session.commit()
+                # background_tasks.add_task(cls.run_reindex_worker, model.__name__, DatabaseManager.session_maker)
                 return {'success': True, 'data': result.get('data'), 'message': f'Запись {id} успешно обновлена'}
             else:
                 error_type = result.get('error_type')
@@ -239,11 +241,13 @@ class Service(metaclass=ServiceMeta):
         if instance is None:
             raise ValueError(f'instanse with {id=} not found')
         try:
-            await repository.delete(instance, session)
-            await session.flush()
-            await cls.invalidate_search_index(id, repository, model, session)
-            await session.commit()
-            background_tasks.add_task(cls.run_reindex_worker, model.__name__, DatabaseManager.session_maker)
+            resp = await repository.delete(instance, session)
+            if resp:
+                await cls.run_backgound_task(id, background_tasks, True, repository, model, session)
+            # await session.flush()
+            # await cls.invalidate_search_index(id, repository, model, session)
+            # await session.commit()
+            # background_tasks.add_task(cls.run_reindex_worker, model.__name__, DatabaseManager.session_maker)
         except IntegrityError:
             await session.rollback()  # Откат при конфликте связей
             raise PermissionError(f"Cannot delete record {id} of {model.__name__}: related data exists")
@@ -446,6 +450,19 @@ class Service(metaclass=ServiceMeta):
                     repository = get_repo(model)
                     logger.info("Авто-подметатель: обнаружены пустые индексы, начинаю сборку...")
                     await cls.fill_index(repository, model, new_session)
+
+    @classmethod
+    async def run_backgound_task(cls, id: int, background_tasks: BackgroundTasks,
+                                 flush: bool,
+                                 repository: Type[Repository], model: ModelType, session: AsyncSession):
+        """
+            запускает background_tasks для переиндексации
+        """
+        if flush:
+            await session.flush()
+        await cls.invalidate_search_index(id, repository, model, session)
+        await session.commit()
+        background_tasks.add_task(cls.run_reindex_worker, model.__name__, DatabaseManager.session_maker)
 
     @classmethod
     async def get_relevance(cls, search: str, model: ModelType, session: AsyncSession) -> Label:

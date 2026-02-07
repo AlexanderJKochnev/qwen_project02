@@ -238,7 +238,7 @@ class Repository(metaclass=RepositoryMeta):
         return field_info
 
     @classmethod
-    async def delete(cls, obj: ModelType, session: AsyncSession) -> Union[bool, str]:
+    async def delete(cls, obj: ModelType, session: AsyncSession) -> bool:
         """
         удаление записи
         :param obj: instance
@@ -247,7 +247,7 @@ class Repository(metaclass=RepositoryMeta):
         await session.delete(obj)
         # await session.expunge(obj)
         # можно отвязать и вернуть удаленный объект и проделать с ним вские штуки - например записать заново с новым ID
-        return True, None  # , obj
+        return True  # , None  # , obj
 
     @classmethod
     async def get_by_id(cls, id: int, model: ModelType, session: AsyncSession) -> Optional[ModelType]:

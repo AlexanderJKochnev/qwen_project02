@@ -6,7 +6,7 @@ from decimal import Decimal
 from typing import Type, Optional, Dict, Any
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import HTTPException
+from fastapi import HTTPException, BackgroundTasks
 # from app.support.item.schemas import ItemCreate, ItemCreateRelation, ItemRead
 from app.core.services.service import Service
 from app.core.config.project_config import settings
@@ -328,7 +328,8 @@ class ItemService(Service):
     @classmethod
     async def update_item_drink(cls, id: int, data: ItemUpdatePreact,
                                 isfile: bool, repository: ItemRepository,
-                                model: Item, session: AsyncSession) -> ItemRead:
+                                model: Item, background_tasks: BackgroundTasks,
+                                session: AsyncSession) -> ItemRead:
         """
             обновление item, включая drink
         """
@@ -341,7 +342,8 @@ class ItemService(Service):
         else:
             drink_id = data_dict.get('drink_id')
             drink = DrinkUpdate(**data_dict)
-            result = await DrinkService.patch(drink_id, drink, DrinkRepository, Drink, session)
+            result = await DrinkService.patch(drink_id, drink, DrinkRepository, Drink, background_tasks,
+                                              session)
             if not result.get('success'):
                 raise HTTPException(status_code=500, detail=f'Не удалось обновить запись Drink {drink_id=}')
         item = ItemUpdate(**data_dict)
