@@ -27,7 +27,7 @@ TUpdateSchema = TypeVar("TUpdateSchema", bound=UpdateSchema)
 TService = TypeVar("TService", bound=Service)
 
 dev = settings.DEV
-delta = delta_data(2)    # (datetime.now(timezone.utc) - relativedelta(years=2)).isoformat()
+delta = delta_data(settings.DATA_DELTA)    # (datetime.now(timezone.utc) - relativedelta(years=2)).isoformat()
 
 
 def type_checking(result, func_name):

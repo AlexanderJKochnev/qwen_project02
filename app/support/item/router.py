@@ -44,7 +44,7 @@ class ItemRouter(BaseRouter):
         )
         # ???????? UPDATE -> POST ?
         self.router.add_api_route(
-            "/update_item_drink/{id}", self.update_item_drink, status_code=status.HTTP_200_OK, methods=["POST"],
+            "/update_item_drink/{id}", self.update_item_drink, status_code=status.HTTP_200_OK, methods=["PATCH"],
             response_model=ItemCreateResponseSchema,
             openapi_extra={'x-request-schema': None}
         )
@@ -202,10 +202,9 @@ class ItemRouter(BaseRouter):
 
     async def update_item_drink(self,
                                 id: int,
+                                background_tasks: BackgroundTasks,
                                 data: str = Form(..., description="JSON string of ItemUpdatePreact"),
                                 file: UploadFile = File(None),
-
-                                # background_tasks: BackgroundTasks,
                                 session: AsyncSession = Depends(get_db),
                                 image_service: ThumbnailImageService = Depends()
                                 ) -> ItemRead:  # ItemCreateResponseSchema:
@@ -229,7 +228,8 @@ class ItemRouter(BaseRouter):
             # item_drink_data.drink_action = drink_action
             # Find the existing item to update
             result = await self.service.update_item_drink(id, item_drink_data, isfile,
-                                                          ItemRepository, Item, session)
+                                                          ItemRepository, Item, background_tasks,
+                                                          session)
             if not result.get('success'):
                 print(result, 'ошибка обновления')
                 raise HTTPException(status_code=500, detail=result.get('message', 'ошибка обновления'))

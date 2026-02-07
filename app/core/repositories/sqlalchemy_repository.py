@@ -87,16 +87,22 @@ class Repository(metaclass=RepositoryMeta):
         return matching_ids
 
     @classmethod
-    async def get_greenlet(cls, model: ModelType, matching: List, session: AsyncSession) -> List[ModelType]:
+    async def get_greenlet(cls, model: ModelType, matching: List, session: AsyncSession,
+                           skip: int = None, limit: int = None) -> List[ModelType]:
         """
             загрузка связей по списку ids,
             возвращает ранжированный список instances
         """
-        stmt = cls.get_query(model).where(model.id.in_(matching))
+        stmt = cls.get_query(model)
+        if matching:
+            stmt = stmt.where(model.id.in_(matching))
+        elif skip:
+            stmt.offset(skip).limit(limit)
         result = await session.execute(stmt)
         items = result.scalars().all()
         items_map = {item.id: item for item in items}
-        items = [items_map[id_] for id_ in matching if id_ in items_map]
+        if matching:
+            items = [items_map[id_] for id_ in matching if id_ in items_map]
         return items
 
     @classmethod
@@ -525,20 +531,26 @@ class Repository(metaclass=RepositoryMeta):
         """
         try:
             total_count = 0
-            # получение ранжированного списка id
-            matching = await cls.get_match(model, relevance, search, session, skip, limit)
-            if not matching:
-                return [], 0
-            if len(matching) <= limit:
-                total_count = len(matching)
-            else:
-                # 2. Считаем общее количество подходящих записей
-                count_stmt = (select(func.count())
-                              .select_from(model)
-                              .where(cast(literal(search), Text).op("<%")(model.search_content)))
+            if search:
+                # получение ранжированного списка id
+                matching = await cls.get_match(model, relevance, search, session, skip, limit)
+                if not matching:
+                    return [], 0
+                if len(matching) <= limit:
+                    total_count = len(matching)
+                else:
+                    # 2. Считаем общее количество подходящих записей
+                    count_stmt = (select(func.count())
+                                  .select_from(model)
+                                  .where(cast(literal(search), Text).op("<%")(model.search_content)))
+                    total_count = await session.scalar(count_stmt) or 0
+                # 3. load all greenlets
+                items = await cls.get_greenlet(model, matching, session)
+            else:   # пустой поисковый запрос
+                count_stmt = select(func.count()).select_from(model)
                 total_count = await session.scalar(count_stmt) or 0
-            # 3. load all greenlets
-            items = await cls.get_greenlet(model, matching, session)
+                matching = []
+            items = await cls.get_greenlet(model, matching, session, skip, limit)
             return items, total_count
         except Exception as e:
             logger.error(f'search_geans.error: {e}')

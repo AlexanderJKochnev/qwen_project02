@@ -194,6 +194,7 @@ class DrinkService(Service):
             if not result:
                 raise HTTPException(status_code=500, detail=f'не удалось обновить foods для drink {id=}')
         result = await repository.patch(obj, filtered_data_dict, session)
+        # await cls.run_backgound_task(id, background_tasks, True, repository, model, session)
         """ will be return:
             {"success": True, "data": obj}
             or

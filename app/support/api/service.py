@@ -196,7 +196,6 @@ class ApiService(ItemService):
         try:
             relevance: Label = await cls.get_relevance(search, model, session)
             items = await repository.search_geans_all(search, relevance, model, session)
-            return items
             result = []
             for item in items:
                 if item_dict := item.to_dict():

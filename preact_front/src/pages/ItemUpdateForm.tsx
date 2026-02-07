@@ -399,7 +399,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
       }
 
       await apiClient(`/items/update_item_drink/${id}`, {
-        method: 'POST',
+        method: 'PATCH',
         body: multipartFormData,
         // Don't set Content-Type header, let browser set it with boundary
       }, false); // Don't include language for multipart form data

@@ -1,19 +1,21 @@
 # app.support.item.service.py
 from deepdiff import DeepDiff
-from datetime import datetime
+from loguru import logger
 from functools import reduce
 from decimal import Decimal
-from typing import Type, Optional, Dict, Any
+from typing import Type, Optional, Dict, Any, List
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql.elements import Label
 from fastapi import HTTPException, BackgroundTasks
-# from app.support.item.schemas import ItemCreate, ItemCreateRelation, ItemRead
+from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.services.service import Service
 from app.core.config.project_config import settings
 from app.core.utils import localized_field_with_replacement
+from app.core.utils.alchemy_utils import ModelType
 from app.core.utils.pydantic_utils import get_field_name
-from app.core.utils.common_utils import flatten_dict_with_localized_fields, camel_to_enum, jprint
-from app.core.utils.converters import read_convert_json, list_move, lang_suffix_list, lang_suffix_dict
+from app.core.utils.common_utils import flatten_dict_with_localized_fields, jprint, delta_data
+from app.core.utils.converters import read_convert_json, list_move, lang_suffix_list
 from app.core.utils.pydantic_utils import make_paginated_response
 # from app.core.schemas.base import PaginatedResponse
 from app.mongodb.service import ThumbnailImageService
@@ -355,6 +357,8 @@ class ItemService(Service):
         if not item_instance:
             raise HTTPException(f'Item records with {item_id=} not found')
         result = await repository.patch(item_instance, item_dict, session)
+        logger.error(f'run background tasks for update_item_drink {id}')
+        await cls.run_backgound_task(id, background_tasks, True, repository, model, session)
         """ will be return:
                     {"success": True, "data": obj}
                     or
@@ -391,8 +395,6 @@ class ItemService(Service):
             Поиск элементов с использованием триграммного индекса в связанной модели Drink с локализацией
             при пустом поисковом запросе выдает ВСЕ ЗАПИСИ !! ЭТО ВАЖНО !! ТАК И ДОЛЖНО БЫТЬ !!!
         """
-        # if search_str is None:
-        #     return None  # make_paginated_response([], 0, page, page_size)
         skip = (page - 1) * page_size
         items, total = await repository.search_by_trigram_index(search_str, model, session, skip, page_size)
         result = []
@@ -522,3 +524,42 @@ class ItemService(Service):
         item_dict.update(drink_dict)
         return item_dict
 
+    @classmethod
+    async def search_geansX(cls, lang: str, search: str, page: int, page_size: int,
+                           repository: Type[Repository], model: Type[Item], session: AsyncSession) -> List[dict]:
+        """ новый поиск вместо триграмного  индекса ONLY FOR ITEMS_PREACT"""
+        try:
+            response = await super().search_geans(search, page, page_size, repository, model, session)
+            items = response.get('items')
+            total = response.get('total')
+            if total > 0:
+                result = []
+                for item in items:
+                    item_dict = item.to_dict()
+                    transformed_item = cls.transform_item_for_list_view(item_dict, lang)
+                    result.append(transformed_item)
+                response = make_paginated_response(result, total, page, page_size)
+            return response
+        except Exception as e:
+            logger.error(f'search_geans. {e}')
+            raise HTTPException(status_code=502, detail=f'search_geans. {e}')
+
+    @classmethod
+    async def search_geans_allX(cls, lang: str, search: str,
+                                repository: Type[Repository], model: ModelType,
+                                session: AsyncSession) -> List[dict]:
+        try:
+            if search is None:
+                items = await repository.get_all(delta_data(10000), model, session)
+            else:
+                relevance: Label = await cls.get_relevance(search, model, session)
+                items = await repository.search_geans_all(search, relevance, model, session)
+            result = []
+            for item in items:
+                item_dict = item.to_dict()
+                transformed_item = cls.transform_item_for_list_view(item_dict, lang)
+                result.append(transformed_item)
+            return result
+        except Exception as e:
+            logger.error(f'search_gens_all. {e}')
+            raise HTTPException(status_code=503, detail=f'search_gens_all. {e}')
