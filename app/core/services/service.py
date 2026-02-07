@@ -201,7 +201,7 @@ class Service(metaclass=ServiceMeta):
         if isinstance(result, dict):
             if result.get('success'):
                 await cls.invalidate_search_index(id, repository, model, session)
-                session.commit()
+                await session.commit()
                 background_tasks.add_task(cls.run_reindex_worker, model.__name__, DatabaseManager.session_maker)
                 return {'success': True, 'data': result.get('data'), 'message': f'Запись {id} успешно обновлена'}
             else:
@@ -531,7 +531,7 @@ class Service(metaclass=ServiceMeta):
         # 1. получение image_id by id
         image_id = await repository.get_image_id(id, model, session)
         if not image_id:
-            raise HTTPException(status_code = 402, detail = f'instance {model.__name__} with {id=} not found')
+            raise HTTPException(status_code=402, detail=f'instance {model.__name__} with {id=} not found')
         # 2. получение thumbnail by image_id
         image = await image_service.get_thumbnail(image_id)
         return image
