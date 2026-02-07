@@ -65,7 +65,7 @@ async def test_get_routers(authenticated_client_with_db, get_get_routes):
                     table.add_row(path, good, f"{response.status_code} {response.text}")
                 else:
                     table.add_row(path, fault, f"{response.status_code} {response.text}")
-                fault_nmbr += 1
+                    fault_nmbr += 1
         except Exception as e:
             table.add_row(path, fault, f"common error {path} {response.status_code=} {e}")
             # print(f'ОШИБКА {e}')
