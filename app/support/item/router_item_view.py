@@ -182,9 +182,9 @@ class ItemViewRouter:
         """ Поиск элементов с использованием триграммного индекса в связанной модели Drink
             вместо старого триграммного используется новые geans
         """
-        result = await self.service.search_by_trigram_index(search_str, lang, ItemRepository,
-                                                            Item, session, page, page_size)
-        # result = await self.service.search_geans(lang, search_str, page, page_size, ItemRepository,
-        #                                          Item, session)
+        # result = await self.service.search_by_trigram_index(search_str, lang, ItemRepository,
+        #                                                     Item, session, page, page_size)
+        result = await self.service.search_geans_items(lang, search_str, page, page_size, ItemRepository,
+                                                       Item, session)
 
         return result

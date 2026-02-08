@@ -525,12 +525,14 @@ class ItemService(Service):
         return item_dict
 
     @classmethod
-    async def search_geansX(cls, lang: str, search: str, page: int, page_size: int,
-                           repository: Type[Repository], model: Type[Item], session: AsyncSession) -> List[dict]:
+    async def search_geans_items(cls, lang: str, search: str, page: int, page_size: int,
+                                 repository: Type[Repository], model: Type[Item], session: AsyncSession) -> List[dict]:
         """ новый поиск вместо триграмного  индекса ONLY FOR ITEMS_PREACT"""
         try:
-            response = await super().search_geans(search, page, page_size, repository, model, session)
-            items = response.get('items')
+            response = await cls.search_geans(search, page, page_size, repository, model, session)
+            items = response.pop('items')
+            logger.error(f'{len(items)} : длина списка')
+            jprint(response)
             total = response.get('total')
             if total > 0:
                 result = []
@@ -545,15 +547,11 @@ class ItemService(Service):
             raise HTTPException(status_code=502, detail=f'search_geans. {e}')
 
     @classmethod
-    async def search_geans_allX(cls, lang: str, search: str,
-                                repository: Type[Repository], model: ModelType,
-                                session: AsyncSession) -> List[dict]:
+    async def search_geans_all_items(cls, lang: str, search: str,
+                                     repository: Type[Repository], model: ModelType,
+                                     session: AsyncSession) -> List[dict]:
         try:
-            if search is None:
-                items = await repository.get_all(delta_data(10000), model, session)
-            else:
-                relevance: Label = await cls.get_relevance(search, model, session)
-                items = await repository.search_geans_all(search, relevance, model, session)
+            items = cls.search_geans_all(search, repository, model, session)
             result = []
             for item in items:
                 item_dict = item.to_dict()

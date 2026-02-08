@@ -483,6 +483,9 @@ class Service(metaclass=ServiceMeta):
         try:
             # Запрос с загрузкой связей и пагинацией
             skip = (page - 1) * page_size
+            if not search:
+                items, total = await repository.get_full_with_pagination(skip, page_size, model, session)
+                return make_paginated_response(items, total, page, page_size)
             # определаяем тип поиска (geans OR b-tree
             if hasattr(model, 'search_content'):
                 # 2. Формируем расчет веса (релевантности)
@@ -503,6 +506,8 @@ class Service(metaclass=ServiceMeta):
         try:
             # Запрос с загрузкой связей без пагинации
             # определаяем тип поиска (geans OR b-tree
+            if not search:
+                return await repository.get_full(model, session)
             if hasattr(model, 'search_content'):
                 relevance: Label = await cls.get_relevance(search, model, session)
                 items = await repository.search_geans_all(search, relevance, model, session)

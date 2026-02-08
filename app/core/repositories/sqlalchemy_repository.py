@@ -61,8 +61,8 @@ class Repository(metaclass=RepositoryMeta):
     @classmethod
     async def nonpagination(cls, stmt: Select, session: AsyncSession):
         """
-            получает запрос, сдвиг и размер страницы, сессию
-            возвращает список instances и кол-во записей
+            получает запрос
+            возвращает список instances
         """
         result = await session.execute(stmt)
         items = result.scalars().all()
@@ -87,17 +87,12 @@ class Repository(metaclass=RepositoryMeta):
         return matching_ids
 
     @classmethod
-    async def get_greenlet(cls, model: ModelType, matching: List, session: AsyncSession,
-                           skip: int = None, limit: int = None) -> List[ModelType]:
+    async def get_greenlet(cls, model: ModelType, matching: List, session: AsyncSession) -> List[ModelType]:
         """
             загрузка связей по списку ids,
             возвращает ранжированный список instances
         """
-        stmt = cls.get_query(model)
-        if matching:
-            stmt = stmt.where(model.id.in_(matching))
-        elif skip:
-            stmt.offset(skip).limit(limit)
+        stmt = cls.get_query(model).where(model.id.in_(matching))
         result = await session.execute(stmt)
         items = result.scalars().all()
         items_map = {item.id: item for item in items}
@@ -545,12 +540,12 @@ class Repository(metaclass=RepositoryMeta):
                                   .where(cast(literal(search), Text).op("<%")(model.search_content)))
                     total_count = await session.scalar(count_stmt) or 0
                 # 3. load all greenlets
-                items = await cls.get_greenlet(model, matching, session)
+                # items = await cls.get_greenlet(model, matching, session, skip, limit)
             else:   # пустой поисковый запрос
                 count_stmt = select(func.count()).select_from(model)
                 total_count = await session.scalar(count_stmt) or 0
                 matching = []
-            items = await cls.get_greenlet(model, matching, session, skip, limit)
+            items = await cls.get_greenlet(model, matching, session)
             return items, total_count
         except Exception as e:
             logger.error(f'search_geans.error: {e}')
@@ -563,8 +558,9 @@ class Repository(metaclass=RepositoryMeta):
         """
             Поисковый запрос
         """
-        matchnig = await cls.get_match(model, relevance, search, session)
-        items = await cls.get_greenlet(model, matchnig, session)
+        matching: list = []
+        matching = await cls.get_match(model, relevance, search, session)
+        items = await cls.get_greenlet(model, matching, session)
         return items
 
     @classmethod
@@ -577,3 +573,24 @@ class Repository(metaclass=RepositoryMeta):
         stmt = select(model.image_id).where(model.id == id)
         result = await session.execute(stmt)
         return result.scalar_one_or_none()
+
+    @classmethod
+    async def get_full_with_pagination(cls, skip: int, limit: int,
+                                       model: ModelType, session: AsyncSession, ) -> tuple:
+        """
+            Запрос полного списка с загрузкой связей и пагинацией
+            return Tuple[List[instances], int]
+        """
+        stmt = (cls.get_query(model).order_by(model.id.asc()))
+        result = await cls.pagination(stmt, skip, limit, session)
+        return result
+
+    @classmethod
+    async def get_full(cls, model: ModelType, session: AsyncSession, ) -> list:
+        """
+            Запрос полного списка с загрузкой связей NO PAGINATION - ОСТОРОЖНО МОЖЕТ БЫТЬ ОЧЕНЬ БОЛЬШИМ
+            return List[instance]
+        """
+        stmt = cls.get_query(model).order_by(model.id.asc())
+        result = await cls.nonpagination(stmt, session)
+        return result
