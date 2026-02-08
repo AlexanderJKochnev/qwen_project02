@@ -130,7 +130,6 @@ async def log_requests(request: Request, call_next):
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        # "http://abc8888.ru",
         "https://abc8888.ru",
         "http://localhost:5173"],
     allow_credentials=True,
