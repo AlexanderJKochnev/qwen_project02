@@ -38,8 +38,8 @@ async def allow_internal_network(request: Request) -> bool:
     # Быстрая проверка по префиксам
     for prefix in internal_prefixes:
         if client_host.startswith(prefix):
-            return True
-
+            # отмена внутренних адресов
+            return False
     return False
 
 
