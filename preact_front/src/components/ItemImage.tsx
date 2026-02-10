@@ -18,7 +18,7 @@ export const ItemImage = ({ image_id, alt = 'Item',
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(!!image_id);
 
-  const sizePx = size === 'small' ? 60 : size === 'medium' ? 120 : 240;
+  const sizePx = size === 'small' ? 60 : size === 'medium' ? 240 : 480;
 
   useEffect(() => {
     if (!image_id) return;
