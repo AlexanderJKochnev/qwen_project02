@@ -6,7 +6,7 @@ from decimal import Decimal
 from typing import Type, Optional, Dict, Any, List
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.sql.elements import Label
+# from sqlalchemy.sql.elements import Label
 from fastapi import HTTPException, BackgroundTasks
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.services.service import Service
@@ -14,7 +14,7 @@ from app.core.config.project_config import settings
 from app.core.utils import localized_field_with_replacement
 from app.core.utils.alchemy_utils import ModelType
 from app.core.utils.pydantic_utils import get_field_name
-from app.core.utils.common_utils import flatten_dict_with_localized_fields, jprint, delta_data
+from app.core.utils.common_utils import flatten_dict_with_localized_fields, jprint  # , delta_data
 from app.core.utils.converters import read_convert_json, list_move, lang_suffix_list
 from app.core.utils.pydantic_utils import make_paginated_response
 # from app.core.schemas.base import PaginatedResponse
@@ -29,7 +29,8 @@ from app.support.item.schemas import (ItemCreate, ItemCreateRelation, ItemRead, 
                                       ItemCreatePreact, ItemUpdatePreact, ItemUpdate,
                                       ItemDetailNonLocalized, ItemDetailLocalized, ItemDetailForeignLocalized,
                                       ItemDetailManyToManyLocalized, ItemListView,
-                                      ItemApiLangNonLocalized, ItemApiLangLocalized, ItemApiLang, ItemApi)
+                                      # ItemApiLangNonLocalized, ItemApiLangLocalized, ItemApiLang, ItemApi
+                                      )
 
 
 class ItemService(Service):
@@ -525,14 +526,16 @@ class ItemService(Service):
         return item_dict
 
     @classmethod
-    async def search_geans_items(cls, lang: str, search: str, page: int, page_size: int,
+    async def search_geans_items(cls, lang: str, search: str, similarity_threshold: float,
+                                 page: int, page_size: int,
                                  repository: Type[Repository], model: Type[Item], session: AsyncSession) -> List[dict]:
-        """ новый поиск вместо триграмного  индекса ONLY FOR ITEMS_PREACT"""
+        """ новый поиск вместо триграмного  индекса ONLY FOR ITEMS_PREACT """
         try:
-            response = await cls.search_geans(search, page, page_size, repository, model, session)
+            # значение similarity_thresholfd настраивается в .env
+            similarity_threshold = similarity_threshold or settings.SIMILARITY_THRESHOLD
+            response = await cls.search_geans(search, similarity_threshold,
+                                              page, page_size, repository, model, session)
             items = response.pop('items')
-            logger.error(f'{len(items)} : длина списка')
-            jprint(response)
             total = response.get('total')
             if total > 0:
                 result = []
@@ -547,11 +550,13 @@ class ItemService(Service):
             raise HTTPException(status_code=502, detail=f'search_geans. {e}')
 
     @classmethod
-    async def search_geans_all_items(cls, lang: str, search: str,
+    async def search_geans_all_items(cls, lang: str, search: str, similarity_threshold: float,
                                      repository: Type[Repository], model: ModelType,
                                      session: AsyncSession) -> List[dict]:
         try:
-            items = cls.search_geans_all(search, repository, model, session)
+            similarity_threshold = similarity_threshold or settings.SIMILARITY_THRESHOLD
+            items: list = await cls.search_geans_all(search, similarity_threshold,
+                                                     repository, model, session)
             result = []
             for item in items:
                 item_dict = item.to_dict()

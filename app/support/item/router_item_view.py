@@ -7,7 +7,7 @@
 from typing import List, Annotated, Callable
 from fastapi import Depends, Path, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from loguru import logger
 from app.auth.dependencies import get_active_user_or_internal
 from app.core.config.database.db_async import get_db
 from app.core.schemas.base import PaginatedResponse
@@ -178,13 +178,16 @@ class ItemViewRouter:
                                                             "(при отсутствии значения - выдает все записи)"),
                                       page: int = Query(1, ge=1, description="Номер страницы"),
                                       page_size: int = Query(15, ge=1, le=100, description="Размер страницы"),
+                                      similarity_thershold: float = Query(0.2,
+                                                                          ge=0., le=1.0,
+                                                                          description=("Толерантность поиска")),
                                       session: AsyncSession = Depends(get_db)):
         """ Поиск элементов с использованием триграммного индекса в связанной модели Drink
             вместо старого триграммного используется новые geans
         """
         # result = await self.service.search_by_trigram_index(search_str, lang, ItemRepository,
         #                                                     Item, session, page, page_size)
-        result = await self.service.search_geans_items(lang, search_str, page, page_size, ItemRepository,
+        result = await self.service.search_geans_items(lang, search_str, similarity_thershold,
+                                                       page, page_size, ItemRepository,
                                                        Item, session)
-
         return result

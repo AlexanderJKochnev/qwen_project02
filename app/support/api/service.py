@@ -1,7 +1,7 @@
 # app.support.api.service.py
 from decimal import Decimal
 from fastapi import HTTPException
-from typing import List, Type
+from typing import List, Type, Dict, Any
 from datetime import datetime
 from loguru import logger
 from sqlalchemy.sql.elements import Label
@@ -175,12 +175,16 @@ class ApiService(ItemService):
         return result
 
     @classmethod
-    async def search_geans(cls, search: str, page: int, page_size: int,
-                           repository: ItemRepository, model: Item, session: AsyncSession) -> List[dict]:
+    async def search_geans(cls, search: str, similarity_threshold: float,
+                           page: int, page_size: int,
+                           repository: ItemRepository, model: Item, session: AsyncSession) -> Dict[str, Any]:
         try:
             skip = (page - 1) * page_size
-            relevance: Label = await cls.get_relevance(search, model, session)
-            items, total = await repository.search_geans(search, relevance, skip, page_size, model, session)
+            if not search:
+                items, total = await repository.get_full_with_pagination(skip, page_size, model, session)
+            else:
+                relevance: Label = await cls.get_relevance(search, model, session, similarity_threshold)
+                items, total = await repository.search_geans(search, relevance, skip, page_size, model, session)
             result = []
             for item in items:
                 if item_dict := item.to_dict():
@@ -191,11 +195,15 @@ class ApiService(ItemService):
             raise HTTPException(status_code=502, detail=f'search_geans. {e}')
 
     @classmethod
-    async def search_geans_all(cls, search: str, repository: Type[Repository],
+    async def search_geans_all(cls, search: str, similarity_threshold: float,
+                               repository: Type[Repository],
                                model: ModelType, session: AsyncSession) -> List[dict]:
         try:
-            relevance: Label = await cls.get_relevance(search, model, session)
-            items = await repository.search_geans_all(search, relevance, model, session)
+            if not search:
+                items = await repository.get_full(model, session)
+            else:
+                relevance: Label = await cls.get_relevance(search, model, session, similarity_threshold)
+                items = await repository.search_geans_all(search, relevance, model, session)
             result = []
             for item in items:
                 if item_dict := item.to_dict():

@@ -3,7 +3,7 @@ import asyncio
 from abc import ABCMeta
 from datetime import datetime
 from fastapi import HTTPException, BackgroundTasks
-from typing import List, Optional, Tuple, Type
+from typing import List, Optional, Tuple, Type, Dict, Any
 from loguru import logger
 from sqlalchemy import select, update, text, func
 from sqlalchemy.exc import IntegrityError
@@ -146,7 +146,7 @@ class Service(metaclass=ServiceMeta):
     @classmethod
     async def get_all(cls, ater_date: datetime,
                       page: int, page_size: int, repository: Type[Repository], model: ModelType,
-                      session: AsyncSession) -> List[dict]:
+                      session: AsyncSession) -> Dict[str, Any]:
         # Запрос с загрузкой связей и пагинацией
         skip = (page - 1) * page_size
         items, total = await repository.get_all(ater_date, skip, page_size, model, session)
@@ -259,7 +259,7 @@ class Service(metaclass=ServiceMeta):
     async def search(cls, search: str, page: int, page_size: int,
                      repository: Type[Repository], model: ModelType,
                      session: AsyncSession
-                     ) -> dict:
+                     ) -> Dict[str, Any]:
         """
             базовый поиск
         """
@@ -282,7 +282,8 @@ class Service(metaclass=ServiceMeta):
 
     @classmethod
     async def get_list_view_page(cls, page: int, page_size: int,
-                                 repository: Type[Repository], model: ModelType, session: AsyncSession, ) -> List[dict]:
+                                 repository: Type[Repository], model: ModelType, session: AsyncSession,
+                                 ) -> Dict[str, Any]:
         # Запрос с загрузкой связей и пагинацией
         skip = (page - 1) * page_size
         items, total = await repository.get_list_view_page(skip, page_size, model, session)
@@ -371,7 +372,7 @@ class Service(metaclass=ServiceMeta):
 
                 for model in searchable_models:
                     # 2. Ищем записи с пустым индексом для конкретной модели
-                    stmt = (select(model.id).where(model.search_content == None).limit(batch_size))
+                    stmt = (select(model.id).where(model.search_content.is_(None)).limit(batch_size))
                     result = await session.execute(stmt)
                     ids_to_update = result.scalars().all()
 
@@ -465,21 +466,25 @@ class Service(metaclass=ServiceMeta):
         background_tasks.add_task(cls.run_reindex_worker, model.__name__, DatabaseManager.session_maker)
 
     @classmethod
-    async def get_relevance(cls, search: str, model: ModelType, session: AsyncSession) -> Label:
+    async def get_relevance(cls, search: str, model: ModelType,
+                            session: AsyncSession, similarity_threshold: float = None
+                            ) -> Label:
         """
             задаем порог толерантности к опечаткам/ошибкам ЕСЛИ что меняй в .env
             чем меньше тем терпимее к ошибкам
         """
-        similarity_threshold = settings.SIMILARITY_THRESHOLD
+        if not similarity_threshold:
+            similarity_threshold = settings.SIMILARITY_THRESHOLD
         await session.execute(text(f"SET LOCAL pg_trgm.similarity_threshold = {similarity_threshold}"))
         # 2. Формируем расчет веса (релевантности)
         return func.similarity(model.search_content, search).label("rank")
 
     @classmethod
-    async def search_geans(cls, search: str, page: int, page_size: int,
+    async def search_geans(cls, search: str, similarity_threshold: float,
+                           page: int, page_size: int,
                            repository: Type[Repository], model: ModelType,
-                           session: AsyncSession
-                           ) -> List[dict]:
+                           session: AsyncSession,
+                           ) -> Dict[str, Any]:
         try:
             # Запрос с загрузкой связей и пагинацией
             skip = (page - 1) * page_size
@@ -489,7 +494,7 @@ class Service(metaclass=ServiceMeta):
             # определаяем тип поиска (geans OR b-tree
             if hasattr(model, 'search_content'):
                 # 2. Формируем расчет веса (релевантности)
-                relevance: Label = await cls.get_relevance(search, model, session)
+                relevance: Label = await cls.get_relevance(search, model, session, similarity_threshold)
                 items, total = await repository.search_geans(search, relevance, skip, page_size, model, session)
             else:
                 # model is not indexed by GIN
@@ -501,7 +506,8 @@ class Service(metaclass=ServiceMeta):
             raise HTTPException(status_code=501, detail=f'{e}')
 
     @classmethod
-    async def search_geans_all(cls, search: str, repository: Type[Repository],
+    async def search_geans_all(cls, search: str, similarity_threshold: float,
+                               repository: Type[Repository],
                                model: ModelType, session: AsyncSession) -> List[dict]:
         try:
             # Запрос с загрузкой связей без пагинации
@@ -509,7 +515,7 @@ class Service(metaclass=ServiceMeta):
             if not search:
                 return await repository.get_full(model, session)
             if hasattr(model, 'search_content'):
-                relevance: Label = await cls.get_relevance(search, model, session)
+                relevance: Label = await cls.get_relevance(search, model, session, similarity_threshold)
                 items = await repository.search_geans_all(search, relevance, model, session)
             else:
                 # model is not indexed by GIN

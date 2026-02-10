@@ -352,6 +352,7 @@ class BaseRouter:
                                                      "Поисковый запрос. "
                                                      "В случае пустого запроса будут "
                                                      "выведены все данные "),
+                           similarity_threshold: float = Query(None, ge=0, le=1.0),
                            page: int = Query(1, ge=1),
                            page_size: int = Query(paging.get('def', 20),
                                                   ge=paging.get('min', 1),
@@ -365,16 +366,19 @@ class BaseRouter:
             response_model PaginatedResponse[<>ReadRelation>]
         """
         try:
-            result = await self.service.search_geans(search, page, page_size, self.repo, self.model, session)
+            result = await self.service.search_geans(search, similarity_threshold,
+                                                     page, page_size, self.repo,
+                                                     self.model, session)
             return result
         except Exception as e:
-            logger.error(f'{await self.service.search_geans}, {e}')
-            raise HTTPException(status_code=501, detail=f'search_geans, {self.model.__name__}, e')
+            logger.error(f'search_geans, {e}')
+            raise HTTPException(status_code=501, detail=f'search_geans, {self.model.__name__}, {e}')
 
     async def search_geans_all(self,
                                search: str = Query(None, description="Поисковый запрос. "
                                                    "В случае пустого запроса будут "
                                                    "выведены все данные "),
+                               similarity_threshold: float = Query(None, ge = 0, le = 1.0),
                                session: AsyncSession = Depends(get_db)) -> List[TReadSchema]:
         """
             Поиск по всем текстовым полям основной таблицы БЕЗ пагинации
@@ -382,7 +386,8 @@ class BaseRouter:
             response_model <>ReadRelatio
         """
         try:
-            return await self.service.search_geans_all(search, self.repo, self.model, session)
+            return await self.service.search_geans_all(search, similarity_threshold,
+                                                       self.repo, self.model, session)
         except Exception as e:
             raise HTTPException(status_code=501, detail=f'search_geans_all, {self.model.__name__}, {e}')
 
