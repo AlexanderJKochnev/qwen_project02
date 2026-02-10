@@ -232,58 +232,48 @@ export const ItemDetailView = () => {
       </div>
 
       {/* Enlarged Image Popup */}
-      {showEnlargedImage && (
-        <div
-          className="modal modal-open"
-          onClick={handleCloseEnlargedImage}
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            zIndex: 1000
-          }}
-        >
+        {showEnlargedImage && (
           <div
-            className="modal-box p-0"
+            className="modal modal-open"
+            onClick={handleCloseEnlargedImage}
             style={{
-              margin: 0,
-              maxWidth: 'none',
-              width: '85vw',
-              height: '85vh',
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100vw',
+              height: '100vh',
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
-              backgroundColor: 'transparent',
-              border: 'thin solid #ccc'
+              backgroundColor: 'rgba(0, 0, 0, 0.85)',
+              zIndex: 1000,
+              cursor: 'zoom-out'
             }}
-            onClick={(e) => e.stopPropagation()}
           >
-            <img
-              src={enlargedImageUrl}
-              alt="Enlarged view"
+            <div
+              onClick={(e) => e.stopPropagation()} // Чтобы клик по самому фото не закрывал окно
               style={{
-                maxWidth: '85vw',
-                maxHeight: '85vh',
-                objectFit: 'contain'
+                maxWidth: '90vw',
+                maxHeight: '90vh',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                backgroundColor: '#fff',
+                padding: '10px',
+                borderRadius: '8px'
               }}
-              onLoad={() => {
-                // Image loaded successfully
-              }}
-              onError={(e) => {
-                console.error('Error loading enlarged image:', e);
-              }}
-            />
-            <button
-              className="btn btn-circle btn-sm absolute top-1 right-1 bg-white text-black"
-              onClick={handleCloseEnlargedImage}
-              aria-label="Close"
             >
-              ✕
-            </button>
+              {/* Используем ваш компонент, он сам подставит /mongodb/images/ и добавит Token */}
+              <ItemImage
+                image_id={data.image_id}
+                size="large"
+                isFullMode={true} // Картинка станет большой
+                alt={data.title}
+              />
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
 
       {/* Confirmation Dialog */}
       {showConfirmDialog && (

@@ -199,7 +199,7 @@ export const ItemListView = () => {
           {data?.items.map(item => (
             <div key={item.id} className="card">
               <div className="h-48 flex items-center justify-center bg-gray-100">
-                <ItemImage image_id={item.image_id} size="large" />
+                <ItemImage image_id={item.image_id} size="medium" />
               </div>
               <div className="p-4">
                 <h2 className="text-lg font-semibold mb-2">

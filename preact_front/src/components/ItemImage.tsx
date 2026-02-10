@@ -8,9 +8,13 @@ interface ItemImageProps {
   image_id?: string | null;
   alt?: string;
   size?: 'small' | 'medium' | 'large';
+  isFullMode?: boolean; // Добавляем новый пропс
 }
 
-export const ItemImage = ({ image_id, alt = 'Item', size = 'medium' }: ItemImageProps) => {
+export const ItemImage = ({ image_id, alt = 'Item',
+                            size = 'medium',
+                            isFullMode = false // По умолчанию false
+                            }: ItemImageProps) => {
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(!!image_id);
 
@@ -24,7 +28,12 @@ export const ItemImage = ({ image_id, alt = 'Item', size = 'medium' }: ItemImage
 
     const loadImage = async () => {
       const token = getAuthToken();
-      const imageUrl = `${IMAGE_BASE_URL}/mongodb/thumbnails/${image_id}`;
+
+      // ЛОГИКА ВЫБОРА ЭНДПОИНТА:
+      // Если размер large -> запрашиваем полноразмерное (images)
+      // В остальных случаях -> миниатюру (thumbnails)
+      const endpoint = size === 'large' ? 'images' : 'thumbnails';
+      const imageUrl = `${IMAGE_BASE_URL}/mongodb/${endpoint}/${image_id}`;
 
       try {
         const response = await fetch(imageUrl, {
@@ -34,7 +43,7 @@ export const ItemImage = ({ image_id, alt = 'Item', size = 'medium' }: ItemImage
           }
         });
 
-        if (!response.ok) throw new Error('401 or other error');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
         const blob = await response.blob();
         if (isMounted) {
@@ -43,8 +52,11 @@ export const ItemImage = ({ image_id, alt = 'Item', size = 'medium' }: ItemImage
           setLoading(false);
         }
       } catch (err) {
-        console.error('Failed to load secure image:', err);
-        if (isMounted) setLoading(false);
+        console.error(`Failed to load ${endpoint}:`, err);
+        if (isMounted) {
+          setLoading(false);
+          setBlobUrl(null); // Сбрасываем, чтобы показать заглушку "Нет фото"
+        }
       }
     };
 
@@ -54,35 +66,31 @@ export const ItemImage = ({ image_id, alt = 'Item', size = 'medium' }: ItemImage
       isMounted = false;
       if (currentUrl) URL.revokeObjectURL(currentUrl);
     };
-  }, [image_id]);
+  }, [image_id, size]); // Добавили size в зависимости, если он вдруг изменится на лету
 
-  // Заглушка, если нет ID или произошла ошибка загрузки
-  if (!image_id || (!loading && !blobUrl)) {
-    return (
-      <div style={{
-        width: `${sizePx}px`, height: `${sizePx}px`,
-        backgroundColor: '#f0f0f0', display: 'flex',
-        alignItems: 'center', justifyContent: 'center',
-        color: '#999', fontSize: '12px',
-        borderRadius: '4px', border: '1px solid #ddd',
-      }}>
-        {loading ? 'Загрузка...' : 'Нет фото'}
-      </div>
-    );
-  }
+  // Вычисляем стили в зависимости от режима
+  const imageStyle = isFullMode
+    ? {
+        width: 'auto',
+        height: 'auto',
+        maxWidth: '90vw',  // 90% ширины окна
+        maxHeight: '85vh', // 85% высоты окна
+        objectFit: 'contain' as const,
+      }
+    : {
+        width: `${sizePx}px`,
+        height: size === 'large' ? 'auto' : `${sizePx}px`,
+        maxHeight: size === 'large' ? '600px' : `${sizePx}px`,
+        objectFit: 'contain' as const,
+        borderRadius: '4px',
+        border: '1px solid #ddd',
+      };
 
   return (
     <img
       src={blobUrl || ''}
       alt={alt}
-      style={{
-        width: `${sizePx}px`,
-        height: `${sizePx}px`,
-        objectFit: 'contain',
-        borderRadius: '4px',
-        border: '1px solid #ddd',
-        display: blobUrl ? 'block' : 'none'
-      }}
+      style={imageStyle}
     />
   );
 };
