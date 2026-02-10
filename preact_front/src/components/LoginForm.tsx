@@ -29,7 +29,11 @@ export const LoginForm = ({ onLogin }: { onLogin: () => void }) => {
       }
 
       const data = await response.json();
-      setAuthToken(data.access_token);
+      await setAuthToken(data.access_token);
+
+      setTimeout(() => {
+        onLogin();
+      }, 10);
 
       window.dispatchEvent(new Event('auth-change'));
 

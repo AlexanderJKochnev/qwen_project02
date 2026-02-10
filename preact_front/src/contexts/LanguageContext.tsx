@@ -1,7 +1,11 @@
+// -------
+// import { getAuthToken } from '../lib/apiClient'; // Импортируйте это
+// -------
 import { createContext, h, VNode } from 'preact';
 import { useContext, useState } from 'preact/hooks';
 import { useEffect } from 'preact/hooks';
 import { API_BASE_URL } from '../config/api';
+
 
 // Define the supported languages as a dynamic type
 export type Language = string;
@@ -323,22 +327,19 @@ export const LanguageProvider = ({ children }: { children: VNode }) => {
   const [language, setLanguage] = useState<Language>(initialLanguage);
   const [availableLanguages, setAvailableLanguages] = useState<Language[]>(['en', 'ru']); // Initialize with defaults
 
-  // Добавляем состояние токена
-  const [token, setToken] = useState(localStorage.getItem('auth_token'));
-
   useEffect(() => {
     // Fetch available languages from the backend
     const fetchAvailableLanguages = async () => {
 
-      const currentToken = localStorage.getItem('auth_token');
-
-      // СТОП: Если токена нет, не делаем запрос вообще
-      if (!currentToken) {
-        console.log('Skipping languages fetch: No token');
+      const token = localStorage.getItem('auth_token');
+      // Если токена нет, не шлем запрос, чтобы не получить 401
+      if (!token || token === 'undefined' || token === 'null') {
+        console.warn('Attempted to fetch languages without token');
         return;
       }
 
       try {
+        console.log('Token in Storage:', localStorage.getItem('auth_token'))
         const response = await fetch(`${API_BASE_URL}/get/languages`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`,
@@ -384,13 +385,7 @@ export const LanguageProvider = ({ children }: { children: VNode }) => {
     };
 
     fetchAvailableLanguages();
-    // Слушаем событие входа
-    const handleAuthUpdate = () => setToken(localStorage.getItem('auth_token'));
-    window.addEventListener('auth-change', handleAuthUpdate);
-    return () => window.removeEventListener('auth-change', handleAuthUpdate);
-  }, [token]); // Хук перезапустится при изменении токена
-
-  // }, []);
+  }, []);
 
   // Save language preference to localStorage whenever it changes
   useEffect(() => {

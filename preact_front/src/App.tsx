@@ -1,4 +1,5 @@
 // src/App.tsx
+import { LanguageProvider } from './contexts/LanguageContext'; // Импортируйте провайдер
 import { h, useState, useEffect } from 'preact/hooks';
 import { Router, Route, useLocation } from 'preact-iso';
 import { getAuthToken } from './lib/apiClient';
@@ -94,40 +95,41 @@ export function App() {
   }
 
   return (
-    <div className="app-container">
-      <Header
-        sidebarVisible={sidebarVisible}
-        setSidebarVisible={setSidebarVisible}
-      />
+    <LanguageProvider>
+        <div className="app-container">
+          <Header
+            sidebarVisible={sidebarVisible}
+            setSidebarVisible={setSidebarVisible}
+          />
 
-      <div className="main-body">
-        <div className={`navbar ${sidebarVisible ? '' : 'hidden'}`}>
-          <Sidebar onClose={() => setSidebarVisible(false)} />
-        </div>
+          <div className="main-body">
+            <div className={`navbar ${sidebarVisible ? '' : 'hidden'}`}>
+              <Sidebar onClose={() => setSidebarVisible(false)} />
+            </div>
 
-        <div className="content-area">
-          <div className="w-full">
-            <Router>
-              <Route path="/" component={isAuthenticated ? HomeRedirect : Home} />
+            <div className="content-area">
+              <div className="w-full">
+                <Router>
+                  <Route path="/" component={isAuthenticated ? HomeRedirect : Home} />
 
-              <Route path="/items/create" component={ItemCreateFormWrapper} />
-              <Route path="/items/edit/:id" component={ItemUpdateFormWrapper} />
-              <Route path="/items/:id" component={ItemDetailView} />
-              <Route path="/items" component={ItemListView} />
-              <Route path="/handbooks" component={HandbookList} />
+                  <Route path="/items/create" component={ItemCreateFormWrapper} />
+                  <Route path="/items/edit/:id" component={ItemUpdateFormWrapper} />
+                  <Route path="/items/:id" component={ItemDetailView} />
+                  <Route path="/items" component={ItemListView} />
+                  <Route path="/handbooks" component={HandbookList} />
 
-              <Route path="/handbooks/:type/create" component={HandbookCreateForm} />
-              <Route path="/handbooks/:type/edit/:id" component={HandbookUpdateForm} />
-              <Route path="/handbooks/:type/:id" component={HandbookDetail} />
-              <Route path="/handbooks/:type" component={HandbookTypeList} />
+                  <Route path="/handbooks/:type/create" component={HandbookCreateForm} />
+                  <Route path="/handbooks/:type/edit/:id" component={HandbookUpdateForm} />
+                  <Route path="/handbooks/:type/:id" component={HandbookDetail} />
+                  <Route path="/handbooks/:type" component={HandbookTypeList} />
 
-              <Route default component={NotFound} />
-            </Router>
+                  <Route default component={NotFound} />
+                </Router>
+              </div>
+            </div>
           </div>
+          <Footer />
         </div>
-      </div>
-
-      <Footer />
-    </div>
+    </LanguageProvider>
   );
 }

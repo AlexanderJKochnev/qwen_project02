@@ -6,18 +6,22 @@ interface ApiOptions {
   body?: any;
 }
 
-let authToken: string | null = null;
+// let authToken: string | null = null;
+// Инициализируем переменную сразу из localStorage при загрузке скрипта
+let authToken: string | null = localStorage.getItem('auth_token');
 
 export const setAuthToken = (token: string) => {
   authToken = token;
+  localStorage.setItem('auth_token', token); // Обязательно сохраняем!
 };
 
 export const getAuthToken = () => {
-  return authToken;
+  return authToken || localStorage.getItem('auth_token');
 };
 
 export const removeAuthToken = () => {
   authToken = null;
+  localStorage.removeItem('auth_token'); // Обязательно удаляем!
 };
 
 export const getCurrentLanguage = () => {
