@@ -127,8 +127,10 @@ services:
         condition: service_healthy
       mongo:
         condition: service_healthy
-    ports:
-      - ${API_PORT}:${API_PORT}
+    # ports:
+    #   - ${API_PORT}:${API_PORT}
+    expose:
+      - ${API_PORT}
     environment:
       POSTGRES_HOST: ${POSTGRES_HOST}
       WEB_PORT: ${API_PORT}
