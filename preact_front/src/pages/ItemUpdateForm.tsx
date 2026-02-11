@@ -3,6 +3,7 @@ import { h, useState, useEffect } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
 import { apiClient } from '../lib/apiClient';
 import { useLanguage } from '../contexts/LanguageContext';
+import { ItemImage } from '../components/ItemImage';
 import { IMAGE_BASE_URL } from '../config/api';
 
 interface ItemUpdateFormProps {
@@ -789,11 +790,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                       <span className="label-text">Current Image</span>
                     </label>
                     <span className="half-life">
-                    <img
-                      src={`${IMAGE_BASE_URL}/mongodb/thumbnails/${formData.image_id}`}
-                      alt="Current item" 
-                      className="max-w-xs max-h-48 object-contain border rounded"
-                    />
+                    <ItemImage image_id={formData.image_id} size="medium" />
                     </span>
                   </div>
                 )}
