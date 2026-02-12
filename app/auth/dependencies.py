@@ -1,19 +1,23 @@
 # app/auth/dependencies.py
-from fastapi import Depends, HTTPException, status, Request
+from fastapi import Depends, HTTPException, status, Request, Security
 from typing import Optional
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer, APIKeyHeader
 from jose import JWTError, jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config.database.db_async import get_db
+from app.core.config.project_config import settings
 from app.auth.repository import UserRepository
 # from app.auth.utils import verify_token
 from app.auth.models import User
-from app.core.config.project_config import settings
+
 
 # oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token",
                                      auto_error=False       # это для неавторизованных внутрисетевых запросов
                                      )
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+TECH_API_KEY = settings.API_KEY
 
 credentials_exception = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
@@ -117,3 +121,20 @@ async def get_current_active_superuser(
         raise HTTPException(status_code=400,
                             detail="The user doesn't have enough privileges")
     return current_user
+
+
+async def get_current_api_user(
+    x_api_key: Optional[str] = Security(api_key_header)
+):
+    # 1. Проверка API Key (Технический аккаунт)
+    print(f'{x_api_key=}')
+    print(f'{TECH_API_KEY=}')
+    if x_api_key == TECH_API_KEY:
+        return {"user": "tech_account", "scope": "all"}
+
+    # 3. Если ничего не подошло
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Not authenticated aaa",
+        headers={"WWW-Authenticate": "Bearer"},
+    )

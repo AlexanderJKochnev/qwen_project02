@@ -105,6 +105,7 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_ROTATE_MIN_LIFETIME: int = 720000
     SECRET_KEY: str = "gV64m9aIzFG4qpgVphvQbPQrtAO0nM-7YwwOvu0XPt5KJOjAy4AfgLkqJXYEt"
     ALGORITHM: str = "HS256"
+    API_KEY: str = "verystrictkeyнадвухязыкахъъьээ"
     # В продакшене SECRET_KEY генерируется через openssl rand -hex 32
 
     # ==== PAGING SETTINGS ====

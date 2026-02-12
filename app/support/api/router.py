@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from typing import List
 from dateutil.relativedelta import relativedelta
 from fastapi import Depends, Query
+from app.auth.dependencies import get_current_api_user
 from app.core.config.project_config import settings, get_paging
 from app.core.schemas.base import PaginatedResponse
 # from app.mongodb import router as mongorouter
@@ -27,7 +28,7 @@ paging = get_paging
 
 class ApiRouter(ItemRouter):
     def __init__(self):
-        super().__init__(prefix='/api')
+        super().__init__(prefix='/api', auth_dependency=get_current_api_user)
         self.paginated_response = PaginatedResponse[ItemApi]
         self.nonpaginated_response = List[self.read_schema]
         self.repo = ItemRepository

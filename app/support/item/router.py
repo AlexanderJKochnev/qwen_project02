@@ -4,7 +4,7 @@ import json
 from fastapi import Depends, File, Form, HTTPException, Path, Query, status, UploadFile, BackgroundTasks
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from app.auth.dependencies import get_active_user_or_internal
 from app.core.config.database.db_async import get_db
 from app.core.config.project_config import get_paging
 from app.core.routers.base import BaseRouter
@@ -18,11 +18,15 @@ paging = get_paging
 
 
 class ItemRouter(BaseRouter):
-    def __init__(self, prefix: str = '/items', **kwargs):
+    def __init__(self, prefix: str = '/items',
+                 auth_dependency=get_active_user_or_internal,
+                 **kwargs):
         super().__init__(
             model=Item,
             prefix=prefix,
-            repo=ItemRepository
+            repo=ItemRepository,
+            auth_dependency=auth_dependency,
+            **kwargs
         )
         self.image_service: ThumbnailImageService = Depends()
 

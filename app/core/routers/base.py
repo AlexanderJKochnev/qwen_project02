@@ -1,6 +1,6 @@
 # app/core/routers/base.py
 
-from typing import Any, List, Type, TypeVar
+from typing import Any, List, Type, TypeVar, Callable
 # from dateutil.relativedelta import relativedelta
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Request, BackgroundTasks
@@ -49,11 +49,13 @@ class BaseRouter:
         self,
         model: Type[Any],
         prefix: str,
+        auth_dependency: Callable = get_active_user_or_internal,
         **kwargs
     ):
         self.model = model
         self.repo = get_repo(model)
         self.service: TService = get_service(model)
+        self.auth_dependency = auth_dependency
         # input py schema for simple create without relation
         self.create_schema = get_pyschema(model, 'Create')
         self.create_response_schema = get_pyschema(model, 'CreateResponseSchema') or self.create_schema
@@ -74,7 +76,7 @@ class BaseRouter:
         include_in_schema = kwargs.get('include_in_schema', True)
         self.router = APIRouter(prefix=prefix,
                                 tags=self.tags,
-                                dependencies=[Depends(get_active_user_or_internal)],
+                                dependencies=[Depends(self.auth_dependency)],
                                 include_in_schema=include_in_schema)
         self.setup_routes()
 
