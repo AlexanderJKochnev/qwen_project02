@@ -32,9 +32,9 @@ htmlcov/
 .pytest_cache/
 
 # Environment
-# .env
-# .env.local
-# .env.*
+.env
+.env.local
+.env.*
 .venv/
 venv/
 ENV/
