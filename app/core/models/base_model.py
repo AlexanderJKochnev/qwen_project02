@@ -200,6 +200,7 @@ class Search:
     def search_content(cls) -> Mapped[Optional[str]]:
         return mapped_column(Text, deferred=True, nullable=True)
 
+
     __table_args__ = (Index(
         "idx_search_content_null_only",  # Название индекса
         "id",  # Колонка, которую индексируем

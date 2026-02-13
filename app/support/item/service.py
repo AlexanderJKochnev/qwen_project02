@@ -537,13 +537,15 @@ class ItemService(Service):
                                               page, page_size, repository, model, session)
             items = response.pop('items')
             total = response.get('total')
-            if total > 0:
+            if total == 0:
+                result = []
+            else:
                 result = []
                 for item in items:
                     item_dict = item.to_dict()
                     transformed_item = cls.transform_item_for_list_view(item_dict, lang)
                     result.append(transformed_item)
-                response = make_paginated_response(result, total, page, page_size)
+            response = make_paginated_response(result, total, page, page_size)
             return response
         except Exception as e:
             logger.error(f'search_geans. {e}')
