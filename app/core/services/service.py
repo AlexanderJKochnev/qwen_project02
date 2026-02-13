@@ -563,3 +563,47 @@ class Service(metaclass=ServiceMeta):
         # 2. получение thumbnail by image_id
         image = await image_service.get_thumbnail(image_id)
         return image
+
+    @classmethod
+    async def search_fts(cls, search: str,
+                         page: int, page_size: int,
+                         repository: Type[Repository], model: ModelType,
+                         session: AsyncSession,
+                         ) -> Dict[str, Any]:
+        try:
+            # Запрос с загрузкой связей и пагинацией
+            skip = (page - 1) * page_size
+            if not search:
+                items, total = await repository.get_full_with_pagination(skip, page_size, model, session)
+                return make_paginated_response(items, total, page, page_size)
+            # определаяем тип поиска (geans OR b-tree
+            if hasattr(model, 'search_content'):
+                # 2. Формируем расчет веса (релевантности)
+                items, total = await repository.search_fts(search, skip, page_size, model, session)
+            else:
+                # model is not indexed by GIN
+                items, total = await repository.search(search, skip, page_size, model, session)
+            result: dict = make_paginated_response(items, total, page, page_size)
+            return result
+        except Exception as e:
+            logger.error(f'search_geans.error: {e}')
+            raise HTTPException(status_code=501, detail=f'{e}')
+
+    @classmethod
+    async def search_fts_all(cls, search: str,
+                             repository: Type[Repository],
+                             model: ModelType, session: AsyncSession) -> List[dict]:
+        try:
+            # Запрос с загрузкой связей без пагинации
+            # определаяем тип поиска (tfs OR b-tree
+            if not search:
+                return await repository.get_full(model, session)
+            if hasattr(model, 'search_content'):
+                items = await repository.search_tfs_all(search, model, session)
+            else:
+                # model is not indexed by GIN
+                items = await repository.search_all(search, model, session)
+            return items
+        except Exception as e:
+            logger.error(f'search_geans_all.error: {e}')
+            raise HTTPException(status_code=501, detail=f'{e}')

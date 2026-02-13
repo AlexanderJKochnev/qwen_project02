@@ -796,7 +796,8 @@ async def authenticated_client_with_db(test_db_session, super_user_data,
     async with AsyncClient(
         transport=ASGITransport(app=app),
         base_url=base_url,
-        headers={"Authorization": f"Bearer {access_token}"}
+        headers={"Authorization": f"Bearer {access_token}",
+                 "X-API-Key": "4f9e6a32d8c1b5a0f7e4d2b9a1c8f3e5d0b2a7c4f1e9d6b3a0c5f8e2d1b7a4c9"}
     ) as ac:
         ac._test_user = super_user_data
         ac._test_user_db = create_super_user

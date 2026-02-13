@@ -8,11 +8,11 @@ from abc import ABCMeta
 from datetime import datetime
 from loguru import logger
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
-from sqlalchemy import and_, func, select, Select, update, desc, cast, Text, text, literal
+from sqlalchemy import and_, func, select, Select, update, desc, cast, Text, text, literal, literal_column
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql.elements import Label
-# from sqlalchemy.dialects import postgresql
+from sqlalchemy.dialects import postgresql
 # from sqlalchemy.sql.elements import ColumnElement
 from app.core.utils.alchemy_utils import (create_enum_conditions,
                                           create_search_conditions2, ModelType)
@@ -594,3 +594,44 @@ class Repository(metaclass=RepositoryMeta):
         stmt = cls.get_query(model).order_by(model.id.asc())
         result = await cls.nonpagination(stmt, session)
         return result
+
+    @classmethod
+    async def search_fts(cls, search: str, skip: int, limit: int,
+                         model: ModelType, session: AsyncSession) -> Tuple[Any, int]:
+        """ полнотекстовый поиск """
+        try:
+            # formatted_query = " & ".join(search.split())
+            formatted_query = " & ".join([f"{word}:*" for word in search.split()])
+            # condition = model.search_vector.bool_op("@@")(func.to_tsquery('simple', formatted_query))
+            condition = model.search_vector.bool_op("@@")(func.to_tsquery(literal_column("'simple'"),
+                                                                          formatted_query))
+            count_stmt = select(func.count()).select_from(model).where(condition)
+            total = await session.execute(count_stmt)
+            total_count = total.scalar() or 0
+            stmp = cls.get_query(model).where(condition).offset(skip).limit(limit)
+            # compiled = stmp.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
+            # logger.error(f'{compiled.string=}')
+            result = await session.execute(stmp)
+            items = result.scalars().all()
+            return items, total_count
+        except Exception as e:
+            logger.error(f'search_fts.error: {e}')
+            raise Exception(f'search_fts.error: {e}')
+
+    @classmethod
+    async def search_fts_all(cls, search: str, model: ModelType, session: AsyncSession) -> Tuple[Any, int]:
+        """ полнотекстовый поиск without pagination"""
+        try:
+            # formatted_query = " & ".join(search.split())
+            formatted_query = " & ".join([f"{word}:*" for word in search.split()])
+            condition = model.search_vector.bool_op("@@")(func.to_tsquery(literal_column("'simple'"),
+                                                                          formatted_query))
+            stmp = cls.get_query(model).where(condition)
+            # compiled = stmp.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
+            # logger.error(f'{compiled=}')
+            result = await session.execute(stmp)
+            items = result.scalars().all()
+            return items
+        except Exception as e:
+            logger.error(f'search_fts.error: {e}')
+            raise Exception(f'search_fts.error: {e}')

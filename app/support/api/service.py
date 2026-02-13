@@ -183,8 +183,8 @@ class ApiService(ItemService):
             if not search:
                 items, total = await repository.get_full_with_pagination(skip, page_size, model, session)
             else:
-                relevance: Label = await cls.get_relevance(search, model, session, similarity_threshold)
-                items, total = await repository.search_geans(search, relevance, skip, page_size, model, session)
+                # relevance: Label = await cls.get_relevance(search, model, session, similarity_threshold)
+                items, total = await repository.search_fts(search, skip, page_size, model, session)
             result = []
             for item in items:
                 if item_dict := item.to_dict():
@@ -198,12 +198,13 @@ class ApiService(ItemService):
     async def search_geans_all(cls, search: str, similarity_threshold: float,
                                repository: Type[Repository],
                                model: ModelType, session: AsyncSession) -> List[dict]:
+        """ перделан под полнотекстовый поиск """
         try:
             if not search:
                 items = await repository.get_full(model, session)
             else:
-                relevance: Label = await cls.get_relevance(search, model, session, similarity_threshold)
-                items = await repository.search_geans_all(search, relevance, model, session)
+                # relevance: Label = await cls.get_relevance(search, model, session, similarity_threshold)
+                items = await repository.search_fts_all(search, model, session)
             result = []
             for item in items:
                 if item_dict := item.to_dict():

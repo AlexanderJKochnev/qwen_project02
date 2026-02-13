@@ -532,9 +532,10 @@ class ItemService(Service):
         """ новый поиск вместо триграмного  индекса ONLY FOR ITEMS_PREACT """
         try:
             # значение similarity_thresholfd настраивается в .env
-            similarity_threshold = similarity_threshold or settings.SIMILARITY_THRESHOLD
-            response = await cls.search_geans(search, similarity_threshold,
-                                              page, page_size, repository, model, session)
+            # similarity_threshold = similarity_threshold or settings.SIMILARITY_THRESHOLD
+            # response = await cls.search_geans(search, similarity_threshold,
+            #                                   page, page_size, repository, model, session)
+            response = await cls.search_fts(search, page, page_size, repository, model, session)
             items = response.pop('items')
             total = response.get('total')
             if total == 0:
@@ -556,9 +557,10 @@ class ItemService(Service):
                                      repository: Type[Repository], model: ModelType,
                                      session: AsyncSession) -> List[dict]:
         try:
-            similarity_threshold = similarity_threshold or settings.SIMILARITY_THRESHOLD
-            items: list = await cls.search_geans_all(search, similarity_threshold,
-                                                     repository, model, session)
+            # similarity_threshold = similarity_threshold or settings.SIMILARITY_THRESHOLD
+            # items: list = await cls.search_geans_all(search, similarity_threshold,
+            #                                          repository, model, session)
+            items = await cls.search_fts_all(search, repository, model, session)
             result = []
             for item in items:
                 item_dict = item.to_dict()
