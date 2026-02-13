@@ -127,8 +127,6 @@ async def get_current_api_user(
     x_api_key: Optional[str] = Security(api_key_header)
 ):
     # 1. Проверка API Key (Технический аккаунт)
-    print(f'{x_api_key=}')
-    print(f'{TECH_API_KEY=}')
     if x_api_key == TECH_API_KEY:
         return {"user": "tech_account", "scope": "all"}
 

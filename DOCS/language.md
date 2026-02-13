@@ -27,6 +27,8 @@
          1. также см. scripts/create_index.sql
       3. app/support/item/schemas/
            # class ItemApi(ItemApiRoot)
+      4. app/support/drink/schemas/
+           # class LangMixin
 2. preact_front
    1. src/pages/HandbookUpdateForm.tsx
       # const [formData, setFormData] = useState({

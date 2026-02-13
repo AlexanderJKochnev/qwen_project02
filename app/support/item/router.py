@@ -3,6 +3,7 @@ import json
 
 from fastapi import Depends, File, Form, HTTPException, Path, Query, status, UploadFile, BackgroundTasks
 from pydantic import ValidationError
+from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.dependencies import get_active_user_or_internal
 from app.core.config.database.db_async import get_db
@@ -169,7 +170,7 @@ class ItemRouter(BaseRouter):
                                 image_service: ThumbnailImageService = Depends()
                                 ) -> ItemCreateResponseSchema:
         """
-        Создание записи Item & Drink и всеми связями
+        Создание записи Item & Drink и всеми связями - endpoint for preact
         Принимает JSON строку и файл изображения
         Валидирует схемой ItemCreatePreact
         Сохраняет в порядке: Drink -> DrinkVarietal -> DrinkFood -> Item
@@ -197,8 +198,8 @@ class ItemRouter(BaseRouter):
             print(detail)
             raise HTTPException(status_code=501, detail=exc)
         except Exception as e:
-            detail = f'{str(e)}, {data=}'
-            print(f'=========={data}')
+            detail = f'{str(e)}'
+            logger.error(f'create_item_drink. {e}')
             raise HTTPException(status_code=500, detail=detail)
 
     async def update_item_drink(self,

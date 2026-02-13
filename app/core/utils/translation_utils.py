@@ -91,7 +91,6 @@ async def fill_missing_translations(data: Dict[str, Any], test: bool = False) ->
     mark = settings.MACHINE_TRANSLATION_MARK
     # Group fields by their base name {'name': ['name', 'name_ru', 'name_fr', ...], ...}
     field_groups = get_group_localized_fields(langs, default_lang, localized_fields)
-
     # Process each group of related fields
     for base_name, fields in field_groups.items():
         # Check which fields are filled
@@ -135,5 +134,4 @@ async def fill_missing_translations(data: Dict[str, Any], test: bool = False) ->
 
                     if translated_text:
                         updated_data[field] = translated_text
-
     return updated_data

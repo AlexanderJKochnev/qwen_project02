@@ -326,7 +326,7 @@ class ItemService(Service):
             item_instance, new = await cls.get_or_create(item, ItemRepository, Item, session)
             return item_instance
         except Exception as e:
-            raise Exception(f'item_create_item_drink_error: {e}')
+            raise Exception(e)
 
     @classmethod
     async def update_item_drink(cls, id: int, data: ItemUpdatePreact,

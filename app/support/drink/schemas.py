@@ -18,22 +18,42 @@ class LangMixin:
     # title: Optional[str] = None
     title_ru: Optional[str] = None
     title_fr: Optional[str] = None
+    title_es: Optional[str] = None
+    title_it: Optional[str] = None
+    title_de: Optional[str] = None
+    title_zh: Optional[str] = None
 
     subtitle: Optional[str] = None
     subtitle_ru: Optional[str] = None
     subtitle_fr: Optional[str] = None
+    subtitle_es: Optional[str] = None
+    subtitle_it: Optional[str] = None
+    subtitle_de: Optional[str] = None
+    subtitle_zh: Optional[str] = None
 
     description: Optional[str] = None
     description_ru: Optional[str] = None
     description_fr: Optional[str] = None
+    description_es: Optional[str] = None
+    description_it: Optional[str] = None
+    description_de: Optional[str] = None
+    description_zh: Optional[str] = None
 
     recommendation: Optional[str] = None
     recommendation_ru: Optional[str] = None
     recommendation_fr: Optional[str] = None
+    recommendation_es: Optional[str] = None
+    recommendation_it: Optional[str] = None
+    recommendation_de: Optional[str] = None
+    recommendation_zh: Optional[str] = None
 
     madeof: Optional[str] = None
     madeof_ru: Optional[str] = None
     madeof_fr: Optional[str] = None
+    madeof_es: Optional[str] = None
+    madeof_it: Optional[str] = None
+    madeof_de: Optional[str] = None
+    madeof_zh: Optional[str] = None
 
 
 class LangMixinExclude:
@@ -43,22 +63,42 @@ class LangMixinExclude:
     title: Optional[str] = Field(exclude=True)
     title_ru: Optional[str] = Field(exclude=True)
     title_fr: Optional[str] = Field(exclude=True)
+    title_es: Optional[str] = Field(exclude=True)
+    title_it: Optional[str] = Field(exclude=True)
+    title_de: Optional[str] = Field(exclude=True)
+    title_zh: Optional[str] = Field(exclude=True)
 
     subtitle: Optional[str] = Field(exclude=True)
     subtitle_ru: Optional[str] = Field(exclude=True)
     subtitle_fr: Optional[str] = Field(exclude=True)
+    subtitle_es: Optional[str] = Field(exclude=True)
+    subtitle_it: Optional[str] = Field(exclude=True)
+    subtitle_de: Optional[str] = Field(exclude=True)
+    subtitle_zh: Optional[str] = Field(exclude=True)
 
     description: Optional[str] = Field(exclude=True)
     description_ru: Optional[str] = Field(exclude=True)
     description_fr: Optional[str] = Field(exclude=True)
+    description_es: Optional[str] = Field(exclude=True)
+    description_it: Optional[str] = Field(exclude=True)
+    description_de: Optional[str] = Field(exclude=True)
+    description_zh: Optional[str] = Field(exclude=True)
 
     recommendation: Optional[str] = Field(exclude=True)
     recommendation_ru: Optional[str] = Field(exclude=True)
     recommendation_fr: Optional[str] = Field(exclude=True)
+    recommendation_es: Optional[str] = Field(exclude=True)
+    recommendation_it: Optional[str] = Field(exclude=True)
+    recommendation_de: Optional[str] = Field(exclude=True)
+    recommendation_zh: Optional[str] = Field(exclude=True)
 
     madeof: Optional[str] = Field(exclude=True)
     madeof_ru: Optional[str] = Field(exclude=True)
     madeof_fr: Optional[str] = Field(exclude=True)
+    madeof_es: Optional[str] = Field(exclude=True)
+    madeof_it: Optional[str] = Field(exclude=True)
+    madeof_de: Optional[str] = Field(exclude=True)
+    madeof_zh: Optional[str] = Field(exclude=True)
 
 
 class CustomUpdSchema(LangMixin):
