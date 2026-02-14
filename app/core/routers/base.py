@@ -350,10 +350,9 @@ class BaseRouter:
 
     async def search_geans(self, search: str = Query(None,
                                                      min_length=3, max_length=50,
-                                                     description="Не менее 3-х знаков"
-                                                     "Поисковый запрос. "
-                                                     "В случае пустого запроса будут "
-                                                     "выведены все данные "),
+                                                     description="Полнотекстовый поиск по слову или "
+                                                                 " части слова (с начала), "
+                                                                 " набору слов в любом порядке"),
                            similarity_threshold: float = Query(None, ge=0, le=1.0),
                            page: int = Query(1, ge=1),
                            page_size: int = Query(paging.get('def', 20),
@@ -380,7 +379,7 @@ class BaseRouter:
                                search: str = Query(None, description="Поисковый запрос. "
                                                    "В случае пустого запроса будут "
                                                    "выведены все данные "),
-                               similarity_threshold: float = Query(None, ge = 0, le = 1.0),
+                               similarity_threshold: float = Query(None, ge=0, le=1.0),
                                session: AsyncSession = Depends(get_db)) -> List[TReadSchema]:
         """
             Поиск по всем текстовым полям основной таблицы БЕЗ пагинации

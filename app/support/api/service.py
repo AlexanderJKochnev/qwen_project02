@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from typing import List, Type, Dict, Any
 from datetime import datetime
 from loguru import logger
-from sqlalchemy.sql.elements import Label
+# from sqlalchemy.sql.elements import Label
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.utils.alchemy_utils import ModelType
 from app.core.utils.pydantic_utils import get_field_name, make_paginated_response
@@ -46,8 +46,11 @@ class ApiService(ItemService):
             # add root fields
             for key in root_fields:
                 if val := item.get(key):
-                    if key == 'category' and val == 'Wine':
-                        val = item.get('subcategory')
+                    if key == 'category':
+                        if val.get('name') in ('Wine', 'wine'):
+                            val = item.get('subcategory')
+                        if val.get('name') in ('Other', 'other'):
+                            item['type'] = item.get('subcategory')
                     if isinstance(val, (float, Decimal)):
                         val = f"{val:.03g}"
                     elif isinstance(val, dict):
@@ -71,6 +74,9 @@ class ApiService(ItemService):
                         lf = localized_field_with_replacement(region, 'name', lang_suff, k)
                         lt = localized_field_with_replacement(subregion, 'name', lang_suff)
                         lf['region'] = f"{lf['region']}. {lt['name']}".replace('None', '').replace('..', '.')
+                    elif k == 'type':  # subcategory for other
+                        if subcategory := item.get('type'):
+                            lf = localized_field_with_replacement(subcategory, 'name', lang_suff, k)
                     else:
                         lf = localized_field_with_replacement(item, k, lang_suff)
                     if lf:

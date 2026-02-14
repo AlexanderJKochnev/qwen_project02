@@ -266,9 +266,10 @@ class ItemApiLangNonLocalized(BaseModel):
 
 class ItemApiLangLocalized(ItemDetailLocalized):
     region: Optional[str] = None  # Region. Subregion
+    type: Optional[str] = None  # subcategory for category other
 
 
-class ItemApiLang(ItemDetailManyToManyLocalized, ItemDetailLocalized, ItemApiLangNonLocalized):
+class ItemApiLang(ItemDetailManyToManyLocalized, ItemApiLangLocalized, ItemApiLangNonLocalized):
     pass
 
 

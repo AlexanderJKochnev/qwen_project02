@@ -842,7 +842,7 @@ def search_local(query_string: str) -> int:
 
 
 def localized_field_with_replacement(source: Dict[str, Any], key: str,
-                                     langs: list, target_key: str = None) -> Dict[str, Any]:
+                                     langs: Union[list, tuple], target_key: str = None) -> Dict[str, Any]:
     """
         source - словарь
         key: ключ
