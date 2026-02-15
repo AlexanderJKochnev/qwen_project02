@@ -80,8 +80,8 @@ class Name(Base, BaseAt):
 class Rawdata(Base, BaseAt):
 
     name_id: Mapped[int] = mapped_column(ForeignKey("names.id", ondelete="CASCADE"), unique=True)
-    body_html: Mapped[Optional[str]] = mapped_column(Text)
-    parsed_data: Mapped[Optional[str]] = mapped_column(Text)  # JSON or YAML formatted parsed data
+    # body_html: Mapped[Optional[str]] = mapped_column(Text)
+    # parsed_data: Mapped[Optional[str]] = mapped_column(Text)  # JSON or YAML formatted parsed data
     metadata_json: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSONB, nullable=True)
     status: Mapped["Status"] = relationship("Status", back_populates="rawdatas")
     status_id: Mapped[int] = mapped_column(ForeignKey("status.id", ondelete="SET NULL"), nullable=True)
@@ -89,31 +89,9 @@ class Rawdata(Base, BaseAt):
     name: Mapped["Name"] = relationship("Name", back_populates="raw_data")
     attachment_url: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
 
-    # 1. Вычисляемый столбец для русского FTS
-    # Используем sa.Computed() с прямым SQL выражением
-
-    fts_russian: Mapped[str] = mapped_column(TSVECTOR,
-                                             Computed(
-                                                 text("jsonb_to_tsvector('russian', metadata_json, '[\"string\"]')"),
-                                                 persisted=True
-                                                 # Важно: сохраняет (STORED) результат в БД, а не вычисляет на лету
-                                             ), nullable=True
-                                             )
-
-    # 2. Вычисляемый столбец для английского FTS
-    fts_english: Mapped[str] = mapped_column(TSVECTOR,
-                                             Computed(
-                                                 text("jsonb_to_tsvector('english', metadata_json, '[\"string\"]')"),
-                                                 persisted=True
-                                             ), nullable=True
-                                             )
-
-    # 3. Создание GIN-индексов прямо в модели через __table_args__
-    __table_args__ = (Index(
-        'idx_products_fts_russian', fts_russian, postgresql_using='gin'
-    ), Index(
-        'idx_products_fts_english', fts_english, postgresql_using='gin'
-    ),)
+    __table_args__ = (Index('ix_data_path_ops',
+                            'metadata_json',
+                            postgresql_using='gin', postgresql_ops={'data': 'jsonb_path_ops'}),)
 
     def __str__(self):
         return str(self.name_id) or ""

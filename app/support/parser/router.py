@@ -277,7 +277,7 @@ class RawdataRouter(BaseRouter):
     def __init__(self):
         super().__init__(
             model=Rawdata,
-            prefix="/rawdatas", include_in_schema=False
+            prefix="/rawdatas", include_in_schema=True
         )
 
     def setup_routes(self):

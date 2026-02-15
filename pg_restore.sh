@@ -5,11 +5,12 @@ SERVICE_NAME="wine_host"
 DB_USER="wine"
 # Имя файла бэкапа
 # BACKUP_NAME="pg_backup_$(date +%Y%m%d_%H%M%S).sql"
-BACKUP_NAME="pg_backup.sql"
+BACKUP_NAME="pg_backup.sql.gz"
 
 echo "--- Начинаю восстановление базы данных из контейнера $SERVICE_NAME ---"
 
-cat backup/$BACKUP_NAME | docker exec -i $SERVICE_NAME psql -U $DB_USER -d postgres
+# cat backup/$BACKUP_NAME | docker exec -i $SERVICE_NAME psql -U $DB_USER -d postgres
+gunzip -c backup/$BACKUP_NAME | docker exec -i $SERVICE_NAME psql -U $DB_USER -d postgres
 
 if [ $? -eq 0 ]; then
     echo "--- база данных POSTGRESQL успешно восстановлена из $BACKUP_NAME ---"
