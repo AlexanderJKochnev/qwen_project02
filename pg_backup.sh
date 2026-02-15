@@ -10,7 +10,7 @@ BACKUP_NAME="pg_backup.sql"
 echo "--- Начинаю бэкап базы данных из контейнера $SERVICE_NAME ---"
 
 # Создаем дамп
-docker-compose exec -t $SERVICE_NAME pg_dumpall -c -U $DB_USER > "backup/$BACKUP_NAME"
+docker exec -t $SERVICE_NAME pg_dumpall -c -U $DB_USER > "backup/$BACKUP_NAME"
 
 if [ $? -eq 0 ]; then
     echo "--- Бэкап POSTGRESQL успешно создан: $BACKUP_NAME ---"
