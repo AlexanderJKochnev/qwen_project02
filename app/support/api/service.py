@@ -220,3 +220,18 @@ class ApiService(ItemService):
         except Exception as e:
             logger.error(f'search_gens_all. {e}')
             raise HTTPException(status_code=503, detail=f'search_gens_all. {e}')
+
+    @classmethod
+    async def get_list_api_view_ids(cls, ids: str, repository, model,
+                                    session: AsyncSession,):
+        """ Получение списка элементов для api view """
+        if not ids:
+            return []
+        comma_separator = ','
+        ids_set = tuple(int(b) for a in set(ids.split(comma_separator)) if (b := a.strip()).isdigit())
+        items = await repository.get_by_ids(ids_set, model, session)
+        result = []
+        for item in items:
+            item_dict = item.to_dict()
+            result.append(cls.__api_view__(item_dict))
+        return result

@@ -12,7 +12,7 @@ from sqlalchemy import and_, func, select, Select, update, desc, cast, Text, tex
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql.elements import Label
-from sqlalchemy.dialects import postgresql
+# from sqlalchemy.dialects import postgresql
 # from sqlalchemy.sql.elements import ColumnElement
 from app.core.utils.alchemy_utils import (create_enum_conditions,
                                           create_search_conditions2, ModelType)
@@ -259,6 +259,18 @@ class Repository(metaclass=RepositoryMeta):
         result = await session.execute(stmt)
         obj = result.scalar_one_or_none()
         return obj
+
+    @classmethod
+    async def get_by_ids(cls, ids: Tuple[int], model: ModelType, session: AsyncSession) -> Optional[ModelType]:
+        """
+            get records by ids tuple
+        """
+        stmt = cls.get_query(model).where(model.id.in_(ids)).order_by(model.id.asc())
+        # from sqlalchemy.dialects import postgresql
+        # compiled_pg = stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
+        # logger.error(compiled_pg)
+        result = await cls.nonpagination(stmt, session)
+        return result
 
     @classmethod
     async def get_by_obj(cls, data: dict, model: Type[ModelType], session: AsyncSession) -> Optional[ModelType]:

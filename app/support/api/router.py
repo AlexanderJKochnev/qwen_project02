@@ -1,5 +1,7 @@
 # app/support/api/router.py
 import io
+
+import loguru
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.responses import StreamingResponse
@@ -48,6 +50,11 @@ class ApiRouter(ItemRouter):
                                   openapi_extra={'x-request-schema': None}
                                   )
         self.router.add_api_route("/search_all", self.search_geans_all,
+                                  methods=["GET"],
+                                  response_model=List[ItemApi],
+                                  openapi_extra={'x-request-schema': None}
+                                  )
+        self.router.add_api_route("/search_by_ids", self.search_by_ids,
                                   methods=["GET"],
                                   response_model=List[ItemApi],
                                   openapi_extra={'x-request-schema': None}
@@ -198,3 +205,19 @@ class ApiRouter(ItemRouter):
         """
         image_data = await self.service.get_thumbnail_by_id(id, self.repo, self.model, session, image_service)
         return raw_image_response(image_data)
+
+    async def search_by_ids(self, search: str = Query(
+            None, description="Поисковый запрос. В случае пустого запроса будут выведены все данные "
+    ),
+            session: AsyncSession = Depends(get_db)):
+        """
+            Получение записей по ids.
+            Может быть очень тяжелым запросом
+        """
+        try:
+            service = ApiService
+            repository = ItemRepository
+            result = await service.get_list_api_view_ids(search, repository, self.model, session)
+            return result
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=e)

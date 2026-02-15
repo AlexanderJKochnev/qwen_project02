@@ -125,6 +125,10 @@ async def test_search_routers(authenticated_client_with_db, get_get_routes):
             if 'search_trigram' in path:
                 path = f'{path}?search_str={search}&page=1&page_size=15'
                 path2 = f'{path}?search_str={empty}&page=1&page_size=15'
+            if 'search_by_ids' in path:
+                path = f'{path}?search=1%2C%202%2C%203'
+                path2 = path
+
             for n, k in enumerate((path, path2)):
                 response = await client.get(k)
                 if response.status_code in [200, 201]:
