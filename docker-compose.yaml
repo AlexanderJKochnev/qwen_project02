@@ -210,8 +210,6 @@ services:
     ports:
       - "${PREACT_PORT}:5173"                    # хост:контейнер (порт Vite по умолчанию — 5173)
     volumes:
-      # - ./preact_front:/app            # монтируем исходники
-      # - /app/node_modules              # сохраняем node_modules из контейнера
       - ./preact_front/src:/app/src
       - ./preact_front/public:/app/public
       - ./preact_front/package.json:/app/package.json

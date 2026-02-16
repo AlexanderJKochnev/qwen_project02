@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# --- НАСТРОЙКИ ---
 HDD_BASE="/mnt/hdd_data/projects"
 PROJECT_NAME=$(basename "$PWD")
 TARGET_DIR="$HDD_BASE/$PROJECT_NAME"
@@ -9,9 +8,9 @@ if [ "$(id -u)" -ne 0 ]; then echo "Ошибка: запустите от sudo";
 
 echo "--- Анализ проекта: $PROJECT_NAME ---"
 
-# 1. Исправленный Python-блок (извлекает ТОЛЬКО левую часть до двоеточия)
+# 1. Извлекаем тома через Python (теперь возвращаем кортеж путь:тип)
 volumes=$(python3 -c "
-import yaml, glob
+import yaml, glob, os
 vols = set()
 for f in glob.glob('docker-compose*.yaml'):
     try:
@@ -23,44 +22,31 @@ for f in glob.glob('docker-compose*.yaml'):
                 if isinstance(v_list, list):
                     for entry in v_list:
                         if isinstance(entry, str) and entry.startswith('./'):
-                            # Отсекаем правую часть и лишние пробелы
-                            path = entry.split(':')[0].strip()
+                            path = entry.split(':')[0]
+                            # Проверяем, существует ли это уже как файл или папка
                             vols.add(path)
     except Exception: pass
 print('\n'.join(sorted(vols)))
 ")
 
 if [ -z "$volumes" ]; then
-    echo "Локальные тома (./) в секциях volumes: не найдены."
+    echo "Локальные тома (./) не найдены."
     exit 0
 fi
 
-# 2. ИНТЕРАКТИВНЫЙ БЛОК
-echo ""
-echo "Найдены следующие тома для привязки к HDD:"
-echo "------------------------------------------"
+echo -e "\nНайдены тома для переноса:\n--------------------------"
 echo "$volumes" | sed 's/^/  [ ] /'
-echo "------------------------------------------"
-
-# Читаем ответ именно из терминала (/dev/tty), чтобы не проскакивало
-echo -n "Добавить эти тома в fstab и перенести данные на HDD? (y/n): "
+echo -n "--------------------------\nДобавить в fstab? (y/n): "
 read -r CONFIRM < /dev/tty
 
-if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then
-    echo "Операция отменена. Никаких изменений не внесено."
-    exit 0
+if [ "$CONFIRM" != "y" ] && [ "$CONFIRM" != "Y" ]; then
+    echo "Отмена."; exit 0
 fi
 
-# 3. ОЧИСТКА (удаляем старые записи этого проекта из fstab)
-echo "Очистка fstab от старых записей проекта $PROJECT_NAME..."
-# Размонтируем текущие папки, если они были примонтированы
-for vol in $volumes; do
-    vol_clean=$(echo "$vol" | sed 's|^\./||')
-    umount -l "$PWD/$vol_clean" 2>/dev/null
-done
+# 2. Очистка старых записей
 sed -i "\|$TARGET_DIR|d" /etc/fstab
 
-# 4. ОБРАБОТКА И ЗАПИСЬ
+# 3. Обработка
 mkdir -p "$TARGET_DIR"
 
 for vol in $volumes; do
@@ -69,23 +55,30 @@ for vol in $volumes; do
     dst_path="$TARGET_DIR/$vol_clean"
 
     echo "Настройка: $vol_clean"
-    mkdir -p "$src_path" "$dst_path"
 
-    # Перенос данных, если на SSD есть, а на HDD пусто
-    if [ "$(ls -A "$src_path" 2>/dev/null)" ] && [ ! "$(ls -A "$dst_path" 2>/dev/null)" ]; then
-        echo "  [>] Перенос данных на HDD..."
-        rsync -a "$src_path/" "$dst_path/"
-        find "$src_path" -mindepth 1 -delete
+    # ОПРЕДЕЛЯЕМ: ФАЙЛ ИЛИ ПАПКА
+    if [ -f "$src_path" ]; then
+        # Это файл
+        mkdir -p "$(dirname "$dst_path")"
+        touch "$dst_path"
+        # Если файл на SSD не пуст, а на HDD пуст - копируем
+        [ -s "$src_path" ] && [ ! -s "$dst_path" ] && cp "$src_path" "$dst_path"
+    else
+        # Это директория
+        mkdir -p "$src_path" "$dst_path"
+        if [ "$(ls -A "$src_path" 2>/dev/null)" ] && [ ! "$(ls -A "$dst_path" 2>/dev/null)" ]; then
+            echo "  [>] Перенос данных..."
+            rsync -a "$src_path/" "$dst_path/"
+            find "$src_path" -mindepth 1 -delete
+        fi
     fi
 
-    # Добавляем в fstab (Bind Mount)
+    # Добавляем в fstab
     echo "$dst_path $src_path none defaults,bind,nofail,x-systemd.requires=/mnt/hdd_data 0 0" >> /etc/fstab
 done
 
-# 5. ПРИМЕНЕНИЕ
 systemctl daemon-reload
 mount -a
 
-echo ""
-echo "--- ГОТОВО ---"
+echo -e "\n--- ГОТОВО. Проверка монтирования в текущей папке: ---"
 findmnt -R "$PWD"
