@@ -3,7 +3,7 @@ import io
 from datetime import datetime
 from typing import Optional
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, status, UploadFile
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, Response
 from app.auth.dependencies import get_active_user_or_internal
 from app.core.config.project_config import settings
 from app.core.utils.common_utils import back_to_the_future, delta_data
@@ -77,7 +77,7 @@ async def download_thumbnail(
 
     # print(f"📱 Returning THUMBNAIL: {len(image_data['content'])} bytes")
 
-    return StreamingResponse(
+    return Response(
         io.BytesIO(image_data["content"]), media_type=image_data['content_type'], headers=headers
     )
 
@@ -101,7 +101,7 @@ async def download_thumbnail_by_filename(
 
     # print(f"📱 Returning THUMBNAIL: {len(image_data['content'])} bytes")
 
-    return StreamingResponse(
+    return Response(
         io.BytesIO(image_data["content"]), media_type=image_data['content_type'], headers=headers
     )
 
@@ -126,7 +126,7 @@ async def download_full_image(
 
     # print(f"🖼️  Returning FULL IMAGE: {len(image_data['content'])} bytes")
 
-    return StreamingResponse(
+    return Response(
         io.BytesIO(image_data["content"]), media_type=image_data['content_type'], headers=headers
     )
 
@@ -151,7 +151,7 @@ async def download_full_image_by_filename(
 
         # print(f"🖼️  Returning FULL IMAGE: {len(image_data['content'])} bytes")
 
-        return StreamingResponse(
+        return Response(
             io.BytesIO(image_data["content"]), media_type=image_data['content_type'], headers=headers
         )
     except Exception as e:
