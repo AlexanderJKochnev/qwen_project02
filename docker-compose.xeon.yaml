@@ -150,7 +150,7 @@ services:
     environment:
       # POSTGRES_HOST: ${POSTGRES_HOST}
       POSTGRES_HOST: pgbouncer
-      WEB_PORT: 6432
+      WEB_PORT: 5432
       # WEB_PORT: ${API_PORT}
       WEB_HOST: pgbouncer
       # WEB_HOST: ${API_HOST}
