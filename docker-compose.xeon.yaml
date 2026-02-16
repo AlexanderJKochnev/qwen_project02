@@ -310,6 +310,10 @@ services:
       - ADMIN_USERS=${POSTGRES_USER}
       - STATS_USERS=${POSTGRES_USER}
       - IGNORE_STARTUP_PARAMETERS=extra_float_digits,search_path # Критично для SQLAlchemy/Java
+      - LISTEN_BACKLOG=1024        # Увеличиваем очередь ожидания порта
+      - SERVER_LIFETIME=3600
+      - SERVER_IDLE_TIMEOUT=600
+      - CONNECTION_UTILS=1         # Помогает при асинхронных пиках
     healthcheck:
       # Официальный способ проверки pgbouncer (внутри образа есть psql-client)
       test: [ "CMD", "pg_isready", "-h", "localhost", "-p", "5432" ]
