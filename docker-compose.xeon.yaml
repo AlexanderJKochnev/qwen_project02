@@ -301,7 +301,6 @@ services:
     container_name: pgbouncer
     ports:
       - "6432:6432"  # Порт для приложения
-      # networks:
     restart: unless-stopped
     # environment:
       # Параметры подключения к реальному Postgres
@@ -326,7 +325,8 @@ services:
       # - CONNECTION_UTILS=1         # Помогает при асинхронных пиках
     healthcheck:
       # Официальный способ проверки pgbouncer (внутри образа есть psql-client)
-      test: [ "CMD", "pg_isready", "-h", "localhost", "-p", "5432" ]
+      test: ["CMD", "pg_isready", "-h", "localhost", "-p", "6432", "-U", "wine", "-d", "wine_db"]
+      # test: [ "CMD", "pg_isready", "-h", "localhost", "-p", "5432" ]
       interval: 5s
       timeout: 5s
       retries: 5
