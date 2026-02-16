@@ -42,11 +42,27 @@ services:
         limits:
           cpus: '0.5'
           memory: 256M
-
+  
   wine_host:
     image: ghcr.io/alexanderjkochnev/postgres:17-alpine
     container_name: ${POSTGRES_HOST}
     restart: unless-stopped
+    # Команда запуска с тюнингом под 64ГБ ОЗУ
+    command: >
+      postgres
+      -c shared_buffers=16GB
+      -c effective_cache_size=48GB
+      -c maintenance_work_mem=2GB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c work_mem=128MB
+      -c min_wal_size=1GB
+      -c max_wal_size=4GB
+      -c max_worker_processes=14
+      -c max_parallel_workers_per_gather=4
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -57,18 +73,18 @@ services:
       - ./pg_data:/var/lib/postgresql/data
       - ./pg_dump:/tmp
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB" ]
       interval: 10s
       timeout: 5s
       retries: 5
     deploy:
       resources:
         limits:
-          cpus: '4'        # На Xeon v4 можно дать больше для тяжелых запросов
-          memory: 4G       # 64ГБ позволяют не экономить
+          cpus: '8'       # Разрешаем использовать до 8 ядер при нагрузке
+          memory: 20G     # Лимит чуть выше shared_buffers + запас на процессы
         reservations:
-          cpus: '1'
-          memory: 1G
+          cpus: '2'
+          memory: 16G
 
   mongo:
     image: ghcr.io/alexanderjkochnev/mongo:4.4.20
