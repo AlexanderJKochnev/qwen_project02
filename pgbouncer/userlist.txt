@@ -1,0 +1,2 @@
+# /etc/pgbouncer/userlist.txt
+"wine" "wine1"

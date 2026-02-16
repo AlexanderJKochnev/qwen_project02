@@ -90,11 +90,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1'
-          memory: 512M
+          cpus: '8'
+          memory: 20G
         reservations:
-          cpus: '0.125'
-          memory: 256M
+          cpus: '2'
+          memory: 16G
   
   adminer:
     # --- НАСТРОЙКИ ЛОГИРОВАНИЯ ---
@@ -197,7 +197,7 @@ services:
     command: >
       mongod
       --bind_ip_all
-      --wiredTigerCacheSizeGB 0.25
+      --wiredTigerCacheSizeGB 4
       --storageEngine wiredTiger
       --journalCommitInterval 500
       --syncdelay 300
@@ -211,11 +211,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '2'
-          memory: 1G
+          cpus: '4'
+          memory: 8G
         reservations:
-          cpus: '0.5'
-          memory: 512M
+          cpus: '1'
+          memory: 2G
   
   mongo-express:
     # --- НАСТРОЙКИ ЛОГИРОВАНИЯ ---
@@ -270,6 +270,11 @@ services:
     container_name: preact_prod
     expose:
       - "80"
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
       #  - "${PREACT_PORT}:5173"                    # хост:контейнер (порт Vite по умолчанию — 5173)
     # volumes:
       ## - ./preact_front:/app            # монтируем исходники
@@ -290,30 +295,35 @@ services:
     #     condition: service_healthy
   
   pgbouncer:
-    image: edoburu/pgbouncer:latest
-    container_name: pgbouncer
+    build:
+      context: ./pgbouncer
+      dockerfile: Dockerfile
+      container_name: pgbouncer
+      ports:
+        - "6432:6432"  # Порт для приложения
+      networks:
     restart: unless-stopped
     environment:
       # Параметры подключения к реальному Postgres
-      - DB_HOST=wine_host
-      - DB_PORT=5432
-      - DB_USER=${POSTGRES_USER}
-      - DB_PASSWORD=${POSTGRES_PASSWORD}
-      - DB_NAME=${POSTGRES_DB}
-      # - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@wine_host:${API_PORT}/${POSTGRES_DB}
-      - POOL_MODE=transaction
-      - MAX_CLIENT_CONN=500        # Хватит для 9 воркеров с запасом
-      - DEFAULT_POOL_SIZE=50       # Реальные сессии к Postgres
-      - MIN_POOL_SIZE=10
-      - RESERVE_POOL_SIZE=10
-      - AUTH_TYPE=md5
-      - ADMIN_USERS=${POSTGRES_USER}
-      - STATS_USERS=${POSTGRES_USER}
-      - IGNORE_STARTUP_PARAMETERS=extra_float_digits,search_path # Критично для SQLAlchemy/Java
-      - LISTEN_BACKLOG=1024        # Увеличиваем очередь ожидания порта
-      - SERVER_LIFETIME=3600
-      - SERVER_IDLE_TIMEOUT=600
-      - CONNECTION_UTILS=1         # Помогает при асинхронных пиках
+      # - DB_HOST=wine_host
+      # - DB_PORT=5432
+      # - DB_USER=${POSTGRES_USER}
+      # - DB_PASSWORD=${POSTGRES_PASSWORD}
+      # - DB_NAME=${POSTGRES_DB}
+      # # - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@wine_host:${API_PORT}/${POSTGRES_DB}
+      # - POOL_MODE=transaction
+      # - MAX_CLIENT_CONN=500        # Хватит для 9 воркеров с запасом
+      # - DEFAULT_POOL_SIZE=50       # Реальные сессии к Postgres
+      # - MIN_POOL_SIZE=10
+      # - RESERVE_POOL_SIZE=10
+      # - AUTH_TYPE=md5
+      # - ADMIN_USERS=${POSTGRES_USER}
+      # - STATS_USERS=${POSTGRES_USER}
+      # - IGNORE_STARTUP_PARAMETERS=extra_float_digits,search_path # Критично для SQLAlchemy/Java
+      # - LISTEN_BACKLOG=1024        # Увеличиваем очередь ожидания порта
+      # - SERVER_LIFETIME=3600
+      # - SERVER_IDLE_TIMEOUT=600
+      # - CONNECTION_UTILS=1         # Помогает при асинхронных пиках
     healthcheck:
       # Официальный способ проверки pgbouncer (внутри образа есть psql-client)
       test: [ "CMD", "pg_isready", "-h", "localhost", "-p", "5432" ]
