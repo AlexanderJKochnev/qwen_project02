@@ -1,5 +1,5 @@
 # docker-compose.prod.yaml
-# docker compose -f docker-compose.prod.yaml up -d --build
+# docker compose -f docker-compose.xeon.yaml up -d --build
 # перезепуск nginx
 # docker compose -f docker-compose.prod.yaml restart nginx_gateway
 services:
@@ -303,7 +303,7 @@ services:
         - "6432:6432"  # Порт для приложения
       networks:
     restart: unless-stopped
-    environment:
+    # environment:
       # Параметры подключения к реальному Postgres
       # - DB_HOST=wine_host
       # - DB_PORT=5432
