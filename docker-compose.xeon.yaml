@@ -330,8 +330,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    ports:
-      - "6432:6432" # Можно оставить только expose, если доступ извне не нужен
     depends_on:
       wine_host:
         condition: service_healthy
