@@ -312,7 +312,7 @@ services:
       - IGNORE_STARTUP_PARAMETERS=extra_float_digits,search_path # Критично для SQLAlchemy/Java
     healthcheck:
       # Официальный способ проверки pgbouncer (внутри образа есть psql-client)
-      test: [ "CMD", "pg_isready", "-h", "localhost", "-p", "6432" ]
+      test: [ "CMD", "pg_isready", "-h", "localhost", "-p", "5432" ]
       interval: 5s
       timeout: 5s
       retries: 5
