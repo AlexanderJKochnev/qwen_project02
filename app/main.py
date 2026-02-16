@@ -61,9 +61,8 @@ async def lifespan(app: FastAPI):
         logger.success(f"Lifespan: PostgreSQL соединение установлено (OK) {DatabaseManager.connection_string}")
     except Exception as e:
         logger.critical(
-            f"Lifespan: ОШИБКА ПОДКЛЮЧЕНИЯ К БД: {e}"
+            f"Lifespan: ОШИБКА ПОДКЛЮЧЕНИЯ К БД: {e}, {DatabaseManager.connection_string=}"
         )  # Если БД не отвечает, часто нет смысла запускать приложение  # raise e
-
     await MongoDBManager.connect()  # Подключаем Mongo
     await init_db_extensions()  # подключение расщирений Postgresql
     # logger.info("Lifespan: Инициализация pg_listen_worker...")
