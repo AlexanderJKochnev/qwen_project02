@@ -22,6 +22,9 @@ class DatabaseManager:
         cls.engine = create_async_engine(settings_db.database_url,
                                          echo=settings_db.DB_ECHO_LOG,
                                          poolclass=NullPool,
+                                         connect_args={"prepared_statement_cache_size": 0,
+                                                       "statement_cache_size": 0, },
+
                                          # ВАЖНО: отключаем встроенный пул SQLAlchemy
                                          # connect_args={"server_settings": {"extra_float_digits": "3",
                                          #                                   "statement_timeout": "30000"}},

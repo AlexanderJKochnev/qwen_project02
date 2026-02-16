@@ -72,8 +72,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-    # expose:
-    #   - "${POSTGRES_PORT}"
+    expose:
+      - "${POSTGRES_PORT}"
     volumes:
       - ./pg_data:/var/lib/postgresql/data
       - ./pg_dump:/tmp
@@ -150,7 +150,7 @@ services:
     environment:
       # POSTGRES_HOST: ${POSTGRES_HOST}
       POSTGRES_HOST: pgbouncer
-      WEB_PORT: 5432
+      WEB_PORT: 6432
       # WEB_PORT: ${API_PORT}
       WEB_HOST: pgbouncer
       # WEB_HOST: ${API_HOST}
@@ -321,7 +321,7 @@ services:
       timeout: 5s
       retries: 5
     ports:
-      - "5432:5432" # Можно оставить только expose, если доступ извне не нужен
+      - "6432:6432" # Можно оставить только expose, если доступ извне не нужен
     depends_on:
       wine_host:
         condition: service_healthy
