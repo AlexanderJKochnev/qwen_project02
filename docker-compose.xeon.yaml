@@ -138,7 +138,7 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port ${API_PORT} --workers 4
     depends_on:
       pgbouncer:
-        condition: service_started
+        condition: service_healthy
       # wine_host:
       #   condition: service_healthy
       mongo:
@@ -165,11 +165,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '2'
-          memory: 1G
+          cpus: '8'
+          memory: 20G
         reservations:
-          cpus: '0.5'
-          memory: 512M
+          cpus: '2'
+          memory: 16G
   
   mongo:
     # --- НАСТРОЙКИ ЛОГИРОВАНИЯ ---
