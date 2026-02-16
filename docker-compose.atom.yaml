@@ -126,8 +126,13 @@ services:
     expose:
       - ${API_PORT}
     environment:
+      # POSTGRES_HOST: ${POSTGRES_HOST}
+      # MONGODB_URL: mongodb://admin:admin@mongo:${MONGO_INN_PORT}
+      # NODE_ENV: production
       POSTGRES_HOST: ${POSTGRES_HOST}
-      MONGODB_URL: mongodb://admin:admin@mongo:${MONGO_INN_PORT}
+      WEB_PORT: ${API_PORT}
+      WEB_HOST: ${API_HOST}
+      BASE_URL: ${BASE_URL}
       NODE_ENV: production
     deploy:
       resources:
