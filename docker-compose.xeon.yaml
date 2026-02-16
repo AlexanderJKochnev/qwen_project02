@@ -137,8 +137,10 @@ services:
     restart: unless-stopped
     command: uvicorn app.main:app --host 0.0.0.0 --port ${API_PORT} --workers 4
     depends_on:
-      wine_host:
-        condition: service_healthy
+      pgbouncer:
+        condition: service_started
+      # wine_host:
+      #   condition: service_healthy
       mongo:
         condition: service_healthy
     # ports:
@@ -146,8 +148,11 @@ services:
     expose:
       - ${API_PORT}
     environment:
-      POSTGRES_HOST: ${POSTGRES_HOST}
+      # POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_HOST: pgbouncer
+      WEB_PORT: 6432
       WEB_PORT: ${API_PORT}
+      WEB_HOST: pgbouncer
       WEB_HOST: ${API_HOST}
       BASE_URL: ${BASE_URL}
       NODE_ENV: production
@@ -283,6 +288,32 @@ services:
     #     condition: service_healthy
     #   mongo:
     #     condition: service_healthy
+  
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    container_name: pgbouncer
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@wine_host:${API_PORT}/${POSTGRES_DB}
+      - POOL_MODE=transaction
+      - MAX_CLIENT_CONN=500        # Хватит для 9 воркеров с запасом
+      - DEFAULT_POOL_SIZE=50       # Реальные сессии к Postgres
+      - MIN_POOL_SIZE=10
+      - RESERVE_POOL_SIZE=10
+      - AUTH_TYPE=md5
+      - ADMIN_USERS=${POSTGRES_USER}
+      - STATS_USERS=${POSTGRES_USER}
+      - IGNORE_STARTUP_PARAMETERS=extra_float_digits # Критично для SQLAlchemy/Java
+    expose:
+      - "6432" # Можно оставить только expose, если доступ извне не нужен
+    depends_on:
+      wine_host:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
   
 volumes:
   migration_volume: # alembic migrations

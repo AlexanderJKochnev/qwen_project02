@@ -38,11 +38,16 @@ class ConfigDataBase(BaseSettings):
         :return:
         :rtype:
         """
+        return (f"postgresql+{self.DRIVER}://{self.POSTGRES_USER}:"
+                f"{self.POSTGRES_PASSWORD}@pgbouncer:"
+                f"6432/{self.POSTGRES_DB}")
+        """
         return (
             f"postgresql+{self.DRIVER}://{self.POSTGRES_USER}:"
             f"{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:"
             f"{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
         )
+        """
 
     @property
     def django_database_url(self) -> Optional[PostgresDsn]:

@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import (create_async_engine,
                                     async_sessionmaker,
                                     # AsyncEngine,
                                     AsyncSession)
+from sqlalchemy.pool import NullPool
 from sqlalchemy import text
 from loguru import logger
 from app.core.config.database.db_config import settings_db
@@ -20,10 +21,15 @@ class DatabaseManager:
         # Создаем Engine (Singleton)
         cls.engine = create_async_engine(settings_db.database_url,
                                          echo=settings_db.DB_ECHO_LOG,
-                                         pool_pre_ping=True,
-                                         pool_size=settings_db.POOL_SIZE,
-                                         max_overflow=settings_db.MAX_OVERFLOW,
-                                         pool_recycle=settings_db.POOL_RECYCLE
+                                         poolclass=NullPool,
+                                         # ВАЖНО: отключаем встроенный пул SQLAlchemy
+                                         connect_args={"options": "-c statement_timeout=30000"}
+                                         # Опционально: таймаут 30 сек
+                                         # все что ниже только для прямого соединения
+                                         # pool_pre_ping=True,
+                                         # pool_size=settings_db.POOL_SIZE,
+                                         # max_overflow=settings_db.MAX_OVERFLOW,
+                                         # pool_recycle=settings_db.POOL_RECYCLE
                                          )
 
         # Создаем фабрику сессий
