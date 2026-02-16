@@ -1,72 +1,57 @@
 #!/bin/bash
-# Настройки
-HDD_DEV="/dev/sda"             # ПРОВЕРЬТЕ ПРАВИЛЬНОСТЬ ЧЕРЕЗ lsblk!
+
+# --- НАСТРОЙКИ ---
+HDD_DEV="/dev/sda"        # Целевой диск
 MOUNT_POINT="/mnt/hdd_data"
-DOCKER_LIB="/var/lib/docker"
 LOG_DIR="/var/log"
+DOCKER_VOLUMES="/var/lib/docker/volumes"
 
-# Проверка на root
-if [[ $EUID -ne 0 ]]; then
-   echo "Запустите скрипт от имени root (sudo)"
-   exit 1
-fi
+# Проверка прав root
+if [[ $EUID -ne 0 ]]; then echo "Ошибка: Запустите от sudo"; exit 1; fi
 
-echo "!!! ВНИМАНИЕ: Диск $HDD_DEV будет отформатирован. Все данные будут удалены !!!"
-read -p "Вы уверены? (y/n): " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    exit 1
-fi
+echo "--- Начинаю замену/настройку диска $HDD_DEV ---"
 
-# 1. Остановка сервисов (обязательно перед манипуляциями с логами)
-systemctl stop docker docker.socket containerd 2>/dev/null
-systemctl stop rsyslog 2>/dev/null
+# 1. Установка необходимых утилит
+apt update && apt install -y e2fsprogs rsync 2>/dev/null
 
-# 2. Подготовка диска (Размонтирование, форматирование, монтирование)
-umount $HDD_DEV 2>/dev/null
-echo "Форматирование $HDD_DEV в ext4..."
-mkfs.ext4 -F $HDD_DEV
+# 2. Остановка зависимых сервисов
+systemctl stop docker 2>/dev/null
+systemctl stop proftpd 2>/dev/null
 
+# 3. Полная очистка fstab от старых записей этого диска и его bind-монтирований
+sed -i "\|$MOUNT_POINT|d" /etc/fstab
+sed -i "\|/var/log|d" /etc/fstab
+sed -i "\|/var/lib/docker/volumes|d" /etc/fstab
+
+# 4. Форматирование в ext4
+umount -l $HDD_DEV 2>/dev/null
+echo "Форматирование $HDD_DEV..."
+mkfs.ext4 -F $HDD_DEV || { echo "Ошибка форматирования!"; exit 1; }
+
+# 5. Монтирование и получение нового UUID
 mkdir -p $MOUNT_POINT
-mount $HDD_DEV $MOUNT_POINT
-
-# 3. Настройка автомонтрирования через fstab
 UUID=$(blkid -s UUID -o value $HDD_DEV)
-sed -i "\|$MOUNT_POINT|d" /etc/fstab # Чистим старые записи для этого пути
-echo "UUID=$UUID $MOUNT_POINT ext4 defaults 0 2" >> /etc/fstab
+mount -U $UUID $MOUNT_POINT || { echo "Ошибка монтирования!"; exit 1; }
 
-# 4. Функция переноса и создания ссылок
-move_and_link() {
-    local src=$1
-    local dst=$2
-    mkdir -p "$dst"
-    
-    if [ -d "$src" ] && [ ! -L "$src" ]; then
-        echo "Перенос данных из $src на HDD..."
-        rsync -a "$src/" "$dst/"
-        rm -rf "$src"
-    fi
-    
-    # Если папки нет (новый docker), просто создаем ссылку
-    [ ! -e "$src" ] && ln -s "$dst" "$src"
-    echo "Ссылка создана: $src -> $dst"
-}
+# 6. Подготовка структуры папок на самом HDD
+mkdir -p "$MOUNT_POINT/log"
+mkdir -p "$MOUNT_POINT/volumes"
+chown root:adm "$MOUNT_POINT/log"
+chmod 755 "$MOUNT_POINT/log"
 
-# 5. Выполнение линковки
-# Только вольюмы на HDD, образы/контейнеры остаются на SSD (/var/lib/docker/overlay2)
-move_and_link "$DOCKER_LIB/volumes" "$MOUNT_POINT/docker_volumes"
-# Системные логи
-move_and_link "$LOG_DIR" "$MOUNT_POINT/system_logs"
-# Папка для бэкапов
-move_and_link "/opt/backups" "$MOUNT_POINT/backups"
+# 7. Запись в /etc/fstab (Используем Bind Mount для стабильности)
+echo "UUID=$UUID $MOUNT_POINT ext4 defaults,nofail,x-systemd.device-timeout=10s 0 2" >> /etc/fstab
+echo "$MOUNT_POINT/log /var/log none defaults,bind,nofail,x-systemd.requires=$MOUNT_POINT 0 0" >> /etc/fstab
+echo "$MOUNT_POINT/volumes /var/lib/docker/volumes none defaults,bind,nofail,x-systemd.requires=$MOUNT_POINT 0 0" >> /etc/fstab
 
-# 6. Возвращаем права (для логов важно)
-chown root:syslog "$MOUNT_POINT/system_logs" 2>/dev/null
-chmod 755 "$MOUNT_POINT/system_logs"
+# 8. Финальная проверка и применение
+systemctl daemon-reload
+mount -a
 
-# 7. Запуск сервисов
-systemctl start rsyslog 2>/dev/null
+# 9. Запуск сервисов
 systemctl start docker 2>/dev/null
+systemctl start proftpd 2>/dev/null
 
-echo "Готово! HDD подготовлен, ссылки созданы."
-lsblk $HDD_DEV
+echo "--- ГОТОВО ---"
+echo "Диск $HDD_DEV настроен. UUID: $UUID"
+findmnt /var/log

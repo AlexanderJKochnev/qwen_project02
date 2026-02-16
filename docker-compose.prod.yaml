@@ -5,7 +5,6 @@
 services:
   # 1. Сервис-инициализатор (запустится один раз и выключится)
   certbot_init:
-    # image: certbot/certbot
     image: ghcr.io/alexanderjkochnev/certbot:latest
     container_name: certbot_init
     volumes:

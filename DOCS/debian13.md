@@ -38,8 +38,6 @@
    git config --global user.email "akochnev66@gmail.com"
    ls -l ~/.ssh/id_rsa.pub # проверка ключа
    wssh-keygen -t ed25519 -C "akochnev66@gmail.com"
-
-
-
-
-3. 
+10. подключение ghcr -> см. ghcr.md
+11. подключение HDD ->  скрипт scripts/mounting.sh
+12. 

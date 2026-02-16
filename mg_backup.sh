@@ -8,7 +8,7 @@ PASSWORD="admin"
 BACKUP_NAME="mg_backup.gz"
 
 echo "--- Начинаю бэкап базы данных из контейнера $SERVICE_NAME ---"
-docker exec -t $SERVICE_NAME mongodump --host=mongo \
+docker exec $SERVICE_NAME mongodump --host=mongo \
                                --port=27017 \
                                --username=admin \
                                --password='admin' \
