@@ -32,9 +32,9 @@ services:
       - ./nginx/static:/etc/nginx/static:ro
       - certs_data:/etc/letsencrypt
       - certbot_www:/var/www/certbot
-    # depends_on:
-    #   certbot_init:
-    #     condition: service_completed_successfully
+    depends_on:
+      certbot_init:
+        condition: service_completed_successfully
     # Добавлен --post-hook для перезагрузки nginx внутри контейнера
     command: /bin/sh -c "echo '0 12 * * * certbot renew --webroot -w /var/www/certbot --post-hook \"nginx -s reload\"' > /etc/crontabs/root && crond && nginx -g 'daemon off;'"
     deploy:

@@ -45,3 +45,8 @@
 14. git remote add qwen git@github.com:AlexanderJKochnev/qwen_project02.git
 15. git pull qwen main
 16. sh volume_bind.sh
+17. скачиваем и устанавливаем backup
+18. открывем порты:
+    1. ufw allow 80/tcp 
+    2. ufw allow 443/tcp
+19. 
