@@ -301,7 +301,7 @@ services:
       container_name: pgbouncer
       ports:
         - "6432:6432"  # Порт для приложения
-      networks:
+      # networks:
     restart: unless-stopped
     # environment:
       # Параметры подключения к реальному Postgres
