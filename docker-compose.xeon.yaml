@@ -294,7 +294,13 @@ services:
     container_name: pgbouncer
     restart: unless-stopped
     environment:
-      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@wine_host:${API_PORT}/${POSTGRES_DB}
+      # Параметры подключения к реальному Postgres
+      - DB_HOST=wine_host
+      - DB_PORT=5432
+      - DB_USER=${POSTGRES_USER}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - DB_NAME=${POSTGRES_DB}
+      # - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@wine_host:${API_PORT}/${POSTGRES_DB}
       - POOL_MODE=transaction
       - MAX_CLIENT_CONN=500        # Хватит для 9 воркеров с запасом
       - DEFAULT_POOL_SIZE=50       # Реальные сессии к Postgres
@@ -303,7 +309,13 @@ services:
       - AUTH_TYPE=md5
       - ADMIN_USERS=${POSTGRES_USER}
       - STATS_USERS=${POSTGRES_USER}
-      - IGNORE_STARTUP_PARAMETERS=extra_float_digits # Критично для SQLAlchemy/Java
+      - IGNORE_STARTUP_PARAMETERS=extra_float_digits,search_path # Критично для SQLAlchemy/Java
+    healthcheck:
+      # Официальный способ проверки pgbouncer (внутри образа есть psql-client)
+      test: [ "CMD", "pg_isready", "-h", "localhost", "-p", "6432" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     expose:
       - "6432" # Можно оставить только expose, если доступ извне не нужен
     depends_on:
