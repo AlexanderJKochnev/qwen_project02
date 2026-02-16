@@ -62,11 +62,12 @@ services:
       -c default_statistics_target=100
       -c random_page_cost=1.1
       -c effective_io_concurrency=200
-      -c work_mem=128MB
+      -c work_mem=32MB
       -c min_wal_size=1GB
-      -c max_wal_size=4GB
+      -c max_wal_size=8GB
       -c max_worker_processes=14
-      -c max_parallel_workers_per_gather=4
+      -c max_parallel_workers_per_gather=2
+      -c max_connections=200
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
