@@ -1,7 +1,7 @@
 # docker-compose.prod.yaml
 # docker compose -f docker-compose.xeon.yaml up -d --build
 # перезепуск nginx
-# docker compose -f docker-compose.prod.yaml restart nginx_gateway
+# docker compose -f docker-compose.xeon.yaml restart nginx_gateway
 services:
   # 1. Сервис-инициализатор (запустится один раз и выключится)
   certbot_init:
@@ -305,9 +305,15 @@ services:
       DB_NAME: wine_db
       AUTH_TYPE: scram-sha-256
       POOL_MODE: transaction
+      #
       MAX_CLIENT_CONN: 500
+      SERVER_IDLE_TIMEOUT: 600
+      QUERY_TIMEOUT: 60
       DEFAULT_POOL_SIZE: 50
+      MIN_POOL_SIZE: 20
+      RESERVE_POOL_SIZE: 10
       LISTEN_PORT: 6432
+      ADMIN_USERS: wine
       # ВАЖНО: Явно создаем userlist через переменные
       AUTH_FILE: /etc/pgbouncer/userlist.txt
       # Дополнительные пользователи (если нужны)
@@ -315,31 +321,9 @@ services:
     ports:
       - "6432:6432"  # Порт для приложения
     restart: unless-stopped
-    # environment:
-      # Параметры подключения к реальному Postgres
-      # - DB_HOST=wine_host
-      # - DB_PORT=5432
-      # - DB_USER=${POSTGRES_USER}
-      # - DB_PASSWORD=${POSTGRES_PASSWORD}
-      # - DB_NAME=${POSTGRES_DB}
-      # # - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@wine_host:${API_PORT}/${POSTGRES_DB}
-      # - POOL_MODE=transaction
-      # - MAX_CLIENT_CONN=500        # Хватит для 9 воркеров с запасом
-      # - DEFAULT_POOL_SIZE=50       # Реальные сессии к Postgres
-      # - MIN_POOL_SIZE=10
-      # - RESERVE_POOL_SIZE=10
-      # - AUTH_TYPE=md5
-      # - ADMIN_USERS=${POSTGRES_USER}
-      # - STATS_USERS=${POSTGRES_USER}
-      # - IGNORE_STARTUP_PARAMETERS=extra_float_digits,search_path # Критично для SQLAlchemy/Java
-      # - LISTEN_BACKLOG=1024        # Увеличиваем очередь ожидания порта
-      # - SERVER_LIFETIME=3600
-      # - SERVER_IDLE_TIMEOUT=600
-      # - CONNECTION_UTILS=1         # Помогает при асинхронных пиках
     healthcheck:
       # Официальный способ проверки pgbouncer (внутри образа есть psql-client)
       test: ["CMD", "pg_isready", "-h", "localhost", "-p", "6432", "-U", "wine", "-d", "wine_db"]
-      # test: [ "CMD", "pg_isready", "-h", "localhost", "-p", "5432" ]
       interval: 5s
       timeout: 5s
       retries: 5
