@@ -298,9 +298,9 @@ services:
     build:
       context: ./pgbouncer
       dockerfile: Dockerfile
-      container_name: pgbouncer
-      ports:
-        - "6432:6432"  # Порт для приложения
+    container_name: pgbouncer
+    ports:
+      - "6432:6432"  # Порт для приложения
       # networks:
     restart: unless-stopped
     # environment:
