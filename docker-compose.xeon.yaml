@@ -298,7 +298,7 @@ services:
     image: edoburu/pgbouncer:latest
     container_name: pgbouncer
     environment:
-      DB_HOST: postgres
+      DB_HOST: wine_host
       DB_PORT: 5432
       DB_USER: wine
       DB_PASSWORD: wine1
