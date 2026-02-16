@@ -72,8 +72,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-    expose:
-      - "${POSTGRES_PORT}"
+    # expose:
+    #   - "${POSTGRES_PORT}"
     volumes:
       - ./pg_data:/var/lib/postgresql/data
       - ./pg_dump:/tmp
@@ -320,8 +320,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    expose:
-      - "6432" # Можно оставить только expose, если доступ извне не нужен
+    ports:
+      - "5432:5432" # Можно оставить только expose, если доступ извне не нужен
     depends_on:
       wine_host:
         condition: service_healthy
