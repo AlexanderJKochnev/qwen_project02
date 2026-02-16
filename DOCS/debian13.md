@@ -40,4 +40,8 @@
    wssh-keygen -t ed25519 -C "akochnev66@gmail.com"
 10. подключение ghcr -> см. ghcr.md
 11. подключение HDD ->  скрипт scripts/mounting.sh
-12. 
+12. mkdir wine && cd wine (скопировать .env)
+13. git init
+14. git remote add qwen git@github.com:AlexanderJKochnev/qwen_project02.git
+15. git pull qwen main
+16. sh volume_bind.sh
