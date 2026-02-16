@@ -295,10 +295,23 @@ services:
     #     condition: service_healthy
   
   pgbouncer:
-    build:
-      context: ./pgbouncer
-      dockerfile: Dockerfile
+    image: edoburu/pgbouncer:latest
     container_name: pgbouncer
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: wine
+      DB_PASSWORD: wine1
+      DB_NAME: wine_db
+      AUTH_TYPE: md5
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: 500
+      DEFAULT_POOL_SIZE: 50
+      LISTEN_PORT: 6432
+      # ВАЖНО: Явно создаем userlist через переменные
+      AUTH_FILE: /etc/pgbouncer/userlist.txt
+      # Дополнительные пользователи (если нужны)
+      USERS: "wine wine1"
     ports:
       - "6432:6432"  # Порт для приложения
     restart: unless-stopped
