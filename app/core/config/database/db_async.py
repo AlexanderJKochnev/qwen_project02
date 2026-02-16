@@ -23,7 +23,9 @@ class DatabaseManager:
                                          echo=settings_db.DB_ECHO_LOG,
                                          poolclass=NullPool,
                                          # ВАЖНО: отключаем встроенный пул SQLAlchemy
-                                         connect_args={"options": "-c statement_timeout=30000"}
+                                         connect_args={"server_settings": {"extra_float_digits": "3",
+                                                                           "statement_timeout": "30000"}},
+
                                          # Опционально: таймаут 30 сек
                                          # все что ниже только для прямого соединения
                                          # pool_pre_ping=True,
