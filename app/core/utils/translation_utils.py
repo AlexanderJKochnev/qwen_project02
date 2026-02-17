@@ -1,15 +1,16 @@
 # app/core/utils/translation_utils.py
 import asyncio  # noqa: F401
 import httpx
-from loguru import logger
+# from loguru import logger
 from typing import Dict, Optional, Any, List
 from app.core.utils.common_utils import jprint
 from app.core.config.project_config import settings
 
 
-async def translate_text(text: str, source_lang: str = "en",
+async def translate_text(text: str,
                          target_lang: str = "ru",
                          mark: str = "ai",
+                         source_lang: str = "en",
                          test: bool = False) -> Optional[str]:
     """
     Translate text using MyMemory translation service
@@ -54,7 +55,7 @@ async def translate_text(text: str, source_lang: str = "en",
 async def gemma_translate(text: str,
                           target_lang: str = "ru",
                           source_lang: str = "en",
-                          mark: str = "gm") -> Optional[str]:
+                          mark: str = "gm", **kwargs) -> Optional[str]:
     """
     Translate text with gemma
     """
@@ -153,15 +154,16 @@ async def fill_missing_translations(data: Dict[str, Any], test: bool = False) ->
 
         # Fill missing translations
         for field in fields:
+            trans_func = gemma_translate
             if field not in filled_fields:  # Field is missing
                 target_lang = get_field_language(field)
                 if target_lang and target_lang != source_lang:
                     # Translate from source to target
-                    translated_text = await translate_text(
+                    translated_text = await trans_func(
                         source_value,
-                        source_lang=source_lang,
                         target_lang=target_lang,
-                        mark=mark
+                        mark=mark,
+                        source_lang=source_lang,
                     )
 
                     if translated_text:
