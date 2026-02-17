@@ -28,7 +28,7 @@ class GemmaRouter:
 
     async def translate(self,
                         text: str = Query(...,
-                                          description=("текст котолрый нужнол перевести")),
+                                          description=("текст котолрый нужно перевести")),
                         lang: str = Query('ru', description=("язык на который нужно перевести"))
                         ) -> str:
         """  тестирование сервиса перевода Gemma.
@@ -36,4 +36,4 @@ class GemmaRouter:
              язык на котороый перевсти - либо 2-х значный код: ru en zh (н все языки)
              либо текстом russian, french...
         """
-        return gemma_translate(text, lang.lower())
+        return await gemma_translate(text, lang.lower())

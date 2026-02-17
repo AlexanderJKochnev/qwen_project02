@@ -44,7 +44,7 @@
 13. git init
 14. git remote add qwen git@github.com:AlexanderJKochnev/qwen_project02.git
 15. git pull qwen main
-16. sh volume_bind.sh*
+16. sh volume_bind.sh*  НА HDD только volume! остальное даст тормоза
     1. косячит с присоединеним директории для именнованных дисков - проверь и сделай в ручную:
        1. sudo systemctl stop docker
        2. sudo rsync -aHSX /var/lib/docker/volumes/ /mnt/hdd_data/volumes/
@@ -62,4 +62,11 @@
 18. открывем порты:
     1. ufw allow 80/tcp 
     2. ufw allow 443/tcp
-19. 
+19. УСТАНОВКА ДРАЙВЕРОВ НА nvidia rtx3060
+    1. cat /etc/apt/sources.list | grep -E "deb.*trixie"
+    2. uname -r
+    3. sudo apt install linux-headers-$(uname -r) build-essential
+    4. sudo apt install --reinstall nvidia-driver nvidia-kernel-dkms
+    5. sudo modprobe nvidia
+    6. lsmod | grep nvidia
+    7. nvidia-smi
