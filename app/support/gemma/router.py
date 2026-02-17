@@ -45,22 +45,22 @@ class GemmaRouter:
         """
         return await gemma_translate(text, lang.lower())
 
-    async def translate_get(self,
-                            # Обязательные параметры
-                            text: str = Query(..., description="Текст для перевода"),
-                            target_lang: str = Query(..., description="Язык (например, russian)"),
+    async def do_translate(self,
+                           # Обязательные параметры
+                           text: str = Query(..., description="Текст для перевода"),
+                           target_lang: str = Query(..., description="Язык (например, russian)"),
 
-                            # Настройки с дефолтами
-                            model_level: int = Query(1, ge=1, le=3, description="1: 2b, 2: 9b, 3: 27b"),
-                            interaction_type: str = Query("chat", pattern="^(chat|generate)$"),
+                           # Настройки с дефолтами
+                           model_level: int = Query(1, ge=1, le=3, description="1: 2b, 2: 9b, 3: 27b"),
+                           interaction_type: str = Query("chat", pattern="^(chat|generate)$"),
 
-                            # Параметры нейросети
-                            temperature: float = Query(0.1, ge=0.0, le=1.0), num_predict: int = Query(1000),
-                            top_p: float = Query(0.9), keep_alive: str = Query("5m"),
+                           # Параметры нейросети
+                           temperature: float = Query(0.1, ge=0.0, le=1.0), num_predict: int = Query(1000),
+                           top_p: float = Query(0.9), keep_alive: str = Query("5m"),
 
-                            # Сложный параметр (список строк) через Query
-                            stop: Annotated[Optional[List[str]], Query()] = None
-                            ):
+                           # Сложный параметр (список строк) через Query
+                           stop: Annotated[Optional[List[str]], Query()] = None
+                           ):
         # Собираем всё в объект для сервиса (имитируем прошлую схему)
         params = {"text": text, "target_lang": target_lang, "model_level": model_level,
                   "interaction_type": interaction_type, "temperature": temperature, "num_predict": num_predict,
