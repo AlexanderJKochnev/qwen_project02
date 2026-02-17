@@ -26,12 +26,21 @@ class TranslationService:
 
         ollama_options = {"temperature": p['temperature'], "num_predict": p['num_predict'], "top_p": p['top_p'],
                           "stop": p['stop']}
-
+        INDUSTRY_PROMPTS = {
+            "wine": "You are a professional sommelier and wine critic. "
+                    "Translate texts about wine, "
+                    "preserving terminology (terroir, bouquet, vintage) and professional style.",
+            "trade": "You are an e-commerce marketing expert. "
+                     "Translate product descriptions to be attractive for customers, "
+                     "keeping SEO keywords and technical specs accurate.",
+            "general": "You are a professional translator. Output only the translated text."}
         if p['interaction_type'] == "chat":
+            industry = p.get("industry", "general")
             payload = {"model": model_name,
                        "messages": [{"role": "system", "content": f"Translate to {p['target_lang']}. Only text."},
                                     {"role": "user", "content": p['text']}], "stream": False, "options": ollama_options,
-                       "keep_alive": p['keep_alive']}
+                       "keep_alive": p['keep_alive'],
+                       "system_instruction": INDUSTRY_PROMPTS.get(industry, INDUSTRY_PROMPTS["general"])}
             result = await self.repository.call_api("chat", payload)
             content = result.get("message", {}).get("content", "").strip()
         else:
@@ -149,7 +158,8 @@ async def llm_translate(text: str,
               "num_predict": settings.OLLAMA_NUM_PREDICT,
               "top_p": settings.OLLAMA_TOP_P,
               "keep_alive": settings.OLLAMA_KEEP_ALIVE,
-              "stop": None
+              "stop": None,
+              "industry": "wine"
               }
     translated_text, time_taken = await service.translate(params)
     return translated_text

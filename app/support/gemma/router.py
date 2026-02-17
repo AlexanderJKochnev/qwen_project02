@@ -49,12 +49,13 @@ class GemmaRouter:
                            text: str, target_lang: str,
                            model_level: int = Query(1), interaction_type: str = Query("chat"),
                            temperature: float = Query(0.1), num_predict: int = Query(1000), top_p: float = Query(0.9),
-                           keep_alive: str = Query("5m"), stop: Optional[List[str]] = Query(None)
+                           keep_alive: str = Query("5m"), stop: Optional[List[str]] = Query(None),
+                           industry: str = Query("wine", description="wine, trade or general"),
                            ):
         # Собираем параметры в словарь (dict)
         params = {"text": text, "target_lang": target_lang, "model_level": model_level,
                   "interaction_type": interaction_type, "temperature": temperature, "num_predict": num_predict,
-                  "top_p": top_p, "keep_alive": keep_alive, "stop": stop}
+                  "top_p": top_p, "keep_alive": keep_alive, "stop": stop, "industry": industry}
 
         # Вызываем сервис (теперь он вернет текст и время)
         translated_text, time_taken = await self.service.translate(params)
