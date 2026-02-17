@@ -54,7 +54,7 @@ class ApiRouter(ItemRouter):
                                   response_model=List[ItemApi],
                                   openapi_extra={'x-request-schema': None}
                                   )
-        self.router.add_api_route("/search_by_ids", self.search_by_ids,
+        self.router.add_api_route("/get_by_ids", self.search_by_ids,
                                   methods=["GET"],
                                   response_model=List[ItemApi],
                                   openapi_extra={'x-request-schema': None}
