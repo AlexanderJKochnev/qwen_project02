@@ -1,11 +1,11 @@
 # app.support.gemma.router.py
 from fastapi import APIRouter, Depends, Query
-from typing import Callable, Annotated, Optional, List
+from typing import Callable, Optional, List
 from app.auth.dependencies import get_active_user_or_internal
-from app.core.utils.translation_utils import gemma_translate
+from app.core.utils.translation_utils import gemma_translate, TranslationService, OllamaRepository
 # from app.support.gemma.schemas import TranslationRequest
-from app.support.gemma.service import TranslationService
-from app.support.gemma.repository import OllamaRepository
+# from app.support.gemma.service import TranslationService
+# from app.support.gemma.repository import OllamaRepository
 
 
 class GemmaRouter:

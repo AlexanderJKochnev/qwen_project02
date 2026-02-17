@@ -1,17 +1,63 @@
 # app/core/utils/translation_utils.py
 import asyncio  # noqa: F401
 import httpx
+import time
+from fastapi import HTTPException
 # from loguru import logger
 from typing import Dict, Optional, Any, List
 # from app.core.utils.common_utils import jprint
 from app.core.config.project_config import settings
-from app.support.gemma.service import TranslationService
-from app.support.gemma.repository import OllamaRepository
+# from app.support.gemma.service import TranslationService
+# from app.support.gemma.repository import OllamaRepository
 
 
-class GemmaTranslate:
-    def __init__(self, type: str, ):
-        pass
+class TranslationService:
+    def __init__(self, repository):
+        self.repository = repository
+        self.model_map = {1: "translategemma",
+                          2: "gemma2:9b",
+                          3: "gemma2:27b",
+                          4: "qwen2.5:7b"}
+
+    async def translate(self, p: dict):
+        start_time = time.perf_counter()  # Начинаем отсчет
+
+        model_name = self.model_map.get(p['model_level'], "gemma2:2b")
+
+        ollama_options = {"temperature": p['temperature'], "num_predict": p['num_predict'], "top_p": p['top_p'],
+                          "stop": p['stop']}
+
+        if p['interaction_type'] == "chat":
+            payload = {"model": model_name,
+                       "messages": [{"role": "system", "content": f"Translate to {p['target_lang']}. Only text."},
+                                    {"role": "user", "content": p['text']}], "stream": False, "options": ollama_options,
+                       "keep_alive": p['keep_alive']}
+            result = await self.repository.call_api("chat", payload)
+            content = result.get("message", {}).get("content", "").strip()
+        else:
+            payload = {"model": model_name, "prompt": f"Translate to {p['target_lang']}: {p['text']}", "stream": False,
+                       "options": ollama_options, "keep_alive": p['keep_alive']}
+            result = await self.repository.call_api("generate", payload)
+            content = result.get("response", "").strip()
+
+        execution_time = time.perf_counter() - start_time
+        return content, round(execution_time, 3)
+
+
+class OllamaRepository:
+    def __init__(self, base_url: str = "http://ollama:11434"):
+        self.base_url = base_url
+
+    async def call_api(self, endpoint: str, payload: dict):
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            try:
+                resp = await client.post(f"{self.base_url}/api/{endpoint}", json=payload)
+                resp.raise_for_status()
+                return resp.json()
+            except Exception as e:
+                # Прокидываем ошибку наверх в эндпоинт
+                detail = e.response.text if hasattr(e, 'response') else str(e)
+                raise HTTPException(status_code=500, detail=f"Ollama Error: {detail}")
 
 
 async def translate_text(text: str,
@@ -91,7 +137,9 @@ async def gemma_translate(text: str,
 async def llm_translate(text: str,
                         target_lang: str = "ru",
                         source_lang: str = "en",
-                        mark: str = "gm", **kwargs) -> Optional[str]:
+                        mark: str = "gm",
+
+                        **kwargs) -> Optional[str]:
     repo = OllamaRepository()
     service = TranslationService(repo)
     params = {"text": text, "target_lang": target_lang,

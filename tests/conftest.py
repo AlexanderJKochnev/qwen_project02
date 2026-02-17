@@ -19,7 +19,7 @@ import logging
 from app.auth.models import User
 from app.auth.utils import create_access_token, get_password_hash
 from app.core.models.base_model import Base
-from app.core.utils.common_utils import jprint
+# from app.core.utils.common_utils import jprint
 from app.main import app
 from app.core.config.database.db_async import get_db, DatabaseManager
 from app.dependencies import get_translator_func
@@ -511,12 +511,12 @@ async def fakedata_generator(authenticated_client_with_db, test_db_session,
                 if assertions(response.status_code not in [200, 201],
                               failed_cases, item,
                               prefix, f'status_code {response.status_code}'):
-                    jprint(data)
+                    # jprint(data)
                     print('-------------------------------')
                     # assert response.status_code in [200, 201],
                     # f'{prefix}, {response.text}'
             except Exception as e:
-                jprint(data)
+                # jprint(data)
                 assert False, f'{e} {response.status_code} {prefix=}, {response.text}'
     if failed_cases:
         pytest.fail("Failed routers:\n" + "\n".join(failed_cases))
