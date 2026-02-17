@@ -14,9 +14,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql.elements import Label
 # from sqlalchemy.dialects import postgresql
 # from sqlalchemy.sql.elements import ColumnElement
-from app.core.utils.alchemy_utils import (create_enum_conditions,
+from app.core.utils.alchemy_utils import (create_enum_conditions, get_sqlalchemy_fields,
                                           create_search_conditions2, ModelType)
-from app.core.utils.alchemy_utils import get_sqlalchemy_fields
 from app.service_registry import register_repo
 
 

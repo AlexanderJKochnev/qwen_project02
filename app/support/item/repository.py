@@ -8,7 +8,8 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.types import String
 from sqlalchemy.dialects import postgresql
 from app.core.repositories.sqlalchemy_repository import Repository
-from app.core.utils.alchemy_utils import create_enum_conditions, create_search_conditions2, ModelType
+from app.core.utils.alchemy_utils import create_enum_conditions, create_search_conditions2
+from app.core.types import ModelType
 from app.support.category.model import Category
 from app.support.country.model import Country
 from app.support.drink.model import Drink, DrinkFood, DrinkVarietal

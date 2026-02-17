@@ -12,9 +12,7 @@ from sqlalchemy.dialects.postgresql import CITEXT  # если используе
 from sqlalchemy.orm import DeclarativeMeta, RelationshipProperty, selectinload
 from sqlalchemy.sql.selectable import Select
 from dateutil.relativedelta import relativedelta
-
-
-ModelType = TypeVar("ModelType", bound=DeclarativeMeta)
+from app.core.types import ModelType
 
 
 def delta_data(shift: int = 2) -> str:

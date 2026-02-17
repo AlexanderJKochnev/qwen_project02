@@ -1,5 +1,6 @@
 # app/auth/repository.py
-from app.core.repositories.sqlalchemy_repository import Repository, ModelType
+from app.core.repositories.sqlalchemy_repository import Repository
+from app.core.types import ModelType
 from app.auth.models import User
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession

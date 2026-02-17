@@ -3,18 +3,18 @@ import json
 import re
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Type, TypeVar, Union, Any, Set
+from typing import Dict, List, Optional, Tuple, Type, TypeVar, Union
 from fastapi import Query
 from pydantic import BaseModel, create_model, Field
 from sqlalchemy import and_, Column, ColumnElement, func, inspect, or_, String, Text, Unicode, UnicodeText
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import DeclarativeBase, DeclarativeMeta, MapperProperty
 from sqlalchemy.orm.attributes import QueryableAttribute
+from app.core.types import ModelType
 from app.core.models.base_model import Base
 from app.core.utils.common_utils import clean_string, enum_to_camel
 from app.core.config.project_config import get_path_to_root
 
-ModelType = TypeVar("ModelType", bound=DeclarativeMeta)
 function = {1: or_, 2: and_}
 
 

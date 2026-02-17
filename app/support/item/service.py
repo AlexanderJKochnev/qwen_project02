@@ -12,7 +12,7 @@ from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.services.service import Service
 from app.core.config.project_config import settings
 from app.core.utils import localized_field_with_replacement
-from app.core.utils.alchemy_utils import ModelType
+from app.core.types import ModelType
 from app.core.utils.pydantic_utils import get_field_name
 from app.core.utils.common_utils import flatten_dict_with_localized_fields, jprint  # , delta_data
 from app.core.utils.converters import read_convert_json, list_move, lang_suffix_list

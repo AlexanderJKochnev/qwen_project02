@@ -4,7 +4,8 @@ from sqlalchemy.orm import selectinload
 from app.support.food.model import Food
 from app.support.drink.model import DrinkFood, Drink
 from app.support.item.model import Item
-from app.core.repositories.sqlalchemy_repository import Repository, ModelType
+from app.core.repositories.sqlalchemy_repository import Repository
+from app.core.types import ModelType
 
 
 # FoodRepository = RepositoryFactory.get_repository(Food)

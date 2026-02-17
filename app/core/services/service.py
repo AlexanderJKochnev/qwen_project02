@@ -12,7 +12,8 @@ from sqlalchemy.sql.elements import Label
 from app.core.config.project_config import settings
 from app.core.config.database.db_async import DatabaseManager
 from app.core.models.base_model import Base, get_model_by_name
-from app.core.repositories.sqlalchemy_repository import ModelType, Repository
+from app.core.repositories.sqlalchemy_repository import Repository
+from app.core.types import ModelType
 from app.core.utils.alchemy_utils import has_column
 from app.core.utils.common_utils import flatten_dict_with_localized_fields
 from app.core.utils.pydantic_utils import make_paginated_response, prepare_search_string, get_data_for_search, get_repo
