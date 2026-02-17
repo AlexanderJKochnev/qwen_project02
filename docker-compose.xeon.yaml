@@ -314,6 +314,13 @@ services:
           memory: 512M
   
   ollama:
+    # --- НАСТРОЙКИ ЛОГИРОВАНИЯ ---
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"   # Максимальный размер файла лога: 10 МБ
+        max-file: "3"     # Количество хранимых файлов ротации: 3
+    # -----------------------------
     image: ollama/ollama
     container_name: ollama
     deploy:
@@ -334,3 +341,4 @@ volumes:
   upload_volume:
   certs_data:
   certbot_www:
+  ollama:
