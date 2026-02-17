@@ -1,4 +1,10 @@
 ##  загрузка и установка ollama
 1. все написано в docker-compose-.xeon.yaml 
 2. при первом запуске (если потом не сделаю автозагрузчик):
-   1. docker exec -it ollama ollama pull translategemma
+   1. docker exec -it ollama ollama pull translategemma  # модель 2b дообученная
+   2. docker exec -it ollama ollama pull gemma2:9b # модель 9б  
+3. Ollama держит модель в памяти (VRAM) в течение 5 минут после последнего запроса (по умолчанию). 
+4. Чтобы увидеть, что именно загружено прямо сейчас:
+   1. docker exec -it ollama ollama ps
+   2. nvidia-smi # загрузка видеокарты
+5. настройки взаимодействия с LLM
