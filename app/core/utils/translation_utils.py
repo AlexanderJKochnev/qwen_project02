@@ -1,7 +1,9 @@
 # app/core/utils/translation_utils.py
 import asyncio  # noqa: F401
 import httpx
+from loguru import logger
 from typing import Dict, Optional, Any, List
+from app.core.utils.common_utils import jprint
 from app.core.config.project_config import settings
 
 
@@ -73,6 +75,7 @@ async def gemma_translate(text: str,
                                                "stream": False})
             response.raise_for_status()
             data = response.json()
+            jprint(data)
             return {"translated_text": data.get("response").strip()}
         except Exception as e:
             raise Exception(f'gemma_translate.error: {e}')
