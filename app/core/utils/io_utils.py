@@ -4,6 +4,8 @@ import json
 from typing import List
 from app.core.utils.common_utils import enum_to_camel
 from app.core.config.project_config import get_path_to_root, settings
+from fastapi.responses import Response, StreamingResponse
+from io import BytesIO
 # from app.core.utils.alchemy_utils import JsonConverter
 
 
@@ -85,3 +87,15 @@ def get_filepath_from_dir_by_name(filename: str = None, upload_dir: str = None) 
         return filepath
     except Exception:
         raise Exception(f'file {filename} is not exists in {upload_dir}')
+
+
+def ResponseStreaming(image_data: dict, headers: dict):
+    return StreamingResponse(
+        BytesIO(image_data["content"]), media_type=image_data['content_type'], headers=headers
+    )
+
+
+def ResponseJust(image_data: dict, headers: dict):
+    return Response(content=image_data["content"],
+                    media_type=image_data['content_type'],
+                    headers=headers)

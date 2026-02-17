@@ -1,12 +1,13 @@
 # app/mongodb/router.py
-import io
+
 from datetime import datetime
 from typing import Optional
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, status, UploadFile
-from fastapi.responses import Response
+# from fastapi.responses import Response, StreamingResponse
 from app.auth.dependencies import get_active_user_or_internal
 from app.core.config.project_config import settings
 from app.core.utils.common_utils import back_to_the_future, delta_data
+from app.core.utils.io_utils import ResponseJust, ResponseStreaming
 from app.mongodb.models import FileListResponse, ImageCreateResponse, DirectUploadResponse
 from app.mongodb.service import ThumbnailImageService
 # from app.core.cache import cache_key_builder, invalidate_cache  #  потом может быть закэшируем
@@ -75,11 +76,11 @@ async def download_thumbnail(
     else:
         headers["X-Cache"] = "MISS"
 
-    # print(f"📱 Returning THUMBNAIL: {len(image_data['content'])} bytes")
+    return ResponseJust(image_data, headers)
 
-    return Response(
-        io.BytesIO(image_data["content"]), media_type=image_data['content_type'], headers=headers
-    )
+    # return StreamingResponse(
+    #    io.BytesIO(image_data["content"]), media_type=image_data['content_type'], headers=headers
+    # )
 
 
 @router.get(f'/{thumbprefix}/name/' + "{filename}", openapi_extra={'x-request-schema': None})
@@ -99,11 +100,7 @@ async def download_thumbnail_by_filename(
     else:
         headers["X-Cache"] = "MISS"
 
-    # print(f"📱 Returning THUMBNAIL: {len(image_data['content'])} bytes")
-
-    return Response(
-        io.BytesIO(image_data["content"]), media_type=image_data['content_type'], headers=headers
-    )
+    return ResponseJust(image_data, headers)
 
 
 # === FULL IMAGE endpoint'ы (для детального просмотра) ===
@@ -124,11 +121,7 @@ async def download_full_image(
     else:
         headers["X-Cache"] = "MISS"
 
-    # print(f"🖼️  Returning FULL IMAGE: {len(image_data['content'])} bytes")
-
-    return Response(
-        io.BytesIO(image_data["content"]), media_type=image_data['content_type'], headers=headers
-    )
+    return ResponseJust(image_data, headers)
 
 
 @router.get(f'/{fileprefix}/' + "{filename}", openapi_extra={'x-request-schema': None})
@@ -149,11 +142,7 @@ async def download_full_image_by_filename(
         else:
             headers["X-Cache"] = "MISS"
 
-        # print(f"🖼️  Returning FULL IMAGE: {len(image_data['content'])} bytes")
-
-        return Response(
-            io.BytesIO(image_data["content"]), media_type=image_data['content_type'], headers=headers
-        )
+        return ResponseJust(image_data, headers)
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
 
