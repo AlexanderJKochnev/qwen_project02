@@ -1,9 +1,9 @@
 # app.support.gemma.router.py
 from fastapi import APIRouter, Depends, Query
-from typing import Callable
+from typing import Callable, Annotated, Optional, List
 from app.auth.dependencies import get_active_user_or_internal
 from app.core.utils.translation_utils import gemma_translate
-from app.support.gemma.schemas import TranslationRequest
+# from app.support.gemma.schemas import TranslationRequest
 from app.support.gemma.service import TranslationService
 from app.support.gemma.repository import OllamaRepository
 
@@ -45,12 +45,27 @@ class GemmaRouter:
         """
         return await gemma_translate(text, lang.lower())
 
-    async def do_translate(self, params: TranslationRequest):
-        """
-        Экспериментируй с параметрами здесь!
-        Gemma2:2b (level 1) — самая быстрая.
-        Gemma2:9b (level 2) — самая точная для твоей RTX 3060.
-        """
+    async def translate_get(self,
+                            # Обязательные параметры
+                            text: str = Query(..., description="Текст для перевода"),
+                            target_lang: str = Query(..., description="Язык (например, russian)"),
+
+                            # Настройки с дефолтами
+                            model_level: int = Query(1, ge=1, le=3, description="1: 2b, 2: 9b, 3: 27b"),
+                            interaction_type: str = Query("chat", pattern="^(chat|generate)$"),
+
+                            # Параметры нейросети
+                            temperature: float = Query(0.1, ge=0.0, le=1.0), num_predict: int = Query(1000),
+                            top_p: float = Query(0.9), keep_alive: str = Query("5m"),
+
+                            # Сложный параметр (список строк) через Query
+                            stop: Annotated[Optional[List[str]], Query()] = None
+                            ):
+        # Собираем всё в объект для сервиса (имитируем прошлую схему)
+        params = {"text": text, "target_lang": target_lang, "model_level": model_level,
+                  "interaction_type": interaction_type, "temperature": temperature, "num_predict": num_predict,
+                  "top_p": top_p, "keep_alive": keep_alive, "stop": stop}
+
+        # Вызов сервиса
         result = await self.service.translate(params)
-        return {"output": result, "config_used": params.dict(exclude={"text"})  # Возвращаем конфиг для контроля
-                }
+        return {"result": result, "applied_params": params}
