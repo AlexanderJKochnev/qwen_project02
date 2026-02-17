@@ -154,6 +154,7 @@ services:
       # WEB_HOST: ${API_HOST}
       BASE_URL: ${BASE_URL}
       NODE_ENV: production
+      OLLAMA_HOST: http://ollama:11434
     volumes:
       - ./templates:/app/templates
       - ./migration_volume:/app/app/migration/versions
@@ -312,6 +313,19 @@ services:
           cpus: '1'
           memory: 512M
   
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+    volumes:
+      - ollama_data:/root/.ollama
+
 volumes:
   migration_volume: # alembic migrations
   pg_data: # postgresql data

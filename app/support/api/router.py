@@ -1,12 +1,10 @@
 # app/support/api/router.py
 import io
 
-import loguru
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.responses import StreamingResponse
 from datetime import datetime, timezone
-# from loguru import logger
 from typing import List
 from dateutil.relativedelta import relativedelta
 from fastapi import Depends, Query

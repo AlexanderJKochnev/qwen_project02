@@ -25,6 +25,7 @@ from app.preact.handbook.router import HandbookRouter
 from app.preact.patch.router import PatchRouter
 from app.support.api.router import ApiRouter
 # -------ИМПОРТ РОУТЕРОВ----------
+from app.support.gemma.router import GemmaRouter
 from app.support.category.router import CategoryRouter
 from app.support.country.router import CountryRouter
 # from app.support.customer.router import CustomerRouter
@@ -138,6 +139,7 @@ app.add_middleware(
 app.add_middleware(GZipMiddleware, minimum_size=1000)  # минимальный размер для сжатия
 
 app.include_router(ApiRouter().router)
+app.include_router(GemmaRouter().router)
 app.include_router(MongoRouter)
 app.include_router(HandbookRouter().router)
 app.include_router(CreateRouter().router)

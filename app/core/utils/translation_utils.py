@@ -49,6 +49,35 @@ async def translate_text(text: str, source_lang: str = "en",
         return None
 
 
+async def gemma_translate(text: str,
+                          target_lang: str = "ru",
+                          source_lang: str = "en",
+                          mark: str = "gm") -> Optional[str]:
+    """
+    Translate text with gemma
+    """
+    languages: dict = {'ru': 'russian',
+                       'en': 'english',
+                       'it': 'italian',
+                       'zh': 'chinese',
+                       'de': 'germany',
+                       'es': 'spanish',
+                       'fr': 'french'}
+    ollama = settings.OLLAMA_HOST
+    prompt = f"Translate the following text to {languages.get(target_lang, target_lang)}: {text}"
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        try:
+            response = await client.post(f"{ollama}/api/generate",
+                                         json={"model": "translategemma",
+                                               "prompt": prompt,
+                                               "stream": False})
+            response.raise_for_status()
+            data = response.json()
+            return {"translated_text": data.get("response").strip()}
+        except Exception as e:
+            raise Exception(f'gemma_translate.error: {e}')
+
+
 def get_group_localized_fields(langs: list, default_lang: str, localized_fields: list) -> Dict[str, List[str]]:
     """Get dict of localized field names that should be translated"""
     languages = [f'_{lang}' if lang != default_lang else '' for lang in langs]
