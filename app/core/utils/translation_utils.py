@@ -76,7 +76,7 @@ async def gemma_translate(text: str,
             response.raise_for_status()
             data = response.json()
             jprint(data)
-            return {"translated_text": data.get("response").strip()}
+            return data.get("response").strip()
         except Exception as e:
             raise Exception(f'gemma_translate.error: {e}')
 
