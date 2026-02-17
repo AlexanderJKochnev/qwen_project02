@@ -143,8 +143,6 @@ services:
       #   condition: service_healthy
       mongo:
         condition: service_healthy
-    # ports:
-    #   - ${API_PORT}:${API_PORT}
     expose:
       - ${API_PORT}
     environment:
@@ -160,8 +158,6 @@ services:
       - ./templates:/app/templates
       - ./migration_volume:/app/app/migration/versions
       - ./upload_volume:/app/upload_volume
-  #   networks:
-  #     - pgnetwork
     deploy:
       resources:
         limits:
@@ -189,8 +185,6 @@ services:
       MONGO_INITDB_DATABASE: admin
     expose:
       - "${MONGO_INN_PORT}"
-    # ports:
-    #   - "${MONGO_OUT_PORT}:${MONGO_INN_PORT}"
     volumes:
       - ./mongodb_data:/data/db
       - ./mongo/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
@@ -275,24 +269,7 @@ services:
         limits:
           cpus: '1'
           memory: 512M
-      #  - "${PREACT_PORT}:5173"                    # хост:контейнер (порт Vite по умолчанию — 5173)
-    # volumes:
-      ## - ./preact_front:/app            # монтируем исходники
-      ## - /app/node_modules              # сохраняем node_modules из контейнера
-      #- ./preact_front/src:/app/src
-      #- ./preact_front/public:/app/public
-      #- ./preact_front/package.json:/app/package.json
-    # environment:
-      # - NODE_ENV=development
-      # - CHOKIDAR_USEPOLLING=true  # для работы hot-reload в Docker ?
-    # stdin_open: true
-    # tty: true
     restart: unless-stopped
-    # depends_on:
-    #   wine_host:
-    #     condition: service_healthy
-    #   mongo:
-    #     condition: service_healthy
   
   pgbouncer:
     image: edoburu/pgbouncer:latest
@@ -305,7 +282,6 @@ services:
       DB_NAME: wine_db
       AUTH_TYPE: scram-sha-256
       POOL_MODE: transaction
-      #
       MAX_CLIENT_CONN: 500
       SERVER_IDLE_TIMEOUT: 600
       QUERY_TIMEOUT: 60
@@ -318,8 +294,8 @@ services:
       AUTH_FILE: /etc/pgbouncer/userlist.txt
       # Дополнительные пользователи (если нужны)
       USERS: "wine wine1"
-    ports:
-      - "6432:6432"  # Порт для приложения
+    expose:
+      - "6432"  # Порт для приложения
     restart: unless-stopped
     healthcheck:
       # Официальный способ проверки pgbouncer (внутри образа есть psql-client)
