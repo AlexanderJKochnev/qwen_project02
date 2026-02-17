@@ -1,4 +1,4 @@
-# docker-compose.atom.yaml
+# docker-compose.atom.yaml нерабочий - используй docker-compose.xeon.yaml
 # docker compose -f docker-compose.atom.yaml up -d --build
 # перезепуск nginx
 # docker compose -f docker-compose.atom.yaml restart nginx_gateway

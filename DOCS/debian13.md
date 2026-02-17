@@ -44,7 +44,20 @@
 13. git init
 14. git remote add qwen git@github.com:AlexanderJKochnev/qwen_project02.git
 15. git pull qwen main
-16. sh volume_bind.sh
+16. sh volume_bind.sh*
+    1. косячит с присоединеним директории для именнованных дисков - проверь и сделай в ручную:
+       1. sudo systemctl stop docker
+       2. sudo rsync -aHSX /var/lib/docker/volumes/ /mnt/hdd_data/volumes/
+       3. sudo mv /var/lib/docker/volumes /var/lib/docker/volumes.old
+       4. sudo mkdir -p /var/lib/docker/volumes
+       5. sudo mount --bind /mnt/hdd_data/volumes /var/lib/docker/volumes
+       6. sudo nano /etc/fstab
+       7. /mnt/hdd_data/volumes /var/lib/docker/volumes none bind 0 0 # add to the end
+       8. Сохраните файл (Ctrl+O, Enter в nano) и выйдите (Ctrl+X).
+       9. sudo systemctl start docker
+       10. проверка
+           1. docker volume create test_volume
+           2. docker volume inspect test_volume
 17. скачиваем и устанавливаем backup
 18. открывем порты:
     1. ufw allow 80/tcp 
