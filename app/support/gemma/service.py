@@ -1,5 +1,5 @@
 # app.support.gemma.service.py
-from app.support.gemma.schemas import TranslationRequest
+# from app.support.gemma.schemas import TranslationRequest
 
 import time
 
@@ -7,7 +7,10 @@ import time
 class TranslationService:
     def __init__(self, repository):
         self.repository = repository
-        self.model_map = {1: "translategemma", 2: "gemma2:9b", 3: "gemma2:27b"}
+        self.model_map = {1: "translategemma",
+                          2: "gemma2:9b",
+                          3: "gemma2:27b",
+                          4: "qwen2.5:7b"}
 
     async def translate(self, p: dict):
         start_time = time.perf_counter()  # Начинаем отсчет

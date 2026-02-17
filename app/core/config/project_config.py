@@ -213,6 +213,17 @@ class Settings(BaseSettings):
     # === DATA_DELTA YEARS количество лет назад
     DATA_DELTA: int = 10
     OLLAMA_HOST: str = 'http://localhost:11434'
+    OLLAMA_MODEL_LEVEL: int = 1
+    OLLAMA_INTERACTION_TYPE: str = 'chat'
+    # Чем ниже, тем перевод точнее и строже (для перевода лучше 0.1-0.3)
+    OLLAMA_TEMPERATURE: float = 0.3
+    # Лимит длины ответа
+    OLLAMA_NUM_PREDICT: int = 500
+    # Влияет на разнообразие слов
+    OLLAMA_TOP_P: float = 0.9
+    # Удерживает модель в GPU после последнего использования, min
+    OLLAMA_KEEP_ALIVE: int = 5
+
     model_config = SettingsConfigDict(env_file=get_path_to_root(),
                                       env_file_encoding='utf-8',
                                       extra='ignore')

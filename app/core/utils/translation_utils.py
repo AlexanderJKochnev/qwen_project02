@@ -5,6 +5,8 @@ import httpx
 from typing import Dict, Optional, Any, List
 # from app.core.utils.common_utils import jprint
 from app.core.config.project_config import settings
+from app.support.gemma.service import TranslationService
+from app.support.gemma.repository import OllamaRepository
 
 
 class GemmaTranslate:
@@ -86,6 +88,25 @@ async def gemma_translate(text: str,
             raise Exception(f'gemma_translate.error: {e}')
 
 
+async def llm_translate(text: str,
+                        target_lang: str = "ru",
+                        source_lang: str = "en",
+                        mark: str = "gm", **kwargs) -> Optional[str]:
+    repo = OllamaRepository()
+    service = TranslationService(repo)
+    params = {"text": text, "target_lang": target_lang,
+              "model_level": settings.OLLAMA_MODEL_LEVEL,
+              "interaction_type": settings.OLLAMA_INTERACTION_TYPE,
+              "temperature": settings.OLLAMA_TEMPERATURE,
+              "num_predict": settings.OLLAMA_NUM_PREDICT,
+              "top_p": settings.OLLAMA_TOP_P,
+              "keep_alive": settings.OLLAMA_KEEP_ALIVE,
+              "stop": None
+              }
+    translated_text, time_taken = await service.translate(params)
+    return translated_text
+
+
 def get_group_localized_fields(langs: list, default_lang: str, localized_fields: list) -> Dict[str, List[str]]:
     """Get dict of localized field names that should be translated"""
     languages = [f'_{lang}' if lang != default_lang else '' for lang in langs]
@@ -129,6 +150,7 @@ async def fill_missing_translations(data: Dict[str, Any], test: bool = False) ->
     # Group fields by their base name {'name': ['name', 'name_ru', 'name_fr', ...], ...}
     field_groups = get_group_localized_fields(langs, default_lang, localized_fields)
     # Process each group of related fields
+    trans_func = gemma_translate
     for base_name, fields in field_groups.items():
         # Check which fields are filled
         # {'name': 'text', 'name_ru': 'текст', ...}
@@ -158,7 +180,6 @@ async def fill_missing_translations(data: Dict[str, Any], test: bool = False) ->
 
         # Fill missing translations
         for field in fields:
-            trans_func = gemma_translate
             if field not in filled_fields:  # Field is missing
                 target_lang = get_field_language(field)
                 if target_lang and target_lang != source_lang:

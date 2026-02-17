@@ -3,6 +3,8 @@
 2. при первом запуске (если потом не сделаю автозагрузчик):
    1. docker exec -it ollama ollama pull translategemma  # модель 2b дообученная
    2. docker exec -it ollama ollama pull gemma2:9b # модель 9б  
+   3. docker exec -it ollama ollama pull gemma2:27b
+   4. docker exec -it ollama ollama pull qwen2.5:7b
 3. Ollama держит модель в памяти (VRAM) в течение 5 минут после последнего запроса (по умолчанию). 
 4. Чтобы увидеть, что именно загружено прямо сейчас:
    1. docker exec -it ollama ollama ps
