@@ -15,9 +15,9 @@ from sqlalchemy.sql.elements import Label
 # from sqlalchemy.dialects import postgresql
 # from sqlalchemy.sql.elements import ColumnElement
 from app.core.utils.alchemy_utils import (create_enum_conditions, get_sqlalchemy_fields,
-                                          create_search_conditions2, ModelType)
+                                          create_search_conditions2)
 from app.service_registry import register_repo
-
+from app.core.types import ModelType
 
 class RepositoryMeta(ABCMeta):
 
