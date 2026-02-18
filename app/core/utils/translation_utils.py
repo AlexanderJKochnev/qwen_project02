@@ -8,6 +8,7 @@ from fastapi import HTTPException
 from typing import Dict, Optional, Any, List
 from app.core.utils.common_utils import jprint
 from app.core.config.project_config import settings
+from app.support.gemma.logic import get_ollama_payload
 # from app.support.gemma.schemas import BenchmarkRequest
 # from app.support.gemma.service import TranslationService
 # from app.support.gemma.repository import OllamaRepository
@@ -37,26 +38,38 @@ class TranslationService:
         start_time = time.perf_counter()  # Начинаем отсчет
 
         model_name = self.model_map.get(p['model_level'], "gemma2:2b")
+        # 1. Формируем Payload через ЕДИНУЮ логику ядра
+        # Здесь мы пробрасываем ВСЕ параметры, которые ты крутишь на сайте
+        payload = get_ollama_payload(
+            text=p['text'], target_lang=p['target_lang'], model_name=model_name,
+            industry=p.get('industry', 'general'),
+            options={"temperature": p.get('temperature', 0.1), "num_predict": p.get('num_predict', 1000),
+                     "top_p": p.get('top_p', 0.9), "keep_alive": p.get('keep_alive', '5m'), "stop": p.get('stop')
+                     # Если переданы кастомные стоп-слова
+                     }
+        )
 
-        ollama_options = {"temperature": p['temperature'], "num_predict": p['num_predict'], "top_p": p['top_p'],
-                          "stop": p['stop']}
-        if p['interaction_type'] == "chat":
-            industry = p.get("industry", "general")
-            payload = {"model": model_name,
-                       "messages": [{"role": "system", "content": f"Translate to {p['target_lang']}. Only text."},
-                                    {"role": "user", "content": p['text']}], "stream": False, "options": ollama_options,
-                       "keep_alive": p['keep_alive'],
-                       "system_instruction": INDUSTRY_PROMPTS.get(industry, INDUSTRY_PROMPTS["general"])}
-            result = await self.repository.call_api("chat", payload)
-            content = result.get("message", {}).get("content", "").strip()
-        else:
-            payload = {"model": model_name, "prompt": f"Translate to {p['target_lang']}: {p['text']}", "stream": False,
-                       "options": ollama_options, "keep_alive": p['keep_alive']}
-            result = await self.repository.call_api("generate", payload)
-            content = result.get("response", "").strip()
+        # 2. Запрос к Ollama (через наш асинхронный репозиторий)
+        # Мы всегда используем /api/chat, так как это база для logic.py
+        result = await self.repository.call_api("chat", payload)
 
-        execution_time = time.perf_counter() - start_time
-        return content, round(execution_time, 3)
+        # 3. Извлечение текста и расчет TPS (Tokens Per Second)
+        content = result.get("message", {}).get("content", "").strip()
+
+        eval_count = result.get("eval_count", 0)
+        # Переводим наносекунды в секунды для расчета скорости
+        eval_duration_sec = result.get("eval_duration", 1) / 1e9
+        tps = round(eval_count / eval_duration_sec, 1) if eval_count > 0 else 0
+
+        # Общее время выполнения запроса FastAPI
+        total_execution_time = round(time.perf_counter() - start_time, 3)
+
+        # Снимаем показатели VRAM с твоей RTX 3060
+        gpu_stats = self.repository.get_gpu_info()
+
+        return {"result": content, "metrics": {"seconds": total_execution_time, "tokens_per_second": tps,
+                "vram_usage": f"{gpu_stats['used_gb']} / {gpu_stats['total_gb']} GB", "model_used": model_name,
+                "industry_used": p.get('industry', 'general')}}
 
     def _get_similarity(self, text1: str, text2: str) -> float:
         return round(SequenceMatcher(None, text1.lower(), text2.lower()).ratio() * 100, 1)

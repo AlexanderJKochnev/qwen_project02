@@ -33,9 +33,9 @@ class GemmaRouter:
                                   openapi_extra={'x-request-schema': None})
         self.router.add_api_route("/translate2", self.do_translate, methods=["GET"],
                                   openapi_extra={'x-request-schema': None})
-        self.router.add_api_route(
-            "/start_benchmark", self.start_benchmark, methods=["POST"], openapi_extra={'x-request-schema': None}
-        )
+        # self.router.add_api_route(
+        #     "/start_benchmark", self.start_benchmark, methods=["POST"], openapi_extra={'x-request-schema': None}
+        # )
 
     async def translate(
             self, text: str = Query(
@@ -62,9 +62,10 @@ class GemmaRouter:
                   "top_p": top_p, "keep_alive": keep_alive, "stop": stop, "industry": industry}
 
         # Вызываем сервис (теперь он вернет текст и время)
-        translated_text, time_taken = await self.service.translate(params)
-
-        return {"result": translated_text, "seconds": time_taken, "model": self.service.model_map.get(model_level)}
+        # translated_text, time_taken = await self.service.translate(params)
+        result = await self.service.translate(params)
+        # return {"result": translated_text, "seconds": time_taken, "model": self.service.model_map.get(model_level)}
+        return result
 
     async def start_benchmark(self, payload: BenchmarkRequest, background_tasks: BackgroundTasks):
         # Если хочешь ждать результат в браузере - убери background_tasks и добавь await

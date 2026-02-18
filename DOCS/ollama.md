@@ -14,4 +14,4 @@
 5. настройки взаимодействия с LLM
 6. запуск теста (в консоли)
    1. docker exec -it app python app/benchmark_cli.py
-   2. docker cp app:/app/bench_20260218_095603.csv ./результат.csv # название файла см в консоли
+   2. docker cp app:/app/bench_20260218_100340.csv ./результат.csv # название файла см в консоли

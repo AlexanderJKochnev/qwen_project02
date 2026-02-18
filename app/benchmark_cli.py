@@ -1,185 +1,92 @@
-# тест моделей для перевода
-# docker exec -it app python app/benchmark_cli.py
-
 import asyncio
 import time
 import csv
 from datetime import datetime
-from difflib import SequenceMatcher
-from typing import List, Dict, Tuple
-import re
-from rapidfuzz import fuzz
 import httpx
 from rich.console import Console
 from rich.table import Table
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
 
-# Конфигурация
+# Импорт из нашего ядра
+from app.support.gemma.logic import get_ollama_payload, get_similarity_score
+
 OLLAMA_HOST = "http://ollama:11434/api/chat"
 console = Console()
-
-# Твои отраслевые промпты
-INDUSTRY_PROMPTS = {
-    "wine": "You are a professional sommelier and wine critic. Use professional terminology (terroir, bouquet, tannins). Translate accurately and elegantly.",
-    "trade": "You are an e-commerce and retail expert. Focus on product specs, marketing appeal, and clear trade terms.",
-    "general": "You are a precise translator. Output ONLY the translated text without any explanations."
-}
-
-
-def clean_text(text: str) -> str:
-    if not text:
-        return ""
-    # Убираем технические теги Ollama, если они просочились
-    text = re.sub(r'<.*?>', '', text)
-    # Оставляем только буквы и цифры, убираем пунктуацию
-    text = re.sub(r'[^\w\s]', '', text)
-    # Убираем лишние пробелы и переносы, приводим к нижнему регистру
-    return " ".join(text.lower().split())
 
 
 class BenchmarkingCLI:
     def __init__(self):
-        # Маппинг уровней на реальные модели в Ollama
-        self.model_map = {1: "translategemma", 2: "qwen2.5:7b", 3: "gemma2:9b", 4: "gemma2:27b"}
+        self.model_map = {1: "translategemma", 2: "qwen2.5:7b", 3: "gemma2:9b"}
 
-    def calculate_similarity(self, text1: str, text2: str) -> float:
-        t1 = clean_text(text1)
-        t2 = clean_text(text2)
-
-        if not t1 or not t2:
-            return 0.0
-
-        # Вариант А: через стандартную библиотеку (уже лучше после чистки)
-        # ratio = SequenceMatcher(None, t1, t2).ratio()
-
-        # Вариант Б: через RapidFuzz (намного точнее для смысла)
-        ratio = fuzz.ratio(t1, t2) / 100
-
-        return round(ratio * 100, 1)
-        # return round(SequenceMatcher(None, text1.lower(), text2.lower()).ratio() * 100, 1)
-
-    async def translate_step(self, client: httpx.AsyncClient, text: str, model: str, lang: str, temp: float, industry: str):
-        # Выбираем системный промпт
-        sys_content = INDUSTRY_PROMPTS.get(industry, INDUSTRY_PROMPTS["general"])
-
-        payload = {
-            "model": model,
-            "messages": [
-                {"role": "system", "content": f"{sys_content} Target language: {lang}."},
-                {"role": "user", "content": text}
-            ],
-            "stream": False,
-            "options": {"temperature": temp}
-        }
-
-        start = time.perf_counter()
+    async def step(self, client, text, model, lang, industry, options):
+        payload = get_ollama_payload(text, lang, model, industry, options)
         resp = await client.post(OLLAMA_HOST, json=payload, timeout=120.0)
         resp.raise_for_status()
-        end = time.perf_counter()
+        d = resp.json()
 
-        data = resp.json()
-        content = data["message"]["content"].strip()
+        tps = round(d.get("eval_count", 0) / (d.get("eval_duration", 1) / 1e9), 1)
+        return d["message"]["content"].strip(), tps
 
-        # Считаем TPS (Tokens Per Second)
-        eval_count = data.get("eval_count", 0)
-        eval_duration = data.get("eval_duration", 1) / 1e9
-        tps = round(eval_count / eval_duration, 1) if eval_count > 0 else 0
-
-        return content, end - start, tps
-
-    async def run(self, text: str, levels: List[int], langs: List[str], temps: List[float], industry: str):
-        sys_prompt = INDUSTRY_PROMPTS.get(industry, INDUSTRY_PROMPTS["general"])
+    async def run(self, text, levels, langs, temps, industry):
         results = []
-        total_steps = len(levels) * len(langs) * len(temps)
+        total = len(levels) * len(langs) * len(temps)
 
-        console.print(f"[bold blue]Запуск бенчмарка для отрасли:[/] [bold yellow]{industry.upper()}[/]")
-
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            BarColumn(),
-            TaskProgressColumn(),
-            console=console
-        ) as progress:
-            main_task = progress.add_task("[cyan]Прогресс...", total=total_steps)
-
+        with Progress(SpinnerColumn(), TextColumn("[cyan]{task.description}"), BarColumn(), TaskProgressColumn(), console=console) as pr:
+            task = pr.add_task("Тестирование...", total=total)
             async with httpx.AsyncClient() as client:
                 for lvl in levels:
-                    model = self.model_map.get(lvl, "gemma2:2b")
-                    for lang in langs:
-                        for temp in temps:
-                            progress.update(main_task, description=f"[yellow]Тест {model} -> {lang} (T={temp})")
+                    m = self.model_map[lvl]
+                    for ln in langs:
+                        for tp in temps:
+                            pr.update(task, description=f"Модель: {m} | Lang: {ln} | T: {tp}")
                             try:
-                                # Прямой перевод
-                                f_text, t1, tps1 = await self.translate_step(client, text, model, lang, temp, industry)
-                                # Обратный перевод (на английский для сравнения)
-                                b_text, t2, tps2 = await self.translate_step(client, f_text, model, "English", temp, industry)
+                                start = time.perf_counter()
+                                f_txt, tps1 = await self.step(client, text, m, ln, industry, {"temperature": tp})
+                                b_txt, tps2 = await self.step(client, f_txt, m, "English", industry, {"temperature": tp})
+                                end = time.perf_counter()
 
-                                sim = self.calculate_similarity(text, b_text)
-                                avg_tps = round(tps2, 2)  # round((tps1 + tps2) / 2, 1)
-                                avg_time = round(t2, 2)  # round((t1 + t2) / 2, 2)
+                                # ИСПОЛЬЗУЕМ RAPIDFUZZ ЧЕРЕЗ LOGIC
+                                sim = get_similarity_score(text, b_txt)
 
                                 results.append({
-                                    "model": model, "lang": lang, "temperature": str(temp),
-                                    "time": f"{avg_time}s", "tps": avg_tps, "similarity %": sim
+                                    "Model": m, "Lang": ln, "Temp": tp,
+                                    "Time": round((end - start) / 2, 2),
+                                    "TPS": round((tps1 + tps2) / 2, 1),
+                                    "Sim": sim
                                 })
-                            except Exception as e:
-                                results.append({
-                                    "model": model, "lang": lang, "temperature": str(temp),
-                                    "time": f"ERR {e}", "tps": 0, "similarity %": 0
-                                })
-                            progress.advance(main_task)
+                            except Exception:
+                                results.append({"Model": m, "Lang": ln, "Temp": tp, "Time": 0, "TPS": 0, "Sim": 0})
+                            pr.advance(task)
 
-        self.save_to_csv(results)
-        self.display_table(results, text, industry)
+        self.report(results, text, industry)
 
-    def save_to_csv(self, data: List[Dict]):
-        filename = f"bench_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-        keys = data[0].keys()
-        with open(filename, 'w', newline='', encoding='utf-8') as f:
-            dict_writer = csv.DictWriter(f, fieldnames=keys)
-            dict_writer.writeheader()
-            dict_writer.writerows(data)
-        console.print(f"\n[bold green]✓ Результаты сохранены в файл:[/] [white]{filename}[/]")
-
-    def display_table(self, data, original_text, industry):
-        table = Table(
-            title=f"\n[bold white]Бенчмарк: {industry.upper()}[/]\n[grey62]Текст: {original_text[:60]}...",
-            show_header=True,
-            header_style="bold magenta",
-            border_style="bright_black"
-        )
-        table.add_column("Модель", style="cyan")
-        table.add_column("Язык", style="green")
-        table.add_column("T°", justify="center")
-        table.add_column("Время (с)", justify="right")
-        table.add_column("Ток/сек", justify="right", style="bold blue")
-        table.add_column("Схожесть", justify="right")
+    def report(self, data, text, ind):
+        table = Table(title=f"Бенчмарк: {ind.upper()}\n[grey62]Оригинал: {text[:50]}...")
+        table.add_column("Model")
+        table.add_column("Lang")
+        table.add_column("T°")
+        table.add_column("Time (s)")
+        table.add_column("TPS", style="bold blue")
+        table.add_column("Similarity (RapidFuzz)")
 
         for r in data:
-            sim_style = "bold green" if r['similarity %'] >= 90 else "yellow" if r['similarity %'] >= 75 else "bold red"
-            sim_str = f"[{sim_style}]{r['similarity %']}%[/]"
-
-            table.add_row(r['model'], r['lang'], r['temperature'], r['time'], str(r['tps']), sim_str)
+            color = "green" if r['Sim'] > 85 else "yellow" if r['Sim'] > 65 else "red"
+            table.add_row(r['Model'], r['Lang'], str(r['Temp']), str(
+                r['Time']), str(r['TPS']), f"[{color}]{r['Sim']}%[/]")
 
         console.print(table)
 
+        fname = f"bench_{datetime.now().strftime('%H%M%S')}.csv"
+        with open(fname, 'w', encoding='utf-8', newline='') as f:
+            w = csv.DictWriter(f, fieldnames=data[0].keys())
+            w.writeheader()
+            w.writerows(data)
+        console.print(f"\n[bold green]✓ CSV создан: {fname}[/]")
 
-# Параметры теста
+
 if __name__ == "__main__":
-    # Настраиваемые параметры теста
-    TEST_TEXT = ("Бароло – это первое итальянское вино, получившее самый престижный статус DOCG. "
-                 "Между классической технологией производства Бароло и современной лежит огромная пропасть. "
-                 "Для традиционалистов характерны длительная постферментационная мацерация, "
-                 "когда вино насыщается танинами, антоцианами, фенолами и другими соединениями, "
-                 "которые ценятся в красных винах. Кроме того, "
-                 "практикуется длительная выдержка в больших дубовых бочках (как правило, используется славонский дуб) "
-                 "для смягчения жёстких агрессивных танинов, которые являются следствием длительной мацерации.")
-    TEST_TEXT = "Full-bodied Cabernet Sauvignon with firm tannins and notes of blackcurrant and cedar."
-    TEST_LEVELS = [1, 2, 3]  # 2b и 7b
-    TEST_LANGS = ["russian", "spanish", "chinese", "french", "english"]
-    TEST_TEMPS = [0.0, 0.3, 0.9]
-    TEST_INDUSTRY = "wine"  # "wine", "trade", "general"
-
-    cli = BenchmarkingCLI()
-    asyncio.run(cli.run(TEST_TEXT, TEST_LEVELS, TEST_LANGS, TEST_TEMPS, TEST_INDUSTRY))
+    T_TEXT = "Full-bodied Cabernet Sauvignon with firm tannins and notes of blackcurrant."
+    asyncio.run(BenchmarkingCLI().run(T_TEXT, [1, 2, 3],
+                                      ["russian", "spanish", "chinese", "english"],
+                                      [0.0, 0.4, 1.0],
+                                      "wine"))
