@@ -13,7 +13,7 @@ from app.support.item.service import ItemService
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.support.item.repository import ItemRepository
 from app.support.item.model import Item
-from app.core.utils import localized_field_with_replacement
+from app.core.utils.common_utils import localized_field_with_replacement
 from app.core.utils.converters import lang_suffix_list, lang_suffix_dict
 from app.core.config.project_config import settings
 from app.core.schemas.base import PaginatedResponse

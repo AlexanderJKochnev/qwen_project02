@@ -128,8 +128,9 @@ class TranslationService:
         console.print(table)
 
         fname = f"bench_{datetime.now().strftime('%H%M%S')}.csv"
+        keys = data[0].keys()
         with open(fname, 'w', encoding='utf-8', newline='') as f:
-            writer = csv.DictWriter(f, fieldnames=data.keys())
+            writer = csv.DictWriter(f, fieldnames=keys)
             writer.writeheader()
             writer.writerows(data)
 
