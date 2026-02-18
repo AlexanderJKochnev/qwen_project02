@@ -157,10 +157,10 @@ class BenchmarkingCLI:
         table.add_column("Схожесть", justify="right")
 
         for r in data:
-            sim_style = "bold green" if r['sim'] >= 90 else "yellow" if r['sim'] >= 75 else "bold red"
-            sim_str = f"[{sim_style}]{r['sim']}%[/]"
+            sim_style = "bold green" if r['similarity'] >= 90 else "yellow" if r['similarity'] >= 75 else "bold red"
+            sim_str = f"[{sim_style}]{r['similarity']}%[/]"
 
-            table.add_row(r['model'], r['lang'], r['temp'], r['time'], str(r['tps']), sim_str)
+            table.add_row(r['model'], r['lang'], r['temperature'], r['time'], str(r['tps']), sim_str)
 
         console.print(table)
 

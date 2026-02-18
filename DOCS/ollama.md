@@ -13,5 +13,5 @@
    2. nvidia-smi # загрузка видеокарты
 5. настройки взаимодействия с LLM
 6. запуск теста (в консоли)
-   1. уу
+   1. docker exec -it app python app/benchmark_cli.py
    2. docker cp app:/app/bench_20260218_092133.csv ./результат.csv # название файла см в консоли
