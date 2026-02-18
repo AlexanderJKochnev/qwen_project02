@@ -134,8 +134,8 @@ class TranslationService:
 
 
 class OllamaRepository:
-    def __init__(self, base_url: str = "http://ollama:11434"):
-        self.base_url = base_url
+    def __init__(self):
+        self.base_url = settings.OLLAMA_HOST
 
     async def call_api(self, endpoint: str, payload: dict):
         async with httpx.AsyncClient(timeout=120.0) as client:
