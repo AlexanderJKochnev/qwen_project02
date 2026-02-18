@@ -26,7 +26,7 @@ INDUSTRY_PROMPTS = {
 class BenchmarkingCLI:
     def __init__(self):
         # Маппинг уровней на реальные модели в Ollama
-        self.model_map = {1: "gemma2:2b", 2: "qwen2.5:7b", 3: "gemma2:9b"}
+        self.model_map = {1: "translategemma", 2: "qwen2.5:7b", 3: "gemma2:9b", 4: "gemma2:27b"}
 
     def calculate_similarity(self, text1: str, text2: str) -> float:
         return round(SequenceMatcher(None, text1.lower(), text2.lower()).ratio() * 100, 1)
@@ -131,10 +131,17 @@ class BenchmarkingCLI:
 # Параметры теста
 if __name__ == "__main__":
     # Настраиваемые параметры теста
-    TEST_TEXT = "Full-bodied Cabernet Sauvignon with firm tannins and notes of blackcurrant and cedar."
-    TEST_LEVELS = [1, 2]  # 2b и 7b
-    TEST_LANGS = ["russian", "spanish", "chinese", "french"]
-    TEST_TEMPS = [0.0, 0.3]
+    # TEST_TEXT = "Full-bodied Cabernet Sauvignon with firm tannins and notes of blackcurrant and cedar."
+    TEST_TEXT = ("Бароло – это первое итальянское вино, получившее самый престижный статус DOCG. "
+                 "Между классической технологией производства Бароло и современной лежит огромная пропасть. "
+                 "Для традиционалистов характерны длительная постферментационная мацерация, "
+                 "когда вино насыщается танинами, антоцианами, фенолами и другими соединениями, "
+                 "которые ценятся в красных винах. Кроме того, "
+                 "практикуется длительная выдержка в больших дубовых бочках (как правило, используется славонский дуб) "
+                 "для смягчения жёстких агрессивных танинов, которые являются следствием длительной мацерации.")
+    TEST_LEVELS = [1, 2, 3, 4]  # 2b и 7b
+    TEST_LANGS = ["russian", "spanish", "chinese", "french", "english"]
+    TEST_TEMPS = [0.0, 0.3, 0.9]
     TEST_INDUSTRY = "wine"  # "wine", "trade", "general"
 
     cli = BenchmarkingCLI()
