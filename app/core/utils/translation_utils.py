@@ -2,77 +2,136 @@
 import asyncio  # noqa: F401
 import httpx
 import time
-from difflib import SequenceMatcher
+import csv
+from datetime import datetime
 from fastapi import HTTPException
 # from loguru import logger
 from typing import Dict, Optional, Any, List
 from app.core.config.project_config import settings
-# from app.support.gemma.logic import get_ollama_payload
-# from app.support.gemma.schemas import BenchmarkRequest
-# from app.support.gemma.service import TranslationService
-# from app.support.gemma.repository import OllamaRepository
+import re
+from rapidfuzz import fuzz
+import httpx
+from rapidfuzz import fuzz
+from rich.console import Console
+from rich.table import Table
+from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
 
-# if TYPE_CHECKING:
-#     from app.support.gemma.schemas import BenchmarkRequest
+console = Console()
 
+# 1. КОНСТАНТЫ (Прямо здесь, чтобы не было импортов)
 INDUSTRY_PROMPTS = {
-    "wine": "You are a professional sommelier and wine critic. "
-    "Translate texts about wine, "
-    "preserving terminology (terroir, bouquet, vintage) and professional style.",
-            "trade": "You are an e-commerce marketing expert. "
-                     "Translate product descriptions to be attractive for customers, "
-                     "keeping SEO keywords and technical specs accurate.",
-            "general": "You are a professional translator. Output only the translated text."}
+    "wine": "You are a professional sommelier. Use professional terminology (terroir, bouquet, tannins).",
+    "trade": "You are an e-commerce expert. Focus on product specs and marketing appeal.",
+    "general": "You are a precise translator. Output ONLY the translated text without explanations."}
 
 
 class TranslationService:
     def __init__(self, repository):
         self.repository = repository
-        self.model_map = {1: "translategemma",
-                          2: "gemma2:9b",
-                          3: "gemma2:27b",
-                          4: "qwen2.5:7b"}
+        self.model_map = {1: "translategemma", 2: "gemma2:9b", 3: "gemma2:27b", 4: "qwen2.5:7b"}
+
+    # --- МЕТОДЫ ЛОГИКИ (Внутренние) ---
+
+    def _clean(self, text: str) -> str:
+        if not text:
+            return ""
+        text = re.sub(r'<.*?>', '', text)
+        text = re.sub(r'[^\w\s]', '', text)
+        return " ".join(text.lower().split())
+
+    def get_similarity(self, t1: str, t2: str) -> float:
+        s1, s2 = self._clean(t1), self._clean(t2)
+        return round(fuzz.token_sort_ratio(s1, s2), 1) if s1 and s2 else 0.0
+
+    def _build_payload(self, p: dict, model_name: str) -> dict:
+        sys_content = INDUSTRY_PROMPTS.get(p.get('industry', 'general'), INDUSTRY_PROMPTS["general"])
+        return {"model": model_name,
+                "messages": [{"role": "system", "content": f"{sys_content} Target language: {p['target_lang']}."},
+                             {"role": "user", "content": p['text']}, {"role": "assistant", "content": ""}], "stream": False,
+                "options": {"temperature": p.get('temperature', 0.1), "num_predict": p.get('num_predict', 1000),
+                            "top_p": p.get('top_p', 0.9), "stop": ["\nNote:", "\nExplanation:", "<end_of_turn>", "###"]},
+                "keep_alive": p.get('keep_alive', '5m')}
+
+    # --- РАБОЧИЙ МЕТОД (Для FastAPI и Теста) ---
 
     async def translate(self, p: dict):
-        from app.support.gemma.logic import get_ollama_payload
-        start_time = time.perf_counter()  # Начинаем отсчет
+        start = time.perf_counter()
+        model_name = self.model_map.get(p.get('model_level', 1), "translategemma")
 
-        model_name = self.model_map.get(p['model_level'], "gemma2:2b")
-        # 1. Формируем Payload через ЕДИНУЮ логику ядра
-        # Здесь мы пробрасываем ВСЕ параметры, которые ты крутишь на сайте
-        payload = get_ollama_payload(
-            text=p['text'], target_lang=p['target_lang'], model_name=model_name,
-            industry=p.get('industry', 'general'),
-            options={"temperature": p.get('temperature', 0.1), "num_predict": p.get('num_predict', 1000),
-                     "top_p": p.get('top_p', 0.9), "keep_alive": p.get('keep_alive', '5m'), "stop": p.get('stop')
-                     # Если переданы кастомные стоп-слова
-                     }
-        )
-
-        # 2. Запрос к Ollama (через наш асинхронный репозиторий)
-        # Мы всегда используем /api/chat, так как это база для logic.py
+        payload = self._build_payload(p, model_name)
         result = await self.repository.call_api("chat", payload)
 
-        # 3. Извлечение текста и расчет TPS (Tokens Per Second)
         content = result.get("message", {}).get("content", "").strip()
 
+        # Расчет TPS
         eval_count = result.get("eval_count", 0)
-        # Переводим наносекунды в секунды для расчета скорости
-        eval_duration_sec = result.get("eval_duration", 1) / 1e9
-        tps = round(eval_count / eval_duration_sec, 1) if eval_count > 0 else 0
+        eval_duration = result.get("eval_duration", 1) / 1e9
+        tps = round(eval_count / eval_duration, 1) if eval_count > 0 else 0
 
-        # Общее время выполнения запроса FastAPI
-        total_execution_time = round(time.perf_counter() - start_time, 3)
+        return {"result": content, "tps": tps, "time": round(time.perf_counter() - start, 2)}
 
-        # Снимаем показатели VRAM с твоей RTX 3060
-        gpu_stats = self.repository.get_gpu_info()
+    # --- ТЕСТОВЫЙ МЕТОД (Бенчмарк) ---
 
-        return {"result": content, "metrics": {"seconds": total_execution_time, "tokens_per_second": tps,
-                "vram_usage": f"{gpu_stats['used_gb']} / {gpu_stats['total_gb']} GB", "model_used": model_name,
-                "industry_used": p.get('industry', 'general')}}
+    async def run_benchmark(self, text: str, levels: List[int], langs: List[str], temps: List[float], industry: str):
+        results = []
+        total = len(levels) * len(langs) * len(temps)
 
-    def _get_similarity(self, text1: str, text2: str) -> float:
-        return round(SequenceMatcher(None, text1.lower(), text2.lower()).ratio() * 100, 1)
+        with Progress(
+                SpinnerColumn(), TextColumn("[cyan]{task.description}"), BarColumn(), TaskProgressColumn(),
+                console=console
+        ) as pr:
+            task = pr.add_task("Тестирование параметров...", total=total)
+
+            for lvl in levels:
+                for ln in langs:
+                    for tp in temps:
+                        pr.update(task, description=f"Модель: {self.model_map[lvl]} | Lang: {ln} | T: {tp}")
+                        try:
+                            # Прямой прогон
+                            res_f = await self.translate(
+                                {"text": text, "target_lang": ln, "model_level": lvl, "industry": industry,
+                                 "temperature": tp}
+                            )
+                            # Обратный прогон
+                            res_b = await self.translate(
+                                {"text": res_f['result'], "target_lang": "english", "model_level": lvl,
+                                 "industry": industry, "temperature": tp}
+                            )
+
+                            sim = self.get_similarity(text, res_b['result'])
+                            results.append(
+                                {"Model": self.model_map[lvl], "Lang": ln, "Temp": tp, "Time": res_f['time'],
+                                 "TPS": round((res_f['tps'] + res_b['tps']) / 2, 1), "Sim": sim}
+                            )
+                        except Exception as e:
+                            results.append(
+                                {"Model": self.model_map[lvl], "Lang": ln, "Temp": tp, "Time": f"ERR {e}", "TPS": 0,
+                                 "Sim": 0}
+                            )
+                        pr.advance(task)
+
+        self._save_and_show(results, text, industry)
+
+    def _save_and_show(self, data, text, ind):
+        table = Table(title=f"Бенчмарк: {ind.upper()}")
+        table.add_column("Model")
+        table.add_column("Lang")
+        table.add_column("T°")
+        table.add_column("Time")
+        table.add_column("TPS")
+        table.add_column("Similarity")
+        for r in data:
+            color = "green" if r['Sim'] > 90 else "yellow" if r['Sim'] > 70 else "red"
+            table.add_row(
+                r['Model'], r['Lang'], str(r['Temp']), f"{r['Time']}s", str(r['TPS']), f"[{color}]{r['Sim']}%[/]"
+            )
+        console.print(table)
+
+        fname = f"bench_{datetime.now().strftime('%H%M%S')}.csv"
+        with open(fname, 'w', encoding='utf-8', newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=data.keys())
+            writer.writeheader()
+            writer.writerows(data)
 
 
 class OllamaRepository:
@@ -274,3 +333,23 @@ async def fill_missing_translations(data: Dict[str, Any], test: bool = False) ->
                     if translated_text:
                         updated_data[field] = translated_text
     return updated_data
+
+
+# --- ТОЧКА ВХОДА ДЛЯ ЗАПУСКА ИЗ ТЕРМИНАЛА ---
+if __name__ == "__main__":
+    # Импортируем репозиторий здесь, чтобы избежать циклов в основном приложении
+
+    async def main():
+        repo = OllamaRepository()
+        service = TranslationService(repo)
+
+        # САМ ТЕСТ С ПЕРЕБОРОМ ПАРАМЕТРОВ
+        await service.run_benchmark(
+            text="Elegant Pinot Noir with silky tannins and aromas of forest floor.",
+            levels=["translategemma", "gemma2:9b", "qwen2.5:7b"],
+            # Проверяем всё от 2b до Qwen
+            langs=["russian", "spanish", "english", "chinese"], temps=[0.0, 0.3, 0.9],  # Перебираем температуры
+            industry="wine"
+        )
+
+    asyncio.run(main())
