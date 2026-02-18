@@ -7,7 +7,8 @@ import csv
 from datetime import datetime
 from difflib import SequenceMatcher
 from typing import List, Dict, Tuple
-
+import re
+from rapidfuzz import fuzz
 import httpx
 from rich.console import Console
 from rich.table import Table
@@ -25,13 +26,37 @@ INDUSTRY_PROMPTS = {
 }
 
 
+def clean_text(text: str) -> str:
+    if not text:
+        return ""
+    # Убираем технические теги Ollama, если они просочились
+    text = re.sub(r'<.*?>', '', text)
+    # Оставляем только буквы и цифры, убираем пунктуацию
+    text = re.sub(r'[^\w\s]', '', text)
+    # Убираем лишние пробелы и переносы, приводим к нижнему регистру
+    return " ".join(text.lower().split())
+
+
 class BenchmarkingCLI:
     def __init__(self):
         # Маппинг уровней на реальные модели в Ollama
         self.model_map = {1: "translategemma", 2: "qwen2.5:7b", 3: "gemma2:9b", 4: "gemma2:27b"}
 
     def calculate_similarity(self, text1: str, text2: str) -> float:
-        return round(SequenceMatcher(None, text1.lower(), text2.lower()).ratio() * 100, 1)
+        t1 = clean_text(text1)
+        t2 = clean_text(text2)
+
+        if not t1 or not t2:
+            return 0.0
+
+        # Вариант А: через стандартную библиотеку (уже лучше после чистки)
+        # ratio = SequenceMatcher(None, t1, t2).ratio()
+
+        # Вариант Б: через RapidFuzz (намного точнее для смысла)
+        ratio = fuzz.ratio(t1, t2) / 100
+
+        return round(ratio * 100, 1)
+        # return round(SequenceMatcher(None, text1.lower(), text2.lower()).ratio() * 100, 1)
 
     async def translate_step(self, client: httpx.AsyncClient, text: str, model: str, lang: str, temp: float, industry: str):
         # Выбираем системный промпт
@@ -92,16 +117,16 @@ class BenchmarkingCLI:
 
                                 sim = self.calculate_similarity(text, b_text)
                                 avg_tps = round(tps2, 2)  # round((tps1 + tps2) / 2, 1)
-                                avg_time = round(t2, 2)  #round((t1 + t2) / 2, 2)
+                                avg_time = round(t2, 2)  # round((t1 + t2) / 2, 2)
 
                                 results.append({
-                                    "model": model, "lang": lang, "temp": str(temp),
-                                    "time": f"{avg_time}s", "tps": avg_tps, "sim": sim
+                                    "model": model, "lang": lang, "temperature": str(temp),
+                                    "time": f"{avg_time}s", "tps": avg_tps, "similarity %": sim
                                 })
                             except Exception as e:
                                 results.append({
-                                    "model": model, "lang": lang, "temp": str(temp),
-                                    "time": f"ERR {e}", "tps": 0, "sim": 0
+                                    "model": model, "lang": lang, "temperature": str(temp),
+                                    "time": f"ERR {e}", "tps": 0, "similarity %": 0
                                 })
                             progress.advance(main_task)
 
