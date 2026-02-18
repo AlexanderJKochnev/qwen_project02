@@ -1,3 +1,22 @@
+import sys
+import os
+
+# Определяем корень проекта (на две директории выше текущего файла)
+# Если скрипт лежит в /app/app/benchmark_cli.py
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(os.path.dirname(current_dir))  # Идем к /app
+
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
+# Теперь импорт из пакета app сработает гарантированно
+try:
+    from app.support.gemma.logic import get_ollama_payload, get_similarity_score
+except ImportError as e:
+    print(f"Ошибка импорта: {e}")
+    print(f"Пути поиска Python: {sys.path}")
+    sys.exit(1)
+
 import asyncio
 import time
 import csv
@@ -6,7 +25,7 @@ import httpx
 from rich.console import Console
 from rich.table import Table
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
-from app.support.gemma.logic import get_ollama_payload, get_similarity_score
+# from app.support.gemma.logic import get_ollama_payload, get_similarity_score
 
 OLLAMA_HOST = "http://ollama:11434/api/chat"
 console = Console()
