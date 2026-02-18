@@ -1,26 +1,32 @@
 import sys
 import os
+import importlib.util
 
-# Получаем абсолютный путь к папке, где лежит скрипт
-current_dir = os.path.dirname(os.path.abspath(__file__)) # Это /app/app
-project_root = os.path.dirname(current_dir) # Это /app
+# 1. Находим путь к текущему файлу
+current_file_path = os.path.abspath(__file__)
+current_dir = os.path.dirname(current_file_path)
 
-# Добавляем оба пути в поиск
-for path in [current_dir, project_root]:
-    if path not in sys.path:
-        sys.path.insert(0, path)
+# 2. Пытаемся найти logic.py в подпапке support/gemma/
+logic_path = os.path.join(current_dir, "support", "gemma", "logic.py")
 
+if not os.path.exists(logic_path):
+    # Если не нашли, пробуем в папке app/support/gemma/ (если мы в корне /app)
+    logic_path = os.path.join(current_dir, "app", "support", "gemma", "logic.py")
+
+# 3. Динамически загружаем модуль, игнорируя PYTHONPATH
 try:
-    # Вариант 1: если корень /app
-    from app.support.gemma.logic import get_ollama_payload, get_similarity_score
-except ImportError:
-    try:
-        # Вариант 2: если корень /app/app (импорт напрямую)
-        from support.gemma.logic import get_ollama_payload, get_similarity_score
-    except ImportError as e:
-        print(f"Критическая ошибка импорта: {e}")
-        print(f"SYS.PATH: {sys.path}")
-        sys.exit(1)
+    spec = importlib.util.spec_from_file_location("logic_core", logic_path)
+    logic_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(logic_module)
+    
+    # Вытаскиваем нужные функции
+    get_ollama_payload = logic_module.get_ollama_payload
+    get_similarity_score = logic_module.get_similarity_score
+    print(f"✓ Модуль логики успешно загружен из: {logic_path}")
+except Exception as e:
+    print(f"✘ Не удалось загрузить логику: {e}")
+    print(f"Искал здесь: {logic_path}")
+    sys.exit(1)
 
 import asyncio
 import time
