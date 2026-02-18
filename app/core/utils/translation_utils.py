@@ -6,12 +6,11 @@ from difflib import SequenceMatcher
 from fastapi import HTTPException
 # from loguru import logger
 from typing import Dict, Optional, Any, List
-# from app.core.utils.common_utils import jprint
+from app.core.utils.common_utils import jprint
 from app.core.config.project_config import settings
 # from app.support.gemma.schemas import BenchmarkRequest
 # from app.support.gemma.service import TranslationService
 # from app.support.gemma.repository import OllamaRepository
-from typing import TYPE_CHECKING
 
 # if TYPE_CHECKING:
 #     from app.support.gemma.schemas import BenchmarkRequest
@@ -97,7 +96,8 @@ class TranslationService:
                         # Считаем метрики
                         sim = self._get_similarity(req.text, b_text)
                         avg_time = round(((end_f - start_f) + (end_b - start_b)) / 2, 3)
-
+                        jprint({"model": model_name, "lang": lang, "temp": temp, "avg_time_sec": avg_time,
+                                "similarity_pct": sim, "status": "ok"})
                         report.append(
                             {"model": model_name, "lang": lang, "temp": temp, "avg_time_sec": avg_time,
                              "similarity_pct": sim, "status": "ok"}
