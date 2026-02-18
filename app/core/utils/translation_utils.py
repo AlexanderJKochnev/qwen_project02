@@ -10,8 +10,6 @@ from typing import Dict, Optional, Any, List
 from app.core.config.project_config import settings
 import re
 from rapidfuzz import fuzz
-import httpx
-from rapidfuzz import fuzz
 from rich.console import Console
 from rich.table import Table
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
