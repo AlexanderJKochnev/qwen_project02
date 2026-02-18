@@ -3,6 +3,14 @@ from pydantic import BaseModel, Field
 from typing import Optional, List
 
 
+class BenchmarkRequest(BaseModel):
+    text: str
+    target_langs: List[str] = ["russian", "spanish", "chinese", "french", "german", "italy"]
+    model_levels: List[int] = [1, 2, 3, 4]  # Список уровней для сравнения
+    industry: str = "wine"  # wine, trade или general
+    temperatures: List[float] = [0.0, 0.3, 0.7, 1.0]
+
+
 class TranslationRequest(BaseModel):
     # Обязательные
     text: str

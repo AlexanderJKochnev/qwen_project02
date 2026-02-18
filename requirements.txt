@@ -53,3 +53,4 @@ tqdm~=4.67.1
 rich~=14.1.0
 PyJWT~=2.10.1
 polyfactory~=2.22.2
+rapidfuzz

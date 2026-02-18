@@ -1,8 +1,9 @@
 # app.support.gemma.router.py
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, BackgroundTasks
 from typing import Callable, Optional, List
 from app.auth.dependencies import get_active_user_or_internal
 from app.core.utils.translation_utils import gemma_translate, TranslationService, OllamaRepository
+from app.support.gemma.schemas import BenchmarkRequest
 # from app.support.gemma.schemas import TranslationRequest
 # from app.support.gemma.service import TranslationService
 # from app.support.gemma.repository import OllamaRepository
@@ -32,6 +33,9 @@ class GemmaRouter:
                                   openapi_extra={'x-request-schema': None})
         self.router.add_api_route("/translate2", self.do_translate, methods=["GET"],
                                   openapi_extra={'x-request-schema': None})
+        self.router.add_api_route(
+            "/start_benchmark", self.start_benchmark, methods=["GET"], openapi_extra={'x-request-schema': None}
+        )
 
     async def translate(
             self, text: str = Query(
@@ -61,3 +65,9 @@ class GemmaRouter:
         translated_text, time_taken = await self.service.translate(params)
 
         return {"result": translated_text, "seconds": time_taken, "model": self.service.model_map.get(model_level)}
+
+    async def start_benchmark(self, payload: BenchmarkRequest, background_tasks: BackgroundTasks):
+        # Если хочешь ждать результат в браузере - убери background_tasks и добавь await
+        # Но для RTX 3060 лучше запустить и смотреть логи в терминале
+        results = await self.service.run_benchmark(payload)
+        return {"message": "Benchmark finished", "data": results}
