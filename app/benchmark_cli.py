@@ -6,9 +6,7 @@ import httpx
 from rich.console import Console
 from rich.table import Table
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
-
-# Импорт из нашего ядра
-from app.support.gemma.logic import get_ollama_payload, get_similarity_score
+from app.app.support.gemma.logic import get_ollama_payload, get_similarity_score
 
 OLLAMA_HOST = "http://ollama:11434/api/chat"
 console = Console()
