@@ -7,7 +7,7 @@ from fastapi import HTTPException
 # from loguru import logger
 from typing import Dict, Optional, Any, List
 from app.core.config.project_config import settings
-from app.support.gemma.logic import get_ollama_payload
+# from app.support.gemma.logic import get_ollama_payload
 # from app.support.gemma.schemas import BenchmarkRequest
 # from app.support.gemma.service import TranslationService
 # from app.support.gemma.repository import OllamaRepository
@@ -27,6 +27,7 @@ INDUSTRY_PROMPTS = {
 
 class TranslationService:
     def __init__(self, repository):
+        from app.support.gemma.logic import get_ollama_payload
         self.repository = repository
         self.model_map = {1: "translategemma",
                           2: "gemma2:9b",
