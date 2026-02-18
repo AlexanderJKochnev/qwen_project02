@@ -27,7 +27,6 @@ INDUSTRY_PROMPTS = {
 
 class TranslationService:
     def __init__(self, repository):
-        from app.support.gemma.logic import get_ollama_payload
         self.repository = repository
         self.model_map = {1: "translategemma",
                           2: "gemma2:9b",
@@ -35,6 +34,7 @@ class TranslationService:
                           4: "qwen2.5:7b"}
 
     async def translate(self, p: dict):
+        from app.support.gemma.logic import get_ollama_payload
         start_time = time.perf_counter()  # Начинаем отсчет
 
         model_name = self.model_map.get(p['model_level'], "gemma2:2b")
