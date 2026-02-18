@@ -3,6 +3,8 @@
 
 import asyncio
 import time
+import csv
+from datetime import datetime
 from difflib import SequenceMatcher
 from typing import List, Dict, Tuple
 
@@ -89,8 +91,8 @@ class BenchmarkingCLI:
                                 b_text, t2, tps2 = await self.translate_step(client, f_text, model, "English", temp, industry)
 
                                 sim = self.calculate_similarity(text, b_text)
-                                avg_tps = round((tps1 + tps2) / 2, 1)
-                                avg_time = round((t1 + t2) / 2, 2)
+                                avg_tps = round(tps2, 2)  # round((tps1 + tps2) / 2, 1)
+                                avg_time = round(t2, 2)  #round((t1 + t2) / 2, 2)
 
                                 results.append({
                                     "model": model, "lang": lang, "temp": str(temp),
@@ -103,7 +105,17 @@ class BenchmarkingCLI:
                                 })
                             progress.advance(main_task)
 
+        self.save_to_csv(results)
         self.display_table(results, text, industry)
+
+    def save_to_csv(self, data: List[Dict]):
+        filename = f"bench_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+        keys = data[0].keys()
+        with open(filename, 'w', newline='', encoding='utf-8') as f:
+            dict_writer = csv.DictWriter(f, fieldnames=keys)
+            dict_writer.writeheader()
+            dict_writer.writerows(data)
+        console.print(f"\n[bold green]✓ Результаты сохранены в файл:[/] [white]{filename}[/]")
 
     def display_table(self, data, original_text, industry):
         table = Table(
@@ -139,7 +151,7 @@ if __name__ == "__main__":
                  "которые ценятся в красных винах. Кроме того, "
                  "практикуется длительная выдержка в больших дубовых бочках (как правило, используется славонский дуб) "
                  "для смягчения жёстких агрессивных танинов, которые являются следствием длительной мацерации.")
-    TEST_LEVELS = [1, 2, 3, 4]  # 2b и 7b
+    TEST_LEVELS = [1, 2, 3]  # 2b и 7b
     TEST_LANGS = ["russian", "spanish", "chinese", "french", "english"]
     TEST_TEMPS = [0.0, 0.3, 0.9]
     TEST_INDUSTRY = "wine"  # "wine", "trade", "general"
