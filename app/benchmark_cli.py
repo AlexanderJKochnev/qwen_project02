@@ -168,7 +168,6 @@ class BenchmarkingCLI:
 # Параметры теста
 if __name__ == "__main__":
     # Настраиваемые параметры теста
-    # TEST_TEXT = "Full-bodied Cabernet Sauvignon with firm tannins and notes of blackcurrant and cedar."
     TEST_TEXT = ("Бароло – это первое итальянское вино, получившее самый престижный статус DOCG. "
                  "Между классической технологией производства Бароло и современной лежит огромная пропасть. "
                  "Для традиционалистов характерны длительная постферментационная мацерация, "
@@ -176,6 +175,7 @@ if __name__ == "__main__":
                  "которые ценятся в красных винах. Кроме того, "
                  "практикуется длительная выдержка в больших дубовых бочках (как правило, используется славонский дуб) "
                  "для смягчения жёстких агрессивных танинов, которые являются следствием длительной мацерации.")
+    TEST_TEXT = "Full-bodied Cabernet Sauvignon with firm tannins and notes of blackcurrant and cedar."
     TEST_LEVELS = [1, 2, 3]  # 2b и 7b
     TEST_LANGS = ["russian", "spanish", "chinese", "french", "english"]
     TEST_TEMPS = [0.0, 0.3, 0.9]
