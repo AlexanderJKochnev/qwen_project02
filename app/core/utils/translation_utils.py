@@ -350,7 +350,7 @@ if __name__ == "__main__":
             levels=[1, 2, 4],
             # Проверяем всё от 2b до Qwen
             langs=["russian", "spanish", "english", "chinese"], temps=[0.0, 0.3, 0.9],  # Перебираем температуры
-            industry="wine"
+            industry="general"
         )
 
     asyncio.run(main())
