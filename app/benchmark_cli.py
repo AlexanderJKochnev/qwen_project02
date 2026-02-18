@@ -1,23 +1,25 @@
 import sys
 import os
 
-# Получаем путь к папке, где лежит benchmark_cli.py (/app/app/)
-current_dir = os.path.dirname(os.path.abspath(__file__))
+# Получаем абсолютный путь к папке, где лежит скрипт
+current_dir = os.path.dirname(os.path.abspath(__file__)) # Это /app/app
+project_root = os.path.dirname(current_dir) # Это /app
 
-# Добавляем ее в пути поиска
-if current_dir not in sys.path:
-    sys.path.insert(0, current_dir)
+# Добавляем оба пути в поиск
+for path in [current_dir, project_root]:
+    if path not in sys.path:
+        sys.path.insert(0, path)
 
-# Теперь импортируем БЕЗ приставки 'app.', так как мы уже внутри нее
 try:
-    from support.gemma.logic import get_ollama_payload, get_similarity_score
-    print("Импорт успешен!")
-except ImportError as e:
-    # Если структура иная, пробуем через корень
+    # Вариант 1: если корень /app
+    from app.support.gemma.logic import get_ollama_payload, get_similarity_score
+except ImportError:
     try:
-        from app.app.support.gemma.logic import get_ollama_payload, get_similarity_score
-    except:
-        print(f"Ошибка импорта: {e}")
+        # Вариант 2: если корень /app/app (импорт напрямую)
+        from support.gemma.logic import get_ollama_payload, get_similarity_score
+    except ImportError as e:
+        print(f"Критическая ошибка импорта: {e}")
+        print(f"SYS.PATH: {sys.path}")
         sys.exit(1)
 
 import asyncio
