@@ -34,7 +34,7 @@ class GemmaRouter:
         self.router.add_api_route("/translate2", self.do_translate, methods=["GET"],
                                   openapi_extra={'x-request-schema': None})
         self.router.add_api_route(
-            "/start_benchmark", self.start_benchmark, methods=["GET"], openapi_extra={'x-request-schema': None}
+            "/start_benchmark", self.start_benchmark, methods=["POST"], openapi_extra={'x-request-schema': None}
         )
 
     async def translate(

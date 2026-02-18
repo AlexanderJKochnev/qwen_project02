@@ -8,11 +8,13 @@ from fastapi import HTTPException
 from typing import Dict, Optional, Any, List
 # from app.core.utils.common_utils import jprint
 from app.core.config.project_config import settings
-from app.support.gemma.schemas import BenchmarkRequest
-from app.test_bench import TranslationBench
+# from app.support.gemma.schemas import BenchmarkRequest
 # from app.support.gemma.service import TranslationService
 # from app.support.gemma.repository import OllamaRepository
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from app.support.gemma.schemas import BenchmarkRequest
 
 INDUSTRY_PROMPTS = {
     "wine": "You are a professional sommelier and wine critic. "
