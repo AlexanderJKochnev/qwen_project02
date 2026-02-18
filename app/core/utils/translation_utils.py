@@ -45,9 +45,12 @@ class TranslationService:
         sys_content = INDUSTRY_PROMPTS.get(p.get('industry', 'general'), INDUSTRY_PROMPTS["general"])
         return {"model": model_name,
                 "messages": [{"role": "system", "content": f"{sys_content} Target language: {p['target_lang']}."},
-                             {"role": "user", "content": p['text']}, {"role": "assistant", "content": ""}], "stream": False,
-                "options": {"temperature": p.get('temperature', 0.1), "num_predict": p.get('num_predict', 1000),
-                            "top_p": p.get('top_p', 0.9), "stop": ["\nNote:", "\nExplanation:", "<end_of_turn>", "###"]},
+                             {"role": "user", "content": p['text']},
+                             {"role": "assistant", "content": ""}], "stream": False,
+                "options": {"temperature": p.get('temperature', 0.1),
+                            "num_predict": p.get('num_predict', 1000),
+                            "top_p": p.get('top_p', 0.9),
+                            "stop": ["\nNote:", "\nExplanation:", "<end_of_turn>", "###"]},
                 "keep_alive": p.get('keep_alive', '5m')}
 
     # --- РАБОЧИЙ МЕТОД (Для FastAPI и Теста) ---
@@ -335,20 +338,24 @@ async def fill_missing_translations(data: Dict[str, Any], test: bool = False) ->
 
 
 # --- ТОЧКА ВХОДА ДЛЯ ЗАПУСКА ИЗ ТЕРМИНАЛА ---
+# docker exec -it app python3 -m app.core.utils.translation_utils
 if __name__ == "__main__":
-    # Импортируем репозиторий здесь, чтобы избежать циклов в основном приложении
-
     async def main():
         repo = OllamaRepository()
         service = TranslationService(repo)
 
-        # САМ ТЕСТ С ПЕРЕБОРОМ ПАРАМЕТРОВ
+        # Запрашиваем параметры интерактивно
+        text = input("Введите текст для перевода (Enter для значения по умолчанию): ").strip()
+        if not text:
+            text = "Elegant Pinot Noir with silky tannins and aromas of forest floor."
+
+        industry = input("Введите отрасль (Enter для general): ").strip() or "general"
+
+        # Можно добавить запрос и для других параметров
+
         await service.run_benchmark(
-            text="Elegant Pinot Noir with silky tannins and aromas of forest floor.",
-            levels=[1, 2, 4],
-            # Проверяем всё от 2b до Qwen
-            langs=["russian", "spanish", "english", "chinese"], temps=[0.0, 0.3, 0.9],  # Перебираем температуры
-            industry="general"
+            text=text, levels=[1, 2, 4], langs=["russian", "spanish", "english", "chinese"],
+            temps=[0.0, 0.3, 0.9], industry=industry
         )
 
     asyncio.run(main())
