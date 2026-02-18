@@ -13,8 +13,8 @@ from app.core.config.project_config import settings
 # from app.support.gemma.repository import OllamaRepository
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from app.support.gemma.schemas import BenchmarkRequest
+# if TYPE_CHECKING:
+#     from app.support.gemma.schemas import BenchmarkRequest
 
 INDUSTRY_PROMPTS = {
     "wine": "You are a professional sommelier and wine critic. "
@@ -62,7 +62,7 @@ class TranslationService:
     def _get_similarity(self, text1: str, text2: str) -> float:
         return round(SequenceMatcher(None, text1.lower(), text2.lower()).ratio() * 100, 1)
 
-    async def run_benchmark(self, req: BenchmarkRequest):
+    async def run_benchmark(self, req):  # BenchmarkRequest):
         report = []
         # Выбираем промпт отрасли
         sys_prompt = INDUSTRY_PROMPTS.get(req.industry, INDUSTRY_PROMPTS["general"])
