@@ -346,7 +346,7 @@ if __name__ == "__main__":
         # САМ ТЕСТ С ПЕРЕБОРОМ ПАРАМЕТРОВ
         await service.run_benchmark(
             text="Elegant Pinot Noir with silky tannins and aromas of forest floor.",
-            levels=["translategemma", "gemma2:9b", "qwen2.5:7b"],
+            levels=[1, 2, 4],
             # Проверяем всё от 2b до Qwen
             langs=["russian", "spanish", "english", "chinese"], temps=[0.0, 0.3, 0.9],  # Перебираем температуры
             industry="wine"
