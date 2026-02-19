@@ -101,9 +101,9 @@ services:
           cpus: '2'
           memory: 16G
     networks:
-      - shared_network    # Для связи с Nginx
       - pgbouncer_network # Для связи с pgbouncer
-  
+      - shared_network    # Для связи с Nginx
+
   mongo:
     # --- НАСТРОЙКИ ЛОГИРОВАНИЯ ---
     logging:
