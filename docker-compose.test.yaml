@@ -99,7 +99,7 @@ services:
           memory: 2G
         reservations:
           cpus: '0.25'
-          memory: 4G
+          memory: 0.5G
     networks:
       - internal_network
       # - test_pgbouncer_network # Для связи с test_pgbouncer
