@@ -56,7 +56,8 @@ services:
           cpus: '2'
           memory: 16G
     networks:
-      - shared_network:
+      shared_network:
+        aliases:
           - wine_host-test
   
   adminer:
@@ -85,7 +86,8 @@ services:
           cpus: '0.12'
           memory: 256M
     networks:
-      - shared_network:
+      shared_network:
+        aliases:
           - adminer-test
   
   app:
@@ -130,7 +132,8 @@ services:
           cpus: '2'
           memory: 16G
     networks:
-      - shared_network:
+      shared_network:
+        aliases:
           - app-test
   
   mongo:
@@ -177,7 +180,8 @@ services:
           cpus: '1'
           memory: 2G
     networks:
-      - shared_network:
+      shared_network:
+        aliases:
           - mongo-test
   
   mongo-express:
@@ -217,7 +221,8 @@ services:
           cpus: '0.250'
           memory: 256M
     networks:
-      - shared_network:
+      shared_network:
+        aliases:
           - mongo-express-test
   
   preact_front:
@@ -239,7 +244,8 @@ services:
           memory: 512M
     restart: unless-stopped
     networks:
-      - shared_network:
+      shared_network:
+        aliases:
           - preact_front-test
   
   pgbouncer:
@@ -288,7 +294,8 @@ services:
           cpus: '1'
           memory: 512M
     networks:
-      - shared_network:
+      shared_network:
+        aliases:
           - pgbouncer-test
     
   ollama:
@@ -309,7 +316,8 @@ services:
     volumes:
       - ollama_data:/root/.ollama
     networks:
-      - shared_network:
+      shared_network:
+        aliases:
           - ollama-test
 
 volumes:

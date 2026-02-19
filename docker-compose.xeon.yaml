@@ -56,7 +56,8 @@ services:
           cpus: '2'
           memory: 16G
     networks:
-      - shared_network:
+      shared_network:
+          aliases:
           - wine_host-xeon
    
   app:
@@ -101,7 +102,8 @@ services:
           cpus: '2'
           memory: 16G
     networks:
-      - shared_network:
+      shared_network:
+        aliases:
           - app-xeon
   
   mongo:
@@ -148,7 +150,8 @@ services:
           cpus: '1'
           memory: 2G
     networks:
-      - shared_network:
+      shared_network:
+        aliases:
           - mongo-xeon
     
   preact_front:
@@ -170,7 +173,8 @@ services:
           memory: 512M
     restart: unless-stopped
     networks:
-      - shared_network:
+      shared_network:
+        aliases:
           - preact_front-xeon
   
   pgbouncer:
@@ -219,7 +223,8 @@ services:
           cpus: '1'
           memory: 512M
     networks:
-      - shared_network:
+      shared_network:
+        aliases:
           - pgbouncer-xeon
     
   
@@ -241,7 +246,8 @@ services:
     volumes:
       - ollama_data:/root/.ollama
     networks:
-      - shared_network:
+      shared_network:
+        aliases:
           - ollama-xeon
 
 volumes:
