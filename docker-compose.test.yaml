@@ -111,11 +111,10 @@ services:
       - ${API_PORT}
     environment:
       # POSTGRES_HOST: ${POSTGRES_HOST}
-      POSTGRES_HOST: pgbouncer
+      POSTGRES_HOST: pgbouncer-${ALIASE}
       WEB_PORT: 6432
       # WEB_PORT: ${API_PORT}
-      WEB_HOST: pgbouncer
-      # WEB_HOST: ${API_HOST}
+      WEB_HOST: pgbouncer-${ALIASE}
       BASE_URL: ${BASE_URL}
       NODE_ENV: production
       OLLAMA_HOST: http://ollama:11434
@@ -257,7 +256,7 @@ services:
     image: edoburu/pgbouncer:latest
     container_name: ${PGBOUNCER_CONTAINER_NAME}
     environment:
-      DB_HOST: wine_host
+      DB_HOST: wine_host-${ALIASE}
       DB_PORT: 5432
       DB_USER: wine
       DB_PASSWORD: wine1
