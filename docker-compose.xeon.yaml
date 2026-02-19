@@ -203,13 +203,13 @@ services:
       # ВАЖНО: Явно создаем userlist через переменные
       AUTH_FILE: /etc/pgbouncer/userlist.txt
       # Дополнительные пользователи (если нужны)
-      USERS: "wine wine1"
+      USERS: "${POSTGRES_USER} ${POSTGRES_PASSWORD}"
     expose:
       - "6432"  # Порт для приложения
     restart: unless-stopped
     healthcheck:
       # Официальный способ проверки pgbouncer (внутри образа есть psql-client)
-      test: ["CMD", "pg_isready", "-h", "localhost", "-p", "6432", "-U", "wine", "-d", "wine_db"]
+      test: ["CMD", "pg_isready", "-h", "localhost", "-p", "6432", "-U", "${POSTGRES_USER}", "-d", "wine_db"]
       interval: 5s
       timeout: 5s
       retries: 5
