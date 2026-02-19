@@ -101,7 +101,7 @@ services:
           memory: 16G
     networks:
       - internal-${ALIASE}
-      - nginx_network
+      - shared_network
   
   mongo:
     # --- НАСТРОЙКИ ЛОГИРОВАНИЯ ---
@@ -169,7 +169,7 @@ services:
     restart: unless-stopped
     networks:
       - internal-${ALIASE}
-      - nginx_network
+      - shared_network
   
   # только тут нужно поменять имя сервиса
   pgbouncer-xeon:
@@ -250,6 +250,6 @@ volumes:
   ollama_data:
 
 networks:
-  internal-{ALIASE}: # Изолированная сеть для базы и прокси
-  nginx_network:
+  internal-${ALIASE}: # Изолированная сеть для базы и прокси
+  shared_network:
     external: true
