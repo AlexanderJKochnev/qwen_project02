@@ -264,5 +264,9 @@ volumes:
 
 networks:
   shared_network:
+    driver: bridge
     external: true
     name: nginx_gateway_shared_network
+  internal_network:
+    internal: true
+    driver: bridge
