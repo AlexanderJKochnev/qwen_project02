@@ -56,9 +56,7 @@ services:
           cpus: '2'
           memory: 16G
     networks:
-      shared_network:
-          aliases:
-          - wine_host-xeon
+      - internal_network
    
   app:
     logging:
@@ -105,6 +103,7 @@ services:
       shared_network:
         aliases:
           - app-xeon
+      internal_network:
   
   mongo:
     # --- НАСТРОЙКИ ЛОГИРОВАНИЯ ---
@@ -150,9 +149,7 @@ services:
           cpus: '1'
           memory: 2G
     networks:
-      shared_network:
-        aliases:
-          - mongo-xeon
+      - internal_network
     
 
   preact_front:
@@ -177,6 +174,7 @@ services:
       shared_network:
         aliases:
           - preact_front-xeon
+      internal_network:
   
   pgbouncer:
     logging:
@@ -224,9 +222,7 @@ services:
           cpus: '1'
           memory: 512M
     networks:
-      shared_network:
-        aliases:
-          - pgbouncer-xeon
+      - internal_network
     
   
   ollama:
@@ -247,9 +243,7 @@ services:
     volumes:
       - ollama_data:/root/.ollama
     networks:
-      shared_network:
-        aliases:
-          - ollama-xeon
+      - internal_network
 
 volumes:
   migration_volume: # alembic migrations
@@ -262,5 +256,7 @@ volumes:
   ollama_data:
 
 networks:
+  internal_network:
+    driver: bridge
   shared_network:
     external: true
