@@ -224,9 +224,7 @@ services:
           cpus: '0.25'
           memory: 128M
     networks:
-      shared_network:
-        aliases:
-          - pgbouncer-xeon
+      - internal_network
     
   
   ollama:
