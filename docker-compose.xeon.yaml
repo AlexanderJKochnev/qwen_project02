@@ -220,10 +220,11 @@ services:
       wine_host:
         condition: service_healthy
     deploy:
+      replicas: 4
       resources:
         limits:
-          cpus: '1'
-          memory: 512M
+          cpus: '0.25'
+          memory: 128M
     networks:
       shared_network:
         aliases:
