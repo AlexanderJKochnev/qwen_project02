@@ -194,7 +194,7 @@ services:
       MAX_CLIENT_CONN: 500
       SERVER_IDLE_TIMEOUT: 600
       QUERY_TIMEOUT: 60
-      DEFAULT_POOL_SIZE: 50
+      DEFAULT_POOL_SIZE: 100
       MIN_POOL_SIZE: 20
       RESERVE_POOL_SIZE: 10
       LISTEN_PORT: 6432
@@ -263,9 +263,9 @@ networks:
     driver: bridge
     external: true
     name: nginx_gateway_shared_network
+  pgbouncer_network:
+    driver: bridge
   internal_network:
     internal: true
     driver: bridge
-  pgbouncer_network:
-    internal: true
-    driver: bridge
+  
