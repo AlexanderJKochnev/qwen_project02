@@ -70,8 +70,8 @@ services:
     restart: unless-stopped
     command: uvicorn app.main:app --host 0.0.0.0 --port ${API_PORT} --loop auto --workers 56
     depends_on:
-      pgbouncer:
-        condition: service_healthy
+      # pgbouncer:
+      #   condition: service_healthy
       wine_host:
         condition: service_healthy
       mongo:
@@ -80,7 +80,7 @@ services:
       - ${API_PORT}
     environment:
       # POSTGRES_HOST: ${POSTGRES_HOST}
-      POSTGRES_HOST: pgbouncer-${ALIASE}
+      POSTGRES_HOST: pgbouncer
       WEB_PORT: 6432
       # WEB_PORT: ${API_PORT}
       WEB_HOST: pgbouncer-${ALIASE}
@@ -101,6 +101,7 @@ services:
           cpus: '2'
           memory: 16G
     networks:
+      # - internal_network
       - pgbouncer_network # Для связи с pgbouncer
       - shared_network    # Для связи с Nginx
 
