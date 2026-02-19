@@ -57,35 +57,8 @@ services:
           memory: 16G
     networks:
       - internal_network
-  
-  adminer:
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"   # Максимальный размер файла лога: 10 МБ
-        max-file: "3"     # Количество хранимых файлов ротации: 3
-    container_name: pg_admin
-    # image: adminer:4.8.1
-    image: ghcr.io/alexanderjkochnev/adminer:4.8.1
-    restart: unless-stopped
-    environment:
-      - ADMINER_PLUGINS=tables-filter enum-option enum-types
-      - ADMINER_DESIGN=nette
-    depends_on:
-      - wine_host
-    ports:
-      - "${ADMINER_PORTS}"
-    deploy:
-      resources:
-        limits:
-          cpus: '1'
-          memory: 512M
-        reservations:
-          cpus: '0.12'
-          memory: 256M
-    networks:
-      - internal_network
-  
+      
+   
   app:
     logging:
       driver: "json-file"
@@ -95,9 +68,9 @@ services:
     container_name: ${APP_CONTAINER_NAME}
     build: .
     restart: unless-stopped
-    command: uvicorn app.main:app --host 0.0.0.0 --port ${API_PORT} --loop uvloop --workers 56
+    command: uvicorn app.main:app --host 0.0.0.0 --port ${API_PORT} --loop auto --workers 56
     depends_on:
-      pgbouncer:
+      test_pgbouncer:
         condition: service_healthy
       wine_host:
         condition: service_healthy
@@ -106,11 +79,12 @@ services:
     expose:
       - ${API_PORT}
     environment:
-      # POSTGRES_HOST: ${POSTGRES_HOST}
-      POSTGRES_HOST: pgbouncer-${ALIASE}
+      POSTGRES_HOST: test_pgbouncer
       WEB_PORT: 6432
+      WEB_HOST: test_pgbouncer  # test_pgbouncer-${ALIASE}
+      # POSTGRES_HOST: ${POSTGRES_HOST}
       # WEB_PORT: ${API_PORT}
-      WEB_HOST: pgbouncer-${ALIASE}
+      # WEB_HOST: ${API_HOST}
       BASE_URL: ${BASE_URL}
       NODE_ENV: production
       OLLAMA_HOST: http://ollama:11434
@@ -127,11 +101,10 @@ services:
           cpus: '2'
           memory: 16G
     networks:
-      shared_network:
-        aliases:
-          - app-test
-      internal_network:
-  
+      # - internal_network
+      - test_pgbouncer_network # Для связи с test_pgbouncer
+      - shared_network    # Для связи с Nginx
+
   mongo:
     # --- НАСТРОЙКИ ЛОГИРОВАНИЯ ---
     logging:
@@ -162,7 +135,7 @@ services:
       --syncdelay 300
       --nojournal
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | ${MONGODB_CONTAINER_NAME} localhost:${MONGO_INN_PORT}/admin --quiet --username admin --password admin
+      test: echo 'db.runCommand("ping").ok' | mongo localhost:${MONGO_INN_PORT}/admin --quiet --username admin --password admin
       interval: 10s
       timeout: 10s
       retries: 30
@@ -176,48 +149,11 @@ services:
           cpus: '1'
           memory: 2G
     networks:
-      - internal_network
+      shared_network:
+        aliases:
+          - mongo-xeon
+    
 
-  
-  mongo-express:
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"   # Максимальный размер файла лога: 10 МБ
-        max-file: "3"     # Количество хранимых файлов ротации: 3
-    image: ghcr.io/alexanderjkochnev/mongo-express
-    container_name: ${MONGO_EXPRESS_CONTAINER_NAME}
-    restart: unless-stopped
-    environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: ${ME_CONFIG_MONGODB_ADMINUSERNAME}
-      ME_CONFIG_MONGODB_ADMINPASSWORD: ${ME_CONFIG_MONGODB_ADMINPASSWORD}
-      ME_CONFIG_MONGODB_SERVER: ${ME_CONFIG_MONGODB_SERVER}
-      ME_CONFIG_BASICAUTH_USERNAME: ${ME_CONFIG_BASICAUTH_USERNAME}
-      ME_CONFIG_BASICAUTH_PASSWORD: ${ME_CONFIG_BASICAUTH_PASSWORD}
-    ports:
-      - "${ME_OUT_PORT}:${ME_INN_PORT}"
-    depends_on:
-      wine_host:
-        condition: service_healthy
-      mongo:
-        condition: service_healthy
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:${ME_INN_PORT}" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    deploy:
-      resources:
-        limits:
-          cpus: '2'
-          memory: 512M
-        reservations:
-          cpus: '0.250'
-          memory: 256M
-    networks:
-      internal_network
-  
   preact_front:
     logging:
       driver: "json-file"
@@ -239,19 +175,17 @@ services:
     networks:
       shared_network:
         aliases:
-          - preact_front-test
-      internal_network:
+          - preact_front-xeon
   
-  pgbouncer:
+  test_pgbouncer:
     logging:
       driver: "json-file"
       options:
         max-size: "10m"   # Максимальный размер файла лога: 10 МБ
         max-file: "3"     # Количество хранимых файлов ротации: 3
     image: edoburu/pgbouncer:latest
-    container_name: ${PGBOUNCER_CONTAINER_NAME}
     environment:
-      DB_HOST: wine_host-${ALIASE}
+      DB_HOST: ${POSTGRES_HOST}
       DB_PORT: 5432
       DB_USER: wine
       DB_PASSWORD: wine1
@@ -261,21 +195,21 @@ services:
       MAX_CLIENT_CONN: 500
       SERVER_IDLE_TIMEOUT: 600
       QUERY_TIMEOUT: 60
-      DEFAULT_POOL_SIZE: 50
+      DEFAULT_POOL_SIZE: 100
       MIN_POOL_SIZE: 20
       RESERVE_POOL_SIZE: 10
       LISTEN_PORT: 6432
       ADMIN_USERS: wine
       # ВАЖНО: Явно создаем userlist через переменные
-      AUTH_FILE: /etc/pgbouncer/userlist.txt
+      AUTH_FILE: /etc/test_pgbouncer/userlist.txt
       # Дополнительные пользователи (если нужны)
-      USERS: "wine wine1"
+      USERS: "${POSTGRES_USER} ${POSTGRES_PASSWORD}"
     expose:
       - "6432"  # Порт для приложения
     restart: unless-stopped
     healthcheck:
-      # Официальный способ проверки pgbouncer (внутри образа есть psql-client)
-      test: ["CMD", "pg_isready", "-h", "localhost", "-p", "6432", "-U", "wine", "-d", "wine_db"]
+      # Официальный способ проверки test_pgbouncer (внутри образа есть psql-client)
+      test: ["CMD", "pg_isready", "-h", "localhost", "-p", "6432", "-U", "${POSTGRES_USER}", "-d", "wine_db"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -283,13 +217,16 @@ services:
       wine_host:
         condition: service_healthy
     deploy:
+      replicas: 4
       resources:
         limits:
-          cpus: '1'
-          memory: 512M
+          cpus: '0.25'
+          memory: 128M
     networks:
-      internal_network:
+      - internal_network
+      - test_pgbouncer_network
     
+  
   ollama:
     logging:
       driver: "json-file"
@@ -308,7 +245,9 @@ services:
     volumes:
       - ollama_data:/root/.ollama
     networks:
-      internal_network:
+      shared_network:
+        aliases:
+          - ollama-xeon
 
 volumes:
   migration_volume: # alembic migrations
@@ -321,7 +260,12 @@ volumes:
   ollama_data:
 
 networks:
-  internal_network:
-    driver: bridge
   shared_network:
+    driver: bridge
     external: true
+    name: nginx_gateway_shared_network
+  test_pgbouncer_network:
+    driver: bridge
+  internal_network:
+    internal: true
+    driver: bridge
