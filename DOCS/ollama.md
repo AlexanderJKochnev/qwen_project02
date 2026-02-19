@@ -4,7 +4,7 @@
    1. docker exec -it ollama ollama pull translategemma  # модель 2b дообученная
    2. docker exec -it ollama ollama pull gemma2:9b # модель 9б  
    3. docker exec -it ollama ollama pull gemma2:27b
-   4. docker exec -it ollama ollama pull qwen2.5:7b
+   4. docker exec -it ollama ollama pull qwen2.5:7b # 14b
    5. docker exec -it ollama ollama list # проверка какие модели загружены
 
 3. Ollama держит модель в памяти (VRAM) в течение 5 минут после последнего запроса (по умолчанию). 
@@ -15,3 +15,5 @@
 6. запуск теста (в консоли)
    1. docker exec -it app python app/benchmark_cli.py
    2. docker cp app:/app/bench_20260218_100340.csv ./результат.csv # название файла см в консоли
+
+   
