@@ -184,7 +184,7 @@ services:
         max-file: "3"     # Количество хранимых файлов ротации: 3
     image: edoburu/pgbouncer:latest
     environment:
-      DB_HOST: wine_host-${ALIASE}
+      DB_HOST: ${POSTGRES_HOST}
       DB_PORT: 5432
       DB_USER: wine
       DB_PASSWORD: wine1
