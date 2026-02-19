@@ -79,12 +79,12 @@ services:
     expose:
       - ${API_PORT}
     environment:
-      POSTGRES_HOST: test_pgbouncer
-      WEB_PORT: 6432
-      WEB_HOST: test_pgbouncer  # test_pgbouncer-${ALIASE}
-      # POSTGRES_HOST: ${POSTGRES_HOST}
-      # WEB_PORT: ${API_PORT}
-      # WEB_HOST: ${API_HOST}
+      # POSTGRES_HOST: test_pgbouncer
+      # WEB_PORT: 6432
+      # WEB_HOST: test_pgbouncer  # test_pgbouncer-${ALIASE}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      WEB_PORT: ${API_PORT}
+      WEB_HOST: ${API_HOST}
       BASE_URL: ${BASE_URL}
       NODE_ENV: production
       OLLAMA_HOST: http://ollama:11434
@@ -101,8 +101,8 @@ services:
           cpus: '2'
           memory: 16G
     networks:
-      # - internal_network
-      - test_pgbouncer_network # Для связи с test_pgbouncer
+      - internal_network
+      # - test_pgbouncer_network # Для связи с test_pgbouncer
       - shared_network    # Для связи с Nginx
 
   mongo:
