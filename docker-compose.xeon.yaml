@@ -101,10 +101,8 @@ services:
           cpus: '2'
           memory: 16G
     networks:
-      shared_network:
-        aliases:
-          - app-xeon
-      internal_network:
+      - shared_network    # Для связи с Nginx
+      - pgbouncer_network # Для связи с pgbouncer
   
   mongo:
     # --- НАСТРОЙКИ ЛОГИРОВАНИЯ ---
@@ -225,6 +223,7 @@ services:
           memory: 128M
     networks:
       - internal_network
+      - pgbouncer_network
     
   
   ollama:
@@ -265,5 +264,8 @@ networks:
     external: true
     name: nginx_gateway_shared_network
   internal_network:
+    internal: true
+    driver: bridge
+  pgbouncer_network:
     internal: true
     driver: bridge
