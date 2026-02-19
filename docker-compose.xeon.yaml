@@ -187,7 +187,7 @@ services:
     image: edoburu/pgbouncer:latest
     container_name: ${PGBOUNCER_CONTAINER_NAME}
     environment:
-      DB_HOST: wine_host-${ALIASE}
+      DB_HOST: wine_host
       DB_PORT: 5432
       DB_USER: wine
       DB_PASSWORD: wine1
