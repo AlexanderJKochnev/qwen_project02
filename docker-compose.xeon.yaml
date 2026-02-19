@@ -10,7 +10,7 @@ services:
         max-file: "3"     # Количество хранимых файлов ротации: 3
     # -----------------------------
     restart: unless-stopped
-    container_name: ${POSTGRES_HOST}
+    container_name: ${POSTGRES_HOST}-${ALIASE}
     image: ghcr.io/alexanderjkochnev/postgres:17-alpine
     command: >
       postgres
@@ -56,18 +56,15 @@ services:
           cpus: '2'
           memory: 16G
     networks:
-      shared_network:
-        aliases:
-          - wine_host-xeon
+      - internal-${ALIASE}
       
-   
   app:
     logging:
       driver: "json-file"
       options:
         max-size: "10m"   # Максимальный размер файла лога: 10 МБ
         max-file: "3"     # Количество хранимых файлов ротации: 3
-    container_name: ${APP_CONTAINER_NAME}
+    container_name: app-${ALIASE}
     build: .
     restart: unless-stopped
     command: uvicorn app.main:app --host 0.0.0.0 --port ${API_PORT} --loop auto --workers 56
@@ -103,9 +100,8 @@ services:
           cpus: '2'
           memory: 16G
     networks:
-      shared_network:
-        aliases:
-          - app-xeon
+      - internal-${ALIASE}
+      - nginx_network
   
   mongo:
     # --- НАСТРОЙКИ ЛОГИРОВАНИЯ ---
@@ -116,7 +112,7 @@ services:
         max-file: "3"     # Количество хранимых файлов ротации: 3
     # -----------------------------
     image: ghcr.io/alexanderjkochnev/mongo:4.4.20
-    container_name: ${MONGODB_CONTAINER_NAME}
+    container_name: mongo-${ALIASE}
     hostname: ${MONGO_HOSTNAME}
     restart: unless-stopped
     environment:
@@ -151,10 +147,7 @@ services:
           cpus: '1'
           memory: 2G
     networks:
-      shared_network:
-        aliases:
-          - mongo-xeon
-    
+      - internal-${ALIASE}
 
   preact_front:
     logging:
@@ -165,7 +158,7 @@ services:
     build:
       context: ./preact_front          # путь к папке с Preact
       dockerfile: Dockerfile           # имя Dockerfile внутри ./preact_front
-    container_name: ${PREACT_CONTAINER_NAME}
+    container_name: preact-${ALIASE}
     expose:
       - "80"
     deploy:
@@ -175,24 +168,23 @@ services:
           memory: 512M
     restart: unless-stopped
     networks:
-      shared_network:
-        aliases:
-          - preact_front-xeon
+      - internal-${ALIASE}
+      - nginx_network
   
-  pgbouncer:
+  # только тут нужно поменять имя сервиса
+  pgbouncer-xeon:
     logging:
       driver: "json-file"
       options:
         max-size: "10m"   # Максимальный размер файла лога: 10 МБ
         max-file: "3"     # Количество хранимых файлов ротации: 3
     image: edoburu/pgbouncer:latest
-    container_name: ${PGBOUNCER_CONTAINER_NAME}
     environment:
-      DB_HOST: wine_host-${ALIASE}
+      DB_HOST: ${POSTGRES_HOST}-${ALIASE}
       DB_PORT: 5432
-      DB_USER: wine
-      DB_PASSWORD: wine1
-      DB_NAME: wine_db
+      DB_USER: ${POSTGRES_USER}  # wine
+      DB_PASSWORD: ${POSTGRES_PASSWORD}  # wine1
+      DB_NAME: ${POSTGRES_DB}  # wine_db
       AUTH_TYPE: scram-sha-256
       POOL_MODE: transaction
       MAX_CLIENT_CONN: 500
@@ -202,11 +194,11 @@ services:
       MIN_POOL_SIZE: 20
       RESERVE_POOL_SIZE: 10
       LISTEN_PORT: 6432
-      ADMIN_USERS: wine
+      ADMIN_USERS: ${POSTGRES_USER}
       # ВАЖНО: Явно создаем userlist через переменные
       AUTH_FILE: /etc/pgbouncer/userlist.txt
       # Дополнительные пользователи (если нужны)
-      USERS: "wine wine1"
+      USERS: "${POSTGRES_USER} ${POSTGRES_PASSWORD}"
     expose:
       - "6432"  # Порт для приложения
     restart: unless-stopped
@@ -225,11 +217,8 @@ services:
           cpus: '1'
           memory: 512M
     networks:
-      shared_network:
-        aliases:
-          - pgbouncer-xeon
-    
-  
+      - internal-${ALIASE}
+
   ollama:
     logging:
       driver: "json-file"
@@ -237,7 +226,7 @@ services:
         max-size: "10m"   # Максимальный размер файла лога: 10 МБ
         max-file: "3"     # Количество хранимых файлов ротации: 3
     image: ollama/ollama
-    container_name: ${OLLAMA_CONTAINER_NAME}
+    container_name: ollama-${ALIASE}
     deploy:
       resources:
         reservations:
@@ -248,9 +237,7 @@ services:
     volumes:
       - ollama_data:/root/.ollama
     networks:
-      shared_network:
-        aliases:
-          - ollama-xeon
+      - internal-${ALIASE}
 
 volumes:
   migration_volume: # alembic migrations
@@ -263,5 +250,6 @@ volumes:
   ollama_data:
 
 networks:
-  shared_network:
+  internal-{ALIASE}: # Изолированная сеть для базы и прокси
+  nginx_network:
     external: true
