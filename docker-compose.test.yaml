@@ -70,8 +70,8 @@ services:
     restart: unless-stopped
     command: uvicorn app.main:app --host 0.0.0.0 --port ${API_PORT} --loop auto --workers 56
     depends_on:
-      test_pgbouncer:
-        condition: service_healthy
+      # test_pgbouncer:
+      #   condition: service_healthy
       wine_host:
         condition: service_healthy
       mongo:
