@@ -265,3 +265,4 @@ volumes:
 networks:
   shared_network:
     external: true
+    name: nginx_gateway_shared_network
