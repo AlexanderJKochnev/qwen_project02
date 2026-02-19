@@ -50,11 +50,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '8'
-          memory: 20G
+          cpus: '4'
+          memory: 10G
         reservations:
-          cpus: '2'
-          memory: 16G
+          cpus: '0.5'
+          memory: 1G
     networks:
       - internal_network
       
@@ -95,11 +95,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '8'
-          memory: 20G
-        reservations:
           cpus: '2'
-          memory: 16G
+          memory: 2G
+        reservations:
+          cpus: '0.25'
+          memory: 4G
     networks:
       - internal_network
       # - test_pgbouncer_network # Для связи с test_pgbouncer
@@ -143,11 +143,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '4'
-          memory: 8G
+          cpus: '2'
+          memory: 4G
         reservations:
-          cpus: '1'
-          memory: 2G
+          cpus: '0.5'
+          memory: 1G
     networks:
       shared_network:
         aliases:
@@ -217,7 +217,7 @@ services:
       wine_host:
         condition: service_healthy
     deploy:
-      replicas: 4
+      # replicas: 4
       resources:
         limits:
           cpus: '0.25'
