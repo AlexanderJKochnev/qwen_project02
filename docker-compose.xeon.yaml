@@ -186,7 +186,6 @@ services:
         max-size: "10m"   # Максимальный размер файла лога: 10 МБ
         max-file: "3"     # Количество хранимых файлов ротации: 3
     image: edoburu/pgbouncer:latest
-    container_name: ${PGBOUNCER_CONTAINER_NAME}
     environment:
       DB_HOST: wine_host-${ALIASE}
       DB_PORT: 5432
