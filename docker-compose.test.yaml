@@ -1,6 +1,6 @@
 # docker-compose.prod.yaml
-# docker compose -f docker-compose.xeon.yaml up -d --build
-# aliases suffix is -xeon
+# docker compose -f docker-compose.test.yaml up -d --build
+# aliases suffix is -test
 services:
   wine_host: # this is the name of the service and name of the host (POSTGRES_HOST)
     logging:
@@ -57,8 +57,37 @@ services:
           memory: 16G
     networks:
       - shared_network:
-          - wine_host-xeon
-   
+          - wine_host-test
+  
+  adminer:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"   # Максимальный размер файла лога: 10 МБ
+        max-file: "3"     # Количество хранимых файлов ротации: 3
+    container_name: pg_admin
+    # image: adminer:4.8.1
+    image: ghcr.io/alexanderjkochnev/adminer:4.8.1
+    restart: unless-stopped
+    environment:
+      - ADMINER_PLUGINS=tables-filter enum-option enum-types
+      - ADMINER_DESIGN=nette
+    depends_on:
+      - wine_host
+    ports:
+      - "${ADMINER_PORTS}"
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.12'
+          memory: 256M
+    networks:
+      - shared_network:
+          - adminer-test
+  
   app:
     logging:
       driver: "json-file"
@@ -102,7 +131,7 @@ services:
           memory: 16G
     networks:
       - shared_network:
-          - app-xeon
+          - app-test
   
   mongo:
     # --- НАСТРОЙКИ ЛОГИРОВАНИЯ ---
@@ -149,8 +178,48 @@ services:
           memory: 2G
     networks:
       - shared_network:
-          - mongo-xeon
-    
+          - mongo-test
+  
+  mongo-express:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"   # Максимальный размер файла лога: 10 МБ
+        max-file: "3"     # Количество хранимых файлов ротации: 3
+    image: ghcr.io/alexanderjkochnev/mongo-express
+    container_name: ${MONGO_EXPRESS_CONTAINER_NAME}
+    restart: unless-stopped
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${ME_CONFIG_MONGODB_ADMINUSERNAME}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${ME_CONFIG_MONGODB_ADMINPASSWORD}
+      ME_CONFIG_MONGODB_SERVER: ${ME_CONFIG_MONGODB_SERVER}
+      ME_CONFIG_BASICAUTH_USERNAME: ${ME_CONFIG_BASICAUTH_USERNAME}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${ME_CONFIG_BASICAUTH_PASSWORD}
+    ports:
+      - "${ME_OUT_PORT}:${ME_INN_PORT}"
+    depends_on:
+      wine_host:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:${ME_INN_PORT}" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 512M
+        reservations:
+          cpus: '0.250'
+          memory: 256M
+    networks:
+      - shared_network:
+          - mongo-express-test
+  
   preact_front:
     logging:
       driver: "json-file"
@@ -171,7 +240,7 @@ services:
     restart: unless-stopped
     networks:
       - shared_network:
-          - preact_front-xeon
+          - preact_front-test
   
   pgbouncer:
     logging:
@@ -220,9 +289,8 @@ services:
           memory: 512M
     networks:
       - shared_network:
-          - pgbouncer-xeon
+          - pgbouncer-test
     
-  
   ollama:
     logging:
       driver: "json-file"
@@ -242,7 +310,7 @@ services:
       - ollama_data:/root/.ollama
     networks:
       - shared_network:
-          - ollama-xeon
+          - ollama-test
 
 volumes:
   migration_volume: # alembic migrations
