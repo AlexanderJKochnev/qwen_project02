@@ -96,7 +96,7 @@ services:
       options:
         max-size: "10m"   # Максимальный размер файла лога: 10 МБ
         max-file: "3"     # Количество хранимых файлов ротации: 3
-    container_name: app
+    container_name: ${APP_CONTAINER_NAME}
     build: .
     restart: unless-stopped
     command: uvicorn app.main:app --host 0.0.0.0 --port ${API_PORT} --loop uvloop --workers 56
@@ -234,7 +234,7 @@ services:
     build:
       context: ./preact_front          # путь к папке с Preact
       dockerfile: Dockerfile           # имя Dockerfile внутри ./preact_front
-    container_name: preact_prod
+    container_name: ${PREACT_CONTAINER_NAME}
     expose:
       - "80"
     deploy:
@@ -255,7 +255,7 @@ services:
         max-size: "10m"   # Максимальный размер файла лога: 10 МБ
         max-file: "3"     # Количество хранимых файлов ротации: 3
     image: edoburu/pgbouncer:latest
-    container_name: pgbouncer
+    container_name: ${PGBOUNCER_CONTAINER_NAME}
     environment:
       DB_HOST: wine_host
       DB_PORT: 5432
@@ -305,7 +305,7 @@ services:
         max-size: "10m"   # Максимальный размер файла лога: 10 МБ
         max-file: "3"     # Количество хранимых файлов ротации: 3
     image: ollama/ollama
-    container_name: ollama
+    container_name: ${OLLAMA_CONTAINER_NAME}
     deploy:
       resources:
         reservations:
