@@ -68,7 +68,7 @@ services:
     container_name: ${APP_CONTAINER_NAME}
     build: .
     restart: unless-stopped
-    command: uvicorn app.main:app --host 0.0.0.0 --port ${API_PORT} --loop auto --workers 56
+    command: uvicorn app.main:app --host 0.0.0.0 --port ${API_PORT} --loop auto --workers 4
     depends_on:
       # test_pgbouncer:
       #   condition: service_healthy
