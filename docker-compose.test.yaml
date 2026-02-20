@@ -74,8 +74,8 @@ services:
       #   condition: service_healthy
       wine_host:
         condition: service_healthy
-      mongo:
-        condition: service_healthy
+      # mongo:
+      #   condition: service_healthy
     expose:
       - ${API_PORT}
     environment:
