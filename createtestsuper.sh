@@ -20,8 +20,8 @@ if [ $# -eq 3 ]; then
     docker compose -f docker-compose.test.yaml exec app python -m app.admin.create_superuser "$1" "$2" "$3"
 elif [ "$1" = "--interactive" ]; then
     echo "Интерактивное создание суперпользователя..."
-    docker compose docker-compose.test.yaml exec -it app python -m app.admin.create_superuser --interactive
+    docker compose -f docker-compose.test.yaml exec -it app python -m app.admin.create_superuser --interactive
 else
     echo "Интерактивное создание суперпользователя..."
-    docker compose docker-compose.test.yaml exec -it app python -m app.admin.create_superuser
+    docker compose -f docker-compose.test.yaml exec -it app python -m app.admin.create_superuser
 fi
