@@ -1,16 +1,14 @@
-# docker-compose.prod.yaml
+# docker-compose.test.yaml
 # docker compose -f docker-compose.test.yaml up -d --build
-# aliases suffix is -test
 services:
-  wine_host: # this is the name of the service and name of the host (POSTGRES_HOST)
+  wine_host_test:
     logging:
       driver: "json-file"
       options:
-        max-size: "10m"   # Максимальный размер файла лога: 10 МБ
-        max-file: "3"     # Количество хранимых файлов ротации: 3
-    # -----------------------------
+        max-size: "10m"
+        max-file: "3"
     restart: unless-stopped
-    container_name: ${POSTGRES_HOST}
+    container_name: ${POSTGRES_HOST}  # Будет test_postgres из .env.test
     image: ghcr.io/alexanderjkochnev/postgres:17-alpine
     command: >
       postgres
@@ -35,14 +33,12 @@ services:
     expose:
       - "${POSTGRES_PORT}"
     volumes:
-      - ./pg_data:/var/lib/postgresql/data
-      - ./pg_dump:/tmp
-
+      - pg_data_test:/var/lib/postgresql/data
+      - pg_dump_test:/tmp
     healthcheck:
       test: |
         sh -c 'pg_isready -h localhost -p ${POSTGRES_PORT} -U ${POSTGRES_USER} -d ${POSTGRES_DB}'
-      # минимальная конфигурация для того что бы не было проблем с role root doesnnot exists
-      interval: 10s # 1m30s
+      interval: 10s
       timeout: 10s
       retries: 5
       start_period: 40s
@@ -50,71 +46,64 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '4'
+          cpus: '4'  # Меньше ресурсов для тестового окружения
           memory: 10G
         reservations:
-          cpus: '0.5'
-          memory: 1G
+          cpus: '1'
+          memory: 4G
     networks:
-      - internal_network
+      - internal_network_test
       
-   
-  app:
+  app_test:
     logging:
       driver: "json-file"
       options:
-        max-size: "10m"   # Максимальный размер файла лога: 10 МБ
-        max-file: "3"     # Количество хранимых файлов ротации: 3
-    container_name: ${APP_CONTAINER_NAME}
+        max-size: "10m"
+        max-file: "3"
+    container_name: ${APP_CONTAINER_NAME}  # Будет test_app из .env.test
     build: .
     restart: unless-stopped
-    command: uvicorn app.main:app --host 0.0.0.0 --port ${API_PORT} --loop auto --workers 4
+    command: uvicorn app.main:app --host 0.0.0.0 --port ${API_PORT} --loop auto --workers 8  # Меньше воркеров
     depends_on:
-      # test_pgbouncer:
-      #   condition: service_healthy
-      wine_host:
+      pgbouncer_test:
         condition: service_healthy
-      # mongo:
-      #   condition: service_healthy
+      wine_host_test:
+        condition: service_healthy
+      mongo_test:
+        condition: service_healthy
     expose:
       - ${API_PORT}
     environment:
-      POSTGRES_HOST: test_pgbouncer
+      POSTGRES_HOST: pgbouncer_test
       WEB_PORT: 6432
-      WEB_HOST: test_pgbouncer  # test_pgbouncer-${ALIASE}
-      # POSTGRES_HOST: ${POSTGRES_HOST}
-      # WEB_PORT: ${API_PORT}
-      # WEB_HOST: ${POSTGRES_HOST}  # ${API_HOST}
-      BASE_URL: ${BASE_URL}
-      NODE_ENV: production
-      OLLAMA_HOST: http://ollama:11434
+      WEB_HOST: pgbouncer_test
+      BASE_URL: ${BASE_URL}  # Будет https://test.abc8888.ru
+      NODE_ENV: test  # Важно для тестового режима
+      OLLAMA_HOST: http://ollama_test:11434
     volumes:
       - ./templates:/app/templates
-      - ./migration_volume:/app/app/migration/versions
-      - ./upload_volume:/app/upload_volume
+      - ./migration_volume_test:/app/app/migration/versions
+      - ./upload_volume_test:/app/upload_volume
     deploy:
       resources:
         limits:
-          cpus: '2'
-          memory: 2G
+          cpus: '4'
+          memory: 8G
         reservations:
-          cpus: '0.25'
-          memory: 0.5G
+          cpus: '1'
+          memory: 4G
     networks:
-      # - internal_network
-      - test_pgbouncer_network # Для связи с test_pgbouncer
-      - shared_network    # Для связи с Nginx
+      - pgbouncer_network_test
+      - shared_network  # Оставляем в общей сети для Nginx
 
-  mongo:
-    # --- НАСТРОЙКИ ЛОГИРОВАНИЯ ---
+  mongo_test:
     logging:
       driver: "json-file"
       options:
-        max-size: "10m"   # Максимальный размер файла лога: 10 МБ
-        max-file: "3"     # Количество хранимых файлов ротации: 3
-    # -----------------------------
+        max-size: "10m"
+        max-file: "3"
     image: ghcr.io/alexanderjkochnev/mongo:4.4.20
-    container_name: ${MONGODB_CONTAINER_NAME}
+    container_name: ${MONGODB_CONTAINER_NAME}  # Будет test_mongo из .env.test
     hostname: ${MONGO_HOSTNAME}
     restart: unless-stopped
     environment:
@@ -124,12 +113,12 @@ services:
     expose:
       - "${MONGO_INN_PORT}"
     volumes:
-      - ./mongodb_data:/data/db
+      - mongodb_data_test:/data/db
       - ./mongo/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     command: >
       mongod
       --bind_ip_all
-      --wiredTigerCacheSizeGB 4
+      --wiredTigerCacheSizeGB 2
       --storageEngine wiredTiger
       --journalCommitInterval 500
       --syncdelay 300
@@ -146,95 +135,91 @@ services:
           cpus: '2'
           memory: 4G
         reservations:
-          cpus: '0.5'
-          memory: 1G
+          cpus: '1'
+          memory: 2G
     networks:
       shared_network:
         aliases:
-          - mongo-xeon
-    
+          - mongo-test
 
-  preact_front:
+  preact_front_test:
     logging:
       driver: "json-file"
       options:
-        max-size: "10m"   # Максимальный размер файла лога: 10 МБ
-        max-file: "3"     # Количество хранимых файлов ротации: 3
+        max-size: "10m"
+        max-file: "3"
     build:
-      context: ./preact_front          # путь к папке с Preact
-      dockerfile: Dockerfile           # имя Dockerfile внутри ./preact_front
-    container_name: ${PREACT_CONTAINER_NAME}
+      context: ./preact_front
+      dockerfile: Dockerfile
+      args:
+        - NODE_ENV=test  # Передаем аргумент для тестовой сборки
+    container_name: ${PREACT_CONTAINER_NAME}  # Будет test_preact из .env.test
     expose:
       - "80"
     deploy:
       resources:
         limits:
-          cpus: '1'
-          memory: 512M
+          cpus: '0.5'
+          memory: 256M
     restart: unless-stopped
     networks:
       shared_network:
         aliases:
-          - preact_front-xeon
+          - preact-front-test
   
-  test_pgbouncer:
+  pgbouncer_test:
     logging:
       driver: "json-file"
       options:
-        max-size: "10m"   # Максимальный размер файла лога: 10 МБ
-        max-file: "3"     # Количество хранимых файлов ротации: 3
+        max-size: "10m"
+        max-file: "3"
     image: edoburu/pgbouncer:latest
     environment:
       DB_HOST: ${POSTGRES_HOST}
       DB_PORT: 5432
-      DB_USER: wine
-      DB_PASSWORD: wine1
-      DB_NAME: wine_db
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB}
       AUTH_TYPE: scram-sha-256
       POOL_MODE: transaction
-      MAX_CLIENT_CONN: 500
+      MAX_CLIENT_CONN: 200
       SERVER_IDLE_TIMEOUT: 600
       QUERY_TIMEOUT: 60
-      DEFAULT_POOL_SIZE: 100
-      MIN_POOL_SIZE: 20
-      RESERVE_POOL_SIZE: 10
+      DEFAULT_POOL_SIZE: 50
+      MIN_POOL_SIZE: 10
+      RESERVE_POOL_SIZE: 5
       LISTEN_PORT: 6432
-      ADMIN_USERS: wine
-      # ВАЖНО: Явно создаем userlist через переменные
-      AUTH_FILE: /etc/test_pgbouncer/userlist.txt
-      # Дополнительные пользователи (если нужны)
+      ADMIN_USERS: ${POSTGRES_USER}
       USERS: "${POSTGRES_USER} ${POSTGRES_PASSWORD}"
     expose:
-      - "6432"  # Порт для приложения
+      - "6432"
     restart: unless-stopped
     healthcheck:
-      # Официальный способ проверки test_pgbouncer (внутри образа есть psql-client)
-      test: ["CMD", "pg_isready", "-h", "localhost", "-p", "6432", "-U", "${POSTGRES_USER}", "-d", "wine_db"]
+      test: ["CMD", "pg_isready", "-h", "localhost", "-p", "6432", "-U", "${POSTGRES_USER}", "-d", "${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
     depends_on:
-      wine_host:
+      wine_host_test:
         condition: service_healthy
     deploy:
-      # replicas: 4
+      replicas: 2  # Меньше реплик для теста
       resources:
         limits:
           cpus: '0.25'
           memory: 128M
     networks:
-      - internal_network
-      - test_pgbouncer_network
-    
+      - internal_network_test
+      - pgbouncer_network_test
   
-  ollama:
+  ollama_test:
     logging:
       driver: "json-file"
       options:
-        max-size: "10m"   # Максимальный размер файла лога: 10 МБ
-        max-file: "3"     # Количество хранимых файлов ротации: 3
+        max-size: "10m"
+        max-file: "3"
     image: ollama/ollama
-    container_name: ${OLLAMA_CONTAINER_NAME}
+    container_name: ${OLLAMA_CONTAINER_NAME}  # Будет test_ollama из .env.test
     deploy:
       resources:
         reservations:
@@ -243,29 +228,26 @@ services:
               count: 1
               capabilities: [ gpu ]
     volumes:
-      - ollama_data:/root/.ollama
+      - ollama_data_test:/root/.ollama
     networks:
       shared_network:
         aliases:
-          - ollama-xeon
+          - ollama-test
 
 volumes:
-  migration_volume: # alembic migrations
-  pg_data: # postgresql data
-  pg_dump: # postgres dump/restore
-  mongodb_data:
-  upload_volume:
-  certs_data:
-  certbot_www:
-  ollama_data:
+  migration_volume_test:
+  pg_data_test:
+  pg_dump_test:
+  mongodb_data_test:
+  upload_volume_test:
+  ollama_data_test:
 
 networks:
   shared_network:
-    driver: bridge
     external: true
     name: nginx_gateway_shared_network
-  test_pgbouncer_network:
+  pgbouncer_network_test:
     driver: bridge
-  internal_network:
+  internal_network_test:
     internal: true
     driver: bridge
