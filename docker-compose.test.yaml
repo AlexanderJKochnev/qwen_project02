@@ -124,7 +124,7 @@ services:
       --syncdelay 300
       --nojournal
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongo localhost:${MONGO_INN_PORT}/admin --quiet --username admin --password admin
+      test: echo 'db.runCommand("ping").ok' | mongo localhost:27017/admin --quiet --username admin --password admin
       interval: 10s
       timeout: 10s
       retries: 30
