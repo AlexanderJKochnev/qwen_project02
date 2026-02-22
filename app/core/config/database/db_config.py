@@ -19,6 +19,7 @@ class ConfigDataBase(BaseSettings):
     POSTGRES_PASSWORD: str
     POSTGRES_HOST: str
     POSTGRES_PORT: str
+    PGBOUNCER_PORT: str
     POSTGRES_DB: str
     DB_ECHO_LOG: bool
     PGBOUNCER_CONTAINER_NAME: str
@@ -41,7 +42,7 @@ class ConfigDataBase(BaseSettings):
         """
         return (f"postgresql+{self.DRIVER}://{self.POSTGRES_USER}:"
                 f"{self.POSTGRES_PASSWORD}@{self.PGBOUNCER_CONTAINER_NAME}:"
-                f"6432/{self.POSTGRES_DB}")
+                f"{self.PGBOUNCER_PORT}/{self.POSTGRES_DB}")
         """
         return (
             f"postgresql+{self.DRIVER}://{self.POSTGRES_USER}:"

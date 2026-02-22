@@ -2,7 +2,7 @@
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.types import ModelType
 from app.auth.models import User
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from passlib.context import CryptContext
 
@@ -35,10 +35,11 @@ class UserRepository(Repository):
         return user
 
     @classmethod
-    async def create(cls, data: dict, session):
-        data["hashed_password"] = cls.get_password_hash(data.pop("password"))
-        verified_data = cls.model(**data)
-        return await super().create(verified_data, cls.model, session)
+    async def create(cls, obj: User, session):
+        session.add(obj)
+        await session.flush()
+        await session.refresh(obj)
+        return obj
 
     @classmethod
     async def get_superuser_by_username(cls, username: str, session: AsyncSession):
@@ -48,3 +49,20 @@ class UserRepository(Repository):
                                   User.is_active == True)    # NOQA: E712
         result = await session.execute(stmt)
         return result.scalar_one_or_none()
+
+    @classmethod
+    async def get_by_username(cls, filter: dict, model: ModelType, session: AsyncSession):
+        """ поиск в базе данных совпадений по username или email """
+        try:
+            conditions = []
+            for key, value in filter.items():
+                column = getattr(model, key)
+                if value is None:
+                    conditions.append(column.is_(None))
+                else:
+                    conditions.append(column == value)
+            stmt = select(model).where(or_(*conditions)).limit(1)
+            result = await session.execute(stmt)
+            return result.scalar_one_or_none()
+        except Exception as e:
+            raise Exception(f'get_by_username.error: {e}')

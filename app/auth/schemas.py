@@ -1,6 +1,9 @@
 # app/auth/schemas.py
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, computed_field
 from typing import Optional
+from passlib.context import CryptContext
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class Token(BaseModel):
@@ -33,10 +36,14 @@ class UserRead(UserBase):
 
 
 class UserInDB(UserBase):
-    id: int
-    hashed_password: str
+    password: Optional[str] = Field(default=None, exclude=True)
 
-    model_config = ConfigDict(from_attributes=True)
+    @computed_field(return_type=str)
+    @property
+    def hashed_password(self) -> str:
+        if self.password:
+            return pwd_context.hash(self.password)
+        return None
 
 
 class UserLogin(BaseModel):

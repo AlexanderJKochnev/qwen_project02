@@ -1,8 +1,10 @@
 # app/auth/routers/user.py
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config.database.db_async import get_db
 from app.auth.repository import UserRepository
+from app.auth.service import UserService
 from app.auth.schemas import UserCreate, UserRead, UserResponse, UserUpdate
 from app.auth.dependencies import get_current_active_user
 from app.auth.models import User
@@ -11,20 +13,30 @@ from app.core.config.project_config import settings
 prefix = settings.USER_PREFIX
 router = APIRouter(prefix=f"/{prefix}", tags=[f"{prefix}"])
 
-user_repo = UserRepository()
+repository = UserRepository
+service = UserService
+model = User
 
 
 @router.post("", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register_user(user: UserCreate, session: AsyncSession = Depends(get_db)):
-    # Проверяем, существует ли пользователь с таким именем
-    existing_user = await user_repo.get_by_field("username", user.username, User, session)
-    if existing_user:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Username already registered")
-
-    # Создаем нового пользователя
-    db_user = await user_repo.create(user.model_dump(), session)
+    #   Создание нового пользователя с проверкой, существует ли пользователь с таким именем
+    try:
+        db_user, exist = await service.get_or_create(user, repository, model, session, default=('username',))
+        if not exist:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Username already registered"
+            )
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f'register user.error: {e}')
     return db_user
+
+
+@router.get("get_full", response_model=List[UserResponse], status_code=status.HTTP_200_OK)
+async def get_users(session: AsyncSession = Depends(get_db)):
+    """ получениее списка пользователей """
+    result = await service.get_full(repository, model, session)
+    return result
 
 
 @router.get("/me", response_model=UserRead)
@@ -41,7 +53,7 @@ async def protected_route(current_user: User = Depends(get_current_active_user))
 async def read_user(id: int, db: AsyncSession = Depends(get_db),
                     current_user: User = Depends(get_current_active_user)):
     """Получение пользователя по ID"""
-    user = await user_repo.get_by_id(user_id=id, session=db)
+    user = await repository.get_by_id(id=id, model=User, session=db)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return user
@@ -52,11 +64,11 @@ async def update_user(
     id: int, user_update: UserUpdate, db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    """Обновление пользователя"""
+    """ Обновление пользователя - доделать """
     if current_user.id != id and current_user.disabled:
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
-    db_user = await user_repo.update(id, user_update, db)
+    db_user = await repository.update(id, user_update, db)
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return db_user

@@ -19,6 +19,7 @@ from app.core.utils.alchemy_utils import (create_enum_conditions, get_sqlalchemy
 from app.service_registry import register_repo
 from app.core.types import ModelType
 
+
 class RepositoryMeta(ABCMeta):
 
     def __new__(cls, name, bases, attrs):
@@ -110,6 +111,7 @@ class Repository(metaclass=RepositoryMeta):
         try:
             stmp = update(item).where(cls.item_exists(id)).values({'search_content': None})
             # Компилируем специально для PostgreSQL
+            # from sqlalchemy.dialects import postgresql
             # compiled = stmp.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
             await session.execute(stmp)
         except Exception as e:
@@ -352,13 +354,13 @@ class Repository(metaclass=RepositoryMeta):
                 else:
                     conditions.append(column == value)
             stmt = select(model).where(and_(*conditions)).limit(1)
-            # print(f"DEBUG: session object: {session}")
-            # print(f"DEBUG: session type: {type(session)}")
-            # print(f"DEBUG: hasattr execute: {hasattr(session, 'execute')}")
             result = await session.execute(stmt)
             return result.scalar_one_or_none()
         except Exception as e:
-            raise Exception(f'repo.get_by_fields: {filter=}, {model.__name__=}, {e}')
+            if hasattr(model, '__name__'):
+                raise Exception(f'repo.get_by_fields: {filter=}, {model.__name__=}, {e}')
+            else:
+                raise Exception(f'repo.get_by_fields: {filter=}, {model=}, {e}')
 
     @classmethod
     async def get_count(cls, after_date: datetime, model: ModelType, session: AsyncSession) -> int:
