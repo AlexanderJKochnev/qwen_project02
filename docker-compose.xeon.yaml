@@ -59,6 +59,7 @@ services:
       - internal_network
       
    
+  
   app:
     logging:
       driver: "json-file"
@@ -68,7 +69,7 @@ services:
     container_name: ${APP_CONTAINER_NAME}
     build: .
     restart: unless-stopped
-    command: uvicorn app.main:app --host 0.0.0.0 --port ${API_PORT} --loop auto --workers 56
+    command: uvicorn app.main:app --host 0.0.0.0 --port ${API_PORT} --loop auto --workers ${APP_WORKERS}
     depends_on:
       pgbouncer:
         condition: service_healthy
@@ -79,7 +80,7 @@ services:
     expose:
       - ${API_PORT}
     environment:
-      POSTGRES_HOST: pgbouncer
+      POSTGRES_HOST: ${PGBOUNCER_CONTAINER_NAME}
       WEB_PORT: 6432
       WEB_HOST: pgbouncer
       # POSTGRES_HOST: ${POSTGRES_HOST}
@@ -87,7 +88,7 @@ services:
       # WEB_HOST: ${API_HOST}
       BASE_URL: ${BASE_URL}
       NODE_ENV: production
-      OLLAMA_HOST: http://ollama:11434
+      OLLAMA_HOST: ${OLLAMA_HOST}
     volumes:
       - ./templates:/app/templates
       - ./migration_volume:/app/app/migration/versions
@@ -248,6 +249,34 @@ services:
       shared_network:
         aliases:
           - ollama-xeon
+  
+  searxng:
+    image: searxng/searxng:latest
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    expose:
+      - "8080"
+    volumes:
+      - ./searxng/settings.yml:/etc/searxng/settings.yml:ro
+      - searxng-data:/etc/searxng
+      # - ./searxng-config:/etc/searxng:rw
+      # - searxng-data:/var/cache/searxng
+    environment:
+      - SEARXNG_BASE_URL=${BASE_URL}/searxng  # Важно! Базовый URL через nginx
+      - SEARXNG_SECRET_KEY=${SEARXNG_SECRET_KEY}  # через .env
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+      - DAC_OVERRIDE
+    restart: unless-stopped
+    networks:
+      - shared_network
 
 volumes:
   migration_volume: # alembic migrations
@@ -258,6 +287,7 @@ volumes:
   certs_data:
   certbot_www:
   ollama_data:
+  searxng-data:
 
 networks:
   shared_network:

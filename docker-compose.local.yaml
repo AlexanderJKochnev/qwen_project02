@@ -82,7 +82,7 @@ services:
     container_name: app
     build: .
     # restart:
-    command: uvicorn app.main:app --host ${API_HOST} --port ${API_PORT} --loop auto --workers ${APP_WORKERS}
+    command: uvicorn app.main:app --host ${API_HOST} --port ${API_PORT} --loop auto
     depends_on:
       wine_host:
         condition: service_healthy
@@ -91,11 +91,10 @@ services:
     ports:
       - ${API_PORT}:${API_PORT}
     environment:
-      POSTGRES_HOST: ${PGBOUNCER_CONTAINER_NAME}
+      POSTGRES_HOST: ${POSTGRES_HOST}
       WEB_PORT: ${API_PORT}
       WEB_HOST: ${API_HOST}
       BASE_URL: ${BASE_URL}
-      SEARXNG_URL: "http://searxng:8080"
     volumes:
       - ./templates:/app/templates
       - ./migration_volume:/app/app/migration/versions
@@ -225,38 +224,6 @@ services:
         condition: service_healthy
       mongo:
         condition: service_healthy
- 
-# SearXNG - локальный метапоисковик (без лимитов!)
-  searxng:
-    image: searxng/searxng:latest
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    ports:
-      - "8080:8080"
-    volumes:
-      # - ./searxng/settings.yml:/etc/searxng/settings.yml:ro
-      # - searxng-data:/etc/searxng
-      - ./searxng-config:/etc/searxng:rw
-      - searxng-data:/var/cache/searxng
-    environment:
-      - SEARXNG_BASE_URL=${BASE_URL}/searxng  # Важно! Базовый URL через nginx
-      - SEARXNG_SECRET_KEY=${SEARXNG_SECRET_KEY}  # через .env
-      # - SEARXNG_BASE_URL=http://localhost:8888/
-      # - SEARXNG_BASE_URL=https://api.abc8888.ru/searxng  # Важно! Базовый URL через nginx
-      # - SEARXNG_SECRET_KEY=${SEARXNG_SECRET_KEY}  # через .env
-    cap_drop:
-      - ALL
-    cap_add:
-      - CHOWN
-      - SETGID
-      - SETUID
-      - DAC_OVERRIDE
-    restart: unless-stopped
-    #  networks:
-    #   - shared_network
   
 volumes:
   migration_volume: # alembic migrations
@@ -264,4 +231,3 @@ volumes:
   pg_dump: # postgres dump/restore
   mongodb_data:
   upload_volume:
-  searxng-data:

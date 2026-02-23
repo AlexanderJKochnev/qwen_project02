@@ -32,13 +32,8 @@ COPY ./app ./app
 COPY alembic.ini .
 COPY .env .
 
-ARG APP_PORT
-ARG APP_HOST
-ENV APP_PORT=${WEB_PORT}
-ENV APP_HOST=${WEB_HOST}
+# ARG APP_PORT
+# ENV APP_PORT=${APP_PORT}
 
-EXPOSE $APP_PORT
-# CMD ["uvicorn", "app.main:app", "--host", "$APP_HOST", "--port", "$APP_PORT", "--reload", "--loop", "uvloop"]
-CMD ["sh", "-c", "uvicorn app.main:app --host $APP_HOST --port $APP_PORT --loop uvloop --workers 56"]
-# CMD ["sh", "-c", "uvicorn app.main:app --host $APP_HOST --port $APP_PORT --reload --loop uvloop"]
-
+# EXPOSE $APP_PORT
+# CMD ["sh", "-c", "uvicorn app.main:app --host $APP_HOST --port $APP_PORT --loop uvloop --workers 56"]

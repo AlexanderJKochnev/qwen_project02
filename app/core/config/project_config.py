@@ -223,6 +223,8 @@ class Settings(BaseSettings):
     OLLAMA_TOP_P: float = 0.9
     # Удерживает модель в GPU после последнего использования, min
     OLLAMA_KEEP_ALIVE: int = 5
+    # SEARXNG
+    SEARXNG_SECRET_KEY: str
 
     model_config = SettingsConfigDict(env_file=get_path_to_root(),
                                       env_file_encoding='utf-8',

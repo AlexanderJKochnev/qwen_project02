@@ -1,0 +1,63 @@
+# Minimal конфигурация
+use_default_settings: true
+
+general:
+  debug: false
+  instance_name: "Search API"
+
+search:
+  safe_search: 0  # 0 = выключен, 1 = умеренный, 2 = строгий
+  latency_threshold: 1.0
+  autocomplete: google
+  formats:
+    - html
+    - json  # явно разрешаем JSON формат
+
+outgoing:
+  request_timeout: 1.5   # Общий тайм-аут на запрос к внешнему движку
+  max_request_timeout: 20.0
+  pool_connections: 100
+  pool_maxsize: 10
+  enable_http2: true
+
+engines:
+  - name: google
+    engine: google
+    use_mobile_ui: false
+    disabled: false
+  
+  - name: duckduckgo
+    engine: duckduckgo
+    disabled: true
+
+  - name: bing
+    engine: bing
+    disabled: true
+
+server:
+  port: 8080
+  secret_key: "77sZFCRUmVrSH8egjUkepHktbImnpkf1"  # Is overwritten by ${SEARXNG_SECRET}
+  bind_address: "0.0.0.0"
+  base_url: http://searxng:8080
+  # base_url: "https://api.abc8888.ru/searxng"  # Должен совпадать с SEARXNG_BASE_URL
+  # base_url: "https://test.api.abc8888.ru/searxng"
+  limiter: false  # Отключаем лимитер для внутреннего использования
+  public_instance: false
+
+categories:
+  as_tabs:
+    general: "General"
+    images: "Images"
+    videos: "Videos"
+    news: "News"
+    map: "Map"
+    it: "IT"
+    files: "Files"
+
+limiter:
+  enabled: false  # временно отключаем для теста
+  real_ip:
+    proxies: ["127.0.0.0/8", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+    trusted_proxies: ["127.0.0.1", "::1"]
+  link_token:
+    max_links: 10
