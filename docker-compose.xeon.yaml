@@ -294,6 +294,7 @@ services:
       retries: 5
     networks:
       - internal_network
+      - shared_network
   
 volumes:
   migration_volume: # alembic migrations
