@@ -15,7 +15,7 @@ class RedisManager:
             port=port,
             db=0,
             decode_responses=False,  # False для работы со сжатыми (bytes) данными
-            max_connections=20
+            max_connections=2
         )
         # Проверка: создаем временный клиент и пингуем базу
         client = Redis(connection_pool=self.pool)

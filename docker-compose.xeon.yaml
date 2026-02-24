@@ -101,6 +101,8 @@ services:
         reservations:
           cpus: '2'
           memory: 16G
+    links:
+      - redis:redis
     networks:
       # - internal_network  # расскомментировать для теста
       - pgbouncer_network # Для связи с pgbouncer
