@@ -304,6 +304,7 @@ volumes:
   certbot_www:
   ollama_data:
   searxng-data:
+  redis_data:
 
 networks:
   shared_network:
