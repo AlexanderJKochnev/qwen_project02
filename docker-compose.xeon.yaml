@@ -9,7 +9,7 @@ services:
         max-size: ${MAX_SIZE}
         max-file: ${MAX_FILE}
     restart: unless-stopped
-    container_name: ${POSTGRES_HOST}
+    # image: postgres:17-alpine # based on this image
     image: ghcr.io/alexanderjkochnev/postgres:17-alpine
     command: >
       postgres
@@ -85,7 +85,7 @@ services:
       # WEB_PORT: ${API_PORT}
       # WEB_HOST: ${API_HOST}
       BASE_URL: ${BASE_URL}
-      NODE_ENV: production
+      SEARXNG_URL: "http://searxng:8080"
       OLLAMA_HOST: ${OLLAMA_HOST}
     volumes:
       - ./templates:/app/templates
@@ -236,8 +236,8 @@ services:
       - ollama_data:/root/.ollama
     networks:
       - shared_network
-      # - internal_network  # проверить
-  
+ 
+# SearXNG - локальный метапоисковик (без лимитов!)
   searxng:
     image: searxng/searxng:latest
     logging:
@@ -253,9 +253,9 @@ services:
     environment:
       # - SEARXNG_BASE_URL=${BASE_URL}/searxng  # Важно! Базовый URL через nginx
       - SEARXNG_SECRET_KEY=${SEARXNG_SECRET_KEY}  # через .env
-      - SEARXNG_BASE_URL=${SEARXNG_BASE_URL}/searxng  # базовый url
-      # - SEARXNG_BASE_URL=https://api.abc8888.ru/searxng  # Важно! Базовый URL через nginx
-      # - SEARXNG_SECRET_KEY=${SEARXNG_SECRET_KEY}  # через .env
+      - SEARXNG_BASE_URL=${SEARXNG_BASE_URL}  # базовый url
+      - SEARXNG_PORT=${SEARXNG_PORT}
+      - SEARXNG_BIND_ADDRESS=0.0.0.0
     cap_drop:
       - ALL
     cap_add:
@@ -266,7 +266,8 @@ services:
     restart: unless-stopped
     networks:
       - shared_network
-
+      - internal_network
+  
 volumes:
   migration_volume: # alembic migrations
   pg_data: # postgresql data
