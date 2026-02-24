@@ -66,7 +66,6 @@ services:
       options:
         max-size: "10m"   # Максимальный размер файла лога: 10 МБ
         max-file: "3"     # Количество хранимых файлов ротации: 3
-    container_name: ${APP_CONTAINER_NAME}
     build: .
     restart: unless-stopped
     command: uvicorn app.main:app --host 0.0.0.0 --port ${API_PORT} --loop auto --workers ${APP_WORKERS}
@@ -102,7 +101,7 @@ services:
           cpus: '2'
           memory: 16G
     networks:
-      # - internal_network
+      # - internal_network  # расскомментировать для теста
       - pgbouncer_network # Для связи с pgbouncer
       - shared_network    # Для связи с Nginx
 
@@ -115,7 +114,6 @@ services:
         max-file: "3"     # Количество хранимых файлов ротации: 3
     # -----------------------------
     image: ghcr.io/alexanderjkochnev/mongo:4.4.20
-    container_name: ${MONGODB_CONTAINER_NAME}
     hostname: ${MONGO_HOSTNAME}
     restart: unless-stopped
     environment:
@@ -150,9 +148,7 @@ services:
           cpus: '1'
           memory: 2G
     networks:
-      shared_network:
-        aliases:
-          - mongo-xeon
+      - shared_network:
     
 
   preact_front:
@@ -164,7 +160,6 @@ services:
     build:
       context: ./preact_front          # путь к папке с Preact
       dockerfile: Dockerfile           # имя Dockerfile внутри ./preact_front
-    container_name: ${PREACT_CONTAINER_NAME}
     expose:
       - "80"
     deploy:
@@ -174,9 +169,7 @@ services:
           memory: 512M
     restart: unless-stopped
     networks:
-      shared_network:
-        aliases:
-          - preact_front-xeon
+      - shared_network
   
   pgbouncer:
     logging:
@@ -235,7 +228,6 @@ services:
         max-size: "10m"   # Максимальный размер файла лога: 10 МБ
         max-file: "3"     # Количество хранимых файлов ротации: 3
     image: ollama/ollama
-    container_name: ${OLLAMA_CONTAINER_NAME}
     deploy:
       resources:
         reservations:
@@ -246,9 +238,8 @@ services:
     volumes:
       - ollama_data:/root/.ollama
     networks:
-      shared_network:
-        aliases:
-          - ollama-xeon
+      - shared_network
+      # - internal_network  # проверить
   
   searxng:
     image: searxng/searxng:latest
@@ -258,15 +249,16 @@ services:
         max-size: "10m"
         max-file: "3"
     expose:
-      - "8080"
+      - "${SEARXNG_PORT}"
     volumes:
-      - ./searxng/settings.yml:/etc/searxng/settings.yml:ro
-      - searxng-data:/etc/searxng
-      # - ./searxng-config:/etc/searxng:rw
-      # - searxng-data:/var/cache/searxng
+      - ./searxng-config:/etc/searxng:rw
+      - searxng-data:/var/cache/searxng
     environment:
-      - SEARXNG_BASE_URL=${BASE_URL}/searxng  # Важно! Базовый URL через nginx
+      # - SEARXNG_BASE_URL=${BASE_URL}/searxng  # Важно! Базовый URL через nginx
       - SEARXNG_SECRET_KEY=${SEARXNG_SECRET_KEY}  # через .env
+      - SEARXNG_BASE_URL=${SEARXNG_BASE_URL}/searxng  # базовый url
+      # - SEARXNG_BASE_URL=https://api.abc8888.ru/searxng  # Важно! Базовый URL через nginx
+      # - SEARXNG_SECRET_KEY=${SEARXNG_SECRET_KEY}  # через .env
     cap_drop:
       - ALL
     cap_add:

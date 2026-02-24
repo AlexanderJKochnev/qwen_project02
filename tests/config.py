@@ -29,7 +29,6 @@ class ConfigDataBase(BaseSettings):
     SECRET_KEY: str
     ALGORITHM: str
     # -----------------
-    MONGODB_CONTAINER_NAME: str
     MONGO_INITDB_ROOT_USERNAME: str
     MONGO_INITDB_ROOT_PASSWORD: str
     MONGO_INITDB_DATABASE: str
@@ -37,7 +36,6 @@ class ConfigDataBase(BaseSettings):
     MONGO_OUT_PORT: int
     MONGO_INN_PORT: int
     MONGO_HOSTNAME: str
-    MONGO_EXPRESS_CONTAINER_NAME: str
     ME_CONFIG_MONGODB_ADMINUSERNAME: str
     ME_CONFIG_MONGODB_ADMINPASSWORD: str
     ME_CONFIG_MONGODB_SERVER: str

@@ -12,7 +12,6 @@ services:
     #   context: .
     #   dockerfile: Dockerfile.postgres
     restart: unless-stopped
-    container_name: ${POSTGRES_HOST}
     # image: postgres:17-alpine
     image: ghcr.io/alexanderjkochnev/postgres:17-alpine
     environment:
@@ -42,6 +41,8 @@ services:
         reservations:
           cpus: '0.125'
           memory: 256M
+    networks:
+      - internal_network
   
   adminer:
     # --- НАСТРОЙКИ ЛОГИРОВАНИЯ ---
@@ -51,7 +52,6 @@ services:
         max-size: "10m"   # Максимальный размер файла лога: 10 МБ
         max-file: "3"     # Количество хранимых файлов ротации: 3
     # -----------------------------
-    container_name: pg_admin
     image: ghcr.io/alexanderjkochnev/adminer:4.8.1
     # image: adminer:4.8.1
     restart: unless-stopped
@@ -70,6 +70,8 @@ services:
         reservations:
           cpus: '0.12'
           memory: 256M
+    networks:
+      - internal_network
   
   app:
     # --- НАСТРОЙКИ ЛОГИРОВАНИЯ ---
@@ -79,7 +81,6 @@ services:
         max-size: "10m"   # Максимальный размер файла лога: 10 МБ
         max-file: "3"     # Количество хранимых файлов ротации: 3
     # -----------------------------
-    container_name: app
     build: .
     # restart:
     command: uvicorn app.main:app --host ${API_HOST} --port ${API_PORT} --loop auto --workers ${APP_WORKERS}
@@ -100,8 +101,6 @@ services:
       - ./templates:/app/templates
       - ./migration_volume:/app/app/migration/versions
       - ./upload_volume:/app/upload_volume
-  #   networks:
-  #     - pgnetwork
     deploy:
       resources:
         limits:
@@ -110,6 +109,10 @@ services:
         reservations:
           cpus: '0.5'
           memory: 512M
+    networks:
+      - internal_network  # расскомментировать для теста
+      # - pgbouncer_network # Для связи с pgbouncer
+      - shared_network    # Для связи с Nginx
   
   mongo:
     # --- НАСТРОЙКИ ЛОГИРОВАНИЯ ---
@@ -120,7 +123,6 @@ services:
         max-file: "3"     # Количество хранимых файлов ротации: 3
     # -----------------------------
     image: ghcr.io/alexanderjkochnev/mongo:4.4.20
-    container_name: ${MONGODB_CONTAINER_NAME}
     hostname: ${MONGO_HOSTNAME}
     restart: unless-stopped
     environment:
@@ -156,6 +158,8 @@ services:
         reservations:
           cpus: '0.5'
           memory: 512M
+    networks:
+      - shared_network
   
   mongo-express:
     # --- НАСТРОЙКИ ЛОГИРОВАНИЯ ---
@@ -166,7 +170,6 @@ services:
         max-file: "3"     # Количество хранимых файлов ротации: 3
     # -----------------------------
     image: ghcr.io/alexanderjkochnev/mongo-express
-    container_name: ${MONGO_EXPRESS_CONTAINER_NAME}
     restart: unless-stopped
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: ${ME_CONFIG_MONGODB_ADMINUSERNAME}
@@ -195,7 +198,9 @@ services:
         reservations:
           cpus: '0.250'
           memory: 256M
-  
+    networks:
+      - shared_network
+
   preact_front:
     # --- НАСТРОЙКИ ЛОГИРОВАНИЯ ---
     logging:
@@ -207,7 +212,6 @@ services:
     build:
       context: ./preact_front          # путь к папке с Preact
       dockerfile: Dockerfile.dev       # имя Dockerfile внутри ./preact_front
-    container_name: preact_front
     ports:
       - "${PREACT_PORT}:5173"                    # хост:контейнер (порт Vite по умолчанию — 5173)
     volumes:
@@ -225,6 +229,8 @@ services:
         condition: service_healthy
       mongo:
         condition: service_healthy
+    networks:
+      - shared_network
  
 # SearXNG - локальный метапоисковик (без лимитов!)
   searxng:
@@ -234,19 +240,17 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    ports:
-      - "8080:8080"
+    expose:
+      - "${SEARXNG_PORT}"
     volumes:
-      # - ./searxng/settings.yml:/etc/searxng/settings.yml:ro
-      # - searxng-data:/etc/searxng
       - ./searxng-config:/etc/searxng:rw
       - searxng-data:/var/cache/searxng
     environment:
-      - SEARXNG_BASE_URL=${BASE_URL}/searxng  # Важно! Базовый URL через nginx
+      # - SEARXNG_BASE_URL=${BASE_URL}/searxng  # Важно! Базовый URL через nginx
       - SEARXNG_SECRET_KEY=${SEARXNG_SECRET_KEY}  # через .env
-      # - SEARXNG_BASE_URL=http://localhost:8888/
-      # - SEARXNG_BASE_URL=https://api.abc8888.ru/searxng  # Важно! Базовый URL через nginx
-      # - SEARXNG_SECRET_KEY=${SEARXNG_SECRET_KEY}  # через .env
+      - SEARXNG_BASE_URL=${SEARXNG_BASE_URL}  # базовый url
+      - SEARXNG_PORT=${SEARXNG_PORT}
+      - SEARXNG_BIND_ADDRESS=0.0.0.0
     cap_drop:
       - ALL
     cap_add:
@@ -255,8 +259,9 @@ services:
       - SETUID
       - DAC_OVERRIDE
     restart: unless-stopped
-    #  networks:
-    #   - shared_network
+    networks:
+      - shared_network
+      - internal_network
   
 volumes:
   migration_volume: # alembic migrations
@@ -265,3 +270,15 @@ volumes:
   mongodb_data:
   upload_volume:
   searxng-data:
+
+networks:
+  shared_network:
+    driver: bridge
+    # external: true  #  при работе с ngginx раскомментировать
+    # internal: true  #  при работе с ngginx закомментировать
+    name: nginx_gateway_shared_network
+  # pgbouncer_network:
+  #   driver: bridge
+  internal_network:
+    internal: true
+    driver: bridge

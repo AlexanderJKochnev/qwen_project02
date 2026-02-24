@@ -125,7 +125,6 @@ class Settings(BaseSettings):
     JSON_FILENAME: str = "data.json"
 
     # MongoDB
-    MONGODB_CONTAINER_NAME: str = "mongo"
     ME_CONFIG_MONGODB_ADMINUSERNAME: str = "admin"
     ME_CONFIG_MONGODB_ADMINPASSWORD: str = "admin"
     ME_CONFIG_MONGODB_SERVER: str = "mongo"
@@ -145,7 +144,6 @@ class Settings(BaseSettings):
     MINPOOLSIZE: int = 5
 
     # mongo-express УДАЛИТЬ В PRODUCTION
-    MONGO_EXPRESS_CONTAINER_NAME: str = "mongo-express"
     MONGO_EXPRESS_PORT: int = 8081
     # Application
     API_V1_STR: str = "/api/v1"
@@ -225,6 +223,8 @@ class Settings(BaseSettings):
     OLLAMA_KEEP_ALIVE: int = 5
     # SEARXNG
     SEARXNG_SECRET_KEY: str
+    SEARXNG_BASE_URL: str = "http://localhost"
+    SEARXNG_PORT: int = 8080
 
     model_config = SettingsConfigDict(env_file=get_path_to_root(),
                                       env_file_encoding='utf-8',

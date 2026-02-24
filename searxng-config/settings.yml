@@ -35,24 +35,12 @@ engines:
     disabled: true
 
 server:
-  port: 8080
-  secret_key: "77sZFCRUmVrSH8egjUkepHktbImnpkf1"  # Is overwritten by ${SEARXNG_SECRET}
-  bind_address: "0.0.0.0"
-  base_url: http://searxng:8080
-  # base_url: "https://api.abc8888.ru/searxng"  # Должен совпадать с SEARXNG_BASE_URL
-  # base_url: "https://test.api.abc8888.ru/searxng"
+  port: "%(SEARXNG_PORT)s"
+  secret_key: "%(SEARXNG_SECRET_KEY)s"  # Is overwritten by ${SEARXNG_SECRET}
+  bind_address: "%(SEARXNG_BIND_ADDRESS)"
+  base_url: "%(SEARXNG_BASE_URL)"
   limiter: false  # Отключаем лимитер для внутреннего использования
   public_instance: false
-
-categories:
-  as_tabs:
-    general: "General"
-    images: "Images"
-    videos: "Videos"
-    news: "News"
-    map: "Map"
-    it: "IT"
-    files: "Files"
 
 limiter:
   enabled: false  # временно отключаем для теста

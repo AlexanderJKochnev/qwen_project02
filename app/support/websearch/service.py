@@ -1,6 +1,7 @@
 # app/support/websearch/service.py
 # app/services/web_search.py
 import httpx
+from fastapi import HTTPException
 import asyncio
 from typing import List, Dict
 import json
@@ -24,38 +25,42 @@ categories_as_tabs:
 
 class WebSearchService:
     def __init__(self):
-        # self.searxng_url = "https://api.abc8888.ru/searxng"
-        # self.searxng_url = "https://api.test.abc8888.ru/searxng"
-        self.searxng_url: str = "http://searxng:8080"
+        # В Docker сети SearXNG доступен по имени searxng:8080
+        # self.searxng_url: str = f'{settings.SEARXNG_BASE_URL}:{settings.SEARXNG_PORT}'
+        self.searxng_url: str = f"http://searxng:{settings.SEARXNG_PORT}"
         ollama_url: str = "http://ollama:11434"
         # ollama_url: str = "http://localhost:11434"
 
     async def search_tune(self, search: str, category: str, language: str, max_results: int):
         """ настраиваемый поиск через SearXNG """
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(
-                f"{self.searxng_url}/search",
-                params={"q": search,
-                        "format": "json",
-                        "categories": category,
-                        "language": language,
-                        "safesearch": "0",
-                        "pageno": 1,
-                        "count": max_results
-                        }
-            )
-            print(response.status_code, '===========================')
-            data = response.json()
-            from app.core.utils.common_utils import jprint
-            print(data.keys())
-            jprint(data)
-            results = []
-            for result in data.get("results", [])[:max_results]:
-                results.append(
-                    {"title": result.get("title", ""), "url": result.get("url", ""),
-                     "content": result.get("content", ""), "score": result.get("score", 0)}
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(
+                    f"{self.searxng_url}/search",
+                    params={"q": search,
+                            "format": "json",
+                            "categories": category,
+                            "language": language,
+                            "safesearch": "0",
+                            "pageno": 1,
+                            "count": max_results
+                            }
                 )
-            return results
+                if response.status_code != 200:
+                    raise HTTPException(status_code=response.status_code, detail=response.text)
+                data = response.json()
+                from app.core.utils.common_utils import jprint
+                print(data.keys())
+                jprint(data)
+                results = []
+                for result in data.get("results", [])[:max_results]:
+                    results.append(
+                        {"title": result.get("title", ""), "url": result.get("url", ""),
+                         "content": result.get("content", ""), "score": result.get("score", 0)}
+                    )
+                return results
+        except HTTPException as e:
+            logger.error(str(e))
 
     async def search_searxng(self, query: str, max_results: int = 5) -> List[Dict]:
         """Поиск через SearXNG"""
