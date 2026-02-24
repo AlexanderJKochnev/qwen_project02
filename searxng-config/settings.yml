@@ -1,5 +1,8 @@
 # Minimal конфигурация
-use_default_settings: true
+use_default_settings:
+  engines:
+    keep_only:
+      - google
 
 general:
   debug: false
@@ -14,7 +17,7 @@ search:
     - json  # явно разрешаем JSON формат
 
 outgoing:
-  request_timeout: 1.5   # Общий тайм-аут на запрос к внешнему движку
+  request_timeout: 3   # Общий тайм-аут на запрос к внешнему движку
   max_request_timeout: 20.0
   pool_connections: 100
   pool_maxsize: 10
@@ -25,14 +28,15 @@ engines:
     engine: google
     use_mobile_ui: false
     disabled: false
+    weight: 1.0
   
-  - name: duckduckgo
-    engine: duckduckgo
-    disabled: true
+  # - name: duckduckgo
+  #  engine: duckduckgo
+  #  disabled: true
 
-  - name: bing
-    engine: bing
-    disabled: true
+  # - name: bing
+  #   engine: bing
+  #   disabled: true
 
 server:
   port: "%(SEARXNG_PORT)s"

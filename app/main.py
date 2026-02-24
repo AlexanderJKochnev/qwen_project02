@@ -15,6 +15,7 @@ from app.auth.routers import auth_router, user_router
 # from app.core.config.project_config import settings
 from app.core.config.database.db_async import DatabaseManager, init_db_extensions
 from app.core.config.database.db_mongo import MongoDBManager, get_mongodb
+from app.core.config.database.redis_async import redis_manager
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.mongodb.router import router as MongoRouter
 from app.preact.create.router import CreateRouter
@@ -67,6 +68,7 @@ async def lifespan(app: FastAPI):
         )  # Если БД не отвечает, часто нет смысла запускать приложение  # raise e
     await MongoDBManager.connect()  # Подключаем Mongo
     await init_db_extensions()  # подключение расщирений Postgresql
+    await redis_manager.connect(host="redis", port=6379)  # запускаем redis
     # logger.info("Lifespan: Инициализация pg_listen_worker...")
     # listen_task = asyncio.create_task(pg_listen_worker())
     # logger.success("Lifespan: Инициализация pg_listen_worker...")
@@ -84,6 +86,7 @@ async def lifespan(app: FastAPI):
     #     pass
     await DatabaseManager.engine.dispose()
     await MongoDBManager.disconnect()
+    await redis_manager.disconnect()
 
 
 app = FastAPI(title="Hybrid PostgreSQL-MongoDB API",
@@ -175,7 +178,6 @@ app.include_router(OrchestratorRouter().router)
 # app.include_router(ArqWorkerRouter)
 app.include_router(auth_router)
 app.include_router(user_router)
-
 
 
 @app.get("/")

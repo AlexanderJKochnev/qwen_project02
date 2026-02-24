@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import List, Dict, Callable
 from app.auth.dependencies import get_active_user_or_internal
-from app.support.websearch.service import WebSearchService
+from app.support.websearch.service import get_web_search_service, WebSearchService
 from app.support.websearch.schemas import SearchResponse, SearchRequest
 
 
@@ -10,14 +10,12 @@ prefix = 'websearch'
 auth_dependency: Callable = get_active_user_or_internal
 router = APIRouter(prefix=f"/{prefix}",
                    tags=[f"{prefix}"],
-                   # dependencies=[Depends(auth_dependency)],
+                   dependencies=[Depends(auth_dependency)],
                    include_in_schema=True)
 
-web_search = WebSearchService()
 
-
-@router.post("", response_model=SearchResponse, status_code=status.HTTP_200_OK)
-async def search(request: SearchRequest):
+# @router.post("", response_model=SearchResponse, status_code=status.HTTP_200_OK)
+async def search(request: SearchRequest, web_search: WebSearchService = Depends(get_web_search_service)):
     # 1. Сначала поиск в вашей PostgreSQL (полнотекстовый)
     # db_result = await search_in_postgres(request.query)  # ваша существующая функция
 
@@ -50,6 +48,7 @@ async def search(request: SearchRequest):
 async def searchX(search: str = Query(..., description=("что нужно найти")),
                   category: str = Query('general', description=("категория поиска")),
                   language: str = Query('ru', description=("приоритетный язык поиска")),
-                  max_results: int = Query(5, description=("кол-во результатов поиска"))):
-    search_result: List[Dict] = await web_search.search_tune(search, category, language, max_results)
-    return SearchResponse(found_in_db=False, result=search_result)
+                  max_results: int = Query(5, description=("кол-во результатов поиска")),
+                  web_search: WebSearchService = Depends(get_web_search_service)):
+    search_result: SearchResponse = await web_search.search_tune(search, category, language, max_results)
+    return search_result

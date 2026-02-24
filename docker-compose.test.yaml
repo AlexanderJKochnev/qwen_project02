@@ -74,6 +74,8 @@ services:
         condition: service_healthy
       mongo:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     expose:
       - ${API_PORT}
     environment:
@@ -267,6 +269,28 @@ services:
     restart: unless-stopped
     networks:
       - shared_network
+      - internal_network
+  
+  redis:
+    image: redis:7.2-alpine
+    # container_name: redis_cache
+    restart: always
+    command: >
+      redis-server
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --appendonly yes
+      --save 900 1
+    expose:
+      - "6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
       - internal_network
   
 volumes:

@@ -9,6 +9,7 @@ class SearchRequest(BaseModel):
 
 class SearchResponse(BaseModel):
     found_in_db: bool
+    found_in_cash: Optional[bool] = False
     description: Optional[str] = None
     location: Optional[str] = None
     confidence: Optional[float] = None
