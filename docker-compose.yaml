@@ -199,6 +199,8 @@ services:
       dockerfile: Dockerfile.dev       # имя Dockerfile внутри ./preact_front
     ports:
       - "${PREACT_PORT}:5173"                    # хост:контейнер (порт Vite по умолчанию — 5173)
+    env_file:
+      - .env
     volumes:
       - ./preact_front/src:/app/src
       - ./preact_front/public:/app/public

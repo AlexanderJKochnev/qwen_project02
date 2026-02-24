@@ -158,6 +158,8 @@ services:
       dockerfile: Dockerfile           # имя Dockerfile внутри ./preact_front
     expose:
       - "80"
+    env_file:
+      - .env
     deploy:
       resources:
         limits:

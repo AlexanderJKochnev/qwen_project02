@@ -157,6 +157,8 @@ services:
     build:
       context: ./preact_front          # путь к папке с Preact
       dockerfile: Dockerfile           # имя Dockerfile внутри ./preact_front
+    env_file:
+      - .env
     expose:
       - "80"
     deploy:
