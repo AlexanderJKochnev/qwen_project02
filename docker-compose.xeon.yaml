@@ -178,9 +178,9 @@ services:
     environment:
       DB_HOST: ${POSTGRES_HOST}
       DB_PORT: 5432
-      DB_USER: wine
-      DB_PASSWORD: wine1
-      DB_NAME: wine_db
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB}
       AUTH_TYPE: scram-sha-256
       POOL_MODE: transaction
       MAX_CLIENT_CONN: 500
@@ -248,7 +248,7 @@ services:
     expose:
       - "${SEARXNG_PORT}"
     volumes:
-      - ./searxng-config:/etc/searxng:rw
+      - ./searxng-config:/etc/searxng:rw,z
       - searxng-data:/var/cache/searxng
     environment:
       # - SEARXNG_BASE_URL=${BASE_URL}/searxng  # Важно! Базовый URL через nginx

@@ -1,14 +1,14 @@
 # docker-compose.test.yaml
 # docker compose -f docker-compose.test.yaml up -d --build
 services:
-  wine_host_test:
+  wine_host: # this is the name of the service and name of the host (POSTGRES_HOST)
     logging:
-      driver: "json-file"
+      driver: ${LOGGER_DRIVER}
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: ${MAX_SIZE}
+        max-file: ${MAX_FILE}
     restart: unless-stopped
-    container_name: ${POSTGRES_HOST}  # Будет test_postgres из .env.test
+    # image: postgres:17-alpine # based on this image
     image: ghcr.io/alexanderjkochnev/postgres:17-alpine
     command: >
       postgres
@@ -33,12 +33,14 @@ services:
     expose:
       - "${POSTGRES_PORT}"
     volumes:
-      - pg_data_test:/var/lib/postgresql/data
-      - pg_dump_test:/tmp
+      - ./pg_data:/var/lib/postgresql/data
+      - ./pg_dump:/tmp
+
     healthcheck:
       test: |
         sh -c 'pg_isready -h localhost -p ${POSTGRES_PORT} -U ${POSTGRES_USER} -d ${POSTGRES_DB}'
-      interval: 10s
+      # минимальная конфигурация для того что бы не было проблем с role root doesnnot exists
+      interval: 10s # 1m30s
       timeout: 10s
       retries: 5
       start_period: 40s
@@ -52,38 +54,42 @@ services:
           cpus: '1'
           memory: 4G
     networks:
-      - internal_network_test
+      - internal_network
       
-  app_test:
+   
+  
+  app:
     logging:
-      driver: "json-file"
+      driver: ${LOGGER_DRIVER}
       options:
-        max-size: "10m"
-        max-file: "3"
-    container_name: ${APP_CONTAINER_NAME}  # Будет test_app из .env.test
+        max-size: ${MAX_SIZE}
+        max-file: ${MAX_FILE}
     build: .
     restart: unless-stopped
-    command: uvicorn app.main:app --host 0.0.0.0 --port ${API_PORT} --loop auto --workers 8  # Меньше воркеров
+    command: uvicorn app.main:app --host 0.0.0.0 --port ${API_PORT} --loop auto --workers ${APP_WORKERS}
     depends_on:
-      pgbouncer_test:
+      pgbouncer:
         condition: service_healthy
-      wine_host_test:
+      wine_host:
         condition: service_healthy
-      mongo_test:
+      mongo:
         condition: service_healthy
     expose:
       - ${API_PORT}
     environment:
-      POSTGRES_HOST: pgbouncer_test
+      POSTGRES_HOST: ${PGBOUNCER_CONTAINER_NAME}
       WEB_PORT: 6432
-      WEB_HOST: pgbouncer_test
-      BASE_URL: ${BASE_URL}  # Будет https://test.abc8888.ru
-      NODE_ENV: test  # Важно для тестового режима
-      OLLAMA_HOST: http://ollama_test:11434
+      WEB_HOST: pgbouncer
+      # POSTGRES_HOST: ${POSTGRES_HOST}
+      # WEB_PORT: ${API_PORT}
+      # WEB_HOST: ${API_HOST}
+      BASE_URL: ${BASE_URL}
+      SEARXNG_URL: "http://searxng:8080"
+      OLLAMA_HOST: ${OLLAMA_HOST}
     volumes:
       - ./templates:/app/templates
-      - ./migration_volume_test:/app/app/migration/versions
-      - ./upload_volume_test:/app/upload_volume
+      - ./migration_volume:/app/app/migration/versions
+      - ./upload_volume:/app/upload_volume
     deploy:
       resources:
         limits:
@@ -93,17 +99,17 @@ services:
           cpus: '1'
           memory: 4G
     networks:
-      - pgbouncer_network_test
-      - shared_network  # Оставляем в общей сети для Nginx
+      # - internal_network  # расскомментировать для теста
+      - pgbouncer_network # Для связи с pgbouncer
+      - shared_network    # Для связи с Nginx
 
-  mongo_test:
+  mongo:
     logging:
-      driver: "json-file"
+      driver: ${LOGGER_DRIVER}
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: ${MAX_SIZE}
+        max-file: ${MAX_FILE}
     image: ghcr.io/alexanderjkochnev/mongo:4.4.20
-    container_name: ${MONGODB_CONTAINER_NAME}  # Будет test_mongo из .env.test
     hostname: ${MONGO_HOSTNAME}
     restart: unless-stopped
     environment:
@@ -113,18 +119,18 @@ services:
     expose:
       - "${MONGO_INN_PORT}"
     volumes:
-      - mongodb_data_test:/data/db
+      - ./mongodb_data:/data/db
       - ./mongo/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     command: >
       mongod
       --bind_ip_all
-      --wiredTigerCacheSizeGB 2
+      --wiredTigerCacheSizeGB 4
       --storageEngine wiredTiger
       --journalCommitInterval 500
       --syncdelay 300
       --nojournal
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongo localhost:27017/admin --quiet --username admin --password admin
+      test: echo 'db.runCommand("ping").ok' | mongo localhost:${MONGO_INN_PORT}/admin --quiet --username admin --password admin
       interval: 10s
       timeout: 10s
       retries: 30
@@ -138,22 +144,18 @@ services:
           cpus: '1'
           memory: 2G
     networks:
-      shared_network:
-        aliases:
-          - mongo-test
-
-  preact_front_test:
+      - shared_network
+      - internal_network
+    
+  preact_front:
     logging:
-      driver: "json-file"
+      driver: ${LOGGER_DRIVER}
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: ${MAX_SIZE}
+        max-file: ${MAX_FILE}
     build:
-      context: ./preact_front
-      dockerfile: Dockerfile
-      args:
-        - NODE_ENV=test  # Передаем аргумент для тестовой сборки
-    container_name: ${PREACT_CONTAINER_NAME}  # Будет test_preact из .env.test
+      context: ./preact_front          # путь к папке с Preact
+      dockerfile: Dockerfile           # имя Dockerfile внутри ./preact_front
     expose:
       - "80"
     deploy:
@@ -163,16 +165,14 @@ services:
           memory: 256M
     restart: unless-stopped
     networks:
-      shared_network:
-        aliases:
-          - preact-front-test
+      - shared_network
   
-  pgbouncer_test:
+  pgbouncer:
     logging:
-      driver: "json-file"
+      driver: ${LOGGER_DRIVER}
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: ${MAX_SIZE}
+        max-file: ${MAX_FILE}
     image: edoburu/pgbouncer:latest
     environment:
       DB_HOST: ${POSTGRES_HOST}
@@ -189,18 +189,22 @@ services:
       MIN_POOL_SIZE: 10
       RESERVE_POOL_SIZE: 5
       LISTEN_PORT: 6432
-      ADMIN_USERS: ${POSTGRES_USER}
+      ADMIN_USERS: wine
+      # ВАЖНО: Явно создаем userlist через переменные
+      AUTH_FILE: /etc/pgbouncer/userlist.txt
+      # Дополнительные пользователи (если нужны)
       USERS: "${POSTGRES_USER} ${POSTGRES_PASSWORD}"
     expose:
       - "6432"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "pg_isready", "-h", "localhost", "-p", "6432", "-U", "${POSTGRES_USER}", "-d", "${POSTGRES_DB}"]
+      # Официальный способ проверки pgbouncer (внутри образа есть psql-client)
+      test: ["CMD", "pg_isready", "-h", "localhost", "-p", "6432", "-U", "${POSTGRES_USER}", "-d", "wine_db"]
       interval: 5s
       timeout: 5s
       retries: 5
     depends_on:
-      wine_host_test:
+      wine_host:
         condition: service_healthy
     deploy:
       replicas: 2  # Меньше реплик для теста
@@ -209,17 +213,17 @@ services:
           cpus: '0.25'
           memory: 128M
     networks:
-      - internal_network_test
-      - pgbouncer_network_test
+      - internal_network
+      - pgbouncer_network
+    
   
-  ollama_test:
+  ollama:
     logging:
-      driver: "json-file"
+      driver: ${LOGGER_DRIVER}
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: ${MAX_SIZE}
+        max-file: ${MAX_FILE}
     image: ollama/ollama
-    container_name: ${OLLAMA_CONTAINER_NAME}  # Будет test_ollama из .env.test
     deploy:
       resources:
         reservations:
@@ -228,26 +232,60 @@ services:
               count: 1
               capabilities: [ gpu ]
     volumes:
-      - ollama_data_test:/root/.ollama
+      - ollama_data:/root/.ollama
     networks:
-      shared_network:
-        aliases:
-          - ollama-test
-
+      - shared_network
+ 
+# SearXNG - локальный метапоисковик (без лимитов!)
+  searxng:
+    image: searxng/searxng:latest
+    logging:
+      driver: ${LOGGER_DRIVER}
+      options:
+        max-size: ${MAX_SIZE}
+        max-file: ${MAX_FILE}
+    expose:
+      - "${SEARXNG_PORT}"
+    volumes:
+      - ./searxng-config:/etc/searxng:rw,z
+      - searxng-data:/var/cache/searxng
+    environment:
+      # - SEARXNG_BASE_URL=${BASE_URL}/searxng  # Важно! Базовый URL через nginx
+      - SEARXNG_SECRET_KEY=${SEARXNG_SECRET_KEY}  # через .env
+      - SEARXNG_BASE_URL=${SEARXNG_BASE_URL}  # базовый url
+      - SEARXNG_PORT=${SEARXNG_PORT}
+      - SEARXNG_BIND_ADDRESS=0.0.0.0
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+      - DAC_OVERRIDE
+    restart: unless-stopped
+    networks:
+      - shared_network
+      - internal_network
+  
 volumes:
-  migration_volume_test:
-  pg_data_test:
-  pg_dump_test:
-  mongodb_data_test:
-  upload_volume_test:
-  ollama_data_test:
+  migration_volume: # alembic migrations
+  pg_data: # postgresql data
+  pg_dump: # postgres dump/restore
+  mongodb_data:
+  upload_volume:
+  certs_data:
+  certbot_www:
+  ollama_data:
+  searxng-data:
 
 networks:
   shared_network:
+    driver: bridge
     external: true
     name: nginx_gateway_shared_network
-  pgbouncer_network_test:
+  pgbouncer_network:
     driver: bridge
-  internal_network_test:
+  internal_network:
     internal: true
     driver: bridge
+  

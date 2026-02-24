@@ -228,7 +228,7 @@ services:
     expose:
       - "${SEARXNG_PORT}"
     volumes:
-      - ./searxng-config:/etc/searxng:rw
+      - ./searxng-config:/etc/searxng:rw,z
       - searxng-data:/var/cache/searxng
     environment:
       # - SEARXNG_BASE_URL=${BASE_URL}/searxng  # Важно! Базовый URL через nginx
