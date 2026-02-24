@@ -26,7 +26,7 @@ TCreateResponse = TypeVar("TCreateResponse", bound=CreateResponse)
 TUpdateSchema = TypeVar("TUpdateSchema", bound=UpdateSchema)
 TService = TypeVar("TService", bound=Service)
 
-dev = settings.DEV
+# dev = settings.DEV
 delta = delta_data(settings.DATA_DELTA)    # (datetime.now(timezone.utc) - relativedelta(years=2)).isoformat()
 
 

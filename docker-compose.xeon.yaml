@@ -4,11 +4,10 @@
 services:
   wine_host: # this is the name of the service and name of the host (POSTGRES_HOST)
     logging:
-      driver: "json-file"
+      driver: ${LOGGER_DRIVER}
       options:
-        max-size: "10m"   # Максимальный размер файла лога: 10 МБ
-        max-file: "3"     # Количество хранимых файлов ротации: 3
-    # -----------------------------
+        max-size: ${MAX_SIZE}
+        max-file: ${MAX_FILE}
     restart: unless-stopped
     container_name: ${POSTGRES_HOST}
     image: ghcr.io/alexanderjkochnev/postgres:17-alpine
@@ -62,10 +61,10 @@ services:
   
   app:
     logging:
-      driver: "json-file"
+      driver: ${LOGGER_DRIVER}
       options:
-        max-size: "10m"   # Максимальный размер файла лога: 10 МБ
-        max-file: "3"     # Количество хранимых файлов ротации: 3
+        max-size: ${MAX_SIZE}
+        max-file: ${MAX_FILE}
     build: .
     restart: unless-stopped
     command: uvicorn app.main:app --host 0.0.0.0 --port ${API_PORT} --loop auto --workers ${APP_WORKERS}
@@ -106,13 +105,11 @@ services:
       - shared_network    # Для связи с Nginx
 
   mongo:
-    # --- НАСТРОЙКИ ЛОГИРОВАНИЯ ---
     logging:
-      driver: "json-file"
+      driver: ${LOGGER_DRIVER}
       options:
-        max-size: "10m"   # Максимальный размер файла лога: 10 МБ
-        max-file: "3"     # Количество хранимых файлов ротации: 3
-    # -----------------------------
+        max-size: ${MAX_SIZE}
+        max-file: ${MAX_FILE}
     image: ghcr.io/alexanderjkochnev/mongo:4.4.20
     hostname: ${MONGO_HOSTNAME}
     restart: unless-stopped
@@ -153,10 +150,10 @@ services:
 
   preact_front:
     logging:
-      driver: "json-file"
+      driver: ${LOGGER_DRIVER}
       options:
-        max-size: "10m"   # Максимальный размер файла лога: 10 МБ
-        max-file: "3"     # Количество хранимых файлов ротации: 3
+        max-size: ${MAX_SIZE}
+        max-file: ${MAX_FILE}
     build:
       context: ./preact_front          # путь к папке с Preact
       dockerfile: Dockerfile           # имя Dockerfile внутри ./preact_front
@@ -173,10 +170,10 @@ services:
   
   pgbouncer:
     logging:
-      driver: "json-file"
+      driver: ${LOGGER_DRIVER}
       options:
-        max-size: "10m"   # Максимальный размер файла лога: 10 МБ
-        max-file: "3"     # Количество хранимых файлов ротации: 3
+        max-size: ${MAX_SIZE}
+        max-file: ${MAX_FILE}
     image: edoburu/pgbouncer:latest
     environment:
       DB_HOST: ${POSTGRES_HOST}
@@ -223,10 +220,10 @@ services:
   
   ollama:
     logging:
-      driver: "json-file"
+      driver: ${LOGGER_DRIVER}
       options:
-        max-size: "10m"   # Максимальный размер файла лога: 10 МБ
-        max-file: "3"     # Количество хранимых файлов ротации: 3
+        max-size: ${MAX_SIZE}
+        max-file: ${MAX_FILE}
     image: ollama/ollama
     deploy:
       resources:
@@ -244,10 +241,10 @@ services:
   searxng:
     image: searxng/searxng:latest
     logging:
-      driver: "json-file"
+      driver: ${LOGGER_DRIVER}
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: ${MAX_SIZE}
+        max-file: ${MAX_FILE}
     expose:
       - "${SEARXNG_PORT}"
     volumes:
