@@ -18,7 +18,6 @@ class DatabaseManager:
     @classmethod
     def __init__(cls):
         cls.connection_string = settings_db.database_url
-        print(f'{cls.connection_string=}')
         # Создаем Engine (Singleton)
         cls.engine = create_async_engine(settings_db.database_url,
                                          echo=settings_db.DB_ECHO_LOG,
