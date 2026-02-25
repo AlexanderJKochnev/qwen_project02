@@ -96,7 +96,7 @@ class WebSearchService:
                     except Exception as e:
                         logger.error(f"Cache write error: {e}")
                 jprint(search_results)
-                return SearchResponse(result=search_results, found_in_db=False, found_in_cash=True)
+                return SearchResponse(result=search_results, found_in_db=False, found_in_cash=False)
         except HTTPException as e:
             logger.error(str(e))
 

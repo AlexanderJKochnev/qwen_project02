@@ -1,5 +1,5 @@
 # app/support/websearch/router.py
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, status, Query
 from typing import List, Dict, Callable
 from app.auth.dependencies import get_active_user_or_internal
 from app.support.websearch.service import get_web_search_service, WebSearchService
@@ -47,7 +47,7 @@ async def search(request: SearchRequest, web_search: WebSearchService = Depends(
 @router.get("", response_model=SearchResponse, status_code=status.HTTP_200_OK)
 async def searchX(search: str = Query(..., description=("что нужно найти")),
                   category: str = Query('general', description=("категория поиска")),
-                  language: str = Query('ru', description=("приоритетный язык поиска")),
+                  language: str = Query('en', description=("приоритетный язык поиска")),
                   max_results: int = Query(5, description=("кол-во результатов поиска")),
                   web_search: WebSearchService = Depends(get_web_search_service)):
     search_result: SearchResponse = await web_search.search_tune(search, category, language, max_results)

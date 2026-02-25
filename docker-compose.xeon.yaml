@@ -1,6 +1,5 @@
 # docker-compose.prod.yaml
 # docker compose -f docker-compose.xeon.yaml up -d --build
-# aliases suffix is -xeon
 services:
   wine_host: # this is the name of the service and name of the host (POSTGRES_HOST)
     logging:
@@ -55,9 +54,7 @@ services:
           cpus: '2'
           memory: 16G
     networks:
-      - internal_network
-      
-   
+      - postgres_network
   
   app:
     logging:
@@ -83,9 +80,6 @@ services:
       POSTGRES_HOST: ${PGBOUNCER_CONTAINER_NAME}
       WEB_PORT: 6432
       WEB_HOST: pgbouncer
-      # POSTGRES_HOST: ${POSTGRES_HOST}
-      # WEB_PORT: ${API_PORT}
-      # WEB_HOST: ${API_HOST}
       BASE_URL: ${BASE_URL}
       SEARXNG_URL: "http://searxng:8080"
       OLLAMA_HOST: ${OLLAMA_HOST}
@@ -104,9 +98,13 @@ services:
     links:
       - redis:redis
     networks:
-      # - internal_network  # расскомментировать для теста
+      # - postgres_network  # расскомментировать для теста
       - pgbouncer_network # Для связи с pgbouncer
       - redis_network    # Для связи с Nginx
+      - ollama_network
+      - searxng_network
+      - mongodb_network
+      - preact_network
       - shared_network
 
   mongo:
@@ -150,9 +148,8 @@ services:
           cpus: '1'
           memory: 2G
     networks:
-      - shared_network
-      - internal_network
-    
+      - mongodb_network
+
   preact_front:
     logging:
       driver: ${LOGGER_DRIVER}
@@ -172,8 +169,11 @@ services:
           cpus: '1'
           memory: 512M
     restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_started
     networks:
-      - shared_network
+      - preact_network
   
   pgbouncer:
     logging:
@@ -221,7 +221,7 @@ services:
           cpus: '0.25'
           memory: 128M
     networks:
-      - internal_network
+      - postgres_network
       - pgbouncer_network
     
   
@@ -242,7 +242,7 @@ services:
     volumes:
       - ollama_data:/root/.ollama
     networks:
-      - shared_network
+      - ollama_network
  
 # SearXNG - локальный метапоисковик (без лимитов!)
   searxng:
@@ -272,8 +272,7 @@ services:
       - DAC_OVERRIDE
     restart: unless-stopped
     networks:
-      - shared_network
-      - internal_network
+      - searxng_network
   
   redis:
     image: redis:7.2-alpine
@@ -317,10 +316,21 @@ networks:
     name: nginx_gateway_shared_network
   pgbouncer_network:
     driver: bridge
-  internal_network:
+    internal: true
+  postgres_network:
     internal: true
     driver: bridge
   redis_network:
     internal: true
+    driver: bridge
+  ollama_network:
+    internal: true
+    driver: bridge
+  mongodb_network:
+    internal: true
+    driver: bridge
+  searxng_network:
+    driver: bridge
+  preact_network:
     driver: bridge
   

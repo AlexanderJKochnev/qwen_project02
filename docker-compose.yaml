@@ -37,7 +37,7 @@ services:
           cpus: '0.125'
           memory: 256M
     networks:
-      - internal_network
+      - postgres_network
   
   adminer:
     logging:
@@ -64,7 +64,8 @@ services:
           cpus: '0.12'
           memory: 256M
     networks:
-      - internal_network
+      - postgres_network
+      - shared_network
   
   app:
     logging:
@@ -103,10 +104,14 @@ services:
           cpus: '0.5'
           memory: 512M
     networks:
-      - internal_network  # расскомментировать для теста
+      - postgres_network  # расскомментировать для теста
       # - pgbouncer_network # Для связи с pgbouncer
-      - shared_network    # Для связи с Nginx
-      - redis_network
+      - redis_network    # Для связи с Nginx
+      - ollama_network
+      - searxng_network
+      - mongodb_network
+      - preact_network
+      - shared_network
   
   mongo:
     logging:
@@ -151,7 +156,7 @@ services:
           cpus: '0.5'
           memory: 512M
     networks:
-      - shared_network
+      - mongodb_network
   
   mongo-express:
     logging:
@@ -190,6 +195,7 @@ services:
           memory: 256M
     networks:
       - shared_network
+      - mongodb_network
 
   preact_front:
     logging:
@@ -215,12 +221,10 @@ services:
     tty: true
     restart: unless-stopped
     depends_on:
-      wine_host:
-        condition: service_healthy
-      mongo:
-        condition: service_healthy
+      app:
+        condition: service_started
     networks:
-      - shared_network
+      - preact_network
  
 # SearXNG - локальный метапоисковик (без лимитов!)
   searxng:
@@ -250,8 +254,7 @@ services:
       - DAC_OVERRIDE
     restart: unless-stopped
     networks:
-      - shared_network
-      - internal_network
+      - searxng_network
   
   redis:
     image: redis:7.2-alpine
@@ -274,6 +277,10 @@ services:
       retries: 5
     networks:
       - redis_network
+    # ulimits:
+    #   nofile:
+    #     soft: 10000
+    #     hard: 10000
   
 volumes:
   migration_volume: # alembic migrations
@@ -287,14 +294,25 @@ volumes:
 networks:
   shared_network:
     driver: bridge
-    # external: true  #  при работе с ngginx раскомментировать
-    # internal: true  #  при работе с ngginx закомментировать
+    external: true
     name: nginx_gateway_shared_network
-  # pgbouncer_network:
-  #   driver: bridge
-  internal_network:
+  pgbouncer_network:
+    driver: bridge
+    internal: true
+  postgres_network:
     internal: true
     driver: bridge
   redis_network:
     internal: true
     driver: bridge
+  ollama_network:
+    internal: true
+    driver: bridge
+  mongodb_network:
+    internal: true
+    driver: bridge
+  searxng_network:
+    driver: bridge
+  preact_network:
+    driver: bridge
+  
