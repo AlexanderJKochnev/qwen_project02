@@ -333,27 +333,35 @@ volumes:
 
 networks:
   postgres_network:
+    driver: bridge
     ipam:
       config:
         - subnet: ${SUBNET_POSTGRES}
   pgbouncer_network:
+    driver: bridge
     ipam:
       config:
         - subnet: ${SUBNET_PGBOUNCER}
   redis_network:
     internal: true
+    driver: bridge
     ipam:
       config:
         - subnet: ${SUBNET_REDIS}
   searxng_network:
+    driver: bridge
     ipam:
       config:
         - subnet: ${SUBNET_SEARXNG}
   mongodb_network:
+    driver: bridge
     ipam:
       config:
         - subnet: ${SUBNET_MONGO}
   ollama_network:
+    driver: bridge
   preact_network:
+    driver: bridge
   nginx_gateway_shared_network:
+    driver: bridge
     external: true
