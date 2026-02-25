@@ -74,7 +74,7 @@ services:
       mongo:
         condition: service_healthy
       redis:
-        condition: service_healthy
+        condition: service_started
     expose:
       - ${API_PORT}
     environment:
@@ -96,7 +96,7 @@ services:
     extra_hosts:
       - "redis:${IP_REDIS}"
       - "searxng:${IP_SEARXNG}"
-      - "pgbouncer:${IP_PGBOUNCER}"
+      # - "pgbouncer:${IP_PGBOUNCER}"
       - "postgres:${IP_POSTGRES}"
     deploy:
       resources:
