@@ -42,6 +42,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+-1.env
 
 # IDE
 .vscode/

@@ -49,12 +49,13 @@ services:
       resources:
         limits:
           cpus: '8'
-          memory: 20G
+          memory: ${POSTGRES_MEM_LIMIT}
         reservations:
           cpus: '2'
           memory: 16G
     networks:
-      - postgres_network
+      postgres_network:
+        ipv4_address: ${IP_POSTGRES}
   
   app:
     logging:
@@ -64,7 +65,7 @@ services:
         max-file: ${MAX_FILE}
     build: .
     restart: unless-stopped
-    command: uvicorn app.main:app --host 0.0.0.0 --port ${API_PORT} --loop auto --workers ${APP_WORKERS}
+    command: uvicorn app.main:app --host 0.0.0.0 --port ${API_PORT} --loop auto --workers ${APP_WORKERS} --backlog 2048
     depends_on:
       pgbouncer:
         condition: service_healthy
@@ -83,18 +84,28 @@ services:
       BASE_URL: ${BASE_URL}
       SEARXNG_URL: "http://searxng:8080"
       OLLAMA_HOST: ${OLLAMA_HOST}
+      REDIS_HOST: redis
     volumes:
       - ./templates:/app/templates
       - ./migration_volume:/app/app/migration/versions
       - ./upload_volume:/app/upload_volume
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    extra_hosts:
+      - "redis:${IP_REDIS}"
+      - "searxng:${IP_SEARXNG}"
+      - "pgbouncer:${IP_PGBOUNCER}"
+      - "postgres:${IP_POSTGRES}"
     deploy:
       resources:
         limits:
-          cpus: '8'
-          memory: 20G
+          cpus: '${APP_CPU_LIMIT}'
+          memory: '${APP_MEM_LIMIT}'
         reservations:
-          cpus: '2'
-          memory: 16G
+          cpus: '${APP_CPU_RESERVATION}'
+          memory: '${APP_MEM_RESERVATION}'
     links:
       - redis:redis
     networks:
@@ -105,7 +116,7 @@ services:
       - searxng_network
       - mongodb_network
       - preact_network
-      - shared_network
+      - nginx_gateway_shared_network
 
   mongo:
     logging:
@@ -148,7 +159,8 @@ services:
           cpus: '1'
           memory: 2G
     networks:
-      - mongodb_network
+      mongodb_network:
+        ipv4_address: ${IP_MONGO}
 
   preact_front:
     logging:
@@ -183,7 +195,7 @@ services:
         max-file: ${MAX_FILE}
     image: edoburu/pgbouncer:latest
     environment:
-      DB_HOST: ${POSTGRES_HOST}
+      DB_HOST: ${IP_POSTGRES}
       DB_PORT: 5432
       DB_USER: ${POSTGRES_USER}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
@@ -215,15 +227,15 @@ services:
       wine_host:
         condition: service_healthy
     deploy:
-      replicas: 4
+      replicas: ${PGBOUNCER_REPLICAS}
       resources:
         limits:
-          cpus: '0.25'
-          memory: 128M
+          cpus: '0.75'
+          memory: 256M
     networks:
-      - postgres_network
-      - pgbouncer_network
-    
+      postgres_network:
+      pgbouncer_network:
+        ipv4_address: ${IP_PGBOUNCER}
   
   ollama:
     logging:
@@ -271,13 +283,24 @@ services:
       - SETUID
       - DAC_OVERRIDE
     restart: unless-stopped
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
     networks:
-      - searxng_network
-  
+      searxng_network:
+        ipv4_address: ${IP_SEARXNG}
+
   redis:
     image: redis:7.2-alpine
     # container_name: redis_cache
-    hostname: redis
+    # hostname: redis
+    logging:
+      driver: ${LOGGER_DRIVER}
+      options:
+        max-size: ${MAX_SIZE}
+        max-file: ${MAX_FILE}
+    restart: unless-stopped
     restart: always
     command: >
       redis-server
@@ -289,13 +312,13 @@ services:
       - "6379"
     volumes:
       - redis_data:/data
-    healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
-      interval: 5s
-      timeout: 3s
-      retries: 5
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
     networks:
-      - redis_network
+      redis_network:
+        ipv4_address: ${IP_REDIS}
   
 volumes:
   migration_volume: # alembic migrations
@@ -310,27 +333,28 @@ volumes:
   redis_data:
 
 networks:
-  shared_network:
-    driver: bridge
-    external: true
-    name: nginx_gateway_shared_network
-  pgbouncer_network:
-    driver: bridge
-    internal: true
   postgres_network:
-    internal: true
-    driver: bridge
+    ipam:
+      config:
+        - subnet: ${SUBNET_POSTGRES}
+  pgbouncer_network:
+    ipam:
+      config:
+        - subnet: ${SUBNET_PGBOUNCER}
   redis_network:
     internal: true
-    driver: bridge
-  ollama_network:
-    internal: true
-    driver: bridge
-  mongodb_network:
-    internal: true
-    driver: bridge
+    ipam:
+      config:
+        - subnet: ${SUBNET_REDIS}
   searxng_network:
-    driver: bridge
+    ipam:
+      config:
+        - subnet: ${SUBNET_SEARXNG}
+  mongodb_network:
+    ipam:
+      config:
+        - subnet: ${SUBNET_MONGO}
+  ollama_network:
   preact_network:
-    driver: bridge
-  
+  nginx_gateway_shared_network:
+    external: true
