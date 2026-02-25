@@ -107,6 +107,7 @@ services:
       # - internal_network  # расскомментировать для теста
       - pgbouncer_network # Для связи с pgbouncer
       - redis_network    # Для связи с Nginx
+      - shared_network
 
   mongo:
     logging:
