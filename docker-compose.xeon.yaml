@@ -83,7 +83,7 @@ services:
       WEB_HOST: pgbouncer
       BASE_URL: ${BASE_URL}
       SEARXNG_URL: "http://searxng:8080"
-      OLLAMA_HOST: ${OLLAMA_HOST}
+      OLLAMA_HOST: "http://ollama:11434"  # ${OLLAMA_HOST}
       REDIS_HOST: redis
     volumes:
       - ./templates:/app/templates
