@@ -235,7 +235,7 @@ services:
     networks:
       postgres_network:
       pgbouncer_network:
-        ipv4_address: ${IP_PGBOUNCER}
+        # ipv4_address: ${IP_PGBOUNCER}
   
   ollama:
     logging:
