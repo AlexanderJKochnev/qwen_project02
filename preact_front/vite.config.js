@@ -3,7 +3,7 @@ import { defineConfig } from 'vite';
 import preact from '@preact/preset-vite';
 
 export default defineConfig({
-  envDir: '../', // Это заставит Vite заглянуть на уровень выше
+  envDir: '../', // Это заставит Vite заглянуть в .env на уровень выше
   plugins: [preact()],
   server: {
     host: '0.0.0.0',
