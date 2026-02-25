@@ -301,7 +301,6 @@ services:
         max-size: ${MAX_SIZE}
         max-file: ${MAX_FILE}
     restart: unless-stopped
-    restart: always
     command: >
       redis-server
       --maxmemory 512mb
