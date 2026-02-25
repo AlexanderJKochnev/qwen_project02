@@ -106,6 +106,7 @@ services:
       - internal_network  # расскомментировать для теста
       # - pgbouncer_network # Для связи с pgbouncer
       - shared_network    # Для связи с Nginx
+      - redis_network
   
   mongo:
     logging:
@@ -272,7 +273,7 @@ services:
       timeout: 3s
       retries: 5
     networks:
-      - internal_network
+      - redis_network
   
 volumes:
   migration_volume: # alembic migrations
@@ -292,5 +293,8 @@ networks:
   # pgbouncer_network:
   #   driver: bridge
   internal_network:
+    internal: true
+    driver: bridge
+  redis_network:
     internal: true
     driver: bridge
