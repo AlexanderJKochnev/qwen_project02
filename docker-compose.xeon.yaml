@@ -255,7 +255,8 @@ services:
     volumes:
       - ollama_data:/root/.ollama
     networks:
-      - ollama_network
+      ollama_network:
+        ipv4_address: ${IP_OLLAMA}
  
 # SearXNG - локальный метапоисковик (без лимитов!)
   searxng:
@@ -361,6 +362,9 @@ networks:
         - subnet: ${SUBNET_MONGO}
   ollama_network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: ${SUBNET_OLLAMA}
   preact_network:
     driver: bridge
   nginx_gateway_shared_network:
