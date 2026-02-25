@@ -186,6 +186,7 @@ services:
         condition: service_started
     networks:
       - preact_network
+      - nginx_gateway_shared_network
   
   pgbouncer:
     logging:
