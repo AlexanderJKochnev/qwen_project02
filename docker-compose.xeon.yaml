@@ -330,6 +330,8 @@ volumes:
   certs_data:
   certbot_www:
   ollama_data:
+    external: true
+    name: wine_ollama_data
   searxng-data:
   redis_data:
 
