@@ -135,7 +135,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://abc8888.ru",
-        "http://localhost:5173"],
+        "http://localhost:5173",
+        "https://test.abc8888.ru"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
