@@ -1,14 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<link rel="icon" type="image/svg+xml" href="/vite.svg" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<meta name="color-scheme" content="light dark" />
-		<title>First Preact Project</title>
-	</head>
-	<body>
-		<div id="app"></div>
-		<script type="module" src="/src/main.tsx"></script>
-	</body>
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <title>First Preact Project</title>
+
+    <!--
+        ============================================
+        RUNTIME КОНФИГУРАЦИЯ - меняется при старте
+        ============================================
+        Этот блок будет заменен entrypoint скриптом
+        на актуальные значения из окружения
+    -->
+    <script>
+        window.__RUNTIME_CONFIG__ = {
+            API_URL: 'https://api.abc8888.ru'  // будет заменено
+        };
+    </script>
+    <!-- ======================================== -->
+
+    <!-- Preload основных ресурсов -->
+    <link rel="modulepreload" href="/src/main.tsx" />
+</head>
+<body>
+    <div id="app"></div>
+    <!-- Точка входа - основной бандл -->
+    <script type="module" src="/src/main.tsx"></script>
+</body>
 </html>
