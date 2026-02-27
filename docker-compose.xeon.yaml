@@ -184,7 +184,7 @@ services:
         condition: service_started
     networks:
       preact_network:
-        - ipv4_address: ${IP_PREACT}
+        ipv4_address: ${IP_PREACT}
       nginx_gateway_shared_network:
   
   pgbouncer:
