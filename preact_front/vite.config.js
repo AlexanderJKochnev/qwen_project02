@@ -30,7 +30,7 @@ export default defineConfig({
   // Оптимизация для production
   build: {
     target: 'es2015',
-    minify: 'terser',
+    minify: 'esbuild',
     terserOptions: {
       compress: {
         drop_console: true, // убираем console.log в production
