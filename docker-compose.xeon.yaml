@@ -80,9 +80,9 @@ services:
       WEB_PORT: 6432
       WEB_HOST: pgbouncer
       BASE_URL: ${BASE_URL}
-      SEARXNG_URL: "http://searxng.shared:8080"
-      OLLAMA_HOST: "http://ollama.shared:11434"
-      REDIS_HOST: redis.shared
+      SEARXNG_URL: "http://searxng:8080"
+      OLLAMA_HOST: "http://ollama:11434"
+      REDIS_HOST: redis
     volumes:
       - ./templates:/app/templates
       - ./migration_volume:/app/app/migration/versions
@@ -92,9 +92,9 @@ services:
         soft: 65535
         hard: 65535
     extra_hosts:
-      - "redis.shared:${IP_REDIS}"
-      - "searxng.shared:${IP_SEARXNG}"
-      - "ollama.shared:${IP_OLLAMA}"
+      - "redis:${IP_REDIS}"
+      - "searxng:${IP_SEARXNG}"
+      - "ollama:${IP_OLLAMA}"
       - "postgres:${IP_POSTGRES}"
     deploy:
       resources:
