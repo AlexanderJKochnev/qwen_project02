@@ -1,5 +1,6 @@
-# docker-compose.prod.yaml
-# docker compose -f docker-compose.xeon.yaml up -d --build
+# docker-compose.xeon.yaml
+# Для запуска: docker compose -f docker-compose.project1.yaml --env-file .env.project1 up -d --build
+
 services:
   wine_host: # this is the name of the service and name of the host (POSTGRES_HOST)
     logging:
@@ -35,7 +36,6 @@ services:
     volumes:
       - ./pg_data:/var/lib/postgresql/data
       - ./pg_dump:/tmp
-
     healthcheck:
       test: |
         sh -c 'pg_isready -h localhost -p ${POSTGRES_PORT} -U ${POSTGRES_USER} -d ${POSTGRES_DB}'
@@ -73,8 +73,6 @@ services:
         condition: service_healthy
       mongo:
         condition: service_healthy
-      redis:
-        condition: service_started
     expose:
       - ${API_PORT}
     environment:
@@ -82,9 +80,9 @@ services:
       WEB_PORT: 6432
       WEB_HOST: pgbouncer
       BASE_URL: ${BASE_URL}
-      SEARXNG_URL: "http://searxng:8080"
-      OLLAMA_HOST: "http://ollama:11434"  # ${OLLAMA_HOST}
-      REDIS_HOST: redis
+      SEARXNG_URL: "http://searxng.shared:8080"
+      OLLAMA_HOST: "http://ollama.shared:11434"
+      REDIS_HOST: redis.shared
     volumes:
       - ./templates:/app/templates
       - ./migration_volume:/app/app/migration/versions
@@ -94,9 +92,9 @@ services:
         soft: 65535
         hard: 65535
     extra_hosts:
-      - "redis:${IP_REDIS}"
-      - "searxng:${IP_SEARXNG}"
-      # - "pgbouncer:${IP_PGBOUNCER}"
+      - "redis.shared:${IP_REDIS}"
+      - "searxng.shared:${IP_SEARXNG}"
+      - "ollama.shared:${IP_OLLAMA}"
       - "postgres:${IP_POSTGRES}"
     deploy:
       resources:
@@ -106,8 +104,6 @@ services:
         reservations:
           cpus: '${APP_CPU_RESERVATION}'
           memory: '${APP_MEM_RESERVATION}'
-    links:
-      - redis:redis
     networks:
       # - postgres_network  # расскомментировать для теста
       - pgbouncer_network # Для связи с pgbouncer
@@ -240,102 +236,14 @@ services:
       pgbouncer_network:
         # ipv4_address: ${IP_PGBOUNCER}
   
-  ollama:
-    logging:
-      driver: ${LOGGER_DRIVER}
-      options:
-        max-size: ${MAX_SIZE}
-        max-file: ${MAX_FILE}
-    image: ollama/ollama
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [ gpu ]
-    volumes:
-      - ollama_data:/root/.ollama
-    networks:
-      ollama_network:
-        ipv4_address: ${IP_OLLAMA}
- 
-# SearXNG - локальный метапоисковик (без лимитов!)
-  searxng:
-    image: searxng/searxng:latest
-    logging:
-      driver: ${LOGGER_DRIVER}
-      options:
-        max-size: ${MAX_SIZE}
-        max-file: ${MAX_FILE}
-    expose:
-      - "${SEARXNG_PORT}"
-    volumes:
-      - ./searxng-config:/etc/searxng:rw,z
-      - searxng-data:/var/cache/searxng
-    environment:
-      # - SEARXNG_BASE_URL=${BASE_URL}/searxng  # Важно! Базовый URL через nginx
-      - SEARXNG_SECRET_KEY=${SEARXNG_SECRET_KEY}  # через .env
-      - SEARXNG_BASE_URL=${SEARXNG_BASE_URL}  # базовый url
-      - SEARXNG_PORT=${SEARXNG_PORT}
-      - SEARXNG_BIND_ADDRESS=0.0.0.0
-    cap_drop:
-      - ALL
-    cap_add:
-      - CHOWN
-      - SETGID
-      - SETUID
-      - DAC_OVERRIDE
-    restart: unless-stopped
-    ulimits:
-      nofile:
-        soft: 65535
-        hard: 65535
-    networks:
-      searxng_network:
-        ipv4_address: ${IP_SEARXNG}
-
-  redis:
-    image: redis:7.2-alpine
-    # container_name: redis_cache
-    # hostname: redis
-    logging:
-      driver: ${LOGGER_DRIVER}
-      options:
-        max-size: ${MAX_SIZE}
-        max-file: ${MAX_FILE}
-    restart: unless-stopped
-    command: >
-      redis-server
-      --maxmemory 512mb
-      --maxmemory-policy allkeys-lru
-      --appendonly yes
-      --save 900 1
-    expose:
-      - "6379"
-    volumes:
-      - redis_data:/data
-    ulimits:
-      nofile:
-        soft: 65535
-        hard: 65535
-    networks:
-      redis_network:
-        ipv4_address: ${IP_REDIS}
-  
 volumes:
   migration_volume: # alembic migrations
   pg_data: # postgresql data
   pg_dump: # postgres dump/restore
   mongodb_data:
   upload_volume:
-  certs_data:
-  certbot_www:
-  ollama_data:
-    external: true
-    name: wine_ollama_data
-  searxng-data:
-  redis_data:
+  # certs_data:
+  # certbot_www:
 
 networks:
   postgres_network:
@@ -348,29 +256,25 @@ networks:
     ipam:
       config:
         - subnet: ${SUBNET_PGBOUNCER}
-  redis_network:
-    internal: true
-    driver: bridge
-    ipam:
-      config:
-        - subnet: ${SUBNET_REDIS}
-  searxng_network:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: ${SUBNET_SEARXNG}
   mongodb_network:
     driver: bridge
     ipam:
       config:
         - subnet: ${SUBNET_MONGO}
-  ollama_network:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: ${SUBNET_OLLAMA}
   preact_network:
     driver: bridge
   nginx_gateway_shared_network:
     driver: bridge
     external: true
+  ollama_network:
+    driver: bridge
+    external: true
+    name: ollama_ollama_network
+  redis_network:
+    driver: bridge
+    external: true
+    name: ollama_redis_network
+  searxng_network:
+    driver: bridge
+    external: true
+    name: ollama_searxng_network
