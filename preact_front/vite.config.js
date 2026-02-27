@@ -28,8 +28,8 @@ export default defineConfig({
     },
   },
 
-https://api.abc8888.ru
-    build: {
+// оптимизация для production
+  build: {
     target: 'es2015',
     minify: 'esbuild',
     terserOptions: {
