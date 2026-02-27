@@ -14,7 +14,8 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 5173,
     allowedHosts: [
-      '.abc8888.ru',
+      'abc8888.ru',
+      'test.abc8888.ru',
       'localhost'
     ],
     proxy: {
