@@ -52,7 +52,7 @@ services:
           memory: ${POSTGRES_MEM_LIMIT}
         reservations:
           cpus: '2'
-          memory: 16G
+          memory: ${POSTGRES_MEM_RESERVATION}
     networks:
       postgres_network:
         ipv4_address: ${IP_POSTGRES}
