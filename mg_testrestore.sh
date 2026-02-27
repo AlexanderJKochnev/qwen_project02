@@ -4,7 +4,7 @@ BACKUP_NAME="mg_backup.gz"
 
 # docker exec -i имя_контейнера mongorestore --archive --gzip --db имя_базы < backup.gz
 # docker exec -i mongo mongorestore --archive --gzip --nsInclude='wine_database.*' < backup/$BACKUP_NAME
-docker exec -i mongo_test mongorestore \
+docker exec -i test-mongo-1 mongorestore \
   --username=admin \
   --password=admin \
   --authenticationDatabase=admin \
