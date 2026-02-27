@@ -183,8 +183,9 @@ services:
       app:
         condition: service_started
     networks:
-      - preact_network
-      - nginx_gateway_shared_network
+      preact_network:
+        - ipv4_address: ${IP_PREACT}
+      nginx_gateway_shared_network:
   
   pgbouncer:
     logging:
@@ -263,6 +264,9 @@ networks:
         - subnet: ${SUBNET_MONGO}
   preact_network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: ${SUBNET_PREACT}
   nginx_gateway_shared_network:
     driver: bridge
     external: true
