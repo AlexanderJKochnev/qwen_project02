@@ -281,7 +281,7 @@ class ThumbnailImageRepository:
                 images.append(image)
             return images
         except Exception as e:
-            print(f"Error getting images after date: {e}")
+            raise Exception(f"Error getting images after date: {e}")
             return []
 
     async def get_images_after_date_nopage(self,

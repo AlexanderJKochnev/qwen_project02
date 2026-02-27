@@ -4,6 +4,7 @@ import io
 from datetime import datetime, timezone
 from typing import List, Tuple, Optional, Dict, Any
 from pathlib import Path
+from loguru import logger
 # from loguru import logger
 # from dateutil.relativedelta import relativedelta
 from fastapi import Depends, HTTPException, status, UploadFile
@@ -169,6 +170,7 @@ class ImageService:
             )
 
         except Exception as e:
+            logger.error(f"get_images_after_date. {e}")
             raise Exception(f"Service error: {str(e)}")
 
     async def get_recent_images(self, hours: int = 24) -> List[FileResponse]:
@@ -192,7 +194,8 @@ class ImageService:
             )
             return images
         except Exception as e:
-            raise Exception(f"Service error: {str(e)}")
+            logger.error(f"get_recent_images {e}")
+            raise Exception(f"get_recent_images: {str(e)}")
 
 
 class ThumbnailImageService:
@@ -232,6 +235,7 @@ class ThumbnailImageService:
                     "content_type": image_data.get("thumbnail_type", "image/png"), "from_cache": False}
 
         except Exception as e:
+            logger.error(f"get_thmubnail {e}")
             raise HTTPException(status_code=500,
                                 detail=f"Thumbnail for {file_id} retrieval failed: {str(e)}")
 
@@ -428,6 +432,7 @@ class ThumbnailImageService:
             )
 
         except Exception as e:
+            logger.error(f"getimage_after date. {e}")
             raise Exception(f"Service error: {str(e)}")
 
     async def get_images_list_after_date(
