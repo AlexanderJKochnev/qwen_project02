@@ -32,3 +32,6 @@ class LLModels(BaseModel):
     parameter_size: Optional[str] = None
     quantization_level: Optional[str] = None
     details: Optional[dict] = None
+
+class ListLLM(BaseModel):
+    models: LLModels
