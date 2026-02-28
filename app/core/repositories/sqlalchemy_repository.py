@@ -7,6 +7,7 @@
 from abc import ABCMeta
 from datetime import datetime
 from loguru import logger
+import re
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
 from sqlalchemy import and_, func, select, Select, update, desc, cast, Text, text, literal, literal_column
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -614,13 +615,15 @@ class Repository(metaclass=RepositoryMeta):
         """ полнотекстовый поиск """
         try:
             # formatted_query = " & ".join(search.split())
+            search = re.findall(r'\w+', search)
             formatted_query = " & ".join([f"{word}:*" for word in search.split()])
             # condition = model.search_vector.bool_op("@@")(func.to_tsquery('simple', formatted_query))
-            # condition = model.search_vector.bool_op("@@")(func.to_tsquery(literal_column("'simple'"),
-            #                                                               formatted_query))
-            condition = model.search_vector.bool_op("@@")(func.websearch_to_tsquery(
-                literal_column("'simple'"), formatted_query)
-            )
+            condition = model.search_vector.bool_op("@@")(func.to_tsquery(literal_column("'simple'"),
+                                                                          formatted_query))
+            # ниже - ищеть только целые слова
+            # condition = model.search_vector.bool_op("@@")(func.websearch_to_tsquery(
+            #     literal_column("'simple'"), formatted_query)
+            # )
             count_stmt = select(func.count()).select_from(model).where(condition)
             total = await session.execute(count_stmt)
             total_count = total.scalar() or 0
