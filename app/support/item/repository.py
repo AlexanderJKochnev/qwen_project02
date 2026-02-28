@@ -18,7 +18,8 @@ from app.support.item.model import Item
 from app.support.region.model import Region
 from app.support.subcategory.model import Subcategory
 from app.support.subregion.model import Subregion
-
+from app.core.config.project_config import settings
+from app.core.utils.alchemy_utils import build_search_condition, SearchType
 
 # from app.core.config.database.db_noclass import get_db
 
@@ -240,8 +241,8 @@ class ItemRepository(Repository):
                                              limit: int = None
                                              ):
         """Поиск элементов по полям title* и subtitle* связанной модели Drink"""
-        from app.core.config.project_config import settings
-        from app.core.utils.alchemy_utils import build_search_condition, SearchType
+        # from app.core.config.project_config import settings
+        # from app.core.utils.alchemy_utils import build_search_condition, SearchType
 
         # Получаем список языков из настроек
         langs = settings.LANGUAGES
@@ -347,6 +348,55 @@ class ItemRepository(Repository):
         for item in items:
             result.append(item.to_dict())
         return result, total
+
+    @classmethod
+    async def search_by_drink_title_subtitle_nopagination(
+            cls, search_str: str, session: AsyncSession):
+        """Поиск элементов по полям title* и subtitle* связанной модели Drink"""
+
+        # Получаем список языков из настроек
+        langs = settings.LANGUAGES
+
+        # Создаем список полей для поиска
+        title_fields = []
+        subtitle_fields = []
+
+        for lang in langs:
+            if lang == settings.DEFAULT_LANG:
+                title_fields.append(getattr(Drink, 'title'))
+                subtitle_fields.append(getattr(Drink, 'subtitle'))
+            else:
+                title_fields.append(getattr(Drink, f'title_{lang}', None))
+                subtitle_fields.append(getattr(Drink, f'subtitle_{lang}', None))
+
+        # Убираем None значения из списка
+        title_fields = [field for field in title_fields if field is not None]
+        subtitle_fields = [field for field in subtitle_fields if field is not None]
+
+        # Создаем условия поиска
+        search_conditions = []
+
+        for field in title_fields + subtitle_fields:
+            condition = build_search_condition(field, search_str, search_type=SearchType.LIKE)
+            search_conditions.append(condition)
+
+        # Объединяем все условия с помощью OR
+        if search_conditions:
+            search_condition = or_(*search_conditions)
+        else:
+            # Если нет подходящих полей для поиска, возвращаем пустой результат
+            return [], 0
+
+        # Формируем запрос с JOIN на Drink
+        query = cls.get_query(Item).join(Item.drink).where(search_condition)
+        query = query.order_by(Item.id.asc())
+
+        result = await session.execute(query)
+        items = result.scalars().all()
+        result = []
+        for item in items:
+            result.append(item.to_dict())
+        return result
 
 
 def get_drink_search_expression(cls):

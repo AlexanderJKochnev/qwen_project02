@@ -614,14 +614,13 @@ class Repository(metaclass=RepositoryMeta):
                          model: ModelType, session: AsyncSession) -> Tuple[Any, int]:
         """ полнотекстовый поиск """
         try:
-            # formatted_query = " & ".join(search.split())
             words = re.findall(r'\w+', search)
             formatted_query = " & ".join([f"{word}:*" for word in words])
             # formatted_query = " & ".join([f"{word}:*" for word in search.split()])
             # condition = model.search_vector.bool_op("@@")(func.to_tsquery('simple', formatted_query))
             condition = model.search_vector.bool_op("@@")(func.to_tsquery(literal_column("'simple'"),
                                                                           formatted_query))
-            # ниже - ищеть только целые слова
+            # ниже - ищет только целые слова
             # condition = model.search_vector.bool_op("@@")(func.websearch_to_tsquery(
             #     literal_column("'simple'"), formatted_query)
             # )
