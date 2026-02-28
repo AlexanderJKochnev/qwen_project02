@@ -43,10 +43,12 @@ class ApiRouter(ItemRouter):
                                   response_model=List[ItemApi],
                                   # response_model=List[self.read_schema],
                                   openapi_extra={'x-request-schema': None})
+        # поиск api.service.search_geans -> core.repository.search_fts_all
         self.router.add_api_route("/search", self.search_geans, methods=["GET"],
                                   response_model=PaginatedResponse[ItemApi],
                                   openapi_extra={'x-request-schema': None}
                                   )
+        # поиск api.search_geans_all -> core.repository.search_fts
         self.router.add_api_route("/search_all", self.search_geans_all,
                                   methods=["GET"],
                                   response_model=List[ItemApi],

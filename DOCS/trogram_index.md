@@ -1,4 +1,4 @@
-# DOCS/trigram_index.md
+# DOCS/trigram_index.md НЕ ИСПОЛЬЗУЕТСЯ
 1. trigram index (применяется в Item)
    1. Как проверить подкючение trigram 
        SELECT *

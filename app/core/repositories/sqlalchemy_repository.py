@@ -616,8 +616,11 @@ class Repository(metaclass=RepositoryMeta):
             # formatted_query = " & ".join(search.split())
             formatted_query = " & ".join([f"{word}:*" for word in search.split()])
             # condition = model.search_vector.bool_op("@@")(func.to_tsquery('simple', formatted_query))
-            condition = model.search_vector.bool_op("@@")(func.to_tsquery(literal_column("'simple'"),
-                                                                          formatted_query))
+            # condition = model.search_vector.bool_op("@@")(func.to_tsquery(literal_column("'simple'"),
+            #                                                               formatted_query))
+            condition = model.search_vector.bool_op("@@")(func.websearch_to_tsquery(
+                literal_column("'simple'"), formatted_query)
+            )
             count_stmt = select(func.count()).select_from(model).where(condition)
             total = await session.execute(count_stmt)
             total_count = total.scalar() or 0
