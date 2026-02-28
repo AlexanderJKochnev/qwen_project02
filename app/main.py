@@ -44,6 +44,7 @@ from app.support.varietal.router import VarietalRouter
 from app.support.parser.router import (StatusRouter, CodeRouter, NameRouter, OrchestratorRouter,
                                        ImageRouter, RawdataRouter, RegistryRouter)
 from app.support.websearch.router import router as web_router
+from app.support.ollama.router import OllamaRouter
 # from app.arq_worker_routes import router as ArqWorkerRouter
 # from app.support.warehouse.router import WarehouseRouter
 
@@ -146,6 +147,7 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)  # минимальный 
 app.include_router(ApiRouter().router)
 app.include_router(GemmaRouter().router)
 app.include_router(web_router)
+app.include_router(OllamaRouter().router)
 app.include_router(MongoRouter)
 app.include_router(HandbookRouter().router)
 app.include_router(CreateRouter().router)
