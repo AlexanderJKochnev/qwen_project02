@@ -13,7 +13,7 @@ class OllamaRouter(LightRouter):
     def setup_routes(self):
         self.router.add_api_route("", self.get_models_list,
                                   methods=["GET"],
-                                  response_model=dict)
+                                  response_model=list)
 
     async def get_models_list(self):
         """
