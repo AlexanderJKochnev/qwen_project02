@@ -1,11 +1,11 @@
 # app.support.api.service.py
 from decimal import Decimal
 from fastapi import HTTPException
-from typing import List, Type, Dict, Any
+from typing import List, Dict, Any
 from datetime import datetime
 from loguru import logger
 # from sqlalchemy.sql.elements import Label
-from app.core.repositories.sqlalchemy_repository import Repository
+# from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.types import ModelType
 from app.core.utils.pydantic_utils import get_field_name, make_paginated_response
 from app.core.utils.common_utils import camel_to_enum
@@ -191,8 +191,10 @@ class ApiService(ItemService):
                 items, total = await repository.get_full_with_pagination(skip, page_size, model, session)
             else:
                 # relevance: Label = await cls.get_relevance(search, model, session, similarity_threshold)
-                formatted_search = formatted_query(search)
-                items, total = await repository.search_fts(formatted_search, skip, page_size, model, session)
+                if formatted_search := formatted_query(search):
+                    items, total = await repository.search_fts(formatted_search, skip, page_size, model, session)
+                else:
+                    items, totla = await repository.search_by_drink_title_subtitle(search, session, skip, page_size)
             result = []
             for item in items:
                 if item_dict := item.to_dict():
@@ -204,15 +206,17 @@ class ApiService(ItemService):
 
     @classmethod
     async def search_geans_all(cls, search: str, similarity_threshold: float,
-                               repository: Type[Repository],
+                               repository: ItemRepository,
                                model: ModelType, session: AsyncSession) -> List[dict]:
         """ перделан под полнотекстовый поиск """
         try:
             if not search:
                 items = await repository.get_full(model, session)
             else:
-                formatted_search = formatted_query(search)
-                items = await repository.search_fts_all(formatted_search, model, session)
+                if formatted_search := formatted_query(search):
+                    items = await repository.search_fts_all(formatted_search, model, session)
+                else:
+                    items = await repository.search_by_drink_title_subtitle_only(search, session)
             result = []
             for item in items:
                 if item_dict := item.to_dict():

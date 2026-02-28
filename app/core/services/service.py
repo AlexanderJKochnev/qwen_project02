@@ -600,8 +600,10 @@ class Service(metaclass=ServiceMeta):
                 return make_paginated_response(items, total, page, page_size)
             # определаяем тип поиска (geans OR b-tree
             if hasattr(model, 'search_content'):
-                formatted_search = formatted_query(search)
-                items, total = await repository.search_fts(formatted_search, skip, page_size, model, session)
+                if formatted_search := formatted_query(search):
+                    items, total = await repository.search_fts(formatted_search, skip, page_size, model, session)
+                else:
+                    items, total = await repository.search(search, skip, page_size, model, session)
             else:
                 # model is not indexed by GIN
                 items, total = await repository.search(search, skip, page_size, model, session)
@@ -621,8 +623,10 @@ class Service(metaclass=ServiceMeta):
             if not search:
                 return await repository.get_full(model, session)
             if hasattr(model, 'search_content'):
-                formatted_search = formatted_query(search)
-                items = await repository.search_fts_all(formatted_search, model, session)
+                if formatted_search := formatted_query(search):
+                    items = await repository.search_fts_all(formatted_search, model, session)
+                else:
+                    items = await repository.search_all(search, model, session)
             else:
                 # model is not indexed by GIN
                 items = await repository.search_all(search, model, session)

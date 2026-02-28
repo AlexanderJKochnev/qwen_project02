@@ -804,10 +804,12 @@ def has_column(model: TypeVar, col_name: str) -> bool:
     return col_name in mapper.column_attrs
 
 
-def formatted_query(query: str, patt: int = 1, operand: str = '&') -> str:
+def formatted_query(query: str, patt: int = 1, sign: int = 30, operand: str = '&') -> str:
     """
-         преобразует поисковок выражение в строку для полнотекстового поиска:
-         удаляет служебные символы (patt=2) или служебные символы и цифры (patt=1)
+         1. преобразует поисковое выражение в строку для полнотекстового поиска:
+            удаляет служебные символы (patt=2) или служебные символы и цифры (patt=1)
+         2. если длина оставшейся фразы менее <sign> % возвращает None (удаленные символы значимая часть запроса
+            искать по btree (медленно)
          разделяет слова разделителяими (operand):
          & - AND
          | - OR
@@ -817,6 +819,12 @@ def formatted_query(query: str, patt: int = 1, operand: str = '&') -> str:
     pattern = {1: r'[A-Za-zА-Яа-яЁё]+',     # только буквы
                2: r'\w+'}                   # только цифры
     words = re.findall(pattern.get(patt), query)
+
+    clean_len = sum(len(w) for w in words)
+    original_len = len(query) - query.count(" ")
+    
+    if clean_len * 100 < original_len * sign:
+        return None
     if words:
         jointer = f" {operand} "
         return jointer.join([f"{word}:*" for word in words])
