@@ -11,7 +11,7 @@ class OllamaRouter(LightRouter):
         self.service = OllamaService()
 
     def setup_routes(self):
-        self.router.add_api_route("", self.endpoints,
+        self.router.add_api_route("", self.get_models_list,
                                   methods=["GET"],
                                   response_model=dict)
 
