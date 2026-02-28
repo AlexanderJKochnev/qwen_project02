@@ -4,7 +4,7 @@ from app.core.config.project_config import settings
 
 
 class OllamaRepository:
-    def __init__(self, model_name: str):
+    def __init__(self):
         self.host = settings.OLLAMA_HOST
         self.client = AsyncClient(host=self.host)
 
