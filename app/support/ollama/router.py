@@ -15,9 +15,9 @@ class OllamaRouter(LightRouter):
                                   methods=["GET"],
                                   response_model=dict)
 
-    def get_models_list(self):
+    async def get_models_list(self):
         """
         получение загруженных моделей
         """
-        response = self.service.get_models_list()
+        response = await self.service.get_models_list()
         return response

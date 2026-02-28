@@ -6,6 +6,6 @@ class OllamaService:
     def __init__(self):
         self.repository = OllamaRepository()
 
-    def get_models_list(self):
-        result = self.repository.get_models_list()
+    async def get_models_list(self):
+        result = await self.repository.get_models_list()
         return result
