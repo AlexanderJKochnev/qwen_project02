@@ -5,9 +5,9 @@
     get_by_id   result.scalar_one_or_none()
 """
 from abc import ABCMeta
+import re
 from datetime import datetime
 from loguru import logger
-import re
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
 from sqlalchemy import and_, func, select, Select, update, desc, cast, Text, text, literal, literal_column
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -216,11 +216,9 @@ class Repository(metaclass=RepositoryMeta):
         # This is a simplified version - in real implementation you might want to parse
         # specific patterns from different database error messages
         field_info = {}
-
         # Example parsing for PostgreSQL unique constraint violations
         if 'duplicate key value violates unique constraint' in error_message.lower():
             # Extract table and field names
-            import re
             table_match = re.search(r'"([^"]+)"', error_message)
             if table_match:
                 field_info['table'] = table_match.group(1)
@@ -614,12 +612,12 @@ class Repository(metaclass=RepositoryMeta):
                          model: ModelType, session: AsyncSession) -> Tuple[Any, int]:
         """ полнотекстовый поиск """
         try:
-            words = re.findall(r'\w+', search)
-            formatted_query = " & ".join([f"{word}:*" for word in words])
+            # words = re.findall(r'\w+', search)
+            # formatted_query = " & ".join([f"{word}:*" for word in words])
             # formatted_query = " & ".join([f"{word}:*" for word in search.split()])
             # condition = model.search_vector.bool_op("@@")(func.to_tsquery('simple', formatted_query))
             condition = model.search_vector.bool_op("@@")(func.to_tsquery(literal_column("'simple'"),
-                                                                          formatted_query))
+                                                                          search))
             # ниже - ищет только целые слова
             # condition = model.search_vector.bool_op("@@")(func.websearch_to_tsquery(
             #     literal_column("'simple'"), formatted_query)
@@ -642,9 +640,9 @@ class Repository(metaclass=RepositoryMeta):
         """ полнотекстовый поиск without pagination"""
         try:
             # formatted_query = " & ".join(search.split())
-            formatted_query = " & ".join([f"{word}:*" for word in search.split()])
+            # formatted_query = " & ".join([f"{word}:*" for word in search.split()])
             condition = model.search_vector.bool_op("@@")(func.to_tsquery(literal_column("'simple'"),
-                                                                          formatted_query))
+                                                                          search))
             stmp = cls.get_query(model).where(condition)
             # compiled = stmp.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
             # logger.error(f'{compiled=}')

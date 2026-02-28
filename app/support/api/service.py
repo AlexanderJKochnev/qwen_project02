@@ -15,6 +15,7 @@ from app.support.item.repository import ItemRepository
 from app.support.item.model import Item
 from app.core.utils.common_utils import localized_field_with_replacement
 from app.core.utils.converters import lang_suffix_list, lang_suffix_dict
+from app.core.utils.alchemy_utils import formatted_query
 from app.core.config.project_config import settings
 from app.core.schemas.base import PaginatedResponse
 from app.support.item.schemas import ItemApiLangNonLocalized, ItemApiLangLocalized, ItemApiLang, ItemApi
@@ -190,7 +191,8 @@ class ApiService(ItemService):
                 items, total = await repository.get_full_with_pagination(skip, page_size, model, session)
             else:
                 # relevance: Label = await cls.get_relevance(search, model, session, similarity_threshold)
-                items, total = await repository.search_fts(search, skip, page_size, model, session)
+                formatted_search = formatted_query(search)
+                items, total = await repository.search_fts(formatted_search, skip, page_size, model, session)
             result = []
             for item in items:
                 if item_dict := item.to_dict():
@@ -209,8 +211,8 @@ class ApiService(ItemService):
             if not search:
                 items = await repository.get_full(model, session)
             else:
-                # relevance: Label = await cls.get_relevance(search, model, session, similarity_threshold)
-                items = await repository.search_fts_all(search, model, session)
+                formatted_search = formatted_query(search)
+                items = await repository.search_fts_all(formatted_search, model, session)
             result = []
             for item in items:
                 if item_dict := item.to_dict():

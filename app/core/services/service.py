@@ -14,7 +14,7 @@ from app.core.config.database.db_async import DatabaseManager
 from app.core.models.base_model import Base, get_model_by_name
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.types import ModelType
-from app.core.utils.alchemy_utils import has_column
+from app.core.utils.alchemy_utils import has_column, formatted_query
 from app.core.utils.common_utils import flatten_dict_with_localized_fields
 from app.core.utils.pydantic_utils import make_paginated_response, prepare_search_string, get_data_for_search, get_repo
 from app.service_registry import register_service, get_search_dependencies
@@ -600,8 +600,8 @@ class Service(metaclass=ServiceMeta):
                 return make_paginated_response(items, total, page, page_size)
             # определаяем тип поиска (geans OR b-tree
             if hasattr(model, 'search_content'):
-                # 2. Формируем расчет веса (релевантности)
-                items, total = await repository.search_fts(search, skip, page_size, model, session)
+                formatted_search = formatted_query(search)
+                items, total = await repository.search_fts(formatted_search, skip, page_size, model, session)
             else:
                 # model is not indexed by GIN
                 items, total = await repository.search(search, skip, page_size, model, session)
@@ -621,7 +621,8 @@ class Service(metaclass=ServiceMeta):
             if not search:
                 return await repository.get_full(model, session)
             if hasattr(model, 'search_content'):
-                items = await repository.search_tfs_all(search, model, session)
+                formatted_search = formatted_query(search)
+                items = await repository.search_fts_all(formatted_search, model, session)
             else:
                 # model is not indexed by GIN
                 items = await repository.search_all(search, model, session)

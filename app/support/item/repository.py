@@ -350,7 +350,7 @@ class ItemRepository(Repository):
         return result, total
 
     @classmethod
-    async def search_by_drink_title_subtitle_nopagination(
+    async def search_by_drink_title_subtitle_only(
             cls, search_str: str, session: AsyncSession):
         """Поиск элементов по полям title* и subtitle* связанной модели Drink"""
 
@@ -368,14 +368,11 @@ class ItemRepository(Repository):
             else:
                 title_fields.append(getattr(Drink, f'title_{lang}', None))
                 subtitle_fields.append(getattr(Drink, f'subtitle_{lang}', None))
-
         # Убираем None значения из списка
         title_fields = [field for field in title_fields if field is not None]
         subtitle_fields = [field for field in subtitle_fields if field is not None]
-
         # Создаем условия поиска
         search_conditions = []
-
         for field in title_fields + subtitle_fields:
             condition = build_search_condition(field, search_str, search_type=SearchType.LIKE)
             search_conditions.append(condition)
@@ -393,10 +390,7 @@ class ItemRepository(Repository):
 
         result = await session.execute(query)
         items = result.scalars().all()
-        result = []
-        for item in items:
-            result.append(item.to_dict())
-        return result
+        return items
 
 
 def get_drink_search_expression(cls):

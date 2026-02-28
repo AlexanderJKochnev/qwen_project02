@@ -8,7 +8,7 @@ from fastapi import Query
 from pydantic import BaseModel, create_model, Field
 from sqlalchemy import and_, Column, ColumnElement, func, inspect, or_, String, Text, Unicode, UnicodeText
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import DeclarativeBase, DeclarativeMeta, MapperProperty
+from sqlalchemy.orm import DeclarativeBase, MapperProperty
 from sqlalchemy.orm.attributes import QueryableAttribute
 from app.core.types import ModelType
 from app.core.models.base_model import Base
@@ -802,3 +802,22 @@ def has_column(model: TypeVar, col_name: str) -> bool:
     """
     mapper = inspect(model).mapper
     return col_name in mapper.column_attrs
+
+
+def formatted_query(query: str, patt: int = 1, operand: str = '&') -> str:
+    """
+         преобразует поисковок выражение в строку для полнотекстового поиска:
+         удаляет служебные символы (patt=2) или служебные символы и цифры (patt=1)
+         разделяет слова разделителяими (operand):
+         & - AND
+         | - OR
+         ! - NOT
+         <-> - FOLLOWED BY (слова следуют друг за другом в указанном порядке
+    """
+    pattern = {1: r'[A-Za-zА-Яа-яЁё]+',     # только буквы
+               2: r'\w+'}                   # только цифры
+    words = re.findall(pattern.get(patt), query)
+    if words:
+        jointer = f" {operand} "
+        return jointer.join([f"{word}:*" for word in words])
+    return None
