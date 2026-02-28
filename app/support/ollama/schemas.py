@@ -1,7 +1,7 @@
 # app.suport.ollama.schemas.py
 from datetime import datetime
 from typing import Optional
-from app.core.schemas.base import PkSchema
+from app.core.schemas.base import PkSchema, BaseModel
 
 
 """
@@ -24,7 +24,7 @@ from app.core.schemas.base import PkSchema
 """
 
 
-class LLModels(PkSchema):
+class LLModels(BaseModel):
     model: str
     modified_at: datetime
     digest: Optional[str] = None
