@@ -1,5 +1,5 @@
 # app.suport.ollama.repository.py
-from ollama import AsyncClient
+from ollama import AsyncClient, ListResponse
 from app.core.config.project_config import settings
 
 
@@ -8,9 +8,9 @@ class OllamaRepository:
         self.host = settings.OLLAMA_HOST
         self.client = AsyncClient(host=self.host)
 
-    async def get_models_list(self):
+    async def get_models_list(self) -> ListResponse:
         """ получение списка моделей """
-        models_info = await self.client.list()
+        models_info: ListResponse = await self.client.list()
         return models_info
 
     async def check_and_pull(self):

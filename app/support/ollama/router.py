@@ -2,7 +2,8 @@
 from typing import List
 from app.core.routers.base import LightRouter
 from app.support.ollama.service import OllamaService
-from app.support.ollama.schemas import LLModels, ListLLM
+from app.support.ollama.schemas import LLModels
+
 
 class OllamaRouter(LightRouter):
     def __init__(self):
@@ -14,7 +15,7 @@ class OllamaRouter(LightRouter):
     def setup_routes(self):
         self.router.add_api_route("", self.get_models_list,
                                   methods=["GET"],
-                                  response_model=List)
+                                  response_model=List[LLModels])
 
     async def get_models_list(self):
         """

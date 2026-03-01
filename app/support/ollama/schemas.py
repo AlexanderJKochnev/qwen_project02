@@ -5,7 +5,11 @@ from app.core.schemas.base import PkSchema, BaseModel
 
 
 """
-{
+[
+  [
+    "models",
+    [
+      {
         "model": "deepseek-r1:7b",
         "modified_at": "2026-02-28T21:00:43.813787Z",
         "digest": "755ced02ce7befdb13b7ca74e1e4d08cddba4986afdb63a480f2c93d3140383f",
@@ -21,6 +25,9 @@ from app.core.schemas.base import PkSchema, BaseModel
           "quantization_level": "Q4_K_M"
         }
       },
+    ]
+  ]
+]
 """
 
 
@@ -32,6 +39,3 @@ class LLModels(BaseModel):
     parameter_size: Optional[str] = None
     quantization_level: Optional[str] = None
     details: Optional[dict] = None
-
-class ListLLM(BaseModel):
-    models: LLModels
