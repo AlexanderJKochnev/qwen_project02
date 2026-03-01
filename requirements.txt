@@ -13,6 +13,7 @@ pytest-asyncio
 pytest-cov
 pillow~=11.3.0
 psycopg[binary,pool]
+psycopg2-binary
 python-jose[cryptography]
 passlib[bcrypt]
 python-multipart
