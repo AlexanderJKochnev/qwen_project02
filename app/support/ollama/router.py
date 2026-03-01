@@ -3,13 +3,12 @@ from typing import List
 from app.core.routers.base import LightRouter, BaseRouter
 from app.support.ollama.service import OllamaService, LLMService
 from app.support.ollama.schemas import LLModels
+from app.support.ollama.model import LLModel
 
 
 class OllamaRouter(BaseRouter):
     def __init__(self):
-        super().__init__(
-            prefix="/ollama",
-        )
+        super().__init__(model=LLModel, prefix="/ollama")
         self.service = OllamaService
         self.LLMservice = LLMService()
 
