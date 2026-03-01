@@ -9,4 +9,5 @@ class OllamaService:
 
     async def get_models_list(self):
         result: ListResponse = await self.repository.get_models_list()
-        return result.model_dump()
+        tmp = result.model_dump()
+        return tmp.get('models')
