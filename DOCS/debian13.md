@@ -70,3 +70,4 @@
     5. sudo modprobe nvidia
     6. lsmod | grep nvidia
     7. nvidia-smi
+20. ПРЕДОСТАЛВЕНИЕ ПРАВ НА ЗАПИСЬ / ЧТЕНИЕ ДИРЕКТОРИИ

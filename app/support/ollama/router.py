@@ -1,11 +1,11 @@
 # app.suport.ollama.router.py
 from typing import List
-from app.core.routers.base import LightRouter
+from app.core.routers.base import LightRouter, BaseRouter
 from app.support.ollama.service import OllamaService, LLMService
 from app.support.ollama.schemas import LLModels
 
 
-class OllamaRouter(LightRouter):
+class OllamaRouter(BaseRouter):
     def __init__(self):
         super().__init__(
             prefix="/ollama",
