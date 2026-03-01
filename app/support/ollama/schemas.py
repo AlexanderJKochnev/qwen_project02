@@ -1,8 +1,8 @@
 # app.suport.ollama.schemas.py
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from app.core.schemas.base import PkSchema, BaseModel
-
+from pydantic import model_validator
 
 """
 [
@@ -36,6 +36,18 @@ class LLModels(BaseModel):
     modified_at: datetime
     digest: Optional[str] = None
     size: Optional[int] = None
+    # details: Optional[dict] = None
+    parent_model: Optional[str] = None
+    format: Optional[str] = None
+    family: Optional[str] = None
+    families: Optional[List[str]] = None
     parameter_size: Optional[str] = None
     quantization_level: Optional[str] = None
-    details: Optional[dict] = None
+
+    @model_validator(mode='before')
+    @classmethod
+    def flatten_details(cls, data: dict) -> dict:
+        # Извлекаем словарь details
+        details = data.pop('details', {})
+        # Объединяем основной словарь с содержимым details
+        return {**data, **details}

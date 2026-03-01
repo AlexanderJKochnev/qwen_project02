@@ -21,5 +21,6 @@ class OllamaRouter(LightRouter):
         """
         получение загруженных моделей
         """
-        response = await self.service.get_models_list()
-        return response
+        response: List[dict] = await self.service.get_models_list()
+        result = [LLModels.model_validate(key) for key in response]
+        return result
