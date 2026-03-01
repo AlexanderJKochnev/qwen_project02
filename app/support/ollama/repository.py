@@ -1,9 +1,11 @@
 # app.suport.ollama.repository.py
 from ollama import AsyncClient, ListResponse
 from app.core.config.project_config import settings
+from app.core.repositories.sqlalchemy_repository import Repository
+from app.support.ollama.model import LLModel
 
 
-class OllamaRepository:
+class LLMRepository:
     def __init__(self):
         self.host = settings.OLLAMA_HOST
         self.client = AsyncClient(host=self.host)
@@ -49,3 +51,9 @@ class OllamaRepository:
         async for part in await self.client.chat(model=self.model_name, messages=messages, stream=True):
             content = part['message']['content']
             yield content
+
+
+class OllamaRepository(Repository):
+    model = LLModel
+    
+    
