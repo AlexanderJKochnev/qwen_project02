@@ -40,7 +40,7 @@ class LLModels(BaseModel):
     parent_model: Optional[str] = None
     format: Optional[str] = None
     family: Optional[str] = None
-    families: Optional[List[str]] = None
+    # families: Optional[List[str]] = None
     parameter_size: Optional[str] = None
     quantization_level: Optional[str] = None
 
