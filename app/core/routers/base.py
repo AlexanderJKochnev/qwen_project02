@@ -182,7 +182,7 @@ class BaseRouter:
         except Exception as e:
             raise exception_to_http(e)
 
-    async def update_or_create(self, data: TCreateSchema,
+    async def update_or_create(self, data: TUpdateSchema, background_tasks: BackgroundTasks,
                                session: AsyncSession = Depends(get_db)) -> TReadSchema:
         """
             обновление / добавление одной записи ? пока нигде не используется
@@ -191,7 +191,7 @@ class BaseRouter:
         """
         try:
             logger.warning('==========update_or_create=======')
-            obj, created = await self.service.update_or_create(data, self.repo, self.model, session)
+            obj, created = await self.service.update_or_create(data, self.repo, self.model, background_tasks, session)
             logger.warning('==========update_or_create2=======')
             return obj
         except Exception as e:
@@ -231,7 +231,6 @@ class BaseRouter:
                 raise HTTPException(status_code=500, detail=error_message)
             else:
                 raise HTTPException(status_code=500, detail=error_message)
-
         return result['data']
 
     # @logger.catch(reraise=True)

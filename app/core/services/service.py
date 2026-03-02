@@ -109,12 +109,13 @@ class Service(metaclass=ServiceMeta):
 
     @classmethod
     async def update_or_create(cls, data: ModelType, repository: Type[Repository],
-                               model: ModelType, session: AsyncSession,
+                               model: ModelType, background_tasks: BackgroundTasks, session: AsyncSession,
                                default: List[str] = None, **kwargs) -> Tuple[ModelType, bool]:
         """
             находит и обновляет запись или создает если ее нет
         """
         try:
+            return None, False
             data_dict = data.model_dump(exclude_unset=True)
             instance = cls.get_instance(data_dict, repository, model, session, default)
             # значения ключевых полей для поиска
