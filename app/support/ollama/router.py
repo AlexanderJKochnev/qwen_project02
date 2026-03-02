@@ -38,11 +38,14 @@ class OllamaRouter(BaseRouter):
             #  словарь с различиями added, removed, changed
             resp = compare_lists_compact(result3, result, 'model')
             # для remove <и changed> заменяем на id
-            for key in ('removed'):
+            for key in ('removed', 'changed'):
                 if x := resp.get(key):
-                    x = [b.id for a in x for b in result2 if a['model'] == b.model]
+                    x = [b if key == 'removed' else (b, a)
+                         for a in x for b in result2 if a['model'] == b.model]
                     resp[key] = x
-            await self.service.maintain_llm_database(resp, self.repo, self.model, background_tasks, session)
+            jprint(resp)
+
+            await self.service.maintain_llm_database(resp, self.repo, self.model, session)
             jprint(result2)
             return result
         except Exception as e:
