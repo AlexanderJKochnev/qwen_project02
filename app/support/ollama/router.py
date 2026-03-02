@@ -23,9 +23,10 @@ class OllamaRouter(BaseRouter):
                                   response_model=List[LlmResponseSchema])
         super().setup_routes()
 
-    async def get_models_list(self):
+    async def get_models_list(self, session: AsyncSession = Depends(get_db)):
         """
-        получение загруженных моделей
+        получение списка загруженных моделей.
+        сравнение с сохраненными данными в базе данных и обновление
         """
         response: List[dict] = await self.LLMservice.get_models_list()
         result = [LlmResponseSchema.model_validate(key) for key in response]

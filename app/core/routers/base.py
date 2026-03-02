@@ -133,10 +133,15 @@ class BaseRouter:
                                   response_model=self.read_schema,
                                   openapi_extra={'x-request-schema': None})
 
+        self.router.add_api_route("",
+                                  self.update_or_create, methods=["PATCH"],
+                                  response_model=self.read_schema,
+                                  openapi_extra={'x-request-schema': self.update_schema.__name__})
         self.router.add_api_route("/{id}",
                                   self.patch, methods=["PATCH"],
                                   response_model=self.read_schema,
                                   openapi_extra={'x-request-schema': self.update_schema.__name__})
+
         self.router.add_api_route("/{id}",
                                   self.delete, methods=["DELETE"],
                                   response_model=self.delete_response,
@@ -177,7 +182,7 @@ class BaseRouter:
         except Exception as e:
             raise exception_to_http(e)
 
-    async def update_or_create(self, id: int, data: TCreateSchema,
+    async def update_or_create(self, data: TCreateSchema,
                                session: AsyncSession = Depends(get_db)) -> TReadSchema:
         """
             обновление / добавление одной записи ? пока нигде не используется
@@ -185,7 +190,7 @@ class BaseRouter:
             response_model <>ReadRelation
         """
         try:
-            obj, created = await self.service.update_or_create(id, data, self.repo, self.model, session)
+            obj, created = await self.service.update_or_create(data, self.repo, self.model, session)
             return obj
         except Exception as e:
             detail = (f'ошибка обновления записи {e}, model = {self.model}, '

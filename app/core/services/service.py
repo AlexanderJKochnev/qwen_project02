@@ -49,8 +49,20 @@ class Service(metaclass=ServiceMeta):
     """
     __abstract__ = True
     #  список уникальных полей по которым будет осуществляться поиск в методах
-    #  get_or_create, update_or_create
+    #  список уникальных полей для get_or_create, update_or_create
     default: list = ['name']
+
+    @classmethod
+    async def get_instance(cls, data_dict: dict, repository: Type[Repository], model: ModelType,
+                           session: AsyncSession, default: List = None):
+        """ получение instance дя методов get(update)_or_create"""
+        # значения ключевых полей для поиска
+        if not default:
+            default = cls.default
+        lookup_dict = {key: val for key, val in data_dict.items() if key in default}
+        # поиск существующей записи по совпадению объектов по уникальным полям
+        instance = await repository.get_by_fields(lookup_dict, model, session)
+        return instance
 
     @classmethod
     async def create(cls, data: ModelType, repository: Type[Repository], model: ModelType,
@@ -94,21 +106,18 @@ class Service(metaclass=ServiceMeta):
             raise Exception(f"UNKNOWN_ERROR: {str(e)}") from e
 
     @classmethod
-    async def update_or_create(cls, id: int, data: ModelType, repository: Type[Repository],
+    async def update_or_create(cls, data: ModelType, repository: Type[Repository],
                                model: ModelType, session: AsyncSession,
                                default: List[str] = None, **kwargs) -> Tuple[ModelType, bool]:
         """
             находит и обновляет запись или создает если ее нет
         """
         try:
-            if default is None:
-                default = cls.default
             data_dict = data.model_dump(exclude_unset=True)
-            default_dict = {key: val for key, val in data_dict.items() if key in default}
-            # поиск существующей записи по совпадению объектов по уникальным полям
-            instance = await repository.get_by_fields(default_dict, model, session)
+            instance = cls.get_instance(data_dict, repository, model, session, default)
+            # значения ключевых полей для поиска
             if instance:
-                # запись найдена, обновляем
+                # запись найдена, просто обновляем
                 result = await repository.patch(instance, data_dict, session)
                 await session.commit()
                 return result['data'], False

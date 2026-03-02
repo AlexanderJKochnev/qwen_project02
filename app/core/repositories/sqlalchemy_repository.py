@@ -352,8 +352,9 @@ class Repository(metaclass=RepositoryMeta):
                     conditions.append(column.is_(None))
                 else:
                     conditions.append(column == value)
-            stmt = select(model).where(and_(*conditions)).limit(1)
+            stmt = select(model).where(and_(*conditions))
             result = await session.execute(stmt)
+            # возвращает  instance
             return result.scalar_one_or_none()
         except Exception as e:
             if hasattr(model, '__name__'):

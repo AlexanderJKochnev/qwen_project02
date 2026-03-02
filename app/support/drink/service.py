@@ -39,6 +39,7 @@ from app.support.varietal.service import VarietalService
 class DrinkService(Service):
     """ переписываем методы для обрабоки manytomany relationships """
     __abstract__ = False
+    #  список уникальных полей по которым определется существует запись или нет для update_or_create
     default = ['title', 'subtitle']
 
     @classmethod
