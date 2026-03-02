@@ -24,11 +24,12 @@ class LLMService:
 class OllamaService(Service):
     default = ['model']
 
-    def maintain_llm_database(cls):
+    def maintain_llm_database(cls, data: dict, repository: OllamaRepository, model: ModelType, session: AsyncSession):
         """
-         1. получает список загруженных llm models
-         2. сравнивает с тем что сохранено в базе данных ollama
-         3. обновляет/добавляет/удаляет
+         1. получает словарь
+            1.1. added: модели для бобавления
+            1.2. removed: млдели для удаления
+            1.3. changed: модели для изменения
+         2. соотвественно обновляет/добавляет/удаляет
         """
-        llm_service = LLMService()
-        
+        pass

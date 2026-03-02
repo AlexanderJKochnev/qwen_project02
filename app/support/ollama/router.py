@@ -32,12 +32,15 @@ class OllamaRouter(BaseRouter):
         response: List[dict] = await self.LLMservice.get_models_list()
         result = [LlmResponseSchema.model_validate(key).model_dump() for key in response]
         result2 = await self.service.get_full(self.repo, self.model, session)
-        if result2:
-            result3 = (OllamaCreate(**key.to_dict()).model_dump() for key in result2)
-            resp = compare_lists_compact(result, result3, 'model')
-            print(f'{resp=}=======')
-            print(f'{type(resp)=}')
-
+        result3 = (OllamaCreate(**key.to_dict()).model_dump() for key in result2)
+        #  словарь с различиями added, removed, changed
+        resp = compare_lists_compact(result3, result, 'model')
+        for key in ('removed', 'changed'):
+            if x := resp.get(key):
+                x = [b.id for a in x for b in result2 if a['model'] == b.model]
+                resp[key] == x
+        from app.core.utils.common_utils import jprint
+        jprint(resp)
         return result
 
     async def create(self, data: OllamaCreate, session: AsyncSession = Depends(get_db)) -> OllamaRead:
