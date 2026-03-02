@@ -33,7 +33,6 @@ class OllamaRouter(BaseRouter):
             result = [LlmResponseSchema.model_validate(key).model_dump() for key in response]
             from app.core.utils.common_utils import jprint
             result2 = await self.service.get_full(self.repo, self.model, session)
-            jprint(result2)
             result3 = (OllamaCreate(**key.to_dict()).model_dump() for key in result2)
             #  словарь с различиями added, removed, changed
             resp = compare_lists_compact(result3, result, 'model')

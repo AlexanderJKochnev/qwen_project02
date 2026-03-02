@@ -39,7 +39,8 @@ class OllamaService(Service):
                     await repository.create(model(**key), model, session)
             if remove := data.get('remove'):
                 for key in remove:
-                    await repository.delete(key, session)
+                    result = await repository.delete(key, session)
+                    logger.warning(f'{result=}, {key=}')
             if changed := data.get('changed'):
                 for obj, data in changed:
                     await repository.patch(obj, data, session)
