@@ -16,6 +16,7 @@ class OllamaRouter(BaseRouter):
         self.router.add_api_route("", self.get_models_list,
                                   methods=["GET"],
                                   response_model=List[LlmResponseSchema])
+        super().setup_routes()
 
     async def get_models_list(self):
         """
