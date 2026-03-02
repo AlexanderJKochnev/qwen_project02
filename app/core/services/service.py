@@ -126,9 +126,7 @@ class Service(metaclass=ServiceMeta):
                 await session.commit()
                 return instance, True
             # запись найдена, обновляем
-            logger.warning(f'{data=}=={instance=}=========================')
             result = await cls.patch(instance, data, repository, model, background_tasks, session)
-            logger.warning(f'{result=}==33=========================')
             if result.get('success'):
                 return result.get('data'), False
             else:
@@ -224,7 +222,6 @@ class Service(metaclass=ServiceMeta):
         else:
             # вместо id передан instance
             existing_item = id
-            logger.warning(f'{existing_item=}===========44')
         data_dict = data.model_dump(exclude_unset=True)
         if not data_dict:
             return {'success': False, 'message': 'Нет данных для обновления', 'error_type': 'no_data'}
