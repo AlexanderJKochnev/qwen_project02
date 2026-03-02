@@ -40,7 +40,7 @@ class OllamaRouter(BaseRouter):
             if x := resp.get(key):
                 x = [b.id for a in x for b in result2 if a['model'] == b.model]
                 jprint(x)
-                resp[key] == x
+                resp[key] = x
         jprint(resp)
         return result
 
