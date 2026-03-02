@@ -1,13 +1,11 @@
 # app.suport.ollama.service.py
-from typing import List, Tuple, Type, Dict
-
+from loguru import logger
 from ollama import ListResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.services.service import Service
 from app.core.types import ModelType
-from app.support.ollama.repository import OllamaRepository, LLMRepository
+from app.support.ollama.repository import LLMRepository, OllamaRepository
 
 
 class LLMService:
@@ -24,7 +22,9 @@ class LLMService:
 class OllamaService(Service):
     default = ['model']
 
-    def maintain_llm_database(cls, data: dict, repository: OllamaRepository, model: ModelType, session: AsyncSession):
+    @classmethod
+    async def maintain_llm_database(cls, data: dict, background_tasks, repository: OllamaRepository, model: ModelType,
+                                    session: AsyncSession):
         """
          1. получает словарь
             1.1. added: модели для бобавления
@@ -32,4 +32,16 @@ class OllamaService(Service):
             1.3. changed: модели для изменения
          2. соотвественно обновляет/добавляет/удаляет
         """
-        pass
+        try:
+            if added := data.get('added'):
+                for key in added:
+                    await cls.create(key, repository, model, session)
+            if remove := data.get('remove'):
+                for key in remove:
+                    await cls.delete(key, model, repository, background_tasks, session)
+            if changed := data.get('changed'):
+                for key in changed:
+                    await cls.update_or_create(key, repository, model, background_tasks, session)
+        except Exception as e:
+            logger.error(f'maintain_llm_database. {e}')
+            raise Exception(e)
