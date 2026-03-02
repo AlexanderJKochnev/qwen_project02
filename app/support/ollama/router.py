@@ -1,8 +1,9 @@
 # app.suport.ollama.router.py
 from typing import List
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Request, BackgroundTasks
 from app.core.routers.base import LightRouter, BaseRouter
 from app.support.ollama.service import OllamaService, LLMService
-from app.support.ollama.schemas import LlmResponseSchema
+from app.support.ollama.schemas import LlmResponseSchema, OllamaCreate, OllamaUpdate, OllamaRead
 from app.support.ollama.model import Ollama
 
 
@@ -25,3 +26,9 @@ class OllamaRouter(BaseRouter):
         response: List[dict] = await self.LLMservice.get_models_list()
         result = [LlmResponseSchema.model_validate(key) for key in response]
         return result
+
+    async def create(self, data: OllamaCreate) -> OllamaRead:
+        return await super().create(data)
+
+    async def patch(self, id: int, data: OllamaUpdate, background_tasks: BackgroundTasks) -> OllamaRead:
+        return await super().patch(id, data, background_tasks)
