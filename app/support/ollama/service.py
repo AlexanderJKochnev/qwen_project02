@@ -37,7 +37,7 @@ class OllamaService(Service):
             if added := data.get('added'):
                 for key in added:
                     await repository.create(model(**key), model, session)
-            if remove := data.get('remove'):
+            if remove := data.get('removed'):
                 for key in remove:
                     result = await repository.delete(key, session)
                     logger.warning(f'{result=}, {key=}')
