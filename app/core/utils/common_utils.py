@@ -888,6 +888,8 @@ def compare_lists_compact(old_list: List[Dict], new_list: List[Dict], key: str =
     """
     old = {item[key]: item for item in old_list}
     new = {item[key]: item for item in new_list}
-
-    return {"added": [new[k] for k in new.keys() - old.keys()], "removed": [old[k] for k in old.keys() - new.keys()],
-            "changed": [new[k] for k in old.keys() & new.keys() if old[k] != new[k]]}
+    
+    return {"added": [new[k] for k in new.keys() - old.keys()], "removed": [old[k] for k in old.keys() - new.keys()]}
+    # разобраться с changed - теряет подтянутые значения из details
+    # return {"added": [new[k] for k in new.keys() - old.keys()], "removed": [old[k] for k in old.keys() - new.keys()],
+    #         "changed": [new[k] for k in old.keys() & new.keys() if old[k] != new[k]]}
