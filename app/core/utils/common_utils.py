@@ -879,3 +879,15 @@ def get_owners_by_path(obj, path: str):
         current_targets = next_targets
 
     return current_targets  # Вернет список объектов (например, [Item, Item...])
+
+
+def compare_lists_compact(old_list: List[Dict], new_list: List[Dict], key: str = "id") -> Dict:
+    """
+         сравнение двух списков словарей
+         key: ключевое поле которое однозначно определяет словарь
+    """
+    old = {item[key]: item for item in old_list}
+    new = {item[key]: item for item in new_list}
+
+    return {"added": [new[k] for k in new.keys() - old.keys()], "removed": [old[k] for k in old.keys() - new.keys()],
+            "changed": [new[k] for k in old.keys() & new.keys() if old[k] != new[k]]}

@@ -9,6 +9,7 @@ from app.core.routers.base import BaseRouter
 from app.support.ollama.model import Ollama
 from app.support.ollama.schemas import LlmResponseSchema, OllamaCreate, OllamaRead, OllamaUpdate
 from app.support.ollama.service import LLMService, OllamaService
+from app.core.utils.common_utils import compare_lists_compact
 
 
 class OllamaRouter(BaseRouter):
@@ -29,12 +30,14 @@ class OllamaRouter(BaseRouter):
         сравнение с сохраненными данными в базе данных и обновление
         """
         response: List[dict] = await self.LLMservice.get_models_list()
-        result = [LlmResponseSchema.model_validate(key) for key in response]
+        result = [LlmResponseSchema.model_validate(key).model_dump() for key in response]
         result2 = await self.service.get_full(self.repo, self.model, session)
-        from app.core.utils.common_utils import jprint
-        for key in result2:
-            print(f'{type(key)=}')
-            jprint(OllamaCreate(**key.to_dict()))
+        if result2:
+            result3 = (OllamaCreate(**key.to_dict()).model_dump() for key in result2)
+            resp = compare_lists_compact(result, result3, 'model')
+            print(f'{resp=}=======')
+            print(f'{type(resp)=}')
+
         return result
 
     async def create(self, data: OllamaCreate, session: AsyncSession = Depends(get_db)) -> OllamaRead:
