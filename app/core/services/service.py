@@ -117,6 +117,8 @@ class Service(metaclass=ServiceMeta):
         """
         try:
             data_dict = data.model_dump(exclude_unset=True)
+            from app.core.utils.common_utils import jprint
+            jprint(data_dict)
             instance = await cls.get_instance(data_dict, repository, model, session, default)
             # значения ключевых полей для поиска
             if not instance:
