@@ -34,12 +34,13 @@ class OllamaRouter(BaseRouter):
         result2 = await self.service.get_full(self.repo, self.model, session)
         result3 = (OllamaCreate(**key.to_dict()).model_dump() for key in result2)
         #  словарь с различиями added, removed, changed
+        from app.core.utils.common_utils import jprint
         resp = compare_lists_compact(result3, result, 'model')
         for key in ('removed', 'changed'):
             if x := resp.get(key):
                 x = [b.id for a in x for b in result2 if a['model'] == b.model]
+                jprint(x)
                 resp[key] == x
-        from app.core.utils.common_utils import jprint
         jprint(resp)
         return result
 
