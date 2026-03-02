@@ -34,7 +34,7 @@ class OllamaRouter(BaseRouter):
         from app.core.utils.common_utils import jprint
         for key in result2:
             print(f'{type(key)=}')
-            jprint(key.to_dict())
+            jprint(OllamaCreate(**key.to_dict()))
         return result
 
     async def create(self, data: OllamaCreate, session: AsyncSession = Depends(get_db)) -> OllamaRead:
