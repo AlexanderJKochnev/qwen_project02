@@ -22,17 +22,13 @@ class LLMService:
 
 
 class OllamaService(Service):
-    
     default = ['model']
 
-    def create_or_update(cls, data: Dict, repository: Type[Repository],
-                         model: ModelType, session: AsyncSession,
-                         default: List[str] = None, **kwargs) -> Tuple[ModelType, bool]:
+    def maintain_llm_database(cls):
         """
-         1. ищет запись, если найдена:
-         2. обновляе, если нет:
-         3. создает
-         data: данные для обновления
-         default: список полей по которым осуществляется поиск существуюих запсией
+         1. получает список загруженных llm models
+         2. сравнивает с тем что сохранено в базе данных ollama
+         3. обновляет/добавляет/удаляет
         """
+        llm_service = LLMService()
         
