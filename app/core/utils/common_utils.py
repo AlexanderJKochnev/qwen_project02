@@ -3,7 +3,7 @@
 
 from datetime import datetime, timezone
 from fastapi import HTTPException
-from typing import Any, Dict, List, Optional, Set, TypeVar, Union
+from typing import Any, Dict, List, Optional, Set, Union
 from rich.pretty import pprint
 import re
 # from sqlalchemy.sql.sqltypes import String, Text, Boolean
