@@ -3,15 +3,11 @@ from datetime import datetime
 from typing import Optional
 from sqlalchemy import String, BigInteger, DateTime
 # from sqlalchemy.dialects.postgresql import JSONB  # Если используете PostgreSQL
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column
+from app.core.models.base_model import Base
 
 
-class Base(DeclarativeBase):
-    pass
-
-
-class LLModel(Base):
-    __tablename__ = "ll_models"
+class Ollama(Base):
 
     # Первичный ключ
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
@@ -30,5 +26,8 @@ class LLModel(Base):
     parameter_size: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     quantization_level: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
 
-    def __repr__(self) -> str:
-        return f"<LLModel(model={self.model}, size={self.size})>"
+    def __str__(self):
+        return self.model or ""
+
+    # def __repr__(self) -> str:
+    #     return f"<LLModel(model={self.model}, size={self.size})>"

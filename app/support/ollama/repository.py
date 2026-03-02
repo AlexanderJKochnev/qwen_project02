@@ -2,7 +2,7 @@
 from ollama import AsyncClient, ListResponse
 from app.core.config.project_config import settings
 from app.core.repositories.sqlalchemy_repository import Repository
-from app.support.ollama.model import LLModel
+from app.support.ollama.model import Ollama
 
 
 class LLMRepository:
@@ -54,6 +54,4 @@ class LLMRepository:
 
 
 class OllamaRepository(Repository):
-    model = LLModel
-    
-    
+    model = Ollama

@@ -31,7 +31,8 @@ from pydantic import model_validator
 """
 
 
-class CustomCreateSchema(BaseModel):
+class LlmResponseSchema(BaseModel):
+    """ получает на входе вложенный словарь LLM response и возвращает плоский словарь Ollama """
     model: str
     modified_at: datetime
     digest: Optional[str] = None
@@ -51,6 +52,3 @@ class CustomCreateSchema(BaseModel):
         details = data.pop('details', {})
         # Объединяем основной словарь с содержимым details
         return {**data, **details}
-
-
-class
