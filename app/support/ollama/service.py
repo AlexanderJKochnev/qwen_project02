@@ -1,5 +1,6 @@
 # app.suport.ollama.service.py
 from loguru import logger
+from fastapi import BackgroundTasks
 from ollama import ListResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -23,7 +24,9 @@ class OllamaService(Service):
     default = ['model']
 
     @classmethod
-    async def maintain_llm_database(cls, data: dict, background_tasks, repository: OllamaRepository, model: ModelType,
+    async def maintain_llm_database(cls, data: dict,
+                                    repository: OllamaRepository, model: ModelType,
+                                    background_tasks: BackgroundTasks,
                                     session: AsyncSession):
         """
          1. получает словарь
