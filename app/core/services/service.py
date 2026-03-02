@@ -117,10 +117,7 @@ class Service(metaclass=ServiceMeta):
         """
         try:
             data_dict = data.model_dump(exclude_unset=True)
-            from app.core.utils.common_utils import jprint
-            jprint(data_dict)
             instance = await cls.get_instance(data_dict, repository, model, session, default)
-            logger.warning(f'{instance=}===========================')
             # значения ключевых полей для поиска
             if not instance:
                 # запись не найдена, добавляем
@@ -129,7 +126,7 @@ class Service(metaclass=ServiceMeta):
                 await session.commit()
                 return instance, True
             # запись найдена, обновляем
-            logger.warning(f'{instance=}==22=========================')
+            logger.warning(f'{data=}=={instance=}=========================')
             result = await cls.patch(instance, data, repository, model, background_tasks, session)
             logger.warning(f'{result=}==33=========================')
             if result.get('success'):
@@ -224,11 +221,11 @@ class Service(metaclass=ServiceMeta):
             if not existing_item:
                 return {'success': False, 'message': f'Редактируемая запись {id} не найдена на сервере',
                         'error_type': 'not_found'}
-            data_dict = data.model_dump(exclude_unset=True)
         else:
             # вместо id передан instance
             existing_item = id
-
+            logger.warning(f'{existing_item=}===========44')
+        data_dict = data.model_dump(exclude_unset=True)
         if not data_dict:
             return {'success': False, 'message': 'Нет данных для обновления', 'error_type': 'no_data'}
         # Выполняем обновление
