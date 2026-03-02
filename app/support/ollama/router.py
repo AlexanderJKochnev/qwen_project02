@@ -32,7 +32,9 @@ class OllamaRouter(BaseRouter):
         result = [LlmResponseSchema.model_validate(key) for key in response]
         result2 = await self.service.get_full(self.repo, self.model, session)
         from app.core.utils.common_utils import jprint
-        jprint(result2)
+        for key in result2:
+            print(f'{type(key)=}')
+            jprint(key)
         return result
 
     async def create(self, data: OllamaCreate, session: AsyncSession = Depends(get_db)) -> OllamaRead:
