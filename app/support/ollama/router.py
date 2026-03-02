@@ -1,12 +1,12 @@
 # app.suport.ollama.router.py
 from typing import List
-from app.core.routers.base import LightRouter, BaseRouter
+from app.core.routers.base import LightRouter
 from app.support.ollama.service import OllamaService, LLMService
-from app.support.ollama.schemas import LLModels
+from app.support.ollama.schemas import CustomCreateSchema
 from app.support.ollama.model import LLModel
 
 
-class OllamaRouter(BaseRouter):
+class OllamaRouter(LightRouter):
     def __init__(self):
         super().__init__(model=LLModel, prefix="/ollama")
         self.service = OllamaService
@@ -16,7 +16,6 @@ class OllamaRouter(BaseRouter):
         self.router.add_api_route("", self.get_models_list,
                                   methods=["GET"],
                                   response_model=List[LLModels])
-        super().setup_routes()
 
     async def get_models_list(self):
         """

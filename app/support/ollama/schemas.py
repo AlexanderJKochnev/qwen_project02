@@ -31,7 +31,7 @@ from pydantic import model_validator
 """
 
 
-class LLModels(BaseModel):
+class CustomCreateSchema(BaseModel):
     model: str
     modified_at: datetime
     digest: Optional[str] = None
@@ -51,3 +51,6 @@ class LLModels(BaseModel):
         details = data.pop('details', {})
         # Объединяем основной словарь с содержимым details
         return {**data, **details}
+
+
+class
