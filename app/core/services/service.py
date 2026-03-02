@@ -120,6 +120,7 @@ class Service(metaclass=ServiceMeta):
             from app.core.utils.common_utils import jprint
             jprint(data_dict)
             instance = await cls.get_instance(data_dict, repository, model, session, default)
+            logger.warning(f'{instance=}===========================')
             # значения ключевых полей для поиска
             if not instance:
                 # запись не найдена, добавляем
@@ -128,7 +129,9 @@ class Service(metaclass=ServiceMeta):
                 await session.commit()
                 return instance, True
             # запись найдена, обновляем
+            logger.warning(f'{instance=}==22=========================')
             result = await cls.patch(instance, data, repository, model, background_tasks, session)
+            logger.warning(f'{result=}==33=========================')
             if result.get('success'):
                 return result.get('data'), False
             else:
