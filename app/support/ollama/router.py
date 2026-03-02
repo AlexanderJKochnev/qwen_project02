@@ -1,5 +1,7 @@
 # app.suport.ollama.router.py
 from typing import List
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.config.database.db_async import get_db
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Request, BackgroundTasks
 from app.core.routers.base import LightRouter, BaseRouter
 from app.support.ollama.service import OllamaService, LLMService
@@ -27,7 +29,7 @@ class OllamaRouter(BaseRouter):
         result = [LlmResponseSchema.model_validate(key) for key in response]
         return result
 
-    async def create(self, data: OllamaCreate) -> OllamaRead:
+    async def create(self, data: OllamaCreate, session: AsyncSession = Depends(get_db)) -> OllamaRead:
         return await super().create(data)
 
     async def patch(self, id: int, data: OllamaUpdate, background_tasks: BackgroundTasks) -> OllamaRead:
