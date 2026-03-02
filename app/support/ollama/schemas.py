@@ -52,3 +52,33 @@ class LlmResponseSchema(BaseModel):
         details = data.pop('details', {})
         # Объединяем основной словарь с содержимым details
         return {**data, **details}
+
+
+class OllamaCreate(BaseModel):
+    model: str
+    modified_at: datetime
+    digest: Optional[str] = None
+    size: Optional[int] = None
+    # details: Optional[dict] = None
+    parent_model: Optional[str] = None
+    format: Optional[str] = None
+    family: Optional[str] = None
+    # families: Optional[List[str]] = None
+    parameter_size: Optional[str] = None
+    quantization_level: Optional[str] = None
+
+
+class OllamaUpdate(BaseModel):
+    model: Optional[str] = None
+    modified_at: Optional[datetime] = None
+    digest: Optional[str] = None
+    size: Optional[int] = None
+    parent_model: Optional[str] = None
+    format: Optional[str] = None
+    family: Optional[str] = None
+    parameter_size: Optional[str] = None
+    quantization_level: Optional[str] = None
+
+
+class OllamaRead(PkSchema, OllamaCreate):
+    pass
