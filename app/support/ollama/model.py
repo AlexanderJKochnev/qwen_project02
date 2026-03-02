@@ -4,10 +4,10 @@ from typing import Optional
 from sqlalchemy import String, BigInteger, DateTime
 # from sqlalchemy.dialects.postgresql import JSONB  # Если используете PostgreSQL
 from sqlalchemy.orm import Mapped, mapped_column
-from app.core.models.base_model import Base
+from app.core.models.base_model import Base, BaseAt
 
 
-class Ollama(Base):
+class Ollama(Base, BaseAt):
 
     # Первичный ключ
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
