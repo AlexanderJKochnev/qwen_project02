@@ -115,7 +115,6 @@ class Service(metaclass=ServiceMeta):
             находит и обновляет запись или создает если ее нет
         """
         try:
-            return None, False
             data_dict = data.model_dump(exclude_unset=True)
             instance = cls.get_instance(data_dict, repository, model, session, default)
             # значения ключевых полей для поиска
