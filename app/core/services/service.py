@@ -3,7 +3,7 @@ import asyncio
 from abc import ABCMeta
 from datetime import datetime
 from fastapi import HTTPException, BackgroundTasks
-from typing import List, Optional, Tuple, Type, Dict, Any
+from typing import List, Optional, Tuple, Type, Dict, Any, Union
 from loguru import logger
 from sqlalchemy import select, update, text, func
 from sqlalchemy.exc import IntegrityError
@@ -112,28 +112,29 @@ class Service(metaclass=ServiceMeta):
                                model: ModelType, background_tasks: BackgroundTasks, session: AsyncSession,
                                default: List[str] = None, **kwargs) -> Tuple[ModelType, bool]:
         """
-            находит и обновляет запись или создает если ее нет
+            находит и обновляет запись или создает если ее нет.
+            этим методом нельзя обновить ключевые поля - используй path + id
         """
         try:
             data_dict = data.model_dump(exclude_unset=True)
             instance = await cls.get_instance(data_dict, repository, model, session, default)
             # значения ключевых полей для поиска
-            if instance:
-                # запись найдена, просто обновляем
-                result = await repository.patch(instance, data_dict, session)
+            if not instance:
+                # запись не найдена, добавляем
+                obj = model(**data_dict)
+                instance = await repository.create(obj, model, session)
                 await session.commit()
-                return result['data'], False
-            # запись не найдена
-            obj = model(**data_dict)
-            instance = await repository.create(obj, model, session)
-            await session.commit()
-            return instance, True
-        except IntegrityError as e:
-            await session.rollback()
-            raise Exception(f'Integrity error: {e}')
+                return instance, True
+            # запись найдена, обновляем
+            result = await cls.patch(instance, data, repository, model, background_tasks, session)
+            if result.get('success'):
+                return result.get('data'), False
+            else:
+                raise HTTPException(status_code=501, detail=f"{result.get('message')}")
         except Exception as e:
-            await session.rollback()
-            raise Exception(f"UNKNOWN_ERROR: {str(e)}") from e
+            logger.error(f'core.service.update_or_create.error {e}')
+            raise Exception(e)
+
 
     @classmethod
     async def create_relation(cls, data: ModelType,
@@ -203,22 +204,25 @@ class Service(metaclass=ServiceMeta):
         return result
 
     @classmethod
-    async def patch(cls, id: int, data: ModelType,
+    async def patch(cls, id: Union[int, Any], data: ModelType,
                     repository: Type[Repository],
                     model: ModelType,
                     background_tasks: BackgroundTasks,
                     session: AsyncSession) -> dict:
         """
-        Редактирование записи по ID
+        Редактирование записи по ID или instance
         Возвращает dict с результатом операции
         """
-
-        # Получаем существующую запись
-        existing_item = await repository.get_by_id(id, model, session)
-        if not existing_item:
-            return {'success': False, 'message': f'Редактируемая запись {id} не найдена на сервере',
-                    'error_type': 'not_found'}
-        data_dict = data.model_dump(exclude_unset=True)
+        if isinstance(id, int):
+            # Получаем существующую запись
+            existing_item = await repository.get_by_id(id, model, session)
+            if not existing_item:
+                return {'success': False, 'message': f'Редактируемая запись {id} не найдена на сервере',
+                        'error_type': 'not_found'}
+            data_dict = data.model_dump(exclude_unset=True)
+        else:
+            # вместо id передан instance
+            existing_item = id
 
         if not data_dict:
             return {'success': False, 'message': 'Нет данных для обновления', 'error_type': 'no_data'}
