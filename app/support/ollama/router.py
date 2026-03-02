@@ -43,4 +43,4 @@ class OllamaRouter(BaseRouter):
     async def update_or_create(self, data: OllamaUpdate,
                                background_tasks: BackgroundTasks,
                                session: AsyncSession = Depends(get_db)) -> OllamaRead:
-        return await super().patch(id, data, background_tasks, session)
+        return await super().update_or_create(id, data, background_tasks, session)
