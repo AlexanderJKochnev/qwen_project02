@@ -13,7 +13,7 @@ class OllamaRouter(BaseRouter):
         self.LLMservice = LLMService()
 
     def setup_routes(self):
-        self.router.add_api_route("", self.get_models_list,
+        self.router.add_api_route("/llm", self.get_models_list,
                                   methods=["GET"],
                                   response_model=List[LlmResponseSchema])
         super().setup_routes()
