@@ -57,11 +57,13 @@ class Service(metaclass=ServiceMeta):
                            session: AsyncSession, default: List = None):
         """ получение instance дя методов get(update)_or_create"""
         # значения ключевых полей для поиска
+        logger.info('gett_instance')
         if not default:
             default = cls.default
         lookup_dict = {key: val for key, val in data_dict.items() if key in default}
         # поиск существующей записи по совпадению объектов по уникальным полям
         instance = await repository.get_by_fields(lookup_dict, model, session)
+        logger.info(f'{instance=} ========================')
         return instance
 
     @classmethod
