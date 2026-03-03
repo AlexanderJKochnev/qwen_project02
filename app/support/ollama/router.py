@@ -83,8 +83,6 @@ class ISOLanguageRouter(BaseRouter):
         return await super().patch(id, data, background_tasks, session)
 
 
-
-
 class PromptRouter(BaseRouter):
     def __init__(self):
         super().__init__(model=Prompt, prefix="/prompt")
@@ -109,11 +107,11 @@ class PromptRouter(BaseRouter):
                                background_tasks: BackgroundTasks,
                                session: AsyncSession = Depends(get_db)) -> PromptRead:
         return await super().update_or_create(data, background_tasks, session)
-    
-    async def get_generate(self, translate_it: Query(None, description = "текст, который нужно перевести"),
-        session: AsyncSession = Depends(get_db)):
+
+    async def get_generate(self, translate_it: str = Query(None, description='текст, который нужно перевести'),
+                           session: AsyncSession = Depends(get_db)):
         """
             Перевод текста
-    
+
         """
-        pass
+        return translate_it
