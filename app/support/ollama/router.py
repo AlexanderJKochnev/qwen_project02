@@ -69,7 +69,7 @@ class OllamaRouter(BaseRouter):
         return await super().update_or_create(data, background_tasks, session)
 
 
-class PromprRouter(BaseRouter):
+class PromptRouter(BaseRouter):
     def __init__(self):
         super().__init__(model=Prompt, prefix="/prompt")
         self.LLMservice = LLMService()
