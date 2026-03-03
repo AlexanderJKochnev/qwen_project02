@@ -109,5 +109,11 @@ class PromptRouter(BaseRouter):
                                background_tasks: BackgroundTasks,
                                session: AsyncSession = Depends(get_db)) -> PromptRead:
         return await super().update_or_create(data, background_tasks, session)
-
     
+    async def get_generate(self, translate_it: Query(None, description = "текст, который нужно перевести"),
+        session: AsyncSession = Depends(get_db)):
+        """
+            Перевод текста
+    
+        """
+        pass
