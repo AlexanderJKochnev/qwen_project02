@@ -7,8 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config.database.db_async import get_db
 from app.core.routers.base import BaseRouter
 from app.core.utils.common_utils import compare_lists_compact, jprint
-from app.support.ollama.model import Ollama
-from app.support.ollama.schemas import LlmResponseSchema, OllamaCreate, OllamaRead, OllamaUpdate
+from app.support.ollama.model import Ollama, Prompt
+from app.support.ollama.schemas import (LlmResponseSchema, OllamaCreate, OllamaRead, OllamaUpdate, PromptCreate,
+                                        PromptRead, PromptRequest, PromptUpdate)
 from app.support.ollama.service import LLMService
 
 
@@ -65,4 +66,23 @@ class OllamaRouter(BaseRouter):
     async def update_or_create(self, data: OllamaUpdate,
                                background_tasks: BackgroundTasks,
                                session: AsyncSession = Depends(get_db)) -> OllamaRead:
+        return await super().update_or_create(data, background_tasks, session)
+
+
+class PromprRouter(BaseRouter):
+    def __init__(self):
+        super().__init__(model=Prompt, prefix="/prompt")
+        self.LLMservice = LLMService()
+
+    async def create(self, data: PromptCreate, session: AsyncSession = Depends(get_db)) -> PromptRead:
+        return await super().create(data, session)
+
+    async def patch(self, id: int, data: PromptUpdate,
+                    background_tasks: BackgroundTasks,
+                    session: AsyncSession = Depends(get_db)) -> PromptRead:
+        return await super().patch(id, data, background_tasks, session)
+
+    async def update_or_create(self, data: PromptCreate,
+                               background_tasks: BackgroundTasks,
+                               session: AsyncSession = Depends(get_db)) -> PromptRead:
         return await super().update_or_create(data, background_tasks, session)

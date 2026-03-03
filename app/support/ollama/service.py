@@ -47,3 +47,31 @@ class OllamaService(Service):
         except Exception as e:
             logger.error(f'maintain_llm_database. {e}')
             raise Exception(e)
+
+
+class PromptService(Service):
+    default = ['role']
+
+
+"""
+    # Для метода GENERATE
+    payload = OllamaRequestSchema.create_generate_payload(db_settings, user_task)
+
+    response = await client.generate(
+        model=payload.model,
+        prompt=payload.prompt,
+        system=payload.system,
+        options=payload.options.model_dump(exclude_none=True),
+        stream=payload.stream
+    )
+
+    # Для метода CHAT
+    payload = OllamaRequestSchema.create_chat_payload(db_settings, user_task)
+
+    response = await client.chat(
+        model=payload.model,
+        messages=payload.messages,
+        options=payload.options.model_dump(exclude_none=True),
+        stream=payload.stream
+    )
+"""

@@ -2,7 +2,7 @@
 from ollama import AsyncClient, ListResponse
 from app.core.config.project_config import settings
 from app.core.repositories.sqlalchemy_repository import Repository
-from app.support.ollama.model import Ollama
+from app.support.ollama.model import Ollama, Prompt
 
 
 class LLMRepository:
@@ -26,7 +26,7 @@ class LLMRepository:
         if any(self.model_name in m for m in installed_models):
             print(f"Модель {self.model_name} уже готова к работе.")
         else:
-            print(f"Модель не найдена. Начинаю скачивание...")
+            print("Модель не найдена. Начинаю скачивание...")
             # stream=True позволяет видеть прогресс скачивания
             async for progress in await self.client.pull(self.model_name, stream=True):
                 status = progress.get('status', '')
@@ -55,3 +55,7 @@ class LLMRepository:
 
 class OllamaRepository(Repository):
     model = Ollama
+
+
+class PromptRepository(Repository):
+    model = Prompt

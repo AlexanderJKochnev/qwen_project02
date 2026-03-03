@@ -1,10 +1,107 @@
 # app.suport.ollama.schemas.py
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
+from pydantic import model_validator, ConfigDict, Field, field_validator
 from app.core.schemas.base import PkSchema, BaseModel
-from pydantic import model_validator
+# from app.support.ollama.model import Prompt
+
+
+class CustomRead(BaseModel):
+    """Схема только для блока options в API Ollama"""
+    num_ctx: int
+    temperature: float
+    top_p: float
+    top_k: int
+    seed: Optional[int]
+    num_predict: int
+    repeat_penalty: float
+    stop: Optional[List[str]]
+
+
+class PromptRead(BaseModel):
+    """
+        универсальная модель для
+        chat: message и
+        generate: prompt, system
+    """
+    model_config = ConfigDict(from_attributes=True)
+
+    # model: str = "llama3"
+    options: CustomRead
+    stream: bool = False
+
+    # Эти поля взаимоисключающие для разных методов
+    messages: Optional[List[Dict[str, str]]] = None  # Для .chat()
+    prompt: Optional[str] = None  # Для .generate()
+    system: Optional[str] = None  # Для .generate() переопределяет системный промпт
+
+    @classmethod
+    def create_chat_payload(cls, db_obj: Any, user_text: str) -> "PromptRead":
+        """Структура для ollama.chat"""
+        return cls(
+            messages=[{"role": "system", "content": db_obj.system_prompt},
+                      {"role": "user", "content": user_text}], options=CustomRead(**db_obj.__dict__)
+        )
+
+    @classmethod
+    def create_generate_payload(cls, db_obj: Any, user_text: str) -> "PromptRead":
+        """Структура для ollama.generate"""
+        return cls(
+            prompt=user_text, system=db_obj.system_prompt,  # В generate системник передается отдельным полем
+            options=CustomRead(**db_obj.__dict__)
+        )
+
+
+class PromptRequest(PromptRead):
+    """
+        возвращает универсальную модель для
+        chat: message и
+        generate: prompt, system
+        с подставленной моделью.
+        Так как разные поля будут переводить разные роли (переводчик для наименовений, автор для описаний)
+        нужно что бы в каждой роди использовалась одна и таже модель
+    """
+    model: str = "llama3"
+
+
+class Custom(BaseModel):
+    system_prompt: Optional[str] = Field(None, description="Инструкция для модели")
+    num_ctx: Optional[int] = Field(4096, ge=1, le=131072)
+    temperature: Optional[float] = Field(0.1, ge=0.0, le=2.0)
+    top_p: Optional[float] = Field(0.1, ge=0.0, le=1.0)
+    top_k: Optional[int] = Field(40, ge=0)
+    seed: Optional[int] = None
+    num_predict: Optional[int] = Field(1000, ge=-1)
+    repeat_penalty: Optional[float] = Field(1.1, ge=0.0, le=2.0)
+    stop: Optional[List[str]] = None
+
+    # Пример кастомной валидации (Pydantic 2 style)
+
+    @field_validator('stop')
+    @classmethod
+    def validate_stop_sequences(cls, v: Optional[List[str]]) -> Optional[List[str]]:
+        if v is not None and len(v) > 10:
+            raise ValueError("Слишком много стоп-последовательностей (макс. 10)")
+        return v
+
+
+class PromptCreate(Custom):
+    """Модель для POST запроса: role и system_prompt обязательны"""
+    role: str = Field(..., min_length=2, max_length=50, pattern=r"^[a-zа-я0-9_-]+$")
+    system_prompt: str = Field(..., min_length=10)
+
+
+class PromptUpdate(Custom):
+    """Модель для PATCH запроса: все поля необязательны"""
+    # Мы наследуем всё от Base, где поля уже Optional.
+    # Поле role обычно не меняют через PATCH, но если нужно — добавим:
+    role: Optional[str] = Field(None, min_length=2, max_length=50)
+
+    model_config = ConfigDict(extra='forbid')  # Запрещает передавать лишние поля
+
 
 """
+то что возвращает ollama.asyncclient.list()
 [
   [
     "models",

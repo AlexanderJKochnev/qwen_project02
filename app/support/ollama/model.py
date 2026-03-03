@@ -1,14 +1,16 @@
 # app.suport.ollama.model.py
 from datetime import datetime
-from typing import Optional
-from sqlalchemy import String, BigInteger, DateTime
+from typing import Optional, List
+from sqlalchemy import String, BigInteger, DateTime, Integer, JSON, CheckConstraint, Float
 # from sqlalchemy.dialects.postgresql import JSONB  # Если используете PostgreSQL
 from sqlalchemy.orm import Mapped, mapped_column
 from app.core.models.base_model import Base, BaseAt
 
 
 class Ollama(Base, BaseAt):
-
+    """
+         список загружегннных  ll моделей
+    """
     # Первичный ключ
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
 
@@ -31,3 +33,41 @@ class Ollama(Base, BaseAt):
 
     # def __repr__(self) -> str:
     #     return f"<LLModel(model={self.model}, size={self.size})>"
+
+
+class Prompt(Base, BaseAt):
+    """
+        модель для хранения ролей:
+        translator: переводчик
+        author: автор
+        и др. (можно назвать как нибудь поинтересней чехов, полиглот
+            {
+          "model": "llama3",
+          "prompt": "Translate the following...",
+          "options": {
+            "temperature": 0.1,
+            "top_p": 0.1,
+            "seed": 42,
+            "num_ctx": 4096,
+            "repeat_penalty": 1.0,
+            "num_predict": 1000
+          }
+        }
+    """
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    role: Mapped[str] = mapped_column(String(50), unique=True, index=True)
+    system_prompt: Mapped[str] = mapped_column(String)
+
+    # Параметры Ollama (Options)
+    num_ctx: Mapped[int] = mapped_column(Integer, default=4096)
+    temperature: Mapped[float] = mapped_column(Float, default=0.1)
+    top_p: Mapped[float] = mapped_column(Float, default=0.1)
+    top_k: Mapped[int] = mapped_column(Integer, default=40)
+    seed: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    num_predict: Mapped[int] = mapped_column(Integer, default=1000)
+    repeat_penalty: Mapped[float] = mapped_column(Float, default=1.1)
+    stop: Mapped[Optional[List[str]]] = mapped_column(JSON, nullable=True)
+
+    __table_args__ = (CheckConstraint('temperature BETWEEN 0.0 AND 2.0', name='temp_range'),
+                      CheckConstraint('top_p BETWEEN 0.0 AND 1.0', name='top_p_range'),
+                      CheckConstraint('num_predict >= -1', name='predict_range'),)

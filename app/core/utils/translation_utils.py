@@ -1,5 +1,6 @@
 # app/core/utils/translation_utils.py
 import asyncio  # noqa: F401
+from ollama import AsyncClient
 import httpx
 import time
 import csv
@@ -141,7 +142,7 @@ class OllamaRepository:
         self.base_url = settings.OLLAMA_HOST
 
     async def call_api(self, endpoint: str, payload: dict):
-        async with httpx.AsyncClient(timeout=120.0) as client:
+        async with AsyncClient(timeout=120.0) as client:
             try:
                 resp = await client.post(f"{self.base_url}/api/{endpoint}", json=payload)
                 resp.raise_for_status()
@@ -213,7 +214,7 @@ async def gemma_translate(text: str,
                        'fr': 'french'}
     ollama = settings.OLLAMA_HOST
     prompt = f"Translate the following text to {languages.get(target_lang, target_lang)}: {text}"
-    async with httpx.AsyncClient(timeout=60.0) as client:
+    async with AsyncClient(timeout=60.0) as client:
         try:
             response = await client.post(f"{ollama}/api/generate",
                                          json={"model": "translategemma",
