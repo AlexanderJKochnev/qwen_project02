@@ -260,6 +260,8 @@ class BaseRouter:
         obj = await self.service.get_by_id(id, self.repo, self.model, session)
         if obj is None:
             raise HTTPException(status_code=404, detail=f'Запрашиваемый файл {id} не найден на сервере')
+        from app.core.utils.common_utils import jprint
+        jprint(obj.to_dict())
         return obj
 
     async def get(self,

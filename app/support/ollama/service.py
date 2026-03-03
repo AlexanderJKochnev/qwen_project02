@@ -74,4 +74,31 @@ class PromptService(Service):
         options=payload.options.model_dump(exclude_none=True),
         stream=payload.stream
     )
+    context только для generate
+    async def translate_document(segments: list, db_settings):
+    client = AsyncClient()
+    current_context = None # В начале контекста нет
+
+    for segment in segments:
+        # 1. Формируем запрос, передавая накопленный контекст
+        payload = OllamaRequestSchema.create_generate_payload(
+            db_settings,
+            segment,
+            prev_context=current_context
+        )
+
+        # 2. Делаем запрос к Ollama
+        response = await client.generate(
+            model=payload.model,
+            prompt=payload.prompt,
+            system=payload.system,
+            context=payload.context, # <--- ПЕРЕДАЕМ
+            options=payload.options.model_dump(exclude_none=True)
+        )
+
+        # 3. Сохраняем НОВЫЙ контекст для следующего шага
+        current_context = response.get('context')
+
+        print(f"Перевод: {response['response']}")
+
 """

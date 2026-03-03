@@ -1,6 +1,6 @@
 # app.suport.ollama.schemas.py
 from datetime import datetime
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Sequence
 from pydantic import model_validator, ConfigDict, Field, field_validator
 from app.core.schemas.base import PkSchema, BaseModel
 # from app.support.ollama.model import Prompt
@@ -34,6 +34,7 @@ class PromptRead(BaseModel):
     messages: Optional[List[Dict[str, str]]] = None  # Для .chat()
     prompt: Optional[str] = None  # Для .generate()
     system: Optional[str] = None  # Для .generate() переопределяет системный промпт
+    context: Optional[Sequence[int]] = None  # Для .generate() помнит предыдущие абзацы
 
     @classmethod
     def create_chat_payload(cls, db_obj: Any, user_text: str) -> "PromptRead":
@@ -44,10 +45,12 @@ class PromptRead(BaseModel):
         )
 
     @classmethod
-    def create_generate_payload(cls, db_obj: Any, user_text: str) -> "PromptRead":
+    def create_generate_payload(cls, db_obj: Any, user_text: str,
+                                prev_context: Optional[Sequence[int]]=None) -> "PromptRead":
         """Структура для ollama.generate"""
         return cls(
             prompt=user_text, system=db_obj.system_prompt,  # В generate системник передается отдельным полем
+            context=prev_context,  # Передаем память предыдущих переводов
             options=CustomRead(**db_obj.__dict__)
         )
 
