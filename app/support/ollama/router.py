@@ -1,15 +1,16 @@
 # app.suport.ollama.router.py
 from typing import List
 from loguru import logger
-from fastapi import BackgroundTasks, Depends, HTTPException
+from fastapi import BackgroundTasks, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config.database.db_async import get_db
 from app.core.routers.base import BaseRouter
 from app.core.utils.common_utils import compare_lists_compact, jprint
-from app.support.ollama.model import Ollama, Prompt
+from app.support.ollama.model import Ollama, Prompt, ISOLanguage
 from app.support.ollama.schemas import (LlmResponseSchema, OllamaCreate, OllamaRead, OllamaUpdate, PromptCreate,
-                                        PromptRead, PromptRequest, PromptUpdate)
+                                        PromptRead, PromptUpdate,
+                                        ISOLanguageCreate, ISOLanguageRead, ISOLanguageUpdate)
 from app.support.ollama.service import LLMService
 
 
@@ -69,10 +70,32 @@ class OllamaRouter(BaseRouter):
         return await super().update_or_create(data, background_tasks, session)
 
 
+class ISOLanguageRouter(BaseRouter):
+    def __init__(self):
+        super().__init__(model=Prompt, prefix="/isolanguage")
+
+    async def create(self, data: ISOLanguageCreate, session: AsyncSession = Depends(get_db)) -> ISOLanguageRead:
+        return await super().create(data, session)
+
+    async def patch(self, id: int, data: ISOLanguageUpdate,
+                    background_tasks: BackgroundTasks,
+                    session: AsyncSession = Depends(get_db)) -> ISOLanguageRead:
+        return await super().patch(id, data, background_tasks, session)
+
+
+
+
 class PromptRouter(BaseRouter):
     def __init__(self):
         super().__init__(model=Prompt, prefix="/prompt")
         self.LLMservice = LLMService()
+
+    def setup_routes(self):
+        self.router.add_api_route("/translate", self.get_generate,
+                                  methods=["GET"],
+                                  # response_model=List[LlmResponseSchema]
+                                  )
+        super().setup_routes()
 
     async def create(self, data: PromptCreate, session: AsyncSession = Depends(get_db)) -> PromptRead:
         return await super().create(data, session)
@@ -87,11 +110,11 @@ class PromptRouter(BaseRouter):
                                session: AsyncSession = Depends(get_db)) -> PromptRead:
         return await super().update_or_create(data, background_tasks, session)
 
-    async def get_generate(self, id: int, session: AsyncSession = Depends(get_db)):
+    async def get_generate(self, translate_it: Query(None, description="текст, который нужно перевести")
+                           session: AsyncSession = Depends(get_db)):
         """
-            Получение одной записи по ID
-            input_valudation_chema <>CreateRelation
-            response_model <>ReadRelatio
+            Перевод текста
+            
         """
         obj = await self.service.get_by_id(id, self.repo, self.model, session)
         if obj is None:

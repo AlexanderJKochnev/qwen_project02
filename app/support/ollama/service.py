@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.services.service import Service
 from app.core.types import ModelType
-from app.support.ollama.repository import LLMRepository, OllamaRepository
+from app.support.ollama.repository import LLMRepository, OllamaRepository, ISOLanguageRepository
 
 
 class LLMService:
@@ -102,3 +102,7 @@ class PromptService(Service):
         print(f"Перевод: {response['response']}")
 
 """
+
+
+class ISOLanguageService(Service):
+    default = ['iso_639_3']

@@ -2,7 +2,7 @@
 from ollama import AsyncClient, ListResponse
 from app.core.config.project_config import settings
 from app.core.repositories.sqlalchemy_repository import Repository
-from app.support.ollama.model import Ollama, Prompt
+from app.support.ollama.model import Ollama, Prompt, ISOLanguage
 
 
 class LLMRepository:
@@ -59,3 +59,7 @@ class OllamaRepository(Repository):
 
 class PromptRepository(Repository):
     model = Prompt
+
+
+class ISOLanguageRepository(Repository):
+    model = ISOLanguage

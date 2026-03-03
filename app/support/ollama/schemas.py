@@ -6,70 +6,6 @@ from app.core.schemas.base import PkSchema, BaseModel
 # from app.support.ollama.model import Prompt
 
 
-class CustomRead(BaseModel):
-    """Схема только для блока options в API Ollama"""
-    model_config = ConfigDict(extra='ignore')
-    num_ctx: int
-    temperature: float
-    top_p: float
-    top_k: int
-    seed: Optional[int]
-    num_predict: int
-    repeat_penalty: float
-    stop: Optional[List[str]]
-
-
-class PromptRead0(BaseModel):
-    """
-        универсальная модель для
-        chat: message и
-        generate: prompt, system
-    """
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-    # model_config = ConfigDict(from_attributes=True)
-
-    # model: str = "llama3"
-    options: CustomRead
-    stream: bool = False
-
-    # Эти поля взаимоисключающие для разных методов
-    messages: Optional[List[Dict[str, str]]] = None  # Для .chat()
-    prompt: Optional[str] = None  # Для .generate()
-    system: Optional[str] = None  # Для .generate() переопределяет системный промпт
-    context: Optional[Sequence[int]] = None  # Для .generate() помнит предыдущие абзацы
-
-    @classmethod
-    def create_chat_payload(cls, db_obj: Dict[str, Any], user_text: str) -> "PromptRead":
-        """Структура для ollama.chat"""
-        return cls(
-            messages=[{"role": "system", "content": db_obj.system_prompt},
-                      {"role": "user", "content": user_text}],
-            options=CustomRead(**db_obj)
-        )
-
-    @classmethod
-    def create_generate_payload(cls, db_obj: Dict[str, Any], user_text: str,
-                                prev_context: Optional[Sequence[int]] = None) -> "PromptRead":
-        """Структура для ollama.generate"""
-        return cls(
-            prompt=user_text, system=db_obj.system_prompt,  # В generate системник передается отдельным полем
-            context=prev_context,  # Передаем память предыдущих переводов
-            options=CustomRead(**db_obj.__dict__)
-        )
-
-
-class PromptRequest(PromptRead0):
-    """
-        возвращает универсальную модель для
-        chat: message и
-        generate: prompt, system
-        с подставленной моделью.
-        Так как разные поля будут переводить разные роли (переводчик для наименовений, автор для описаний)
-        нужно что бы в каждой роди использовалась одна и таже модель
-    """
-    model: str = "llama3"
-
-
 class Custom(BaseModel):
     system_prompt: Optional[str] = Field(None, description="Инструкция для модели")
     num_ctx: Optional[int] = Field(4096, ge=1, le=131072)
@@ -110,6 +46,7 @@ class PromptRead(Custom):
     id: int
     role: str
     system_prompt: str
+
 
 """
 то что возвращает ollama.asyncclient.list()
@@ -190,3 +127,21 @@ class OllamaUpdate(BaseModel):
 
 class OllamaRead(PkSchema, OllamaCreate):
     pass
+
+
+class ISOLanguageCreate(BaseModel):
+    iso_639_3: str
+    iso_639_1: Optional[str] = None
+    name_en: str
+    name_ru: str
+
+
+class ISOLanguageUpdate(BaseModel):
+    iso_639_3: Optional[str]
+    iso_639_1: Optional[str] = None
+    name_en: Optional[str]
+    name_ru: Optional[str]
+
+
+class ISOLanguageRead(ISOLanguageCreate):
+    id: int

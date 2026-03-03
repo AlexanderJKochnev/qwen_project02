@@ -74,3 +74,17 @@ class Prompt(Base, BaseAt):
 
     def __str__(self):
         return self.role or ""
+
+
+class ISOLanguage(Base, BaseAt):
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    # ISO 639-3 (3 буквы) — отличный первичный ключ, так как он уникален и постоянен
+    iso_639_3: Mapped[str] = mapped_column(String(3), primary_key=True)
+    # ISO 639-1 (2 буквы) — может быть NULL для редких языков
+    iso_639_1: Mapped[Optional[str]] = mapped_column(String(2), unique=True, index=True, nullable=True)
+
+    name_en: Mapped[str] = mapped_column(String(100), nullable=False)
+    name_ru: Mapped[str] = mapped_column(String(100), nullable=False)
+
+    def __str__(self):
+        return f"{self.iso1} {self.name_en}" or ""
