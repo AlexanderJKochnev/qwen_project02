@@ -79,6 +79,7 @@ class BaseRouter:
                                 dependencies=[Depends(self.auth_dependency)],
                                 include_in_schema=include_in_schema)
         self.setup_routes()
+        self.batch = kwargs.get('batch', False)
 
         # self.read_response = py.read_response(read_schema)
         # self.path_schema = path_schema
@@ -95,6 +96,14 @@ class BaseRouter:
                                   methods=["POST"],
                                   response_model=self.read_schema_relation,
                                   openapi_extra={'x-request-schema': self.create_schema_relation.__name__})
+        if self.batch:
+            self.router.add_api_route("/batch",
+                                      self.batch_create,
+                                      status_code=status.HTTP_200_OK,
+                                      methods=['POST'],
+                                      response_model=List[self.read_schema_relation],
+                                      openapi_extra={'x-request-schema':
+                                                     f"List_{self.create_schema_relation.__name__}"})
         # get all без паггинации
         self.router.add_api_route("", self.get, methods=["GET"],
                                   response_model=self.paginated_response,
@@ -156,6 +165,22 @@ class BaseRouter:
         try:
             # obj = await self.service.create(data, self.repo, self.model, session)
             obj, created = await self.service.get_or_create(data, self.repo, self.model, session)
+            return obj
+        except Exception as e:
+            detail = (f'ошибка создания записи {e}, model = {self.model}, '
+                      f'create_schema = {self.create_schema}, '
+                      f'service = {self.service} ,'
+                      f'repository = {self.repo}')
+            print(detail)
+            raise HTTPException(status_code=500, detail=detail)
+
+    async def batch_create(self, data: List[TCreateSchema],
+                           session: AsyncSession = Depends(get_db)) -> List[TReadSchema]:
+        """
+         Создание нескольких записей без зависимостей
+        """
+        try:
+            obj = await self.service.batch_get_or_create(data, self.repo, self.model, session)
             return obj
         except Exception as e:
             detail = (f'ошибка создания записи {e}, model = {self.model}, '

@@ -72,7 +72,7 @@ class OllamaRouter(BaseRouter):
 
 class ISOLanguageRouter(BaseRouter):
     def __init__(self):
-        super().__init__(model=ISOLanguage, prefix="/isolanguage")
+        super().__init__(model=ISOLanguage, prefix="/isolanguage", batch=True)
 
     async def create(self, data: ISOLanguageCreate, session: AsyncSession = Depends(get_db)) -> ISOLanguageRead:
         return await super().create(data, session)

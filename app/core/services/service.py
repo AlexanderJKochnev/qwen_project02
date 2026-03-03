@@ -108,6 +108,40 @@ class Service(metaclass=ServiceMeta):
             raise Exception(f"UNKNOWN_ERROR: {str(e)}") from e
 
     @classmethod
+    async def batch_get_or_create(cls, data_list: List[ModelType],
+                                  repository: Type[Repository], model: ModelType,
+                                  session: AsyncSession, default: List[str] = None, **kwargs) -> Tuple[ModelType, bool]:
+        """
+            находит или создaет записи из списка
+            возвращает instance и True (запись создана) или False (запись существует)
+        """
+        try:
+            if default is None:
+                default = cls.default
+            result: list = []
+            for data in data_list:
+                data_dict = data.model_dump(exclude_unset=True)
+                default_dict = {key: val for key, val in data_dict.items() if key in default}
+                # ошибка НУЖЕН ПОИСК ПО УНИКАЛЬНЫМ И СВЯЗАННЫМ ПОЛЯМ
+                # поиск существующей записи по совпадению объектов по уникальным полям
+                instance = await repository.get_by_fields(default_dict, model, session)
+                if instance:
+                    result.add(instance)
+                else:
+                    # запись не найдена
+                    obj = model(**data_dict)
+                    instance = await repository.create(obj, model, session)
+                    result.add(instance)
+            await session.commit()
+            return result
+        except IntegrityError as e:
+            await session.rollback()
+            raise Exception(f'Integrity error: {e}')
+        except Exception as e:
+            await session.rollback()
+            raise Exception(f"UNKNOWN_ERROR: {str(e)}") from e
+
+    @classmethod
     async def update_or_create(cls, data: ModelType, repository: Type[Repository],
                                model: ModelType, background_tasks: BackgroundTasks, session: AsyncSession,
                                default: List[str] = None, **kwargs) -> Tuple[ModelType, bool]:
@@ -134,7 +168,6 @@ class Service(metaclass=ServiceMeta):
         except Exception as e:
             logger.error(f'core.service.update_or_create.error {e}')
             raise Exception(e)
-
 
     @classmethod
     async def create_relation(cls, data: ModelType,
