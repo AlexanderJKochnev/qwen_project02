@@ -96,7 +96,7 @@ class BaseRouter:
                                   methods=["POST"],
                                   response_model=self.read_schema_relation,
                                   openapi_extra={'x-request-schema': self.create_schema_relation.__name__})
-        if self.batch:
+        if hasattr(self, "batch"):
             self.router.add_api_route("/batch",
                                       self.batch_create,
                                       status_code=status.HTTP_200_OK,
