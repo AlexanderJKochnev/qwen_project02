@@ -179,6 +179,7 @@ class BaseRouter:
          Создание нескольких записей без зависимостей
         """
         try:
+            logger.warning(data)
             obj = await self.service.batch_get_or_create(data, self.repo, self.model, session)
             return obj
         except Exception as e:
