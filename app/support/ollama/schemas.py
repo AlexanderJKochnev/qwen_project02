@@ -19,7 +19,7 @@ class CustomRead(BaseModel):
     stop: Optional[List[str]]
 
 
-class PromptRead(BaseModel):
+class PromptRead0(BaseModel):
     """
         универсальная модель для
         chat: message и
@@ -58,7 +58,7 @@ class PromptRead(BaseModel):
         )
 
 
-class PromptRequest(PromptRead):
+class PromptRequest(PromptRead0):
     """
         возвращает универсальную модель для
         chat: message и
@@ -105,6 +105,11 @@ class PromptUpdate(Custom):
 
     model_config = ConfigDict(extra='forbid')  # Запрещает передавать лишние поля
 
+
+class PromptRead(Custom):
+    if: int
+    role: str
+    system_prompt: str
 
 """
 то что возвращает ollama.asyncclient.list()
