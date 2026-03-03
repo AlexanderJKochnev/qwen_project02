@@ -87,7 +87,7 @@ class ISOLanguageRouter(BaseRouter):
 
     async def batch_create(self, data: List[ISOLanguageCreate],
                            session: AsyncSession = Depends(get_db)) -> List[ISOLanguageRead]:
-        super().batch_create(data, session)
+        return await super().batch_create(data, session)
 
     async def patch(self, id: int, data: ISOLanguageUpdate,
                     background_tasks: BackgroundTasks,
