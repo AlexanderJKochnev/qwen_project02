@@ -107,7 +107,7 @@ class PromptUpdate(Custom):
 
 
 class PromptRead(Custom):
-    if: int
+    id: int
     role: str
     system_prompt: str
 
