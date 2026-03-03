@@ -115,7 +115,7 @@ class Base(AsyncAttrs, DeclarativeBase):
                 continue
             value = getattr(self, key)
             if isinstance(value, list):
-                result[key] = [item.to_dict(seen) for item in value]
+                result[key] = [item.to_dict(seen) if hasattr(item, 'to_dict') else item for item in value]
             elif hasattr(value, "__table__"):  # ORM-объект
                 result[key] = value.to_dict(seen)
             elif isinstance(value, datetime):
