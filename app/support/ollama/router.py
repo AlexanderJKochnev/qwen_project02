@@ -86,3 +86,19 @@ class PromptRouter(BaseRouter):
                                background_tasks: BackgroundTasks,
                                session: AsyncSession = Depends(get_db)) -> PromptRead:
         return await super().update_or_create(data, background_tasks, session)
+
+    async def get_one(self,
+                      id: int,
+                      session: AsyncSession = Depends(get_db)):
+        """
+            Получение одной записи по ID
+            input_valudation_chema <>CreateRelation
+            response_model <>ReadRelatio
+        """
+        obj = await self.service.get_by_id(id, self.repo, self.model, session)
+        if obj is None:
+            raise HTTPException(status_code=404, detail=f'Запрашиваемый файл {id} не найден на сервере')
+        # from app.core.utils.common_utils import jprint
+        print(obj, f'{obj.to_dict()} =====')
+        result = PromptRead.validate(obj.to_dict())
+        return result
