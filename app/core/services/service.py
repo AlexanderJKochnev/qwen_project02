@@ -126,12 +126,12 @@ class Service(metaclass=ServiceMeta):
                 # поиск существующей записи по совпадению объектов по уникальным полям
                 instance = await repository.get_by_fields(default_dict, model, session)
                 if instance:
-                    result.add(instance)
+                    result.append(instance)
                 else:
                     # запись не найдена
                     obj = model(**data_dict)
                     instance = await repository.create(obj, model, session)
-                    result.add(instance)
+                    result.append(instance)
             await session.commit()
             return result
         except IntegrityError as e:
