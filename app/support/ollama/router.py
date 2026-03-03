@@ -72,9 +72,15 @@ class OllamaRouter(BaseRouter):
 
 class ISOLanguageRouter(BaseRouter):
     def __init__(self):
-        kwargs = {}
-        kwargs['batch'] = True
-        super().__init__(model=ISOLanguage, prefix="/isolanguage", **kwargs)
+        super().__init__(model=ISOLanguage, prefix="/isolanguage")
+
+    def setup_routes(self):
+        self.router.add_api_route(
+            "/batch", self.batch_create, status_code=200, methods=['POST'],
+            response_model=List[self.read_schema_relation],
+            openapi_extra={'x-request-schema': f"List_{self.create_schema_relation.__name__}"}
+        )
+        super().setup_routes()
 
     async def create(self, data: ISOLanguageCreate, session: AsyncSession = Depends(get_db)) -> ISOLanguageRead:
         return await super().create(data, session)
