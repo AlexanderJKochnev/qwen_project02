@@ -261,7 +261,7 @@ class BaseRouter:
         if obj is None:
             raise HTTPException(status_code=404, detail=f'Запрашиваемый файл {id} не найден на сервере')
         from app.core.utils.common_utils import jprint
-        jprint(obj.to_dict())
+        jprint(obj)
         return obj
 
     async def get(self,
