@@ -71,3 +71,6 @@ class Prompt(Base, BaseAt):
     __table_args__ = (CheckConstraint('temperature BETWEEN 0.0 AND 2.0', name='temp_range'),
                       CheckConstraint('top_p BETWEEN 0.0 AND 1.0', name='top_p_range'),
                       CheckConstraint('num_predict >= -1', name='predict_range'),)
+
+    def __str__(self):
+        return self.role or ""
