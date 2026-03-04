@@ -32,6 +32,7 @@ class OllamaRouter(BaseRouter):
         """
         try:
             response: List[dict] = await self.LLMservice.get_models_list()
+            print(response, '===============')
             iter = 0
             while iter < 2:
                 iter += 1
