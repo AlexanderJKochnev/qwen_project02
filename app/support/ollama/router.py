@@ -15,6 +15,7 @@ from app.support.ollama.service import LLMService
 
 
 class OllamaRouter(BaseRouter):
+    """ языковые модели для OLLAMA"""
     def __init__(self):
         super().__init__(model=Ollama, prefix="/ollama")
         self.LLMservice = LLMService()
@@ -23,7 +24,9 @@ class OllamaRouter(BaseRouter):
         self.router.add_api_route("/llm", self.get_models_list,
                                   methods=["GET"],
                                   response_model=List[LlmResponseSchema])
-        super().setup_routes()
+        self.router.add_api_route("/translate", self.get_translate,
+                                  methods=['GET'])
+        # super().setup_routes()
 
     async def get_models_list(self, background_tasks: BackgroundTasks, session: AsyncSession = Depends(get_db)):
         """
@@ -58,21 +61,29 @@ class OllamaRouter(BaseRouter):
         except Exception as e:
             raise HTTPException(status_code=501, detail=e)
 
-    async def create(self, data: OllamaCreate, session: AsyncSession = Depends(get_db)) -> OllamaRead:
-        return await super().create(data, session)
+    async def get_translate(self, phrase: str = Query(None, description="Текст для перевода."),
+                            llmodel: str = Query(None, description="Имя модели или ее номер в базе данных"),
+                            prompt: str = Query(None, description="Имя промпта или его номер в базе данных"),
+                            langs: str = Query(None, description="Язык (языки) перевода двух-значные коды через "
+                                                                 "запятую, например 'ru, fr, zh'"),
+                            session: AsyncSession = Depends(get_db)):
+        """
+           тестирование моделей для перевода:
+           1. фраза для перевода
+           2. модель LL
+           3. prompt
+           3. язык/языки для перевода
+           возвращает:
+        """
 
-    async def patch(self, id: int, data: OllamaUpdate,
-                    background_tasks: BackgroundTasks,
-                    session: AsyncSession = Depends(get_db)) -> OllamaRead:
-        return await super().patch(id, data, background_tasks, session)
+        pass
 
-    async def update_or_create(self, data: OllamaUpdate,
-                               background_tasks: BackgroundTasks,
-                               session: AsyncSession = Depends(get_db)) -> OllamaRead:
-        return await super().update_or_create(data, background_tasks, session)
+    async def get_generate(self, session: AsyncSession = Depends(get_db)):
+        pass
 
 
 class ISOLanguageRouter(BaseRouter):
+    """ языки мира """
     def __init__(self):
         super().__init__(model=ISOLanguage, prefix="/isolanguage")
 
@@ -98,6 +109,7 @@ class ISOLanguageRouter(BaseRouter):
 
 
 class PromptRouter(BaseRouter):
+    """ промты для llm """
     def __init__(self):
         super().__init__(model=Prompt, prefix="/prompt")
         self.LLMservice = LLMService()

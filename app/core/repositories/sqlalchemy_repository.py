@@ -327,11 +327,13 @@ class Repository(metaclass=RepositoryMeta):
     @classmethod
     async def get_by_field(cls, field_name: str, field_value: Any, model: ModelType, session: AsyncSession):
         """
-            не гибкий поиск по одному полю. оставлен для совместимости. лучше использовать
+            поиск по одному полю. поисковый запрос входит в значение поля
             get_by_fields
         """
         try:
-            stmt = select(model).where(getattr(model, field_name) == field_value)
+            column = getattr(model, field_name)
+            stmt = select(model).where(column.icontains(field_value))
+            # stmt = select(model).where(getattr(model, field_name) == field_value)
             result = await session.execute(stmt)
             return result.scalar_one_or_none()
         except Exception as e:

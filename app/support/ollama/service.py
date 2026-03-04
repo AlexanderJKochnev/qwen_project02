@@ -6,7 +6,8 @@ from typing import List
 from app.core.services.service import Service
 from app.core.types import ModelType
 from app.support.ollama.schemas import LlmResponseSchema
-from app.support.ollama.repository import LLMRepository, OllamaRepository
+from app.support.ollama.repository import LLMRepository, OllamaRepository, PromptRepository
+from app.support.ollama.model import Ollama, ISOLanguage, Prompt
 
 
 class LLMService:
@@ -49,6 +50,29 @@ class OllamaService(Service):
         except Exception as e:
             logger.error(f'maintain_llm_database. {e}')
             raise Exception(e)
+
+    @classmethod
+    async def get_translate(cls, phrase: str,
+                            search_model: str,
+                            prompt: str,
+                            langs: str,
+                            session: AsyncSession):
+        """ поиск """
+        # 1. Поиск и получение ll model
+        repo = OllamaRepository
+        model = Ollama
+        if search_model.isnumeric():
+            response: Ollama = await repo.get_by_id(int(search_model), model, session)
+        else:
+            response: Ollama = await repo.get_by_field('model', search_model, model, session)
+        llmodel = response.model
+        logger.warning(llmodel)
+
+        # 2. Поиск и получение prompt
+        # 3. получение списка языков
+        # 4. формирование payload (build_ollama_payload)
+        # 5. запуск перевода (asyncio.gather)
+        return None
 
 
 class PromptService(Service):
