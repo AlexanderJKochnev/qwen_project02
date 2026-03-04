@@ -64,7 +64,8 @@ class OllamaService(Service):
         if search_model.isnumeric():
             response: Ollama = await repo.get_by_id(int(search_model), model, session)
         else:
-            response: Ollama = await repo.get_by_field('model', search_model, model, session)
+            response: Ollama = await repo.get_by_field('model', search_model, model, session,
+                                                       order_by='size', asc=True)
         llmodel = response.model
         logger.warning(llmodel)
 

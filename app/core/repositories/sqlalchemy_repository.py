@@ -325,14 +325,21 @@ class Repository(metaclass=RepositoryMeta):
         return result
 
     @classmethod
-    async def get_by_field(cls, field_name: str, field_value: Any, model: ModelType, session: AsyncSession):
+    async def get_by_field(cls, field_name: str, field_value: Any, model: ModelType, session: AsyncSession, **kwargs):
         """
             поиск по одному полю. поисковый запрос входит в значение поля
             get_by_fields
         """
         try:
             column = getattr(model, field_name)
-            stmt = select(model).where(column.icontains(field_value)).limit(1)
+            stmt = select(model).where(column.icontains(field_value))
+            if orderby := kwargs.get('order_by'):
+                sort_by = getattr(model, orderby)
+                if kwargs.get('asc', False):
+                    stmt = select(stmt).order_by(sort_by)
+                else:
+                    stmt = select(stmt).order_by(desc(sort_by))
+            stmt = select(stmt).limit(1)
             # stmt = select(model).where(getattr(model, field_name) == field_value)
             result = await session.execute(stmt)
             return result.scalar_one_or_none()
