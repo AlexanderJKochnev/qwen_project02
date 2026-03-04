@@ -66,12 +66,12 @@ class OllamaClientManager:
 
     async def _check_health(self, mute: bool = False) -> bool:
         """Проверяет, доступен ли Ollama сервис."""
-        if not self.client:
+        if not self._client:
             return False
         try:
             # Пытаемся получить список моделей как легкий healthcheck
             # await self.client.list()
-            await self.client.list()
+            await self._client.list()
             if not mute:
                 logger.success("Ollama connected")
             return True
@@ -200,10 +200,22 @@ class OllamaClientManager:
         self._closed = True
         if self._check_health:
             await self._close_client()
-            self._health_client = None
         self._client = None
         logger.info("Ollama client manager closed")
 
 
-# Создаем менеджер как глобальный объект (или в lifespan)
-ollama_manager = OllamaClientManager(host=OLLAMA_HOST, timeout=OLLAMA_TIMEOUT)
+_ollama_manager_instance = None
+
+
+def get_ollama_manager(host: str = OLLAMA_HOST, timeout: float = OLLAMA_TIMEOUT) -> OllamaClientManager:
+    """
+    Функция для получения singleton экземпляра менеджера.
+    """
+    global _ollama_manager_instance
+    if _ollama_manager_instance is None:
+        _ollama_manager_instance = OllamaClientManager(host=host, timeout=timeout)
+    return _ollama_manager_instance
+
+
+# Для обратной совместимости оставляем переменную, но она теперь использует функцию
+ollama_manager = get_ollama_manager()
