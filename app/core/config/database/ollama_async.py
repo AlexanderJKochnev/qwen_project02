@@ -37,13 +37,15 @@ class OllamaClientManager:
     async def get_client(self) -> AsyncClient:
         """Возвращает существующего или создает нового клиента."""
         # Если клиент уже есть и работает, возвращаем его
-        if self._client and await self._check_health():
+        if self._client and await self._check_health(mute=True):
+            logger.info('ollama client is already run')
             return self._client
 
         # Если клиента нет или он не работает, создаем нового под блокировкой
         async with self._lock:
             # Двойная проверка: пока ждали блокировку, другой запрос мог уже создать клиента
-            if self._client and await self._check_health():
+            if self._client and await self._check_health(mute=True):
+                logger.info('another ollama client is already run')
                 return self._client
 
             logger.info("Creating new Ollama client...")
@@ -62,7 +64,7 @@ class OllamaClientManager:
             logger.info("New Ollama client created and healthy.")
             return self._client
 
-    async def _check_health(self) -> bool:
+    async def _check_health(self, mute: bool = False) -> bool:
         """Проверяет, доступен ли Ollama сервис."""
         if not self.client:
             return False
@@ -70,7 +72,8 @@ class OllamaClientManager:
             # Пытаемся получить список моделей как легкий healthcheck
             # await self.client.list()
             await self.client.list()
-            logger.success("Ollama connected")
+            if not mute:
+                logger.success("Ollama connected")
             return True
         except (httpx.ConnectError, httpx.TimeoutException, Exception) as e:
             logger.warning(f"Health check failed: {e}")
