@@ -3,6 +3,7 @@ from ollama import AsyncClient, ListResponse
 from fastapi import Request
 from app.core.config.database.ollama_async import OllamaClientManager
 from app.core.config.project_config import settings
+from app.core.config.database.ollama_async import get_ollama_manager
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.support.ollama.model import Ollama, Prompt, ISOLanguage
 
@@ -10,14 +11,13 @@ from app.support.ollama.model import Ollama, Prompt, ISOLanguage
 class LLMRepository:
     def __init__(self):
         self.host = settings.OLLAMA_HOST
+        self.ollama_manager = get_ollama_manager()
         # self.client = AsyncClient(host=self.host)
 
-    async def get_models_list(self, request: Request) -> ListResponse:
+    async def get_models_list(self) -> ListResponse:
         """ получение списка моделей """
         print('33333333')
-        manager: OllamaClientManager = request.app.state.ollama_manager
-        print('4444444')
-        models_info: ListResponse = await manager.client.list()  # self.client.list()
+        models_info: ListResponse = await self.ollama_manager.list_models()  # self.client.list()
         print('5555555')
         return models_info
 
