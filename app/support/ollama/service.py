@@ -1,11 +1,11 @@
 # app.suport.ollama.service.py
 from loguru import logger
-from ollama import ListResponse
+from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.services.service import Service
 from app.core.types import ModelType
-from app.support.ollama.repository import LLMRepository, OllamaRepository, ISOLanguageRepository
+from app.support.ollama.repository import LLMRepository, OllamaRepository
 
 
 class LLMService:
@@ -14,16 +14,8 @@ class LLMService:
         self.LLMrepository = LLMRepository()
 
     async def get_models_list(self):
-        result: ListResponse = await self.LLMrepository.get_models_list()
-        print('000000000')
-        print(f'{type(result)=}')
-        print(f'{result=}')
-        tmp = result.model_dump()
-        print('11111111')
-        print(f'{tmp=}')
-        from app.core.utils.common_utils import jprint
-        jprint(tmp.get('models'))
-        return tmp.get('models')
+        result: List = await self.LLMrepository.get_models_list()
+        return result
 
 
 class OllamaService(Service):

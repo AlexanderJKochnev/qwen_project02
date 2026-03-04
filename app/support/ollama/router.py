@@ -31,7 +31,6 @@ class OllamaRouter(BaseRouter):
         сравнение с сохраненными данными в базе данных и обновление
         """
         try:
-            print('11111111')
             response: List[dict] = await self.LLMservice.get_models_list()
 
             iter = 0
