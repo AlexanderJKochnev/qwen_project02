@@ -16,6 +16,8 @@ class LLMService:
     async def get_models_list(self):
         result: ListResponse = await self.LLMrepository.get_models_list()
         tmp = result.model_dump()
+        from app.core.utils.common_utils import jprint
+        jprint(tmp.get('models'))
         return tmp.get('models')
 
 
