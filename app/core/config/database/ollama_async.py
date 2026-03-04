@@ -213,10 +213,10 @@ def get_ollama_manager(host: str = OLLAMA_HOST, timeout: float = OLLAMA_TIMEOUT)
     """
     global _ollama_manager_instance
     if _ollama_manager_instance is None:
-        logger.success('first ollama_manager instance created')
         _ollama_manager_instance = OllamaClientManager(host=host, timeout=timeout)
+        logger.success('first ollama_manager instance created')
     else:
-        logger.error('ollama_manager instance is available now')
+        logger.info('ollama_manager instance is available now')
     return _ollama_manager_instance
 
 
