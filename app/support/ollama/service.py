@@ -61,14 +61,10 @@ class OllamaService(Service):
         # 1. Поиск и получение ll model
         repo = OllamaRepository
         model = Ollama
-        logger.error('11111111')
         if search_model.isnumeric():
-            logger.error('1111333')
             response: Ollama = await repo.get_by_id(int(search_model), model, session)
         else:
-            logger.error('1111444')
             response: Ollama = await repo.get_by_field('model', search_model, model, session)
-        logger.error('444444')
         llmodel = response.model
         logger.warning(llmodel)
 

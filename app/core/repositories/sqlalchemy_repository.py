@@ -332,7 +332,7 @@ class Repository(metaclass=RepositoryMeta):
         """
         try:
             column = getattr(model, field_name)
-            stmt = select(model).where(column.icontains(field_value))
+            stmt = select(model).where(column.icontains(field_value)).limit(1)
             # stmt = select(model).where(getattr(model, field_name) == field_value)
             result = await session.execute(stmt)
             return result.scalar_one_or_none()
