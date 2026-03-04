@@ -72,7 +72,7 @@ class OllamaService(Service):
         # 3. получение списка языков
         # 4. формирование payload (build_ollama_payload)
         # 5. запуск перевода (asyncio.gather)
-        return None
+        return llmodel
 
 
 class PromptService(Service):

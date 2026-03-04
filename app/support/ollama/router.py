@@ -11,7 +11,7 @@ from app.support.ollama.model import Ollama, Prompt, ISOLanguage
 from app.support.ollama.schemas import (LlmResponseSchema, OllamaCreate, OllamaRead, OllamaUpdate, PromptCreate,
                                         PromptRead, PromptUpdate,
                                         ISOLanguageCreate, ISOLanguageRead, ISOLanguageUpdate)
-from app.support.ollama.service import LLMService
+from app.support.ollama.service import LLMService, OllamaService
 
 
 class OllamaRouter(BaseRouter):
@@ -19,6 +19,7 @@ class OllamaRouter(BaseRouter):
     def __init__(self):
         super().__init__(model=Ollama, prefix="/ollama")
         self.LLMservice = LLMService()
+        self.service = OllamaService
 
     def setup_routes(self):
         self.router.add_api_route("/llm", self.get_models_list,
@@ -75,8 +76,8 @@ class OllamaRouter(BaseRouter):
            3. язык/языки для перевода
            возвращает:
         """
-
-        pass
+        result = await self.service.get_translate(phrase, llmodel, prompt, langs, session)
+        return result
 
     async def get_generate(self, session: AsyncSession = Depends(get_db)):
         pass
