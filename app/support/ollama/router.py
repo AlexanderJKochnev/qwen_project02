@@ -36,6 +36,7 @@ class OllamaRouter(BaseRouter):
             iter = 0
             while iter < 2:
                 iter += 1
+                #  валидирует исходные данные и возвращает плоский словарь
                 result = [LlmResponseSchema.model_validate(key).model_dump() for key in response]
                 result2 = await self.service.get_full(self.repo, self.model, session)
                 result3 = (OllamaCreate(**key.to_dict()).model_dump() for key in result2)

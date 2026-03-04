@@ -2,7 +2,7 @@
 from loguru import logger
 from ollama import ListResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from typing import List
 from app.core.services.service import Service
 from app.core.types import ModelType
 from app.support.ollama.schemas import LlmResponseSchema
@@ -14,10 +14,11 @@ class LLMService:
         # self.repository = OllamaRepository()
         self.LLMrepository = LLMRepository()
 
-    async def get_models_list(self):
+    async def get_models_list(self) -> List[dict]:
         result: ListResponse = await self.LLMrepository.get_models_list()
-        res = [LlmResponseSchema(**a) for a in result]
-        return res
+        tmp_dict: dict = result.model_dump()  # {'models': [{...}, список моделей описнаний]
+        response: List[dict] = [a for a in tmp_dict.get('models')]
+        return response
 
 
 class OllamaService(Service):
