@@ -74,9 +74,9 @@ async def lifespan(app: FastAPI):
     logger.success("Lifespan: расширения для PostgreSQL установлены")
     await redis_manager.connect(host="redis", port=6379)  # запускаем redis
     logger.success("Lifespan: Redis запущен, соединение установлено")
-    manager = get_ollama_manager()
-    app.state.ollama_manager = manager
-
+    ollama_manager = get_ollama_manager()
+    app.state.ollama_manager = ollama_manager
+    ollama_manager.get_client()
     yield
 
     # --- SHUTDOWN ---
