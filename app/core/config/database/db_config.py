@@ -32,6 +32,8 @@ class ConfigDataBase(BaseSettings):
     DRIVER: str = 'psycopg_async'  # asyncpg
     # закрывает зависшие соединения
     POOL_RECYCLE: int = 3600
+    OLLAMA_HOST: str = 'http://localhost:11434'
+    OLLAMA_TIMEOUT: float = 60.0
 
     @property
     def database_url(self) -> Optional[PostgresDsn]:

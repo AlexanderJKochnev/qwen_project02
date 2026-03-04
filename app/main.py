@@ -14,6 +14,7 @@ from time import perf_counter
 from app.auth.routers import auth_router, user_router
 # from app.core.config.project_config import settings
 from app.core.config.database.db_async import DatabaseManager, init_db_extensions
+from app.core.config.database.ollama_async import ollama_manager
 from app.core.config.database.db_mongo import MongoDBManager, get_mongodb
 from app.core.config.database.redis_async import redis_manager
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -68,8 +69,13 @@ async def lifespan(app: FastAPI):
             f"Lifespan: ОШИБКА ПОДКЛЮЧЕНИЯ К БД: {e}, {DatabaseManager.connection_string=}"
         )  # Если БД не отвечает, часто нет смысла запускать приложение  # raise e
     await MongoDBManager.connect()  # Подключаем Mongo
+    logger.success("Lifespan: соединение с MongoDB установлены")
     await init_db_extensions()  # подключение расщирений Postgresql
+    logger.success("Lifespan: расширения для PostgreSQL установлены")
     await redis_manager.connect(host="redis", port=6379)  # запускаем redis
+    logger.success("Lifespan: Redis запущен, соединение установлено")
+    app.state.ollama_manager = ollama_manager
+    await ollama_manager.get_client()  # поключение клиента
     # logger.info("Lifespan: Инициализация pg_listen_worker...")
     # listen_task = asyncio.create_task(pg_listen_worker())
     # logger.success("Lifespan: Инициализация pg_listen_worker...")

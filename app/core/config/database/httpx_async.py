@@ -3,6 +3,7 @@
     httpx AsyncClient - для внедрения зависисмости
     применение:
     http_client: httpx.AsyncClient = Depends(get_http_client)
+    пока нигде не используется
 """
 
 
