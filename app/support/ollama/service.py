@@ -14,6 +14,7 @@ class LLMService:
         self.LLMrepository = LLMRepository()
 
     async def get_models_list(self):
+        print('2222222')
         result: ListResponse = await self.LLMrepository.get_models_list()
         tmp = result.model_dump()
         from app.core.utils.common_utils import jprint

@@ -14,8 +14,11 @@ class LLMRepository:
 
     async def get_models_list(self, request: Request) -> ListResponse:
         """ получение списка моделей """
+        print('33333333')
         manager: OllamaClientManager = request.app.state.ollama_manager
+        print('4444444')
         models_info: ListResponse = await manager.client.list()  # self.client.list()
+        print('5555555')
         return models_info
 
     async def check_and_pull(self):
