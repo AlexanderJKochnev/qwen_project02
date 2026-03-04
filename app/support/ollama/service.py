@@ -16,8 +16,6 @@ class LLMService:
 
     async def get_models_list(self):
         result: ListResponse = await self.LLMrepository.get_models_list()
-        for key in result:
-            print(f'{type(key)=}')
         res = [LlmResponseSchema(**a) for a in result]
         return res
 
