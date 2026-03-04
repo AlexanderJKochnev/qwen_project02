@@ -76,7 +76,7 @@ async def lifespan(app: FastAPI):
     logger.success("Lifespan: Redis запущен, соединение установлено")
     ollama_manager = get_ollama_manager()
     app.state.ollama_manager = ollama_manager
-    ollama_manager.get_client()
+    await ollama_manager.get_client()
     yield
 
     # --- SHUTDOWN ---
