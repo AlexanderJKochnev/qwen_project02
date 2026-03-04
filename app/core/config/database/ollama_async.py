@@ -1,7 +1,7 @@
 # app.core.config.database.ollama_async.py
 
 from typing import Optional, Any, Dict, List
-from fastapi import HTTPException
+# from fastapi import HTTPException
 from ollama import AsyncClient
 from ollama import ResponseError as OllamaResponseError
 import httpx
@@ -213,7 +213,10 @@ def get_ollama_manager(host: str = OLLAMA_HOST, timeout: float = OLLAMA_TIMEOUT)
     """
     global _ollama_manager_instance
     if _ollama_manager_instance is None:
+        logger.success('first ollama_manager instance created')
         _ollama_manager_instance = OllamaClientManager(host=host, timeout=timeout)
+    else:
+        logger.error('ollama_manager instance is available now')
     return _ollama_manager_instance
 
 
