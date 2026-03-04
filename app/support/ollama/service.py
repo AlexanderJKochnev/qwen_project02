@@ -16,6 +16,8 @@ class LLMService:
     async def get_models_list(self):
         result: ListResponse = await self.LLMrepository.get_models_list()
         print('000000000')
+        print(f'{type(result)=}')
+        print(f'{result=}')
         tmp = result.model_dump()
         print('11111111')
         print(f'{tmp=}')
