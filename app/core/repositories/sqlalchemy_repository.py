@@ -680,10 +680,12 @@ class Repository(metaclass=RepositoryMeta):
                     stmt = stmt.where((column.is_(None)))
                 elif isinstance(value, Union[List, Tuple]):
                     conditions = [column.icontains(val) for val in value]
-                    logger.warning(conditions)
                     stmt = stmt.where(or_(*conditions))
                 else:
                     stmt = stmt.where(column == value)
+            from sqlalchemy.dialects import postgresql
+            compiled = stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
+            logger.error(f'{compiled=}')
             result = await session.execute(stmt)
             return result.scalars().all()
         except Exception as e:
