@@ -21,7 +21,7 @@ class LLMRepository:
 
     async def get_translate(self, payload: dict):
         """  перевод """
-        result = await self.ollama_manager.generate(payload)
+        result = await self.ollama_manager.generate(**payload)
         return result
 
     async def check_and_pull(self):
