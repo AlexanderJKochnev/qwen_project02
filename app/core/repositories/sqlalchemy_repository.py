@@ -680,6 +680,7 @@ class Repository(metaclass=RepositoryMeta):
                     stmt = stmt.where((column.is_(None)))
                 elif isinstance(value, Union[List, Tuple]):
                     conditions = [column.icontains(val) for val in value]
+                    logger.warning(conditions)
                     stmt = stmt.where(or_(*conditions))
                 else:
                     stmt = stmt.where(column == value)
