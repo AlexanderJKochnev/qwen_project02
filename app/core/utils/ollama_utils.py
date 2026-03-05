@@ -2,7 +2,9 @@ from typing import Dict, Any, Optional, Sequence, Literal
 
 
 def build_ollama_payload(
-        db_row: Dict[str, Any], user_text: str, ll_model: str, mode: Literal['chat', 'generate'] = 'chat',
+        db_row: Dict[str, Any],
+        user_text: str, ll_model: str,
+        mode: Literal['chat', 'generate'] = 'chat',
         context: Optional[Sequence[int]] = None
 ) -> Dict[str, Any]:
     """

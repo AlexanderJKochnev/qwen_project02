@@ -101,9 +101,13 @@ class OllamaService(Service):
             repo = ISOLanguageRepository
             result: List[ISOLanguage] = await repo.search_by_conditions(conditions, ISOLanguage, session)
             languages = [val.name_en for val in result]
-            payload = build_ollama_payload(prompt_dict, phrase, llmodel, 'generate')
-
-            return payload
+            # 4. Подготовка фразы для перевода:
+            result = []
+            for lang in languages:
+                source: str = f"Translate the following text to {lang} ({phrase})."
+                payload = build_ollama_payload(prompt_dict, source, llmodel, 'generate')
+                result.append(payload)
+            return result
         except ValueError as e:
             # Обрабатываем ошибки валидации/поиска
             logger.error(f"Validation error: {e}")
