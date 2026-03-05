@@ -74,6 +74,7 @@ class OllamaService(Service):
                             session: AsyncSession):
         """ поиск """
         try:
+            llm_repository = LLMRepository()
             # 1. Поиск и получение ll model
             response = await cls.get_datas(search_model, OllamaRepository, Ollama, session,
                                            order_by='size', asc=True, equa='icontains',
@@ -106,7 +107,9 @@ class OllamaService(Service):
             for lang in languages:
                 source: str = f"Translate the following text to {lang} ({phrase})."
                 payload = build_ollama_payload(prompt_dict, source, llmodel, 'generate')
-                result.append(payload)
+                response = await llm_repository.get_translate(payload)
+                result.append(response)
+                break
             return result
         except ValueError as e:
             # Обрабатываем ошибки валидации/поиска

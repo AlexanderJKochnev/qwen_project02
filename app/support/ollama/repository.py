@@ -19,6 +19,11 @@ class LLMRepository:
         models_info: ListResponse = await self.ollama_manager.client.list()
         return models_info
 
+    async def get_translate(self, payload: dict):
+        """  перевод """
+        result = await self.ollama_manager.generate(payload)
+        return result
+
     async def check_and_pull(self):
         """Проверяет, есть ли модель, и скачивает её, если нет."""
         print(f"--- Проверка модели {self.model_name} ---")
