@@ -61,8 +61,9 @@ class OllamaService(Service):
         # 1. Поиск и получение ll model
         repo = OllamaRepository
         model = Ollama
-        logger.info(type(search_model))
+        logger.info(search_model.isnumeric())
         if search_model.isnumeric():
+            logger.info(int(search_model))
             response: Ollama = await repo.get_by_id(int(search_model), model, session)
         else:
             response: Ollama = await repo.get_by_field('model', search_model, model, session,
