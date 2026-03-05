@@ -6,7 +6,8 @@ from typing import List, Type
 from app.core.services.service import Service
 from app.core.types import ModelType
 from app.support.ollama.schemas import LlmResponseSchema
-from app.support.ollama.repository import LLMRepository, OllamaRepository, PromptRepository, Repository
+from app.support.ollama.repository import (LLMRepository, OllamaRepository, PromptRepository, Repository,
+                                           ISOLanguageRepository)
 from app.support.ollama.model import Ollama, ISOLanguage, Prompt
 
 
@@ -77,17 +78,30 @@ class OllamaService(Service):
                                            order_by='size', asc=True, equa='icontains',
                                            field='model')
             llmodel = response.model
-            # return llmodel
 
             # 2. Поиск и получение prompt
             prompt = await cls.get_datas(search_prompt, PromptRepository, Prompt, session,
                                          order_by='role', asc=True, equa='icontains',
                                          field='role')
-            return prompt
+
             # 3. получение списка языков
+            if langs and isinstance(langs, str):
+                iso = [lang.strip() for lang in langs]
+                # определяем 3 или 2 знака
+                match len(iso[0]):
+                    case 2:
+                        conditions = {'iso_639_1': iso}
+                    case 3:
+                        conditions = {'iso_639_3': iso}
+                    case _:
+                        conditions = {'name_en': iso}
+                repo = ISOLanguageRepository
+                result: List[ISOLanguage] = repo.search_by_conditions(conditions, session)
+                for key in result:
+                    logger.info(key.name_en)
             # 4. формирование payload (build_ollama_payload)
             # 5. запуск перевода (asyncio.gather)
-
+            return prompt
         except ValueError as e:
             # Обрабатываем ошибки валидации/поиска
             logger.error(f"Validation error: {e}")

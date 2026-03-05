@@ -9,7 +9,7 @@ import re
 from datetime import datetime
 from loguru import logger
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
-from sqlalchemy import and_, func, select, Select, update, desc, cast, Text, text, literal, literal_column
+from sqlalchemy import and_, func, select, Select, update, desc, cast, Text, text, literal, literal_column, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql.elements import Label
@@ -665,3 +665,28 @@ class Repository(metaclass=RepositoryMeta):
         except Exception as e:
             logger.error(f'search_fts.error: {e}')
             raise Exception(f'search_fts.error: {e}')
+
+    @classmethod
+    async def search_by_conditions(cls, filter: dict, model: ModelType, session: AsyncSession, **kwargs):
+        """
+            фильтр по нескольким полям, несколько значений для каждого поля
+            filter = {<имя поля>: [<искомое значение>,...], ...},
+        """
+        try:
+            stmt = select(model)
+            for key, value in filter.items():
+                column = getattr(model, key)
+                if value is None:
+                    stmt = stmt.where((column.is_(None)))
+                elif isinstance(value, Union[List, Tuple]):
+                    conditions = [column.icontains(val) for val in value]
+                    stmt = stmt.where(or_(*conditions))
+                else:
+                    stmt = stmt.where(column == value)
+            result = await session.execute(stmt)
+            return result.scalars().all()
+        except Exception as e:
+            if hasattr(model, '__name__'):
+                raise Exception(f'repo.get_by_fields: {filter=}, {model.__name__=}, {e}')
+            else:
+                raise Exception(f'repo.get_by_fields: {filter=}, {model=}, {e}')
