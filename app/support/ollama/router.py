@@ -76,8 +76,11 @@ class OllamaRouter(BaseRouter):
            3. язык/языки для перевода
            возвращает:
         """
-        result = await self.service.get_translate(phrase, llmodel, prompt, langs, session)
-        return result
+        try:
+            result = await self.service.get_translate(phrase, llmodel, prompt, langs, session)
+            return result
+        except Exception as e:
+            raise HTTPException(status_code=501, detail=e)
 
     async def get_generate(self, session: AsyncSession = Depends(get_db)):
         pass

@@ -58,26 +58,29 @@ class OllamaService(Service):
                             langs: str,
                             session: AsyncSession):
         """ поиск """
-        # 1. Поиск и получение ll model
-        repo = OllamaRepository
-        model = Ollama
-        logger.info(search_model.isnumeric())
-        if search_model.isnumeric():
-            logger.info(int(search_model))
-            response: Ollama = await repo.get_by_id(int(search_model), model, session)
-        else:
-            response: Ollama = await repo.get_by_field('model', search_model, model, session,
-                                                       order_by='size', asc=True, equa='icontains')
-        llmodel = response.model
-        logger.warning(llmodel)
+        try:
+            # 1. Поиск и получение ll model
+            repo = OllamaRepository
+            model = Ollama
+            logger.info(search_model.isnumeric())
+            if search_model.isnumeric():
+                logger.info(int(search_model))
+                response: Ollama = await repo.get_by_id(int(search_model), model, session)
+            else:
+                response: Ollama = await repo.get_by_field('model', search_model, model, session,
+                                                           order_by='size', asc=True, equa='icontains')
+            llmodel = response.model
+            logger.warning(llmodel)
 
-        # 2. Поиск и получение prompt
+            # 2. Поиск и получение prompt
 
-        # 3. получение списка языков
-        # 4. формирование payload (build_ollama_payload)
-        # 5. запуск перевода (asyncio.gather)
-        return llmodel
-
+            # 3. получение списка языков
+            # 4. формирование payload (build_ollama_payload)
+            # 5. запуск перевода (asyncio.gather)
+            return llmodel
+        except Exception as e:
+            logger.error(e)
+            raise Exception(e)
 
 class PromptService(Service):
     default = ['role']
