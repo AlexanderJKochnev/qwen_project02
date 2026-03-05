@@ -108,7 +108,7 @@ class OllamaService(Service):
                 source: str = f"Translate the following text to {lang} ({phrase})."
                 payload = build_ollama_payload(prompt_dict, source, llmodel, 'generate')
                 response = await llm_repository.get_translate(**payload)
-                result.append(payload)
+                result.append(response)
                 break
             return result
         except ValueError as e:
