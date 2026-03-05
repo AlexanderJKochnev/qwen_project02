@@ -86,7 +86,7 @@ class OllamaService(Service):
 
             # 3. получение списка языков
             if langs and isinstance(langs, str):
-                iso = [lang.strip() for lang in langs]
+                iso = [lang.strip() for lang in langs.split(',')]
                 # определяем 3 или 2 знака
                 match len(iso[0]):
                     case 2:
