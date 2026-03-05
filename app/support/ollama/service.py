@@ -61,6 +61,7 @@ class OllamaService(Service):
         # 1. Поиск и получение ll model
         repo = OllamaRepository
         model = Ollama
+        logger.info(type(search_model))
         if search_model.isnumeric():
             response: Ollama = await repo.get_by_id(int(search_model), model, session)
         else:
@@ -70,6 +71,7 @@ class OllamaService(Service):
         logger.warning(llmodel)
 
         # 2. Поиск и получение prompt
+
         # 3. получение списка языков
         # 4. формирование payload (build_ollama_payload)
         # 5. запуск перевода (asyncio.gather)

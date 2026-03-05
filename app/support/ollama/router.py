@@ -77,7 +77,6 @@ class OllamaRouter(BaseRouter):
            возвращает:
         """
         result = await self.service.get_translate(phrase, llmodel, prompt, langs, session)
-        logger.error(result)
         return result
 
     async def get_generate(self, session: AsyncSession = Depends(get_db)):
