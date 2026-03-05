@@ -27,7 +27,7 @@ class OllamaRouter(BaseRouter):
                                   response_model=List[LlmResponseSchema])
         self.router.add_api_route("/translate", self.get_translate,
                                   methods=['GET'])
-        # super().setup_routes()
+        super().setup_routes()
 
     async def get_models_list(self, background_tasks: BackgroundTasks, session: AsyncSession = Depends(get_db)):
         """
