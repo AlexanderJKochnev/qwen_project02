@@ -72,8 +72,8 @@ class OllamaService(Service):
         """ поиск """
         try:
             # 1. Поиск и получение ll model
-            llmodel = cls.get_datas(search_model, OllamaRepository, Ollama, session,
-                                    order_by='size', asc=True, equa='icontains')
+            llmodel = await cls.get_datas(search_model, OllamaRepository, Ollama, session,
+                                          order_by='size', asc=True, equa='icontains')
             """
             repo = OllamaRepository
             model = Ollama
