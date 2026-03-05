@@ -2,7 +2,7 @@ from typing import Dict, Any, Optional, Sequence, Literal
 
 
 def build_ollama_payload(
-        db_row: Dict[str, Any], user_text: str, mode: Literal['chat', 'generate'] = 'chat',
+        db_row: Dict[str, Any], user_text: str, ll_model: str, mode: Literal['chat', 'generate'] = 'chat',
         context: Optional[Sequence[int]] = None
 ) -> Dict[str, Any]:
     """
@@ -16,7 +16,7 @@ def build_ollama_payload(
     options = {k: db_row[k] for k in option_keys if k in db_row and db_row[k] is not None}
 
     # Базовая структура запроса
-    payload = {"model": db_row.get("model", "llama3"), "options": options, "stream": False}
+    payload = {"model": db_row.get("model", ll_model), "options": options, "stream": False}
 
     # 2. Формируем тело в зависимости от режима
     if mode == 'chat':

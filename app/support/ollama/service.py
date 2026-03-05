@@ -101,7 +101,7 @@ class OllamaService(Service):
             repo = ISOLanguageRepository
             result: List[ISOLanguage] = await repo.search_by_conditions(conditions, ISOLanguage, session)
             languages = [val.name_en for val in result]
-            payload = build_ollama_payload(prompt_dict, phrase, 'generate')
+            payload = build_ollama_payload(prompt_dict, phrase, llmodel, 'generate')
 
             return payload
         except ValueError as e:
