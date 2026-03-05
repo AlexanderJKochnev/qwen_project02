@@ -56,8 +56,9 @@ class OllamaService(Service):
         if search.isnumeric():
             response: ModelType = await repo.get_by_id(int(search), model, session)
         else:
+            field = kwargs.get('field', 'name')
             response: ModelType = await repo.get_by_field(
-                'model', search, model, session, **kwargs)
+                field, search, model, session, **kwargs)
             # order_by='size', asc=True, equa='icontains'
         if not response:
             raise ValueError(f'LLM model "{search}" not found')
@@ -72,8 +73,10 @@ class OllamaService(Service):
         """ поиск """
         try:
             # 1. Поиск и получение ll model
-            llmodel = await cls.get_datas(search_model, OllamaRepository, Ollama, session,
-                                          order_by='size', asc=True, equa='icontains')
+            response = await cls.get_datas(search_model, OllamaRepository, Ollama, session,
+                                           order_by='size', asc=True, equa='icontains',
+                                           field='model')
+            llmodel = response.model
             """
             repo = OllamaRepository
             model = Ollama
