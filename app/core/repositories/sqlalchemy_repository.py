@@ -340,7 +340,7 @@ class Repository(metaclass=RepositoryMeta):
                 else:
                     stmt = select(stmt).order_by(desc(orderby))
             """
-            stmt = select(stmt).limit(1)
+            stmt = stmt.limit(1)
             # stmt = select(model).where(getattr(model, field_name) == field_value)
             result = await session.execute(stmt)
             return result.scalar_one_or_none()
