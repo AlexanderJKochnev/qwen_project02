@@ -65,7 +65,7 @@ class OllamaService(Service):
             response: Ollama = await repo.get_by_id(int(search_model), model, session)
         else:
             response: Ollama = await repo.get_by_field('model', search_model, model, session,
-                                                       order_by='size', asc=True)
+                                                       order_by='size', asc=True, equa='icontain')
         llmodel = response.model
         logger.warning(llmodel)
 
