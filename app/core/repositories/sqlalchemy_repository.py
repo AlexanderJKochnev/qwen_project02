@@ -337,7 +337,6 @@ class Repository(metaclass=RepositoryMeta):
                 stmt = select(model).where(column.icontains(field_value))
             else:
                 stmt = select(model).where(column == field_value)
-            
             if orderby := kwargs.get('order_by'):
                 if kwargs.get('asc', False):
                     stmt = stmt.order_by(orderby)
