@@ -2,11 +2,11 @@
 from loguru import logger
 from ollama import ListResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List
+from typing import List, Type
 from app.core.services.service import Service
 from app.core.types import ModelType
 from app.support.ollama.schemas import LlmResponseSchema
-from app.support.ollama.repository import LLMRepository, OllamaRepository, PromptRepository
+from app.support.ollama.repository import LLMRepository, OllamaRepository, PromptRepository, Repository
 from app.support.ollama.model import Ollama, ISOLanguage, Prompt
 
 
@@ -52,6 +52,18 @@ class OllamaService(Service):
             raise Exception(e)
 
     @classmethod
+    async def get_datas(cls, search: str, repo: Type[Repository], model: ModelType, session: AsyncSession, **kwargs):
+        if search.isnumeric():
+            response: ModelType = await repo.get_by_id(int(search), model, session)
+        else:
+            response: ModelType = await repo.get_by_field(
+                'model', search, model, session, **kwargs)
+            # order_by='size', asc=True, equa='icontains'
+        if not response:
+            raise ValueError(f'LLM model "{search}" not found')
+        return response
+
+    @classmethod
     async def get_translate(cls, phrase: str,
                             search_model: str,
                             prompt: str,
@@ -60,6 +72,9 @@ class OllamaService(Service):
         """ поиск """
         try:
             # 1. Поиск и получение ll model
+            llmodel = cls.get_datas(search_model, OllamaRepository, Ollama, session,
+                                    order_by='size', asc=True, equa='icontains')
+            """
             repo = OllamaRepository
             model = Ollama
             logger.info(search_model.isnumeric())
@@ -69,12 +84,12 @@ class OllamaService(Service):
             else:
                 response: Ollama = await repo.get_by_field('model', search_model, model, session,
                                                            order_by='size', asc=True, equa='icontains')
-            if response:
-                llmodel = response.model
-                logger.warning(llmodel)
-                return llmodel
-            else:
-                raise Exception(f'LLmodel {search_model} not found')
+            if not response:
+                raise ValueError(f'LLM model "{search_model}" not found')
+            llmodel = response.model
+            logger.warning(llmodel)
+            """
+            return llmodel
 
             # 2. Поиск и получение prompt
 
@@ -82,9 +97,17 @@ class OllamaService(Service):
             # 4. формирование payload (build_ollama_payload)
             # 5. запуск перевода (asyncio.gather)
             return llmodel
+
+        except ValueError as e:
+            # Обрабатываем ошибки валидации/поиска
+            logger.error(f"Validation error: {e}")
+            raise  # Пробрасываем дальше для обработки в роутере
+
         except Exception as e:
-            logger.error(e)
-            raise Exception(e)
+            # Обрабатываем непредвиденные ошибки
+            logger.error(f"Unexpected error in get_translate: {e}", exc_info=True)
+            raise RuntimeError(f"Internal server error during translation setup: {str(e)}")
+
 
 class PromptService(Service):
     default = ['role']
