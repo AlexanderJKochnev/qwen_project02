@@ -130,6 +130,7 @@ class OllamaClientManager:
         Обертка для generate с автоматическими ретраями и обработкой ошибок.
         Принимает те же параметры, что и оригинальный client.generate()
         """
+        logger.debug(f"generate called with kwargs: {kwargs}")
         max_retries = kwargs.pop('_max_retries', 2)
         last_error = None
 
