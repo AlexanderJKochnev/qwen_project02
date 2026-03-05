@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Type
 from app.core.services.service import Service
 from app.core.types import ModelType
+from app.core.utils.ollama_utils import build_ollama_payload
 from app.support.ollama.schemas import LlmResponseSchema
 from app.support.ollama.repository import (LLMRepository, OllamaRepository, PromptRepository, Repository,
                                            ISOLanguageRepository)
@@ -77,31 +78,32 @@ class OllamaService(Service):
             response = await cls.get_datas(search_model, OllamaRepository, Ollama, session,
                                            order_by='size', asc=True, equa='icontains',
                                            field='model')
-            llmodel = response.model
+            llmodel: str = response.model
 
             # 2. Поиск и получение prompt
-            prompt = await cls.get_datas(search_prompt, PromptRepository, Prompt, session,
-                                         order_by='role', asc=True, equa='icontains',
-                                         field='role')
+            prompt: dict = await cls.get_datas(search_prompt, PromptRepository, Prompt, session,
+                                               order_by='role', asc=True, equa='icontains',
+                                               field='role')
 
             # 3. получение списка языков
             if langs and isinstance(langs, str):
                 iso = [lang.strip() for lang in langs.split(',')]
-                # определяем 3 или 2 знака
-                match len(iso[0]):
-                    case 2:
-                        conditions = {'iso_639_1': iso}
-                    case 3:
-                        conditions = {'iso_639_3': iso}
-                    case _:
-                        conditions = {'name_en': iso}
-                repo = ISOLanguageRepository
-                result: List[ISOLanguage] = await repo.search_by_conditions(conditions, ISOLanguage, session)
-                for key in result:
-                    logger.info(key.name_en)
-            # 4. формирование payload (build_ollama_payload)
-            # 5. запуск перевода (asyncio.gather)
-            return prompt
+            else:
+                iso = ['ru', 'en', 'zh']
+            # определяем 3 или 2 знака
+            match len(iso[0]):
+                case 2:
+                    conditions = {'iso_639_1': iso}
+                case 3:
+                    conditions = {'iso_639_3': iso}
+                case _:
+                    conditions = {'name_en': iso}
+            repo = ISOLanguageRepository
+            result: List[ISOLanguage] = await repo.search_by_conditions(conditions, ISOLanguage, session)
+            languages = [val.name_en for val in result]
+            payload = build_ollama_payload(prompt, phrase, 'generate')
+
+            return payload
         except ValueError as e:
             # Обрабатываем ошибки валидации/поиска
             logger.error(f"Validation error: {e}")

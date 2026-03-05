@@ -683,9 +683,9 @@ class Repository(metaclass=RepositoryMeta):
                     stmt = stmt.where(or_(*conditions))
                 else:
                     stmt = stmt.where(column == value)
-            from sqlalchemy.dialects import postgresql
-            compiled = stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
-            logger.error(f'{compiled.string=}')
+            # from sqlalchemy.dialects import postgresql
+            # compiled = stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
+            # logger.error(f'{compiled.string=}')
             result = await session.execute(stmt)
             return result.scalars().all()
         except Exception as e:
