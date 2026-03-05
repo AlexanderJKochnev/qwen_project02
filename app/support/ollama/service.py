@@ -67,7 +67,7 @@ class OllamaService(Service):
     @classmethod
     async def get_translate(cls, phrase: str,
                             search_model: str,
-                            prompt: str,
+                            search_prompt: str,
                             langs: str,
                             session: AsyncSession):
         """ поиск """
@@ -77,29 +77,16 @@ class OllamaService(Service):
                                            order_by='size', asc=True, equa='icontains',
                                            field='model')
             llmodel = response.model
-            """
-            repo = OllamaRepository
-            model = Ollama
-            logger.info(search_model.isnumeric())
-            if search_model.isnumeric():
-                logger.info(int(search_model))
-                response: Ollama = await repo.get_by_id(int(search_model), model, session)
-            else:
-                response: Ollama = await repo.get_by_field('model', search_model, model, session,
-                                                           order_by='size', asc=True, equa='icontains')
-            if not response:
-                raise ValueError(f'LLM model "{search_model}" not found')
-            llmodel = response.model
-            logger.warning(llmodel)
-            """
-            return llmodel
+            # return llmodel
 
             # 2. Поиск и получение prompt
-
+            prompt = await cls.get_datas(search_prompt, PromptRepository, Prompt, session,
+                                         order_by='role', asc=True, equa='icontains',
+                                         field='role')
+            return prompt
             # 3. получение списка языков
             # 4. формирование payload (build_ollama_payload)
             # 5. запуск перевода (asyncio.gather)
-            return llmodel
 
         except ValueError as e:
             # Обрабатываем ошибки валидации/поиска
