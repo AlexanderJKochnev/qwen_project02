@@ -80,6 +80,7 @@ class OllamaService(Service):
             response = await llm_repository.get_translate(payload)
             total_duration_ns = response.get('total_duration')
             tmp: dict = {'lang': lang, 'response': response.get('response'),
+                         'llmodel': llmodel,
                          'duration': f"{total_duration_ns / 1_000_000_000: .2f}"}
             return tmp
         except Exception as e:
