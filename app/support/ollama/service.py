@@ -81,10 +81,10 @@ class OllamaService(Service):
             llmodel: str = response.model
 
             # 2. Поиск и получение prompt
-            prompt: dict = await cls.get_datas(search_prompt, PromptRepository, Prompt, session,
+            prompt: Prompt = await cls.get_datas(search_prompt, PromptRepository, Prompt, session,
                                                order_by='role', asc=True, equa='icontains',
                                                field='role')
-
+            prompt_dict = prompt.to_dict()
             # 3. получение списка языков
             if langs and isinstance(langs, str):
                 iso = [lang.strip() for lang in langs.split(',')]
@@ -101,7 +101,7 @@ class OllamaService(Service):
             repo = ISOLanguageRepository
             result: List[ISOLanguage] = await repo.search_by_conditions(conditions, ISOLanguage, session)
             languages = [val.name_en for val in result]
-            payload = build_ollama_payload(prompt, phrase, 'generate')
+            payload = build_ollama_payload(prompt_dict, phrase, 'generate')
 
             return payload
         except ValueError as e:
