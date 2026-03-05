@@ -69,8 +69,12 @@ class OllamaService(Service):
             else:
                 response: Ollama = await repo.get_by_field('model', search_model, model, session,
                                                            order_by='size', asc=True, equa='icontains')
-            llmodel = response.model
-            logger.warning(llmodel)
+            if response:
+                llmodel = response.model
+                logger.warning(llmodel)
+                return llmodel
+            else:
+                raise Exception(f'LLmodel {search_model} not found')
 
             # 2. Поиск и получение prompt
 
