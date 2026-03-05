@@ -1,4 +1,6 @@
 # app.suport.ollama.service.py
+import asyncio
+
 from loguru import logger
 from ollama import ListResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -67,12 +69,29 @@ class OllamaService(Service):
         return response
 
     @classmethod
+    async def translate_to_language(cls, phrase: str, lang: str, llmodel: str,
+                                    prompt_dict: dict, llm_repository: LLMRepository):
+        """
+            перевод на один язык
+        """
+        try:
+            source: str = f"Translate the following text to {lang} ({phrase})."
+            payload = build_ollama_payload(prompt_dict, source, llmodel, 'generate')
+            response = await llm_repository.get_translate(payload)
+            total_duration_ns = response.get('total_duration')
+            tmp: dict = {'lang': lang, 'response': response.get('response'),
+                         'duration': f"{total_duration_ns / 1_000_000_000: .2f}"}
+            return tmp
+        except Exception as e:
+            return {'lang': lang, 'error': e}
+
+    @classmethod
     async def get_translate(cls, phrase: str,
                             search_model: str,
                             search_prompt: str,
                             langs: str,
                             session: AsyncSession):
-        """ поиск """
+        """ перевод на несколькол  языков """
         try:
             llm_repository = LLMRepository()
             # 1. Поиск и получение ll model
@@ -83,8 +102,8 @@ class OllamaService(Service):
 
             # 2. Поиск и получение prompt
             prompt: Prompt = await cls.get_datas(search_prompt, PromptRepository, Prompt, session,
-                                               order_by='role', asc=True, equa='icontains',
-                                               field='role')
+                                                 order_by='role', asc=True, equa='icontains',
+                                                 field='role')
             prompt_dict = prompt.to_dict()
             # 3. получение списка языков
             if langs and isinstance(langs, str):
@@ -102,14 +121,10 @@ class OllamaService(Service):
             repo = ISOLanguageRepository
             result: List[ISOLanguage] = await repo.search_by_conditions(conditions, ISOLanguage, session)
             languages = [val.name_en for val in result]
-            # 4. Подготовка фразы для перевода:
-            result = []
-            for lang in languages:
-                source: str = f"Translate the following text to {lang} ({phrase})."
-                payload = build_ollama_payload(prompt_dict, source, llmodel, 'generate')
-                response = await llm_repository.get_translate(payload)
-                result.append(response)
-                break
+            # 4. подготовка к параллельному запуску:
+            tasks = [cls.translate_to_language(phrase, lang, llmodel, prompt_dict, llm_repository) for lang in languages]
+            result = await asyncio.gather(*tasks)
+            return result
             return result
         except ValueError as e:
             # Обрабатываем ошибки валидации/поиска

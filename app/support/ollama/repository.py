@@ -20,7 +20,31 @@ class LLMRepository:
         return models_info
 
     async def get_translate(self, payload: dict):
-        """  перевод """
+        """  перевод
+        response:
+        {
+            "model": "gemma2:27b",
+            "created_at": "2026-03-05T09:02:43.415959219Z",
+            "done": true,
+            "done_reason": "stop",
+            "total_duration": 1349323407,
+            "load_duration": 379073222,
+            "prompt_eval_count": 101,
+            "prompt_eval_duration": 165122747,
+            "eval_count": 6,
+            "eval_duration": 796122539,
+            "response": "Big White Lake \n",
+            "thinking": null,
+            "context": [
+              106,
+              1645,
+              108,
+              64748,
+            ],
+            "logprobs": null
+          }
+
+        """
         result = await self.ollama_manager.generate(**payload)
         return result
 
