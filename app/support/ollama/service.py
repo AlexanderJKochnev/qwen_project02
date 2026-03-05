@@ -96,7 +96,7 @@ class OllamaService(Service):
                     case _:
                         conditions = {'name_en': iso}
                 repo = ISOLanguageRepository
-                result: List[ISOLanguage] = repo.search_by_conditions(conditions, session)
+                result: List[ISOLanguage] = repo.search_by_conditions(conditions, ISOLanguage, session)
                 for key in result:
                     logger.info(key.name_en)
             # 4. формирование payload (build_ollama_payload)
