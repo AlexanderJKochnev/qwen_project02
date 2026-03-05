@@ -334,11 +334,10 @@ class Repository(metaclass=RepositoryMeta):
             column = getattr(model, field_name)
             stmt = select(model).where(column.icontains(field_value))
             if orderby := kwargs.get('order_by'):
-                sort_by = getattr(model, orderby)
                 if kwargs.get('asc', False):
-                    stmt = select(stmt).order_by(sort_by)
+                    stmt = select(stmt).order_by(orderby)
                 else:
-                    stmt = select(stmt).order_by(desc(sort_by))
+                    stmt = select(stmt).order_by(desc(orderby))
             stmt = select(stmt).limit(1)
             # stmt = select(model).where(getattr(model, field_name) == field_value)
             result = await session.execute(stmt)
