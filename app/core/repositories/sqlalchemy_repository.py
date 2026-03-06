@@ -687,8 +687,9 @@ class Repository(metaclass=RepositoryMeta):
             compiled = stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
             logger.error(f'{compiled.string=}')
             result = await session.execute(stmt)
-            logger.warning(f'{result=} {type(result)=}')
-            print(f"Result keys: {result.keys()}")
+            response = result.scalars().all()
+            logger.warning(f'{response=} {type(response)=}')
+            # print(f"Result keys: {result.keys()}")
             
             # response = result.scalars().all()
             # logger.warning(f'{response=}')
