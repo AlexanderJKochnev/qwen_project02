@@ -94,7 +94,8 @@ class OllamaService(Service):
     async def write_the_novel(cls, phrase: str, llmodel: str, prompt_dict: dict, llm_repository: LLMRepository):
         """ описание на одном языке """
         try:
-            source: str = f'Write a 3-4 sentence article about {phrase} in the style of The Oxford Companion to Wine'
+            # source: str = f'Write a 3-4 sentence article about {phrase} in the style of The Oxford Companion to Wine'
+            source: str = f'Напиши на русском языке статью из 3-4 предложений о {phrase} в стиле справочника Мишлен'
             payload: dict = build_ollama_payload(prompt_dict, source, llmodel, 'generate')
             logger.warning(payload)
             logger.warning(source)
