@@ -683,12 +683,13 @@ class Repository(metaclass=RepositoryMeta):
                     stmt = stmt.where(or_(*conditions))
                 else:
                     stmt = stmt.where(column == value)
-            # from sqlalchemy.dialects import postgresql
-            # compiled = stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
-            # logger.error(f'{compiled.string=}')
+            from sqlalchemy.dialects import postgresql
+            compiled = stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
+            logger.error(f'{compiled.string=}')
             result = await session.execute(stmt)
-            logger.warning(f'{result.scalars().all()=}')
-            return result.scalars().all()
+            response = result.scalars().all()
+            logger.warning(f'{response=}')
+            return response
         except Exception as e:
             if hasattr(model, '__name__'):
                 raise Exception(f'repo.get_by_fields: {filter=}, {model.__name__=}, {e}')
