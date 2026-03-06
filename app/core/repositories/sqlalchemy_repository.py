@@ -674,7 +674,6 @@ class Repository(metaclass=RepositoryMeta):
         """
         try:
             stmt = select(model)
-            logger.warning(f'core {filter=}')
             for key, value in filter.items():
                 column = getattr(model, key)
                 if value is None:
@@ -688,6 +687,7 @@ class Repository(metaclass=RepositoryMeta):
             # compiled = stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
             # logger.error(f'{compiled.string=}')
             result = await session.execute(stmt)
+            logger.warning(f'core {result=}')
             return result.scalars().all()
         except Exception as e:
             if hasattr(model, '__name__'):
