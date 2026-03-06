@@ -189,22 +189,22 @@ class OllamaService(Service):
             prompt_dict = prompt.to_dict()
             # 3. получение языка
             if langs and isinstance(langs, str):
-                iso = langs.strip()
+                iso = [langs.strip()]
             else:
-                iso = 'ru'
+                iso = ['ru']
             # определяем 3 или 2 знака
             match len(iso[0]):
                 case 2:
-                    field = 'iso_639_1'
+                    conditions = {'iso_639_1': iso}
                 case 3:
-                    field = 'iso_639_3'
+                    conditions = {'iso_639_3': iso}
                 case _:
-                    field = 'name_en'
+                    conditions = {'name_en': iso}
             repo = ISOLanguageRepository
-            logger.warning(f'{field=} {iso=}.')
-            result: ISOLanguage = await repo.get_by_field(field, iso.lower(), ISOLanguage, session)
+            logger.warning(f'{conditions=}.')
+            result: List[ISOLanguage] = await repo.search_by_conditions(conditions, ISOLanguage, session)
             logger.warning(f'0: {result}')
-            language = result.name_en
+            language = result[0].name_en
             logger.warning(f'1: {language}')
             result = await cls.write_the_novel(phrase, language, llmodel, prompt_dict, llm_repository)
             return result
