@@ -87,4 +87,4 @@ class ISOLanguage(Base, BaseAt):
     name_ru: Mapped[str] = mapped_column(String(100), nullable=False)
 
     def __str__(self):
-        return f"{self.iso} {self.name_en}" or ""
+        return f"{self.iso_639_3} {self.name_en}" or ""
