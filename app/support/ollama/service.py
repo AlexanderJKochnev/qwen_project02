@@ -164,7 +164,7 @@ class OllamaService(Service):
     async def get_novel(cls, phrase: str,
                         search_model: str,
                         search_prompt: str,
-                        langs: str,
+                        # langs: str,
                         session: AsyncSession):
         """
         генерация описаний
@@ -187,7 +187,7 @@ class OllamaService(Service):
             result = await cls.write_the_novel(phrase, llmodel, prompt_dict, llm_repository)
             return result
             # 3. получение списка языков НЕ НУЖНО            return result
-            if langs and isinstance(langs, str):
+            """if langs and isinstance(langs, str):
                 iso = [lang.strip() for lang in langs.split(',')]
             else:
                 iso = ['ru', 'en', 'zh']
@@ -206,7 +206,7 @@ class OllamaService(Service):
             tasks = [cls.translate_to_language(phrase, lang, llmodel, prompt_dict,
                                                llm_repository) for lang in languages]
             result = await asyncio.gather(*tasks)
-            return result
+            return result"""
         except ValueError as e:
             # Обрабатываем ошибки валидации/поиска
             logger.error(f"Validation error: {e}")
