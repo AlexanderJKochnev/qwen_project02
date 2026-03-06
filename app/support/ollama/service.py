@@ -85,6 +85,7 @@ class OllamaService(Service):
             total_duration_ns = response.get('total_duration')
             tmp: dict = {'lang': lang, 'response': response.get('response'),
                          'llmodel': llmodel,
+                         'prompt': prompt_dict.get('role'),
                          'duration': f"{total_duration_ns / 1_000_000_000: .2f}"}
             return tmp
         except Exception as e:
@@ -104,6 +105,7 @@ class OllamaService(Service):
             total_duration_ns = response.get('total_duration')
             tmp: dict = {'source': phrase, 'response': response.get('response'),
                          'llmodel': llmodel,
+                         'prompt': prompt_dict.get('role'),
                          'duration': f"{total_duration_ns / 1_000_000_000: .2f}"}
             return tmp
         except Exception as e:
