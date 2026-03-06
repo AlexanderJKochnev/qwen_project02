@@ -687,7 +687,7 @@ class Repository(metaclass=RepositoryMeta):
             # compiled = stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
             # logger.error(f'{compiled.string=}')
             result = await session.execute(stmt)
-            logger.warning(f'core {result=}')
+            logger.warning(f'{result.scalars().all()=}')
             return result.scalars().all()
         except Exception as e:
             if hasattr(model, '__name__'):
