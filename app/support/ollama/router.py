@@ -101,7 +101,6 @@ class OllamaRouter(BaseRouter):
            ## 3. prompt
         """
         try:
-            logger.warning(f'0. {phrase}')
             result = await self.service.get_novel(phrase, llmodel, prompt, session)
             logger.warning(f'10. {result}')
             return result

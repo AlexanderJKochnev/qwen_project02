@@ -172,16 +172,18 @@ class OllamaService(Service):
         try:
             llm_repository = LLMRepository()
             # 1. Поиск и получение ll model
+            logger.warning(f'0. {phrase}')
             response = await cls.get_datas(search_model, OllamaRepository, Ollama, session,
                                            order_by='size', asc=True, equa='icontains',
                                            field='model')
             llmodel: str = response.model
-
+            logger.warning(f'1. {llmodel}')
             # 2. Поиск и получение prompt
             prompt: Prompt = await cls.get_datas(search_prompt, PromptRepository, Prompt, session,
                                                  order_by='role', asc=True, equa='icontains',
                                                  field='role')
             prompt_dict = prompt.to_dict()
+            logger.warning(f'2. {prompt_dict}')
             result = await cls.write_the_novel(phrase, llmodel, prompt_dict, llm_repository)
             return result
             # 3. получение списка языков НЕ НУЖНО            return result
