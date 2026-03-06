@@ -690,9 +690,10 @@ class Repository(metaclass=RepositoryMeta):
             rows = result.all()
             for i, row in enumerate(rows):
                 try:
+                    
                     # Пробуем преобразовать в dict
-                    row_dict = row._asdict() if hasattr(row, '_asdict') else dict(row)
-                    print(f"Row {i}: {row_dict}")
+                    # row_dict = row._asdict() if hasattr(row, '_asdict') else dict(row)
+                    print(f"Row {i}: {row}")
                 except KeyError as e:
                     print(f"🔥 KeyError в строке {i}: {e}")
                     print(f"Тип строки: {type(row)}")
