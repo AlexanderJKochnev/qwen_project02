@@ -149,6 +149,7 @@ class OllamaService(Service):
                     conditions = {'name_en': iso}
             repo = ISOLanguageRepository
             result: List[ISOLanguage] = await repo.search_by_conditions(conditions, ISOLanguage, session)
+            logger.warning(f'1000000: {result}')
             languages = [val.name_en for val in result]
             # 4. подготовка к параллельному запуску:
             tasks = [cls.translate_to_language(phrase, lang, llmodel, prompt_dict,
