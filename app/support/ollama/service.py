@@ -178,18 +178,16 @@ class OllamaService(Service):
         try:
             llm_repository = LLMRepository()
             # 1. Поиск и получение ll model
-            logger.warning(f'0. {phrase}')
             response = await cls.get_datas(search_model, OllamaRepository, Ollama, session,
                                            order_by='size', asc=True, equa='icontains',
                                            field='model')
             llmodel: str = response.model
-            logger.warning(f'1. {llmodel}')
             # 2. Поиск и получение prompt
             prompt: Prompt = await cls.get_datas(search_prompt, PromptRepository, Prompt, session,
                                                  order_by='role', asc=True, equa='icontains',
                                                  field='role')
             prompt_dict = prompt.to_dict()
-            # 3. получение списка языков НЕ НУЖНО            return result
+            # 3. получение языка
             if langs and isinstance(langs, str):
                 iso = langs.strip()
             else:
@@ -197,14 +195,16 @@ class OllamaService(Service):
             # определяем 3 или 2 знака
             match len(iso[0]):
                 case 2:
-                    conditions = {'iso_639_1': iso}
+                    field = 'iso_639_1'
                 case 3:
-                    conditions = {'iso_639_3': iso}
+                    field = 'iso_639_3'
                 case _:
-                    conditions = {'name_en': iso}
+                    field = 'name_en'
             repo = ISOLanguageRepository
-            result: List[ISOLanguage] = await repo.search_by_conditions(conditions, ISOLanguage, session)
-            language = [val.name_ru for val in result][0]
+            result: ISOLanguage = await repo.get_by_field(field, iso.lower(), ISOLanguage, session)
+            logger.warning(f'0: {result}')
+            language = result.name_en
+            logger.warning(f'1: {language}')
             result = await cls.write_the_novel(phrase, language, llmodel, prompt_dict, llm_repository)
             return result
 
