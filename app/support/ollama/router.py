@@ -86,7 +86,7 @@ class OllamaRouter(BaseRouter):
             raise HTTPException(status_code=501, detail=e)
 
     async def get_novel(
-            self, phrase: str = Query(None, description="Текст для перевода."),
+            self, phrase: str = Query(None, description="Наименование для описания (желательно на англ)."),
             llmodel: str = Query(None, description="Имя модели или ее номер в базе данных"),
             prompt: str = Query(None, description="Имя промпта или его номер в базе данных"),
             # langs: str = Query(
@@ -95,12 +95,10 @@ class OllamaRouter(BaseRouter):
             session: AsyncSession = Depends(get_db)
     ):
         """
-           тестирование моделей для генерации текста:
-           1. наименование для генерации описания
-           2. модель LL выбирается наименьшая из всех с совпадающим именем
-           3. prompt
-           #  3. язык/языки для перевода
-           возвращает:
+           # тестирование моделей для генерации текста:
+           ## 1. наименование для генерации описания
+           ## 2. модель LL выбирается наименьшая из всех с совпадающим именем
+           ## 3. prompt
         """
         try:
             result = await self.service.get_novel(phrase, llmodel, prompt, session)

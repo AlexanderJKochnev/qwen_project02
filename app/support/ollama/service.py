@@ -178,10 +178,9 @@ class OllamaService(Service):
                                                  order_by='role', asc=True, equa='icontains',
                                                  field='role')
             prompt_dict = prompt.to_dict()
-            # 3. получение списка языков НЕ НУЖНО
-            tasks = [cls.write_the_novel(phrase, llmodel, prompt_dict, llm_repository)]
-            result = await asyncio.gather(*tasks)
+            result = await cls.write_the_novel(phrase, llmodel, prompt_dict, llm_repository)
             return result
+            # 3. получение списка языков НЕ НУЖНО            return result
             if langs and isinstance(langs, str):
                 iso = [lang.strip() for lang in langs.split(',')]
             else:
