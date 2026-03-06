@@ -96,11 +96,15 @@ class OllamaService(Service):
         try:
             source: str = f'Write a 3-4 sentence article about {phrase} in the style of The Oxford Companion to Wine'
             payload: dict = build_ollama_payload(prompt_dict, source, llmodel, 'generate')
+            logger.warning(payload)
+            logger.warning(source)
             response = await llm_repository.get_translate(payload)
+            logger.warning(response)
             total_duration_ns = response.get('total_duration')
             tmp: dict = {'source': phrase, 'response': response.get('response'),
                          'llmodel': llmodel,
                          'duration': f"{total_duration_ns / 1_000_000_000: .2f}"}
+            return tmp
         except Exception as e:
             return {'llmodel': llmodel, 'prompt': prompt_dict, 'error': e}
 
