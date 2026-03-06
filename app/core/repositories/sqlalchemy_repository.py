@@ -688,6 +688,7 @@ class Repository(metaclass=RepositoryMeta):
             logger.error(f'{compiled.string=}')
             result = await session.execute(stmt)
             rows = result.all()
+            logger.warning(f'{rows=}')
             for i, row in enumerate(rows):
                 try:
                     
