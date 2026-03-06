@@ -89,11 +89,10 @@ class OllamaRouter(BaseRouter):
             self, phrase: str = Query(None, description="Наименование для описания (желательно на англ)."),
             llmodel: str = Query(None, description="Имя модели или ее номер в базе данных"),
             prompt: str = Query(None, description="Имя промпта или его номер в базе данных"),
-            # langs: str = Query(
-            #     None, description="Язык (языки) перевода двух-значные коды через "
-            #     "запятую, например 'ru, fr, zh'"),
+            langs: str = Query(
+                None, description="Язык текста 2-3 значный код"),
             session: AsyncSession = Depends(get_db)
-    ):
+    ) -> dict:
         """
            # тестирование моделей для генерации текста:
            ## 1. наименование для генерации описания
@@ -101,7 +100,7 @@ class OllamaRouter(BaseRouter):
            ## 3. prompt
         """
         try:
-            result = await self.service.get_novel(phrase, llmodel, prompt, session)
+            result = await self.service.get_novel(phrase, llmodel, prompt, langs, session)
             logger.warning(f'10. {result}')
             return result
         except Exception as e:

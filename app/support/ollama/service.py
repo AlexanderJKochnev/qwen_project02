@@ -92,11 +92,14 @@ class OllamaService(Service):
             return {'lang': lang, 'error': e}
 
     @classmethod
-    async def write_the_novel(cls, phrase: str, llmodel: str, prompt_dict: dict, llm_repository: LLMRepository):
+    async def write_the_novel(cls, phrase: str, language: str, llmodel: str, prompt_dict: dict, llm_repository: (
+            LLMRepository)):
         """ описание на одном языке """
         try:
             # source: str = f'Write a 3-4 sentence article about {phrase} in the style of The Oxford Companion to Wine'
-            source: str = f'Напиши на русском языке статью из 3-4 предложений о {phrase} в стиле справочника Мишлен'
+            source: str = (f'Напиши, используя {language} язык, статью из 3-4 предложений о {phrase} в стиле '
+                           f'справочника '
+                           f'Мишлен')
             payload: dict = build_ollama_payload(prompt_dict, source, llmodel, 'generate')
             logger.warning(payload)
             logger.warning(source)
@@ -167,8 +170,8 @@ class OllamaService(Service):
     async def get_novel(cls, phrase: str,
                         search_model: str,
                         search_prompt: str,
-                        # langs: str,
-                        session: AsyncSession):
+                        langs: str,
+                        session: AsyncSession) -> dict:
         """
         генерация описаний
         """
@@ -186,14 +189,11 @@ class OllamaService(Service):
                                                  order_by='role', asc=True, equa='icontains',
                                                  field='role')
             prompt_dict = prompt.to_dict()
-            logger.warning(f'2. {prompt_dict}')
-            result = await cls.write_the_novel(phrase, llmodel, prompt_dict, llm_repository)
-            return result
             # 3. получение списка языков НЕ НУЖНО            return result
-            """if langs and isinstance(langs, str):
-                iso = [lang.strip() for lang in langs.split(',')]
+            if langs and isinstance(langs, str):
+                iso = langs.strip()
             else:
-                iso = ['ru', 'en', 'zh']
+                iso = 'ru'
             # определяем 3 или 2 знака
             match len(iso[0]):
                 case 2:
@@ -204,7 +204,11 @@ class OllamaService(Service):
                     conditions = {'name_en': iso}
             repo = ISOLanguageRepository
             result: List[ISOLanguage] = await repo.search_by_conditions(conditions, ISOLanguage, session)
-            languages = [val.name_en for val in result]
+            language = [val.name_ru for val in result][0]
+            result = await cls.write_the_novel(phrase, language, llmodel, prompt_dict, llm_repository)
+            return result
+
+            """
             # 4. подготовка к параллельному запуску: НЕ НУЖНО
             tasks = [cls.translate_to_language(phrase, lang, llmodel, prompt_dict,
                                                llm_repository) for lang in languages]
