@@ -687,9 +687,14 @@ class Repository(metaclass=RepositoryMeta):
             compiled = stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
             logger.error(f'{compiled.string=}')
             result = await session.execute(stmt)
-            response = result.scalars().all()
-            logger.warning(f'{response=}')
-            return response
+            rows = result.all()
+            for row in rows:
+                logger.warning(type(row))
+            
+            
+            # response = result.scalars().all()
+            # logger.warning(f'{response=}')
+            # return response
         except Exception as e:
             if hasattr(model, '__name__'):
                 raise Exception(f'repo.get_by_fields: {filter=}, {model.__name__=}, {e}')
