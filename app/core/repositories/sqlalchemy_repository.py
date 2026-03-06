@@ -688,19 +688,7 @@ class Repository(metaclass=RepositoryMeta):
             logger.error(f'{compiled.string=}')
             result = await session.execute(stmt)
             logger.warning(f'{result=} {type(result)=}')
-            rows = result.all()
-            logger.warning(f'{rows=}')
-            for i, row in enumerate(rows):
-                try:
-                    
-                    # Пробуем преобразовать в dict
-                    # row_dict = row._asdict() if hasattr(row, '_asdict') else dict(row)
-                    print(f"Row {i}: {row}")
-                except KeyError as e:
-                    print(f"🔥 KeyError в строке {i}: {e}")
-                    print(f"Тип строки: {type(row)}")
-                    print(f"Доступные ключи: {row.keys() if hasattr(row, 'keys') else 'нет keys()'}")
-            
+            print(f"Result keys: {result.keys()}")
             
             # response = result.scalars().all()
             # logger.warning(f'{response=}')
