@@ -201,6 +201,7 @@ class OllamaService(Service):
                 case _:
                     field = 'name_en'
             repo = ISOLanguageRepository
+            logger.warning(f'{field=} {iso=}.')
             result: ISOLanguage = await repo.get_by_field(field, iso.lower(), ISOLanguage, session)
             logger.warning(f'0: {result}')
             language = result.name_en
