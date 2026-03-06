@@ -687,6 +687,7 @@ class Repository(metaclass=RepositoryMeta):
             compiled = stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
             logger.error(f'{compiled.string=}')
             result = await session.execute(stmt)
+            logger.warning(f'{result=} {type({result=})}')
             rows = result.all()
             logger.warning(f'{rows=}')
             for i, row in enumerate(rows):
