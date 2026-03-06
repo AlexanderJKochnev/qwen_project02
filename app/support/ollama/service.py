@@ -222,8 +222,8 @@ class OllamaService(Service):
 
         except Exception as e:
             # Обрабатываем непредвиденные ошибки
-            logger.error(f"Unexpected error in get_translate: {e}", exc_info=True)
-            raise RuntimeError(f"Internal server error during translation setup: {str(e)}")
+            logger.error(f"Unexpected error in get_novel: {e}", exc_info=True)
+            raise RuntimeError(f"Internal server error during get_novel: {str(e)}")
 
 
 class PromptService(Service):

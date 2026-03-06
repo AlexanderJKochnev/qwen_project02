@@ -674,6 +674,7 @@ class Repository(metaclass=RepositoryMeta):
         """
         try:
             stmt = select(model)
+            logger.warning(f'core {filter=}')
             for key, value in filter.items():
                 column = getattr(model, key)
                 if value is None:
