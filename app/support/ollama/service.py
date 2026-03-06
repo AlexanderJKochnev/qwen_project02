@@ -57,6 +57,10 @@ class OllamaService(Service):
 
     @classmethod
     async def get_datas(cls, search: str, repo: Type[Repository], model: ModelType, session: AsyncSession, **kwargs):
+        """
+            получение данных из базы данных (модель, prompt)
+            сделать кэширование
+        """
         if search.isnumeric():
             response: ModelType = await repo.get_by_id(int(search), model, session)
         else:
@@ -75,7 +79,7 @@ class OllamaService(Service):
             перевод на один язык
         """
         try:
-            source: str = f"Translate the following text to {lang} ({phrase})."
+            source: str = f"Only translate the following text to {lang} '{phrase}'."
             payload = build_ollama_payload(prompt_dict, source, llmodel, 'generate')
             response = await llm_repository.get_translate(payload)
             total_duration_ns = response.get('total_duration')
@@ -87,12 +91,26 @@ class OllamaService(Service):
             return {'lang': lang, 'error': e}
 
     @classmethod
+    async def write_the_novel(cls, phrase: str, llmodel: str, prompt_dict: dict, llm_repository: LLMRepository):
+        """ описание на одном языке """
+        try:
+            source: str = f'Write a 3-4 sentence article about {phrase} in the style of The Oxford Companion to Wine'
+            payload: dict = build_ollama_payload(prompt_dict, source, llmodel, 'generate')
+            response = await llm_repository.get_translate(payload)
+            total_duration_ns = response.get('total_duration')
+            tmp: dict = {'source': phrase, 'response': response.get('response'),
+                         'llmodel': llmodel,
+                         'duration': f"{total_duration_ns / 1_000_000_000: .2f}"}
+        except Exception as e:
+            return {'llmodel': llmodel, 'prompt': prompt_dict, 'error': e}
+
+    @classmethod
     async def get_translate(cls, phrase: str,
                             search_model: str,
                             search_prompt: str,
                             langs: str,
                             session: AsyncSession):
-        """ перевод на несколькол  языков """
+        """ перевод на несколько  языков """
         try:
             llm_repository = LLMRepository()
             # 1. Поиск и получение ll model
@@ -123,9 +141,66 @@ class OllamaService(Service):
             result: List[ISOLanguage] = await repo.search_by_conditions(conditions, ISOLanguage, session)
             languages = [val.name_en for val in result]
             # 4. подготовка к параллельному запуску:
-            tasks = [cls.translate_to_language(phrase, lang, llmodel, prompt_dict, llm_repository) for lang in languages]
+            tasks = [cls.translate_to_language(phrase, lang, llmodel, prompt_dict,
+                                               llm_repository) for lang in languages]
             result = await asyncio.gather(*tasks)
             return result
+            return result
+        except ValueError as e:
+            # Обрабатываем ошибки валидации/поиска
+            logger.error(f"Validation error: {e}")
+            raise  # Пробрасываем дальше для обработки в роутере
+
+        except Exception as e:
+            # Обрабатываем непредвиденные ошибки
+            logger.error(f"Unexpected error in get_translate: {e}", exc_info=True)
+            raise RuntimeError(f"Internal server error during translation setup: {str(e)}")
+
+    @classmethod
+    async def get_novel(cls, phrase: str,
+                        search_model: str,
+                        search_prompt: str,
+                        langs: str,
+                        session: AsyncSession):
+        """
+        генерация описаний
+        """
+        try:
+            llm_repository = LLMRepository()
+            # 1. Поиск и получение ll model
+            response = await cls.get_datas(search_model, OllamaRepository, Ollama, session,
+                                           order_by='size', asc=True, equa='icontains',
+                                           field='model')
+            llmodel: str = response.model
+
+            # 2. Поиск и получение prompt
+            prompt: Prompt = await cls.get_datas(search_prompt, PromptRepository, Prompt, session,
+                                                 order_by='role', asc=True, equa='icontains',
+                                                 field='role')
+            prompt_dict = prompt.to_dict()
+            # 3. получение списка языков НЕ НУЖНО
+            tasks = [cls.write_the_novel(phrase, llmodel, prompt_dict, llm_repository)]
+            result = await asyncio.gather(*tasks)
+            return result
+            if langs and isinstance(langs, str):
+                iso = [lang.strip() for lang in langs.split(',')]
+            else:
+                iso = ['ru', 'en', 'zh']
+            # определяем 3 или 2 знака
+            match len(iso[0]):
+                case 2:
+                    conditions = {'iso_639_1': iso}
+                case 3:
+                    conditions = {'iso_639_3': iso}
+                case _:
+                    conditions = {'name_en': iso}
+            repo = ISOLanguageRepository
+            result: List[ISOLanguage] = await repo.search_by_conditions(conditions, ISOLanguage, session)
+            languages = [val.name_en for val in result]
+            # 4. подготовка к параллельному запуску: НЕ НУЖНО
+            tasks = [cls.translate_to_language(phrase, lang, llmodel, prompt_dict,
+                                               llm_repository) for lang in languages]
+            result = await asyncio.gather(*tasks)
             return result
         except ValueError as e:
             # Обрабатываем ошибки валидации/поиска

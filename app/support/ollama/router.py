@@ -16,6 +16,7 @@ from app.support.ollama.service import LLMService, OllamaService
 
 class OllamaRouter(BaseRouter):
     """ языковые модели для OLLAMA"""
+
     def __init__(self):
         super().__init__(model=Ollama, prefix="/ollama")
         self.LLMservice = LLMService()
@@ -26,6 +27,8 @@ class OllamaRouter(BaseRouter):
                                   methods=["GET"],
                                   response_model=List[LlmResponseSchema])
         self.router.add_api_route("/translate", self.get_translate,
+                                  methods=['GET'])
+        self.router.add_api_route("/novel", self.get_novel,
                                   methods=['GET'])
         super().setup_routes()
 
@@ -82,12 +85,33 @@ class OllamaRouter(BaseRouter):
         except Exception as e:
             raise HTTPException(status_code=501, detail=e)
 
-    async def get_generate(self, session: AsyncSession = Depends(get_db)):
-        pass
+    async def get_novel(
+            self, phrase: str = Query(None, description="Текст для перевода."),
+            llmodel: str = Query(None, description="Имя модели или ее номер в базе данных"),
+            prompt: str = Query(None, description="Имя промпта или его номер в базе данных"),
+            # langs: str = Query(
+            #     None, description="Язык (языки) перевода двух-значные коды через "
+            #     "запятую, например 'ru, fr, zh'"),
+            session: AsyncSession = Depends(get_db)
+    ):
+        """
+           тестирование моделей для генерации текста:
+           1. наименование для генерации описания
+           2. модель LL выбирается наименьшая из всех с совпадающим именем
+           3. prompt
+           #  3. язык/языки для перевода
+           возвращает:
+        """
+        try:
+            result = await self.service.get_novel(phrase, llmodel, prompt, session)
+            return result
+        except Exception as e:
+            raise HTTPException(status_code=501, detail=e)
 
 
 class ISOLanguageRouter(BaseRouter):
     """ языки мира """
+
     def __init__(self):
         super().__init__(model=ISOLanguage, prefix="/isolanguage")
 
@@ -114,6 +138,7 @@ class ISOLanguageRouter(BaseRouter):
 
 class PromptRouter(BaseRouter):
     """ промты для llm """
+
     def __init__(self):
         super().__init__(model=Prompt, prefix="/prompt")
         self.LLMservice = LLMService()

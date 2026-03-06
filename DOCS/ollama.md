@@ -7,7 +7,8 @@
    4. docker exec -it ollama ollama pull gemma2:27b
    5. docker exec -it ollama ollama pull qwen2.5:7b # 14b
    6. docker exec -it ollama-ollama-1 ollama pull deepseek-r1:7b
-   7. docker exec -it ollama ollama list # проверка какие модели загружены
+   7. docker exec -it ollama-ollama-1 ollama pull aya:8b
+   8. docker exec -it ollama ollama list # проверка какие модели загружены
 
 3. Ollama держит модель в памяти (VRAM) в течение 5 минут после последнего запроса (по умолчанию). 
 4. Чтобы увидеть, что именно загружено прямо сейчас:
