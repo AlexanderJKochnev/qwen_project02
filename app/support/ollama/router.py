@@ -33,7 +33,7 @@ class OllamaRouter(BaseRouter):
                                   methods=['GET'])
         self.router.add_api_route("/novel", self.get_novel,
                                   methods=['GET'])
-        super().setup_routes()
+        # super().setup_routes()
 
     async def del_model(self,
                         background_tasks: BackgroundTasks,
