@@ -31,7 +31,7 @@ class OllamaRouter(BaseRouter):
                                   methods=['GET'])
         self.router.add_api_route("/novel", self.get_novel,
                                   methods=['GET'])
-        self.router.add_api_route("/deletellm/{model}", self.del_model, methods=['DEL'])
+        self.router.add_api_route("/llm/{id}", self.del_model, methods=['DEL'])
         # super().setup_routes()
 
     async def del_model(self,
