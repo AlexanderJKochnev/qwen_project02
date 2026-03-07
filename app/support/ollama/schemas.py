@@ -6,9 +6,6 @@ from app.core.schemas.base import PkSchema, BaseModel
 # from app.support.ollama.model import Prompt
 
 
-class Phrase(BaseModel):
-    phrase: str = Field(..., description = "Текст для перевода.")
-
 class ProptionCustom(BaseModel):
     # system_prompt: Optional[str] = Field(None, description="Инструкция для модели")
     num_ctx: Optional[int] = Field(4096, ge=1, le=131072)
@@ -109,7 +106,7 @@ class LlmResponseSchema(BaseModel):
     # families: Optional[List[str]] = None
     parameter_size: Optional[str] = None
     quantization_level: Optional[str] = None
-    
+
     @computed_field
     @property
     def size_gb(self) -> Optional[float]:
@@ -163,6 +160,7 @@ class OllamaRead(PkSchema, OllamaCreate):
         if self.size is None:
             return None
         return round(self.size / (1024 ** 3), 2)
+
 
 class ISOLanguageCreate(BaseModel):
     iso_639_3: str
