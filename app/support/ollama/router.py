@@ -9,7 +9,7 @@ from app.core.routers.base import BaseRouter
 from app.core.utils.common_utils import compare_lists_compact, jprint
 from app.support.ollama.model import Ollama, Prompt, ISOLanguage, Proption
 from app.support.ollama.schemas import (LlmResponseSchema, OllamaCreate, PromptCreate,
-                                        PromptRead, PromptUpdate, Phrase,
+                                        PromptRead, PromptUpdate,
                                         ISOLanguageCreate, ISOLanguageRead, ISOLanguageUpdate,
                                         ProptionRead, ProptionCreate, ProptionUpdate)
 from app.support.ollama.service import LLMService, OllamaService
