@@ -99,19 +99,19 @@ class Prompt(Base, BaseAt):
 
     # Альтернатива Top-P. Отсекает токены, чья вероятность ниже P от вероятности лидера.
     # Диапазон: 0–1. Рекомендуется 0.05 для баланса между качеством и креативностью.
-    min_p: Mapped[float] = mapped_column(Float)  # , default=0.05)
+    min_p: Mapped[float] = mapped_column(Float, default=None)  # 0.05)
 
     # Typical sampling. Снижает риск «зацикливания» на скучных словах.
     # Диапазон: 0–1. Значение 0.9-1.0 помогает делать текст более естественным для людей.
-    typical_p: Mapped[float] = mapped_column(Float)  # , default=0.9)
+    typical_p: Mapped[float] = mapped_column(Float, default=None)  # 0.9)
 
     # Штраф за использование слов в зависимости от того, как часто они уже встречались.
     # Перевод: 0.0. Описания: 0.3–0.5 (избавляет от слов-паразитов в тексте).
-    frequency_penalty: Mapped[float] = mapped_column(Float)  # , default=0.3)
+    frequency_penalty: Mapped[float] = mapped_column(Float, default=None)  # 0.3)
 
     # Штраф за само упоминание темы. Поощряет переход к новым идеям/аспектам.
     # Перевод: 0.0. Описания: 0.2–0.4 (чтобы описание было разносторонним).
-    presence_penalty: Mapped[float] = mapped_column(Float)  # , default=0.2)
+    presence_penalty: Mapped[float] = mapped_column(Float, default=None)  # 0.2)
 
     __table_args__ = (CheckConstraint('temperature BETWEEN 0.0 AND 2.0', name='temp_range'),
                       CheckConstraint('top_p BETWEEN 0.0 AND 1.0', name='top_p_range'),
