@@ -49,7 +49,7 @@ class LLMRepository:
         from loguru import logger
         from app.core.utils.common_utils import jprint
         logger.warning(type(result))
-        jprint(result)
+        # jprint(result)
         return result
 
     async def check_and_pull(self):
