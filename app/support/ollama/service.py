@@ -120,6 +120,7 @@ class OllamaService(Service):
     async def get_translate(cls, phrase: str,
                             search_model: str,
                             search_prompt: str,
+                            search_preset: str,
                             langs: str,
                             session: AsyncSession):
         """ перевод на несколько  языков """
@@ -172,6 +173,7 @@ class OllamaService(Service):
     async def get_novel(cls, phrase: str,
                         search_model: str,
                         search_prompt: str,
+                        search_preset: str,
                         langs: str,
                         session: AsyncSession) -> dict:
         """

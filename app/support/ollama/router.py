@@ -3,7 +3,7 @@ from typing import List
 from loguru import logger
 from fastapi import BackgroundTasks, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from app.core.types import Preset
 from app.core.config.database.db_async import get_db
 from app.core.routers.base import BaseRouter
 from app.core.utils.common_utils import compare_lists_compact, jprint
@@ -89,6 +89,7 @@ class OllamaRouter(BaseRouter):
     async def get_translate(self, phrase: str = Query(None, description="Текст для перевода."),
                             llmodel: str = Query(None, description="Имя модели или ее номер в базе данных"),
                             prompt: str = Query(None, description="Имя промпта или его номер в базе данных"),
+                            preset: Preset = Query(None, description="Типовые настройки"),
                             langs: str = Query(None, description="Язык (языки) перевода двух-значные коды через "
                                                                  "запятую, например 'ru, fr, zh'"),
                             session: AsyncSession = Depends(get_db)):
@@ -101,7 +102,7 @@ class OllamaRouter(BaseRouter):
            возвращает:
         """
         try:
-            result = await self.service.get_translate(phrase, llmodel, prompt, langs, session)
+            result = await self.service.get_translate(phrase, llmodel, prompt, preset, langs, session)
             return result
         except Exception as e:
             raise HTTPException(status_code=501, detail=e)
@@ -110,6 +111,7 @@ class OllamaRouter(BaseRouter):
             self, phrase: str = Query(None, description="Наименование для описания (желательно на англ)."),
             llmodel: str = Query(None, description="Имя модели или ее номер в базе данных"),
             prompt: str = Query(None, description="Имя промпта или его номер в базе данных"),
+            preset: Preset = Query(None, description="Типовые настройки"),
             langs: str = Query(
                 None, description="Язык текста 2-3 значный код"),
             session: AsyncSession = Depends(get_db)
@@ -121,7 +123,7 @@ class OllamaRouter(BaseRouter):
            ## 3. prompt
         """
         try:
-            result = await self.service.get_novel(phrase, llmodel, prompt, langs, session)
+            result = await self.service.get_novel(phrase, llmodel, prompt, preset, langs, session)
             logger.warning(f'10. {result}')
             return result
         except Exception as e:
