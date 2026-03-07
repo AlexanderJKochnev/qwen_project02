@@ -80,6 +80,8 @@ class OllamaService(Service):
         try:
             source: str = f"Only translate the following text to {lang} '{phrase}'."
             payload = build_ollama_payload(prompt_dict, source, llmodel, 'generate')
+            from app.core.utils.common_utils import jprint
+            jprint(payload)
             response = await llm_repository.get_translate(payload)
             total_duration_ns = response.get('total_duration')
             tmp: dict = {'lang': lang, 'response': response.get('response'),
@@ -96,8 +98,7 @@ class OllamaService(Service):
         """ описание на одном языке """
         try:
             # source: str = f'Write a 3-4 sentence article about {phrase} in the style of The Oxford Companion to Wine'
-            source: str = (f'Напиши, используя {language} язык, статью из 3-4 предложений о {phrase} в стиле '
-                           f'справочника Мишлен. '
+            source: str = (f'Напиши, используя {language} язык, статью из 3-4 предложений о {phrase}'
                            f'ПРАВИЛА:'
                            f'1. Можно немного подумать про себя (1-2 предложения максимум)'
                            f'2. Сразу переходи к ответу'
