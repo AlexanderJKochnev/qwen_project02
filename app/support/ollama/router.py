@@ -3,7 +3,7 @@ from typing import List
 from loguru import logger
 from fastapi import BackgroundTasks, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.types import Preset
+from app.core.enum import Preset, Prompts, LLmodel
 from app.core.config.database.db_async import get_db
 from app.core.routers.base import BaseRouter
 from app.core.utils.common_utils import compare_lists_compact, jprint
@@ -87,11 +87,12 @@ class OllamaRouter(BaseRouter):
             raise HTTPException(status_code=501, detail=e)
 
     async def get_translate(self, phrase: str = Query(None, description="Текст для перевода."),
-                            llmodel: str = Query(None, description="Имя модели или ее номер в базе данных"),
-                            prompt: str = Query(None, description="Имя промпта или его номер в базе данных"),
+                            llmodel: LLmodel = Query(None, description="Имя модели или ее номер в базе данных"),
+                            prompt: Prompts = Query(None, description="Имя промпта или его номер в базе данных"),
                             preset: Preset = Query(None, description="Типовые настройки"),
-                            langs: str = Query(None, description="Язык (языки) перевода двух-значные коды через "
-                                                                 "запятую, например 'ru, fr, zh'"),
+                            langs: str = Query('ru, en',
+                                               description="Язык (языки) перевода двух-значные коды через "
+                                                           "запятую, например 'ru, fr, zh'"),
                             session: AsyncSession = Depends(get_db)):
         """
            тестирование моделей для перевода:
@@ -113,7 +114,7 @@ class OllamaRouter(BaseRouter):
             prompt: str = Query(None, description="Имя промпта или его номер в базе данных"),
             preset: Preset = Query(None, description="Типовые настройки"),
             langs: str = Query(
-                None, description="Язык текста 2-3 значный код"),
+                'ru, en', description="Язык текста 2-3 значный код"),
             session: AsyncSession = Depends(get_db)
     ) -> dict:
         """
