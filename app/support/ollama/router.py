@@ -2,6 +2,7 @@
 from typing import List
 from loguru import logger
 from fastapi import BackgroundTasks, Depends, HTTPException, Query
+from pydantic import Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.enum import Preset, Prompts, LLmodel, Languages
 from app.core.config.database.db_async import get_db
@@ -86,7 +87,7 @@ class OllamaRouter(BaseRouter):
         except Exception as e:
             raise HTTPException(status_code=501, detail=e)
 
-    async def get_translate(self, phrase: str = Query(None, description="Текст для перевода."),
+    async def get_translate(self, phrase: str = Field(None, description="Текст для перевода."),
                             llmodel: LLmodel = Query('translategemma:latest', description="Имя модели в базе данных"),
                             prompt: Prompts = Query('universal_translator', description="Имя промпта в базе данных"),
                             preset: Preset = Query(None, description="Типовые настройки качество/скорость"),
@@ -109,7 +110,7 @@ class OllamaRouter(BaseRouter):
             raise HTTPException(status_code=501, detail=e)
 
     async def get_novel(
-            self, phrase: str = Query(None, description="Наименование для описания (желательно на англ)."),
+            self, phrase: str = Field(None, description="Наименование для описания (желательно на англ)."),
             llmodel: LLmodel = Query('qwen3:8b', description="Имя модели в базе данных"),
             prompt: Prompts = Query(None, description="Имя промпта в базе данных"),
             preset: Preset = Query(None, description="Типовые настройки качество/скорость"),
