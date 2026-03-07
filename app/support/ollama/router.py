@@ -7,10 +7,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config.database.db_async import get_db
 from app.core.routers.base import BaseRouter
 from app.core.utils.common_utils import compare_lists_compact, jprint
-from app.support.ollama.model import Ollama, Prompt, ISOLanguage
+from app.support.ollama.model import Ollama, Prompt, ISOLanguage, Proption
 from app.support.ollama.schemas import (LlmResponseSchema, OllamaCreate, OllamaRead, OllamaUpdate, PromptCreate,
                                         PromptRead, PromptUpdate,
-                                        ISOLanguageCreate, ISOLanguageRead, ISOLanguageUpdate)
+                                        ISOLanguageCreate, ISOLanguageRead, ISOLanguageUpdate,
+                                        ProptionRead, ProptionCreate, ProptionUpdate)
 from app.support.ollama.service import LLMService, OllamaService
 
 
@@ -168,3 +169,21 @@ class PromptRouter(BaseRouter):
 
         """
         return translate_it
+
+
+class ProptionRouter(BaseRouter):
+    def __init__(self):
+        super().__init__(model=Proption, prefix="/proption")
+
+    async def create(self, data: ProptionCreate, session: AsyncSession = Depends(get_db)) -> ProptionRead:
+        return await super().create(data, session)
+
+    async def patch(self, id: int, data: ProptionUpdate,
+                    background_tasks: BackgroundTasks,
+                    session: AsyncSession = Depends(get_db)) -> ProptionRead:
+        return await super().patch(id, data, background_tasks, session)
+
+    async def update_or_create(self, data: ProptionCreate,
+                               background_tasks: BackgroundTasks,
+                               session: AsyncSession = Depends(get_db)) -> ProptionRead:
+        return await super().update_or_create(data, background_tasks, session)

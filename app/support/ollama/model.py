@@ -63,6 +63,17 @@ class Prompt(Base, BaseAt):
     role: Mapped[str] = mapped_column(String(50), unique=True, index=True)
     # промпт
     system_prompt: Mapped[str] = mapped_column(String)
+
+    def __str__(self):
+        return self.role or ""
+
+
+class Proption(Base, BaseAt):
+    """
+        параметры настройки Prompt
+    """
+    # наименовение настройки
+    preset: Mapped[str] = mapped_column(String(50), unique=True, index=True)
     # Параметры Ollama (Options)
     # Размер контекстного окна (токенов). Влияет на объем «памяти» модели.
     # Диапазон: от 1 до лимита модели (обычно 4096-128000).
@@ -99,26 +110,69 @@ class Prompt(Base, BaseAt):
 
     # Альтернатива Top-P. Отсекает токены, чья вероятность ниже P от вероятности лидера.
     # Диапазон: 0–1. Рекомендуется 0.05 для баланса между качеством и креативностью.
-    min_p: Mapped[float] = mapped_column(Float, nullable=True)  # , default=0.05)
+    min_p: Mapped[float] = mapped_column(Float, default=0.05)
 
     # Typical sampling. Снижает риск «зацикливания» на скучных словах.
     # Диапазон: 0–1. Значение 0.9-1.0 помогает делать текст более естественным для людей.
-    typical_p: Mapped[float] = mapped_column(Float, nullable=True)  # , default=0.9)
+    typical_p: Mapped[float] = mapped_column(Float, default=0.9)
 
     # Штраф за использование слов в зависимости от того, как часто они уже встречались.
     # Перевод: 0.0. Описания: 0.3–0.5 (избавляет от слов-паразитов в тексте).
-    frequency_penalty: Mapped[float] = mapped_column(Float, nullable=True)  # , default=0.3)
+    frequency_penalty: Mapped[float] = mapped_column(Float, default=0.3)
 
     # Штраф за само упоминание темы. Поощряет переход к новым идеям/аспектам.
     # Перевод: 0.0. Описания: 0.2–0.4 (чтобы описание было разносторонним).
-    presence_penalty: Mapped[float] = mapped_column(Float, nullable=True)  # , default=0.2)
+    presence_penalty: Mapped[float] = mapped_column(Float, default=0.2)
 
-    __table_args__ = (CheckConstraint('temperature BETWEEN 0.0 AND 2.0', name='temp_range'),
-                      CheckConstraint('top_p BETWEEN 0.0 AND 1.0', name='top_p_range'),
-                      CheckConstraint('num_predict >= -1', name='predict_range'),)
+    __table_args__ = (  # Температура
+        CheckConstraint(
+            'temperature >= 0.0 AND temperature <= 2.0', name='temperature_range'
+        ),
 
-    def __str__(self):
-        return self.role or ""
+        # Top-P
+        CheckConstraint(
+            'top_p >= 0.0 AND top_p <= 1.0', name='top_p_range'
+        ),
+
+        # Min-P
+        CheckConstraint(
+            'min_p >= 0.0 AND min_p <= 1.0', name='min_p_range'
+        ),
+
+        # Typical-P
+        CheckConstraint(
+            'typical_p >= 0.0 AND typical_p <= 1.0', name='typical_p_range'
+        ),
+
+        # Top-K
+        CheckConstraint(
+            'top_k >= 1 AND top_k <= 100', name='top_k_range'
+        ),
+
+        # Num predict (специальное значение -1 означает "без лимита")
+        CheckConstraint(
+            'num_predict >= -1', name='num_predict_range'
+        ),
+
+        # Repeat penalty
+        CheckConstraint(
+            'repeat_penalty >= 1.0 AND repeat_penalty <= 2.0', name='repeat_penalty_range'
+        ),
+
+        # Frequency penalty
+        CheckConstraint(
+            'frequency_penalty >= -2.0 AND frequency_penalty <= 2.0', name='frequency_penalty_range'
+        ),
+
+        # Presence penalty
+        CheckConstraint(
+            'presence_penalty >= -2.0 AND presence_penalty <= 2.0', name='presence_penalty_range'
+        ),
+
+        # Num context
+        CheckConstraint(
+            'num_ctx >= 1', name='num_ctx_range'
+        ),)
 
 
 class ISOLanguage(Base, BaseAt):

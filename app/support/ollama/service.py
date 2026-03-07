@@ -11,7 +11,7 @@ from app.core.utils.ollama_utils import build_ollama_payload
 from app.support.ollama.schemas import LlmResponseSchema
 from app.support.ollama.repository import (LLMRepository, OllamaRepository, PromptRepository, Repository,
                                            ISOLanguageRepository)
-from app.support.ollama.model import Ollama, ISOLanguage, Prompt
+from app.support.ollama.model import Ollama, ISOLanguage, Prompt, Proption
 
 
 class LLMService:
@@ -46,7 +46,7 @@ class OllamaService(Service):
                     await repository.create(model(**key), model, session)
             if remove := data.get('removed'):
                 for key in remove:
-                    result = await repository.delete(key, session)
+                    await repository.delete(key, session)
             if changed := data.get('changed'):
                 for obj, data in changed:
                     await repository.patch(obj, data, session)
@@ -98,8 +98,8 @@ class OllamaService(Service):
         """ описание на одном языке """
         try:
             # source: str = f'Write a 3-4 sentence article about {phrase} in the style of The Oxford Companion to Wine'
-            source: str = (f'Переведи текст на {language} язык, '
-                           f'правила: смысловая точность перевода прежде всего, '
+            source: str = (f'Напиши статью о "{phrase}" (3-4 предложения) на {language} язык, '
+                           f'Правила: смысловая точность перевода прежде всего, '
                            f'можно немного подумать про себя и сразу переходи к ответу, '
                            f'не анализируй запрос вслух, Пиши только финальный текст')
             payload: dict = build_ollama_payload(prompt_dict, source, llmodel, 'generate')
@@ -225,6 +225,9 @@ class OllamaService(Service):
 class PromptService(Service):
     default = ['role']
 
+
+class ProptionService(Service):
+    default = ['preset']
 
 """
     # Для метода GENERATE

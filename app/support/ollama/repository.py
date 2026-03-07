@@ -5,7 +5,7 @@ from ollama import ListResponse, GenerateResponse
 from app.core.config.project_config import settings
 from app.core.config.database.ollama_async import get_ollama_manager
 from app.core.repositories.sqlalchemy_repository import Repository
-from app.support.ollama.model import Ollama, Prompt, ISOLanguage
+from app.support.ollama.model import Ollama, Prompt, ISOLanguage, Proption
 
 
 class LLMRepository:
@@ -99,6 +99,10 @@ class OllamaRepository(Repository):
 
 class PromptRepository(Repository):
     model = Prompt
+
+
+class ProptionRepository(Repository):
+    model = Proption
 
 
 class ISOLanguageRepository(Repository):

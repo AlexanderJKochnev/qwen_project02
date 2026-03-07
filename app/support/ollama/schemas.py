@@ -1,13 +1,13 @@
 # app.suport.ollama.schemas.py
 from datetime import datetime
-from typing import Optional, List, Dict, Any, Sequence
+from typing import Optional, List
 from pydantic import model_validator, ConfigDict, Field, field_validator
 from app.core.schemas.base import PkSchema, BaseModel
 # from app.support.ollama.model import Prompt
 
 
-class Custom(BaseModel):
-    system_prompt: Optional[str] = Field(None, description="Инструкция для модели")
+class ProptionCustom(BaseModel):
+    # system_prompt: Optional[str] = Field(None, description="Инструкция для модели")
     num_ctx: Optional[int] = Field(4096, ge=1, le=131072)
     temperature: Optional[float] = Field(0.1, ge=0.0, le=2.0)
     top_p: Optional[float] = Field(0.1, ge=0.0, le=1.0)
@@ -33,13 +33,25 @@ class Custom(BaseModel):
         return v
 
 
-class PromptCreate(Custom):
+class ProptionCreate(ProptionCustom):
+    preset: str = Field(..., min_length=2, max_length=50, pattern=r"^[a-zа-я0-9_-]+$")
+
+
+class ProptionUpdate(ProptionCustom):
+    preset: Optional[str] = Field(..., min_length=2, max_length=50, pattern=r"^[a-zа-я0-9_-]+$")
+
+
+class ProptionRead(PkSchema, ProptionCreate):
+    id: int
+
+
+class PromptCreate(BaseModel):
     """Модель для POST запроса: role и system_prompt обязательны"""
     role: str = Field(..., min_length=2, max_length=50, pattern=r"^[a-zа-я0-9_-]+$")
     system_prompt: str = Field(..., min_length=10)
 
 
-class PromptUpdate(Custom):
+class PromptUpdate(BaseModel):
     """Модель для PATCH запроса: все поля необязательны"""
     # Мы наследуем всё от Base, где поля уже Optional.
     # Поле role обычно не меняют через PATCH, но если нужно — добавим:
@@ -48,10 +60,8 @@ class PromptUpdate(Custom):
     model_config = ConfigDict(extra='forbid')  # Запрещает передавать лишние поля
 
 
-class PromptRead(Custom):
+class PromptRead(PkSchema, PromptCreate):
     id: int
-    role: str
-    system_prompt: str
 
 
 """
@@ -87,7 +97,7 @@ class LlmResponseSchema(BaseModel):
     model: str
     modified_at: datetime
     digest: Optional[str] = None
-    size: Optional[int] = None
+    size: Optional[int] = Field(exclude=True)
     # details: Optional[dict] = None
     parent_model: Optional[str] = None
     format: Optional[str] = None
@@ -95,6 +105,13 @@ class LlmResponseSchema(BaseModel):
     # families: Optional[List[str]] = None
     parameter_size: Optional[str] = None
     quantization_level: Optional[str] = None
+
+    @property
+    def size_gb(self) -> Optional[float]:
+        """Возвращает размер модели в гигабайтах с округлением до 2 знаков."""
+        if self.size is None:
+            return None
+        return round(self.size / (1024 ** 3), 2)
 
     @model_validator(mode='before')
     @classmethod
