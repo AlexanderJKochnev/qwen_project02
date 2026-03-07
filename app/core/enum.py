@@ -24,7 +24,7 @@ def fetch_all_startup_data() -> dict:
 
         # Запрос 4: Languages
         language = session.scalars(select(ISOLanguage.iso_639_1).order_by(ISOLanguage.iso_639_1.asc())).all()
-        data['language'] = [c for c in presets] or ["ru"]
+        data['language'] = [c for c in language] or ["ru"]
 
     return data
 
