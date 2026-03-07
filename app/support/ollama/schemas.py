@@ -97,7 +97,7 @@ class LlmResponseSchema(BaseModel):
     model: str
     modified_at: datetime
     digest: Optional[str] = None
-    size: Optional[int] = Field(exclude=True)
+    size: Optional[int] = None
     # details: Optional[dict] = None
     parent_model: Optional[str] = None
     format: Optional[str] = None
