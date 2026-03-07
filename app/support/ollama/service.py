@@ -97,8 +97,12 @@ class OllamaService(Service):
         try:
             # source: str = f'Write a 3-4 sentence article about {phrase} in the style of The Oxford Companion to Wine'
             source: str = (f'Напиши, используя {language} язык, статью из 3-4 предложений о {phrase} в стиле '
-                           f'справочника '
-                           f'Мишлен')
+                           f'справочника Мишлен. '
+                           f'ПРАВИЛА:'
+                           f'1. Можно немного подумать про себя (1-2 предложения максимум)'
+                           f'2. Сразу переходи к ответу'
+                           f'3. Не анализируй запрос вслух'
+                           f'4. Пиши только финальный текст')
             payload: dict = build_ollama_payload(prompt_dict, source, llmodel, 'generate')
             response = await llm_repository.get_translate(payload)
             total_duration_ns = response.get('total_duration')
