@@ -31,10 +31,10 @@ class OllamaRouter(BaseRouter):
                                   openapi_extra={'x-request-schema': None})
         self.router.add_api_route("/llm/{model}", self.del_model, methods=['DELETE'])
         self.router.add_api_route("/translate", self.get_translate,
-                                  methods=['GET'],
+                                  methods=['POST'],
                                   openapi_extra={'x-request-schema': None})
         self.router.add_api_route("/novel", self.get_novel,
-                                  methods=['GET'],
+                                  methods=['POST'],
                                   openapi_extra={'x-request-schema': None})
         self.router.add_api_route("/full", self.get_full, methods=["GET"],
                                   response_model=self.nonpaginated_response,
