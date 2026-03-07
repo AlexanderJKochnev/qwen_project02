@@ -24,6 +24,7 @@ class ProptionCustom(BaseModel):
     typical_p: Optional[float] = Field(0.9, ge=0.0, le=1.0, description="Типичная вероятность (Typical sampling)")
     frequency_penalty: Optional[float] = Field(0.3, ge=0.0, le=2.0, description="Штраф за частоту слов")
     presence_penalty: Optional[float] = Field(0.2, ge=0.0, le=2.0, description="Штраф за само наличие слов")
+    thinking: Optional[bool] = False
 
     @field_validator('stop')
     @classmethod

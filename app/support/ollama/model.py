@@ -123,6 +123,8 @@ class Proption(Base, BaseAt):
     # Штраф за само упоминание темы. Поощряет переход к новым идеям/аспектам.
     # Перевод: 0.0. Описания: 0.2–0.4 (чтобы описание было разносторонним).
     presence_penalty: Mapped[float] = mapped_column(Float, default=0.2)
+    # Размышления
+    thinking: Mapped(bool) = mapped_column(bool, default=False)
 
     __table_args__ = (  # Температура
         CheckConstraint(
