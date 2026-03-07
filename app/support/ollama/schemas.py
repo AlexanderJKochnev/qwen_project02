@@ -152,6 +152,7 @@ class OllamaUpdate(BaseModel):
 class OllamaRead(PkSchema, OllamaCreate):
     size: Optional[int] = Field(exclude=True)
 
+    @computed_field
     @property
     def size_gb(self) -> Optional[float]:
         """Возвращает размер модели в гигабайтах с округлением до 2 знаков."""
