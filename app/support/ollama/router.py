@@ -35,7 +35,7 @@ class OllamaRouter(BaseRouter):
         self.router.add_api_route("/novel", self.get_novel,
                                   methods=['GET'],
                                   openapi_extra={'x-request-schema': None})
-        self.router.add_api_route("/all", self.get_all, methods=["GET"],
+        self.router.add_api_route("/full", self.get_all, methods=["GET"],
                                   response_model=self.nonpaginated_response,
                                   openapi_extra={'x-request-schema': None}
                                   )

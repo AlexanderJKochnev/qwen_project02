@@ -331,6 +331,13 @@ class BaseRouter:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                 detail=f"Internal server error. {e}")
 
+    async def get_full(self, session: AsyncSession = Depends(get_db)) -> List[TReadSchema]:
+        try:
+            return await self.service.get_full(self.repo, self.model, session)
+        except Exception as e:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail=f"Internal server error. {e}")
+    
     async def search(self, search: str = Query(None, description="Поисковый запрос. "
                                                "В случае пустого запроса будут "
                                                "выведены все данные "),
