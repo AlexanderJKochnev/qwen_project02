@@ -10,7 +10,7 @@ from app.core.routers.base import BaseRouter
 from app.core.utils.common_utils import compare_lists_compact, jprint
 from app.support.ollama.model import Ollama, Prompt, ISOLanguage, Proption
 from app.support.ollama.schemas import (LlmResponseSchema, OllamaCreate, PromptCreate,
-                                        PromptRead, PromptUpdate,
+                                        PromptRead, PromptUpdate, Phrase,
                                         ISOLanguageCreate, ISOLanguageRead, ISOLanguageUpdate,
                                         ProptionRead, ProptionCreate, ProptionUpdate)
 from app.support.ollama.service import LLMService, OllamaService
@@ -87,7 +87,7 @@ class OllamaRouter(BaseRouter):
         except Exception as e:
             raise HTTPException(status_code=501, detail=e)
 
-    async def get_translate(self, phrase: str = Field(None, description="Текст для перевода."),
+    async def get_translate(self, phrase: Phrase,  # = Field(None, description="Текст для перевода."),
                             llmodel: LLmodel = Query('translategemma:latest', description="Имя модели в базе данных"),
                             prompt: Prompts = Query('universal_translator', description="Имя промпта в базе данных"),
                             preset: Preset = Query(None, description="Типовые настройки качество/скорость"),
@@ -110,7 +110,7 @@ class OllamaRouter(BaseRouter):
             raise HTTPException(status_code=501, detail=e)
 
     async def get_novel(
-            self, phrase: str = Field(None, description="Наименование для описания (желательно на англ)."),
+            self, phrase: Phrase,  # str = Field(None, description="Наименование для описания (желательно на англ)."),
             llmodel: LLmodel = Query('qwen3:8b', description="Имя модели в базе данных"),
             prompt: Prompts = Query(None, description="Имя промпта в базе данных"),
             preset: Preset = Query(None, description="Типовые настройки качество/скорость"),
