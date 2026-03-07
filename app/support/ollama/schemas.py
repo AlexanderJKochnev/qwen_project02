@@ -149,8 +149,14 @@ class OllamaUpdate(BaseModel):
 
 
 class OllamaRead(PkSchema, OllamaCreate):
-    pass
+    size: Optional[int] = Field(exclude=True)
 
+    @property
+    def size_gb(self) -> Optional[float]:
+        """Возвращает размер модели в гигабайтах с округлением до 2 знаков."""
+        if self.size is None:
+            return None
+        return round(self.size / (1024 ** 3), 2)
 
 class ISOLanguageCreate(BaseModel):
     iso_639_3: str
