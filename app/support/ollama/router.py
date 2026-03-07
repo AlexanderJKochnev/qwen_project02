@@ -27,11 +27,25 @@ class OllamaRouter(BaseRouter):
         self.router.add_api_route("/llm", self.get_models_list,
                                   methods=["GET"],
                                   response_model=List[LlmResponseSchema])
+        self.router.add_api_route("/llm", self.del_model,
+                                  methods=['DEL'])
         self.router.add_api_route("/translate", self.get_translate,
                                   methods=['GET'])
         self.router.add_api_route("/novel", self.get_novel,
                                   methods=['GET'])
         super().setup_routes()
+
+    async def del_model(self,
+                        background_tasks: BackgroundTasks,
+                        model_name: str = Query(..., description="Имя модели."),
+                        session: AsyncSession = Depends(get_db)) -> bool:
+        try:
+            response: bool = await self.LLMservice.del_model(model_name)
+            if response:
+                await self.get_models_list(background_tasks, session)
+            return response
+        except Exception as e:
+            raise HTTPException(status_code=501, detail=e)
 
     async def get_models_list(self, background_tasks: BackgroundTasks, session: AsyncSession = Depends(get_db)):
         """

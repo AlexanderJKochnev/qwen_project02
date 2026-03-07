@@ -25,6 +25,9 @@ class LLMService:
         response: List[dict] = [a for a in tmp_dict.get('models')]
         return response
 
+    async def del_model(self, model: str) -> bool:
+        return await self.LLMrepository.del_model(model)
+
 
 class OllamaService(Service):
     default = ['model']
@@ -228,6 +231,7 @@ class PromptService(Service):
 
 class ProptionService(Service):
     default = ['preset']
+
 
 """
     # Для метода GENERATE

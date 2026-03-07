@@ -19,6 +19,9 @@ class LLMRepository:
         models_info: ListResponse = await self.ollama_manager.client.list()
         return models_info
 
+    async def del_model(self, model: str):
+        return await self.ollama_manager.delete_model(model)
+
     async def get_translate(self, payload: dict):
         """  перевод
         response:
