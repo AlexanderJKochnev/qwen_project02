@@ -1,7 +1,7 @@
 # app.suport.ollama.schemas.py
 from datetime import datetime
 from typing import Optional, List
-from pydantic import model_validator, ConfigDict, Field, field_validator
+from pydantic import model_validator, ConfigDict, Field, field_validator, computed_field
 from app.core.schemas.base import PkSchema, BaseModel
 # from app.support.ollama.model import Prompt
 
@@ -105,7 +105,8 @@ class LlmResponseSchema(BaseModel):
     # families: Optional[List[str]] = None
     parameter_size: Optional[str] = None
     quantization_level: Optional[str] = None
-
+    
+    @computed_field
     @property
     def size_gb(self) -> Optional[float]:
         """Возвращает размер модели в гигабайтах с округлением до 2 знаков."""
