@@ -10,7 +10,7 @@ from app.core.types import ModelType
 from app.core.utils.ollama_utils import build_ollama_payload
 from app.support.ollama.schemas import LlmResponseSchema
 from app.support.ollama.repository import (LLMRepository, OllamaRepository, PromptRepository, Repository,
-                                           ISOLanguageRepository)
+                                           ISOLanguageRepository, ProptionRepository)
 from app.support.ollama.model import Ollama, ISOLanguage, Prompt, Proption
 
 
@@ -76,12 +76,13 @@ class OllamaService(Service):
 
     @classmethod
     async def translate_to_language(cls, phrase: str, lang: str, llmodel: str,
-                                    prompt_dict: dict, llm_repository: LLMRepository):
+                                    prompt_dict: dict, preset_dict: dict, llm_repository: LLMRepository):
         """
             перевод на один язык
         """
         try:
             source: str = f"Only translate the following text to {lang} '{phrase}'."
+            prompt_dict.update(preset_dict)
             payload = build_ollama_payload(prompt_dict, source, llmodel, 'generate')
             from app.core.utils.common_utils import jprint
             jprint(payload)
@@ -96,7 +97,10 @@ class OllamaService(Service):
             return {'lang': lang, 'error': e}
 
     @classmethod
-    async def write_the_novel(cls, phrase: str, language: str, llmodel: str, prompt_dict: dict, llm_repository: (
+    async def write_the_novel(cls, phrase: str, language: str, llmodel: str,
+                              prompt_dict: dict,
+                              preset_dict: dict,
+                              llm_repository: (
             LLMRepository)):
         """ описание на одном языке """
         try:
@@ -105,6 +109,7 @@ class OllamaService(Service):
                            f'Правила: смысловая точность перевода прежде всего, '
                            f'можно немного подумать про себя и сразу переходи к ответу, '
                            f'не анализируй запрос вслух, Пиши только финальный текст')
+            prompt_dict.update(preset_dict)
             payload: dict = build_ollama_payload(prompt_dict, source, llmodel, 'generate')
             response = await llm_repository.get_translate(payload)
             total_duration_ns = response.get('total_duration')
@@ -137,6 +142,10 @@ class OllamaService(Service):
                                                  order_by='role', asc=True, equa='icontains',
                                                  field='role')
             prompt_dict = prompt.to_dict()
+            # 2.1. Поиск и получение preset
+            preset: Proption = await cls.get_datas(search_preset, ProptionRepository, Proption, session,
+                                                   order_by='preset', asc=True, equa='icontains', field='preset')
+            preset_dict = preset.to_dict()
             # 3. получение списка языков
             if langs and isinstance(langs, str):
                 iso = [lang.strip() for lang in langs.split(',')]
@@ -154,7 +163,7 @@ class OllamaService(Service):
             result: List[ISOLanguage] = await repo.search_by_conditions(conditions, ISOLanguage, session)
             languages = [val.name_en for val in result]
             # 4. подготовка к параллельному запуску:
-            tasks = [cls.translate_to_language(phrase, lang, llmodel, prompt_dict,
+            tasks = [cls.translate_to_language(phrase, lang, llmodel, prompt_dict, preset_dict,
                                                llm_repository) for lang in languages]
             result = await asyncio.gather(*tasks)
             return result
@@ -191,6 +200,11 @@ class OllamaService(Service):
                                                  order_by='role', asc=True, equa='icontains',
                                                  field='role')
             prompt_dict = prompt.to_dict()
+            # 2.1. Поиск и получение preset
+            preset: Proption = await cls.get_datas(search_preset, ProptionRepository, Proption, session,
+                                                   order_by='preset', asc=True, equa='icontains',
+                                                   field='preset')
+            preset_dict = preset.to_dict()
             # 3. получение языка
             if langs and isinstance(langs, str):
                 iso = [langs.strip()]
@@ -207,7 +221,7 @@ class OllamaService(Service):
             repo = ISOLanguageRepository
             result: List[ISOLanguage] = await repo.search_by_conditions(conditions, ISOLanguage, session)
             language = result[0].name_en
-            result = await cls.write_the_novel(phrase, language, llmodel, prompt_dict, llm_repository)
+            result = await cls.write_the_novel(phrase, language, llmodel, prompt_dict, preset_dict, llm_repository)
             return result
 
             """
