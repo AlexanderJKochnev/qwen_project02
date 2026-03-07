@@ -8,7 +8,7 @@ from app.core.config.database.db_async import get_db
 from app.core.routers.base import BaseRouter
 from app.core.utils.common_utils import compare_lists_compact, jprint
 from app.support.ollama.model import Ollama, Prompt, ISOLanguage, Proption
-from app.support.ollama.schemas import (LlmResponseSchema, OllamaCreate, OllamaRead, OllamaUpdate, PromptCreate,
+from app.support.ollama.schemas import (LlmResponseSchema, OllamaCreate, PromptCreate,
                                         PromptRead, PromptUpdate,
                                         ISOLanguageCreate, ISOLanguageRead, ISOLanguageUpdate,
                                         ProptionRead, ProptionCreate, ProptionUpdate)
@@ -26,12 +26,19 @@ class OllamaRouter(BaseRouter):
     def setup_routes(self):
         self.router.add_api_route("/llm", self.get_models_list,
                                   methods=["GET"],
-                                  response_model=List[LlmResponseSchema])
+                                  response_model=List[LlmResponseSchema],
+                                  openapi_extra={'x-request-schema': None})
         self.router.add_api_route("/llm/{model}", self.del_model, methods=['DELETE'])
         self.router.add_api_route("/translate", self.get_translate,
-                                  methods=['GET'])
+                                  methods=['GET'],
+                                  openapi_extra={'x-request-schema': None})
         self.router.add_api_route("/novel", self.get_novel,
-                                  methods=['GET'])
+                                  methods=['GET'],
+                                  openapi_extra={'x-request-schema': None})
+        self.router.add_api_route("/all", self.get_all, methods=["GET"],
+                                  response_model=self.nonpaginated_response,
+                                  openapi_extra={'x-request-schema': None}
+                                  )
         # super().setup_routes()
 
     async def del_model(self,
