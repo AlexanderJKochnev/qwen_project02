@@ -27,7 +27,7 @@ class OllamaRouter(BaseRouter):
         self.router.add_api_route("/llm", self.get_models_list,
                                   methods=["GET"],
                                   response_model=List[LlmResponseSchema])
-        self.router.add_api_route("/llm", self.del_model,
+        self.router.add_api_route("/llm/{model}", self.del_model,
                                   methods=['DEL'])
         self.router.add_api_route("/translate", self.get_translate,
                                   methods=['GET'])
