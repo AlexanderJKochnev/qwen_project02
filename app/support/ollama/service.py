@@ -47,7 +47,6 @@ class OllamaService(Service):
             if remove := data.get('removed'):
                 for key in remove:
                     result = await repository.delete(key, session)
-                    logger.warning(f'{result=}, {key=}')
             if changed := data.get('changed'):
                 for obj, data in changed:
                     await repository.patch(obj, data, session)
@@ -101,10 +100,7 @@ class OllamaService(Service):
                            f'справочника '
                            f'Мишлен')
             payload: dict = build_ollama_payload(prompt_dict, source, llmodel, 'generate')
-            logger.warning(payload)
-            logger.warning(source)
             response = await llm_repository.get_translate(payload)
-            logger.warning(response)
             total_duration_ns = response.get('total_duration')
             tmp: dict = {'source': phrase, 'response': response.get('response'),
                          'llmodel': llmodel,
@@ -149,7 +145,6 @@ class OllamaService(Service):
                     conditions = {'name_en': iso}
             repo = ISOLanguageRepository
             result: List[ISOLanguage] = await repo.search_by_conditions(conditions, ISOLanguage, session)
-            logger.warning(f'1000000: {result}')
             languages = [val.name_en for val in result]
             # 4. подготовка к параллельному запуску:
             tasks = [cls.translate_to_language(phrase, lang, llmodel, prompt_dict,
@@ -202,11 +197,8 @@ class OllamaService(Service):
                 case _:
                     conditions = {'name_en': iso}
             repo = ISOLanguageRepository
-            logger.warning(f'{conditions=}.')
             result: List[ISOLanguage] = await repo.search_by_conditions(conditions, ISOLanguage, session)
-            logger.warning(f'0: {result}')
             language = result[0].name_en
-            logger.warning(f'1: {language}')
             result = await cls.write_the_novel(phrase, language, llmodel, prompt_dict, llm_repository)
             return result
 

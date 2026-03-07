@@ -1,7 +1,7 @@
 # app.suport.ollama.repository.py
-from ollama import AsyncClient, ListResponse
-from fastapi import Request
-from app.core.config.database.ollama_async import OllamaClientManager
+from ollama import ListResponse
+# from fastapi import Request
+# from app.core.config.database.ollama_async import OllamaClientManager
 from app.core.config.project_config import settings
 from app.core.config.database.ollama_async import get_ollama_manager
 from app.core.repositories.sqlalchemy_repository import Repository
@@ -46,6 +46,10 @@ class LLMRepository:
 
         """
         result = await self.ollama_manager.generate(**payload)
+        from loguru import logger
+        from app.core.utils.common_utils import jprint
+        logger.warning(type(result))
+        jprint(result)
         return result
 
     async def check_and_pull(self):
