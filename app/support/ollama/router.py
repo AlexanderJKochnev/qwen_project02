@@ -87,8 +87,8 @@ class OllamaRouter(BaseRouter):
             raise HTTPException(status_code=501, detail=e)
 
     async def get_translate(self, phrase: str = Query(None, description="Текст для перевода."),
-                            llmodel: LLmodel = Query(None, description="Имя модели в базе данных"),
-                            prompt: Prompts = Query(None, description="Имя промпта в базе данных"),
+                            llmodel: LLmodel = Query('translategemma:latest', description="Имя модели в базе данных"),
+                            prompt: Prompts = Query('universal_translator', description="Имя промпта в базе данных"),
                             preset: Preset = Query(None, description="Типовые настройки качество/скорость"),
                             langs: str = Query('ru, en',
                                                description="Язык (языки) перевода двух-значные коды через "
@@ -110,7 +110,7 @@ class OllamaRouter(BaseRouter):
 
     async def get_novel(
             self, phrase: str = Query(None, description="Наименование для описания (желательно на англ)."),
-            llmodel: LLmodel = Query(None, description="Имя модели в базе данных"),
+            llmodel: LLmodel = Query('qwen3:8b', description="Имя модели в базе данных"),
             prompt: Prompts = Query(None, description="Имя промпта в базе данных"),
             preset: Preset = Query(None, description="Типовые настройки качество/скорость"),
             langs: Languages = Query('ru', description="Язык текста 2-3 значный код"),
