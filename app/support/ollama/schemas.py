@@ -17,7 +17,13 @@ class Custom(BaseModel):
     repeat_penalty: Optional[float] = Field(1.1, ge=0.0, le=2.0)
     stop: Optional[List[str]] = None
 
-    # Пример кастомной валидации (Pydantic 2 style)
+    # Новые поля:
+    min_p: Optional[float] = Field(
+        0.05, ge=0.0, le=1.0, description="Минимальная вероятность относительно лидера"
+    )
+    typical_p: Optional[float] = Field(0.9, ge=0.0, le=1.0, description="Типичная вероятность (Typical sampling)")
+    frequency_penalty: Optional[float] = Field(0.3, ge=0.0, le=2.0, description="Штраф за частоту слов")
+    presence_penalty: Optional[float] = Field(0.2, ge=0.0, le=2.0, description="Штраф за само наличие слов")
 
     @field_validator('stop')
     @classmethod
