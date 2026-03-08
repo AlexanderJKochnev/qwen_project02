@@ -84,6 +84,7 @@ async def update_user(
 async def delete_user(id: int, background_task: BackgroundTasks, db: AsyncSession = Depends(get_db),
                       current_user: User = Depends(get_current_active_user)):
     try:
-        return await service.delete(id, model, repository, background_task, db)
+        result = await service.delete(id, model, repository, background_task, db)
+        print(f'{result=} f{type(result)=}')
     except Exception as e:
         raise HTTPException(status_code=501, detail=e)
