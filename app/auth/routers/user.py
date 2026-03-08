@@ -16,7 +16,7 @@ router = APIRouter(prefix=f"/{prefix}", tags=[f"{prefix}"])
 
 repository = UserRepository
 service = UserService
-model = User
+model = User()
 
 
 @router.post("", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
