@@ -72,11 +72,12 @@ async def update_user(
         # только super или сам пользователь менять свои данные
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
-    db_user = await service.patch(id, user_update, repository, model, background_task, db)
-    # db_user = await repository.update(id, user_update, db)
-    if db_user is None:
+    result = await service.patch(id, user_update, repository, model, background_task, db)
+    user: User = result.get('data')
+    if user is None:
         raise HTTPException(status_code=404, detail="User not found")
-    return db_user
+    user_dict = user.to_dict()
+    return UserResponse(**user_dict)
 
 
 @router.delete("/{id}", response_model=DeleteResponse)
