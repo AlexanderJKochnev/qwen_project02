@@ -274,7 +274,8 @@ class Service(metaclass=ServiceMeta):
                 # await cls.invalidate_search_index(id, repository, model, session)
                 # await session.commit()
                 # background_tasks.add_task(cls.run_reindex_worker, model.__name__, DatabaseManager.session_maker)
-                return {'success': True, 'data': result.get('data'), 'message': f'Запись {id} успешно обновлена'}
+                data: ModelType = result.get('data')
+                return {'success': True, 'data': data.to_dict(), 'message': f'Запись {id} успешно обновлена'}
             else:
                 error_type = result.get('error_type')
                 message = result.get('message', 'Неизвестная ошибка')
