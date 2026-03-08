@@ -198,8 +198,9 @@ class DeleteResponse(BaseModel):
 
 class UpdateResponse(BaseModel):
     success: bool
-    updated_id: int
+    updated_id: Optional[int] = None
     message: str
+    error_type: Optional[str] = None
 
 
 class IndexFillResponse(BaseModel):
