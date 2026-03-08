@@ -1,8 +1,9 @@
 # app/auth/routers/user.py
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config.database.db_async import get_db
+from app.core.schemas.base import DeleteResponse
 from app.auth.repository import UserRepository
 from app.auth.service import UserService
 from app.auth.schemas import UserCreate, UserRead, UserResponse, UserUpdate
@@ -32,7 +33,7 @@ async def register_user(user: UserCreate, session: AsyncSession = Depends(get_db
     return db_user
 
 
-@router.get("get_full", response_model=List[UserResponse], status_code=status.HTTP_200_OK)
+@router.get("/get_full", response_model=List[UserResponse], status_code=status.HTTP_200_OK)
 async def get_users(session: AsyncSession = Depends(get_db)):
     """ получениее списка пользователей """
     result = await service.get_full(repository, model, session)
@@ -41,11 +42,13 @@ async def get_users(session: AsyncSession = Depends(get_db)):
 
 @router.get("/me", response_model=UserRead)
 async def read_users_me(current_user: UserRead = Depends(get_current_active_user)):
+    """ получить данные о себе """
     return current_user
 
 
 @router.get("/protected")
 async def protected_route(current_user: User = Depends(get_current_active_user)):
+    """ проверка отклика """
     return {"message": f"Hello {current_user.username}"}
 
 
@@ -61,14 +64,22 @@ async def read_user(id: int, db: AsyncSession = Depends(get_db),
 
 @router.put("/{id}", response_model=UserResponse)
 async def update_user(
-    id: int, user_update: UserUpdate, db: AsyncSession = Depends(get_db),
+    id: int, user_update: UserUpdate, background_task: BackgroundTasks, db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    """ Обновление пользователя - доделать """
-    if current_user.id != id and current_user.disabled:
+    """ Обновление данных пользователя """
+    if current_user.id != id and current_user.is_superuser is False:
+        # только super или сам пользователь менять свои данные
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
-    db_user = await repository.update(id, user_update, db)
+    db_user = await service.patch(id, user_update, repository, model, background_task, db)
+    # db_user = await repository.update(id, user_update, db)
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return db_user
+
+
+@router.delete("/{id}", response_model=DeleteResponse)
+async def delete_user(id, int, background_task: BackgroundTasks, db: AsyncSession = Depends(get_db),
+                      current_user: User = Depends(get_current_active_user)):
+    return await service.delete(id, model, repository, background_task, db)
