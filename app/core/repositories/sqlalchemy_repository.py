@@ -54,6 +54,8 @@ class Repository(metaclass=RepositoryMeta):
         """
         count_stmt = select(func.count()).select_from(stmt)
         total = await session.scalar(count_stmt) or 0
+        if total == 0:
+            return None, total
         stmt = stmt.offset(skip).limit(limit)
         result = await session.execute(stmt)
         items = result.scalars().all()
@@ -66,8 +68,11 @@ class Repository(metaclass=RepositoryMeta):
             возвращает список instances
         """
         result = await session.execute(stmt)
-        items = result.scalars().all()
-        return items
+        if result:
+            items = result.scalars().all()
+            return items
+        else:
+            return None
 
     @classmethod
     async def get_match(cls, model: ModelType, relevance, search: str,
