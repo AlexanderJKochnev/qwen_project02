@@ -49,13 +49,13 @@ class LLMRepository:
 
         """
         result: GenerateResponse = await self.ollama_manager.generate(**payload)
-        from loguru import logger
-        from app.core.utils.common_utils import jprint
-        logger.warning(type(result))
-        result_dict = result.model_dump()
-        result_dict.pop('context')
-        jprint(result_dict)
-        logger.warning(result_dict.keys())
+        # from loguru import logger
+        # from app.core.utils.common_utils import jprint
+        # logger.warning(type(result))
+        # result_dict = result.model_dump()
+        # result_dict.pop('context')
+        # jprint(result_dict)
+        # logger.warning(result_dict.keys())
         return result
 
     async def check_and_pull(self):

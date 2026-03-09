@@ -139,12 +139,58 @@ class OllamaService(Service):
             source: str = writer.format(**kwargs)
             prompt_dict.update(preset_dict)
             payload: dict = build_ollama_payload(prompt_dict, source, llmodel, 'generate')
-            from app.core.utils.common_utils import jprint
-            jprint(payload)
+            # from app.core.utils.common_utils import jprint
+            # jprint(payload)
             response = await llm_repository.get_translate(payload)
-            total_duration_ns = response.get('total_duration')
-            tmp: dict = {'source': phrase, 'response': response.get('response'), 'llmodel': llmodel,
-                         'prompt': prompt_dict.get('role'), 'duration': f"{total_duration_ns / 1_000_000_000: .2f}"}
+            initial_text = response.get('response')
+            duration: list = []
+            duration.append(response.get('total_duration'))
+            # 2. verification
+            verification_prompt: str = (f"Твоя задача — проверить следующий текст "
+                                        f"на наличие фактических ошибок. Текст для проверки: "
+                                        f"{initial_text} "
+                                        f"Проанализируй каждое утверждение и отметь ТОЛЬКО те, которые:"
+                                        f"1. Содержат исторические факты (даты, имена, события) "
+                                        f"2. Утверждают что-то о производителе или создателе "
+                                        f"3. Содержат сравнительные характеристики с другими брендами "
+                                        f"Для каждого сомнительного утверждения укажи:"
+                                        f"- Цитату из текста "
+                                        f"- Почему это может быть недостоверно "
+                                        f"Если все факты достоверны, "
+                                        f"ответь: 'ВСЕ ФАКТЫ ДОСТОВЕРНЫ'")
+            payload['prompt'] = verification_prompt
+            payload['system'] = "Ты — строгий факт-чекер. Проверяй каждое утверждение."
+            payload['options']['temperature'] = 0.1
+            verification_response = await llm_repository.get_translate(payload)
+            verification_text = verification_response.get('response', '')
+            duration.append(verification_response.get('total_duration'))
+            if "ВСЕ ФАКТЫ ДОСТОВЕРНЫ" not in verification_text.upper():
+                # 3. correction of initial text
+                correction_prompt = (f"Перепиши следующий текст, ИСПРАВЛЯЯ или УДАЛЯЯ сомнительные утверждения."
+                                     f"Оригинальный текст: {initial_text} "
+                                     f"Результаты проверки (проблемные места): {verification_text} "
+                                     f"Правила исправления:"
+                                     f"1. Если факт сомнительный — удали его полностью "
+                                     f"2. Если не уверен в дате или имени — убери конкретику "
+                                     f"3. Сохрани общий стиль и описание вкуса/аромата "
+                                     f"4. Не добавляй новых фактов сверх исходного текста "
+                                     f"Исправленный текст: ")
+                payload['prompt'] = correction_prompt
+                payload['system'] = "Ты — редактор, удаляющий фактические ошибки."
+                final_response = await llm_repository.get_translate(payload)
+                final_text = final_response.get('response', initial_text)
+                duration.append(final_response.get('total_duration'))
+            else:
+                final_text = initial_text
+                verification_text = "Ошибок не найдено"
+            total_duration = {f'duration of {n + 1} stage': f"{v / 1_000_000_000: .2f}" for n, v in enumerate(duration)}
+            tmp: dict = {'source': phrase,
+                         'llmodel': llmodel,
+                         'prompt': prompt_dict.get('role'),
+                         'initial_response': response.get('response'),
+                         'verification_text': verification_text,
+                         'final_text': final_text,
+                         'total_duration': total_duration}
             return tmp
         except Exception as e:
             return {'llmodel': llmodel, 'prompt': prompt_dict, 'error': e}
@@ -270,8 +316,7 @@ class OllamaService(Service):
             else:
                 result = await cls.write_the_novel_with_verification(
                     phrase, language, llmodel, prompt_dict, preset_dict, writer, llm_repository
-                    )
-            
+                )
             return result
 
         except ValueError as e:
