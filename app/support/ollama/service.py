@@ -111,6 +111,7 @@ class OllamaService(Service):
         """ описание на одном языке """
         try:
             # source: str = f'Write a 3-4 sentence article about {phrase} in the style of The Oxford Companion to Wine'
+            logger.warning(f'{writer=}')
             source: str = (f'Напиши статью о "{phrase}" (3-4 предложения) на {lang} язык, '
                            f'Правила: смысловая точность перевода прежде всего, '
                            f'можно немного подумать про себя и сразу переходи к ответу, '
@@ -243,7 +244,6 @@ class OllamaService(Service):
                 equa='icontains', field='name'
             )
             writer = wrt.prompt
-            logger.warning(f'{phrase=}, {language=}, {llmodel=}, {prompt_dict=}, {preset_dict=}, {writer=}')
             result = await cls.write_the_novel(phrase, language, llmodel, prompt_dict, preset_dict,
                                                writer, llm_repository)
             return result
