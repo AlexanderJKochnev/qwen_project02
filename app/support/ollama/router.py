@@ -106,6 +106,7 @@ class OllamaRouter(BaseRouter):
            возвращает:
         """
         try:
+            logger.warning(f'{phrase}, {llmodel}, {prompt}, {preset}, {writer}, {langs}')
             result = await self.service.get_translate(phrase, llmodel, prompt, preset, writer, langs, session)
             return result
         except Exception as e:
