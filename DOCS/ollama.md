@@ -14,7 +14,8 @@
    11. docker exec -it ollama-ollama-1 ollama pull qwen3.5:4b
    12. docker exec -it ollama-ollama-1 ollama pull qwen3.5:2b
    13. docker exec -it ollama-ollama-1 ollama pull qwen3:8b
-   14. docker exec -it ollama ollama list # проверка какие модели загружены
+   14. docker exec -it ollama-ollama-1 ollama pull llama3.1:8b
+   15. docker exec -it ollama ollama list # проверка какие модели загружены
 
 3. Ollama держит модель в памяти (VRAM) в течение 5 минут после последнего запроса (по умолчанию). 
 4. Чтобы увидеть, что именно загружено прямо сейчас:

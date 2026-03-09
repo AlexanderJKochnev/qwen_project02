@@ -123,13 +123,13 @@ class LlmResponseSchema(BaseModel):
     parameter_size: Optional[str] = None
     quantization_level: Optional[str] = None
 
-    @computed_field
-    @property
-    def size_gb(self) -> Optional[float]:
-        """Возвращает размер модели в гигабайтах с округлением до 2 знаков."""
-        if self.size is None:
-            return None
-        return round(self.size / (1024 ** 3), 2)
+    # @computed_field
+    # @property
+    # def size_gb(self) -> Optional[float]:
+    #     """Возвращает размер модели в гигабайтах с округлением до 2 знаков."""
+    #     if self.size is None:
+    #         return None
+    #     return round(self.size / (1024 ** 3), 2)
 
     @model_validator(mode='before')
     @classmethod
