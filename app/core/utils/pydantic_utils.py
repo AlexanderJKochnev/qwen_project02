@@ -149,11 +149,11 @@ def make_paginated_response(items: List[Any], total: int,
         see app.core.schemas.base.PaginatedResponse
         :return:  Dict[str, Any]
     """
-    return {"items": items,
+    return {"items": items if total > 0 else [],
             "total": total,
             "page": page,
             "page_size": page_size,
-            "has_next": (page - 1) * page_size + len(items) < total,
+            "has_next": (page - 1) * page_size + len(items) < total if total >0 else False,
             "has_prev": page > 1
             }
 
