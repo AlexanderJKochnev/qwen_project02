@@ -219,16 +219,16 @@ class WriterRuleRouter(BaseRouter):
     def __init__(self):
         super().__init__(model=WriterRule, prefix="/writerrules")
 
-        async def create(self, data: WriterRuleCreate, session: AsyncSession = Depends(get_db)) -> WriterRuleRead:
-            return await super().create(data, session)
+    async def create(self, data: WriterRuleCreate, session: AsyncSession = Depends(get_db)) -> WriterRuleRead:
+        return await super().create(data, session)
 
-        async def patch(
-            self, id: int, data: WriterRuleUpdate, background_tasks: BackgroundTasks,
-            session: AsyncSession = Depends(get_db)
-        ) -> WriterRuleRead:
-            return await super().patch(id, data, background_tasks, session)
+    async def patch(
+        self, id: int, data: WriterRuleUpdate, background_tasks: BackgroundTasks,
+        session: AsyncSession = Depends(get_db)
+    ) -> WriterRuleRead:
+        return await super().patch(id, data, background_tasks, session)
 
-        async def update_or_create(
-            self, data: WriterRuleCreate, background_tasks: BackgroundTasks, session: AsyncSession = Depends(get_db)
-        ) -> WriterRuleRead:
-            return await super().update_or_create(data, background_tasks, session)
+    async def update_or_create(
+        self, data: WriterRuleCreate, background_tasks: BackgroundTasks, session: AsyncSession = Depends(get_db)
+    ) -> WriterRuleRead:
+        return await super().update_or_create(data, background_tasks, session)
