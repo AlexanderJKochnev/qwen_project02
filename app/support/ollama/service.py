@@ -110,7 +110,6 @@ class OllamaService(Service):
             LLMRepository)):
         """ описание на одном языке """
         try:
-            # source: str = f'Write a 3-4 sentence article about {phrase} in the style of The Oxford Companion to Wine'
             """source: str = (f'Напиши статью о "{phrase}" (3-4 предложения) на {lang} язык, '
                            f'Правила: смысловая точность перевода прежде всего, '
                            f'можно немного подумать про себя и сразу переходи к ответу, '
