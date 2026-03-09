@@ -112,5 +112,5 @@ class ISOLanguageRepository(Repository):
     model = ISOLanguage
 
 
-class WriteRuleRepository(Repository):
+class WriterRuleRepository(Repository):
     model = WriterRule
