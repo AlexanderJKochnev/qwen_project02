@@ -134,7 +134,7 @@ class OllamaService(Service):
                             search_model: str,
                             search_prompt: str,
                             search_preset: str,
-                            writer: str,
+                            search_write: str,
                             langs: str,
                             session: AsyncSession):
         """ перевод на несколько  языков """
@@ -171,8 +171,14 @@ class OllamaService(Service):
             repo = ISOLanguageRepository
             result: List[ISOLanguage] = await repo.search_by_conditions(conditions, ISOLanguage, session)
             languages = [val.name_en for val in result]
-            # 4. подготовка к параллельному запуску:
-            tasks = [cls.translate_to_language(phrase, lang, llmodel, prompt_dict, preset_dict,
+            # 4. получение writer
+            wrt: WriterRule = await cls.get_datas(
+                search_write, WriterRuleRepository, WriterRule, session, order_by='name', asc=True,
+                equa='icontains', field='name'
+            )
+            writer = wrt.prompt
+            # 5. подготовка к параллельному запуску:
+            tasks = [cls.translate_to_language(phrase, lang, llmodel, prompt_dict, preset_dict, writer,
                                                llm_repository) for lang in languages]
             result = await asyncio.gather(*tasks)
             return result
