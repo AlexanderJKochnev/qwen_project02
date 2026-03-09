@@ -243,6 +243,7 @@ class OllamaService(Service):
                 equa='icontains', field='name'
             )
             writer = wrt.prompt
+            logger.warning(f'{phrase=}, {language=}, {llmodel=}, {prompt_dict=}, {preset_dict=}, {writer=}')
             result = await cls.write_the_novel(phrase, language, llmodel, prompt_dict, preset_dict,
                                                writer, llm_repository)
             return result

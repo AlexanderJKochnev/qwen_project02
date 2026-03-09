@@ -106,7 +106,6 @@ class OllamaRouter(BaseRouter):
            возвращает:
         """
         try:
-            logger.warning(f'{phrase}, {llmodel}, {prompt}, {preset}, {writer}, {langs}')
             result = await self.service.get_translate(phrase, llmodel, prompt, preset, writer, langs, session)
             return result
         except Exception as e:
@@ -131,7 +130,6 @@ class OllamaRouter(BaseRouter):
         """
         try:
             result = await self.service.get_novel(phrase, llmodel, prompt, preset, writer, langs, session)
-            logger.warning(f'10. {result}')
             return result
         except Exception as e:
             raise HTTPException(status_code=501, detail=e)
