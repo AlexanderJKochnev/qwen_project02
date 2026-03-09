@@ -116,7 +116,8 @@ class OllamaService(Service):
                            f'Правила: смысловая точность перевода прежде всего, '
                            f'можно немного подумать про себя и сразу переходи к ответу, '
                            f'не анализируй запрос вслух, Пиши только финальный текст')
-            source: str = writer.format({'lang': lang, 'phrase': phrase})
+            kwargs = {'lang': lang, 'phrase': phrase}
+            source: str = writer.format(**kwargs)
             logger.info(source)
             prompt_dict.update(preset_dict)
             payload: dict = build_ollama_payload(prompt_dict, source, llmodel, 'generate')
