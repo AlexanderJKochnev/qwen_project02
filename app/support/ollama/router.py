@@ -120,7 +120,7 @@ class OllamaRouter(BaseRouter):
             preset: Preset = Query(None, description="Типовые настройки качество/скорость"),
             writer: Writers = Query(None, description="Типовые правила генерации текста"),
             langs: Languages = Query('ru', description="Язык текста 2-3 значный код"),
-            is_verify: bool = Query('False', description='Верифицировать перевод или нет'),
+            is_verify: bool = Query(False, description='Верифицировать перевод или нет'),
             session: AsyncSession = Depends(get_db)
     ) -> dict:
         """
