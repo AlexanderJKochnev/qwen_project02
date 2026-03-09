@@ -10,8 +10,8 @@ from app.core.types import ModelType
 from app.core.utils.ollama_utils import build_ollama_payload
 # from app.support.ollama.schemas import LlmResponseSchema
 from app.support.ollama.repository import (LLMRepository, OllamaRepository, PromptRepository, Repository,
-                                           ISOLanguageRepository, ProptionRepository)
-from app.support.ollama.model import Ollama, ISOLanguage, Prompt, Proption
+                                           ISOLanguageRepository, ProptionRepository, WriterRuleRepository)
+from app.support.ollama.model import Ollama, ISOLanguage, Prompt, Proption, WriterRule
 
 
 class LLMService:
@@ -58,7 +58,8 @@ class OllamaService(Service):
             raise Exception(e)
 
     @classmethod
-    async def get_datas(cls, search: str, repo: Type[Repository], model: ModelType, session: AsyncSession, **kwargs):
+    async def get_datas(cls, search: str, repo: Type[Repository],
+                        model: ModelType, session: AsyncSession, **kwargs) -> ModelType:
         """
             получение данных из базы данных (модель, prompt)
             сделать кэширование
@@ -76,16 +77,20 @@ class OllamaService(Service):
 
     @classmethod
     async def translate_to_language(cls, phrase: str, lang: str, llmodel: str,
-                                    prompt_dict: dict, preset_dict: dict, llm_repository: LLMRepository):
+                                    prompt_dict: dict, preset_dict: dict,
+                                    writer: str,
+                                    llm_repository: LLMRepository):
         """
             перевод на один язык
         """
         try:
-            source: str = f"Only translate the following text to {lang} '{phrase}'."
+            # source: str = f"Only translate the following text to {lang} '{phrase}'."
+            source: str = writer.format({'lang': lang, 'phrase': phrase})
+            logger.info(source)
             prompt_dict.update(preset_dict)
             payload = build_ollama_payload(prompt_dict, source, llmodel, 'generate')
-            from app.core.utils.common_utils import jprint
-            jprint(payload)
+            # from app.core.utils.common_utils import jprint
+            # jprint(payload)
             response = await llm_repository.get_translate(payload)
             total_duration_ns = response.get('total_duration')
             tmp: dict = {'lang': lang, 'response': response.get('response'),
@@ -100,6 +105,7 @@ class OllamaService(Service):
     async def write_the_novel(cls, phrase: str, lang: str, llmodel: str,
                               prompt_dict: dict,
                               preset_dict: dict,
+                              writer: str,
                               llm_repository: (
             LLMRepository)):
         """ описание на одном языке """
@@ -109,6 +115,8 @@ class OllamaService(Service):
                            f'Правила: смысловая точность перевода прежде всего, '
                            f'можно немного подумать про себя и сразу переходи к ответу, '
                            f'не анализируй запрос вслух, Пиши только финальный текст')
+            source: str = writer.format({'lang': lang, 'phrase': phrase})
+            logger.info(source)
             prompt_dict.update(preset_dict)
             payload: dict = build_ollama_payload(prompt_dict, source, llmodel, 'generate')
             response = await llm_repository.get_translate(payload)
@@ -126,6 +134,7 @@ class OllamaService(Service):
                             search_model: str,
                             search_prompt: str,
                             search_preset: str,
+                            writer: str,
                             langs: str,
                             session: AsyncSession):
         """ перевод на несколько  языков """
@@ -183,6 +192,7 @@ class OllamaService(Service):
                         search_model: str,
                         search_prompt: str,
                         search_preset: str,
+                        search_write: str,
                         langs: str,
                         session: AsyncSession) -> dict:
         """
@@ -221,7 +231,14 @@ class OllamaService(Service):
             repo = ISOLanguageRepository
             result: List[ISOLanguage] = await repo.search_by_conditions(conditions, ISOLanguage, session)
             language = result[0].name_en
-            result = await cls.write_the_novel(phrase, language, llmodel, prompt_dict, preset_dict, llm_repository)
+            # 4. получение writer
+            wrt: WriterRule = await cls.get_datas(
+                search_write, WriterRuleRepository, WriterRule, session, order_by='name', asc=True,
+                equa='icontains', field='name'
+            )
+            writer = wrt.prompt
+            result = await cls.write_the_novel(phrase, language, llmodel, prompt_dict, preset_dict,
+                                               writer, llm_repository)
             return result
 
             """
