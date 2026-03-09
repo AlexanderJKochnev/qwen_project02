@@ -129,6 +129,29 @@ class OllamaService(Service):
             return {'llmodel': llmodel, 'prompt': prompt_dict, 'error': e}
 
     @classmethod
+    async def write_the_novel_with_verification(
+        cls, phrase: str, lang: str, llmodel: str, prompt_dict: dict, preset_dict: dict, writer: str,
+        llm_repository: (LLMRepository)
+    ):
+        """ описание на одном языке """
+        try:
+            """source: str = (f'Напиши статью о "{phrase}" (3-4 предложения) на {lang} язык, '
+                           f'Правила: смысловая точность перевода прежде всего, '
+                           f'можно немного подумать про себя и сразу переходи к ответу, '
+                           f'не анализируй запрос вслух, Пиши только финальный текст')"""
+            kwargs = {'lang': lang, 'phrase': phrase}
+            source: str = writer.format(**kwargs)
+            prompt_dict.update(preset_dict)
+            payload: dict = build_ollama_payload(prompt_dict, source, llmodel, 'generate')
+            response = await llm_repository.get_translate(payload)
+            total_duration_ns = response.get('total_duration')
+            tmp: dict = {'source': phrase, 'response': response.get('response'), 'llmodel': llmodel,
+                         'prompt': prompt_dict.get('role'), 'duration': f"{total_duration_ns / 1_000_000_000: .2f}"}
+            return tmp
+        except Exception as e:
+            return {'llmodel': llmodel, 'prompt': prompt_dict, 'error': e}
+
+    @classmethod
     async def get_translate(cls, phrase: str,
                             search_model: str,
                             search_prompt: str,

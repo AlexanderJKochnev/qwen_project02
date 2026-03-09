@@ -3,7 +3,7 @@ from typing import List
 from loguru import logger
 from fastapi import BackgroundTasks, Depends, HTTPException, Query, Body
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.enum import Preset, Prompts, LLmodel, Languages, Writers
+from app.core.enum import Preset, Prompts, LLmodel, Languages, Writers, BoolOptions
 from app.core.config.database.db_async import get_db
 from app.core.routers.base import BaseRouter
 from app.core.utils.common_utils import compare_lists_compact, jprint
@@ -120,6 +120,7 @@ class OllamaRouter(BaseRouter):
             preset: Preset = Query(None, description="Типовые настройки качество/скорость"),
             writer: Writers = Query(None, description="Типовые правила генерации текста"),
             langs: Languages = Query('ru', description="Язык текста 2-3 значный код"),
+            is_verify: bool = Query('False', description='Верифицировать перевод или нет'),
             session: AsyncSession = Depends(get_db)
     ) -> dict:
         """
