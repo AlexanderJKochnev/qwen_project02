@@ -8,7 +8,7 @@ from typing import List, Type
 from app.core.services.service import Service
 from app.core.types import ModelType
 from app.core.utils.ollama_utils import build_ollama_payload
-from app.support.ollama.schemas import LlmResponseSchema
+# from app.support.ollama.schemas import LlmResponseSchema
 from app.support.ollama.repository import (LLMRepository, OllamaRepository, PromptRepository, Repository,
                                            ISOLanguageRepository, ProptionRepository)
 from app.support.ollama.model import Ollama, ISOLanguage, Prompt, Proption
@@ -97,7 +97,7 @@ class OllamaService(Service):
             return {'lang': lang, 'error': e}
 
     @classmethod
-    async def write_the_novel(cls, phrase: str, language: str, llmodel: str,
+    async def write_the_novel(cls, phrase: str, lang: str, llmodel: str,
                               prompt_dict: dict,
                               preset_dict: dict,
                               llm_repository: (
@@ -105,7 +105,7 @@ class OllamaService(Service):
         """ описание на одном языке """
         try:
             # source: str = f'Write a 3-4 sentence article about {phrase} in the style of The Oxford Companion to Wine'
-            source: str = (f'Напиши статью о "{phrase}" (3-4 предложения) на {language} язык, '
+            source: str = (f'Напиши статью о "{phrase}" (3-4 предложения) на {lang} язык, '
                            f'Правила: смысловая точность перевода прежде всего, '
                            f'можно немного подумать про себя и сразу переходи к ответу, '
                            f'не анализируй запрос вслух, Пиши только финальный текст')
@@ -302,3 +302,7 @@ class ProptionService(Service):
 
 class ISOLanguageService(Service):
     default = ['iso_639_3']
+
+
+class WriterRuleService(Service):
+    default = ['name']

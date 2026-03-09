@@ -7,9 +7,9 @@ from app.core.enum import Preset, Prompts, LLmodel, Languages
 from app.core.config.database.db_async import get_db
 from app.core.routers.base import BaseRouter
 from app.core.utils.common_utils import compare_lists_compact, jprint
-from app.support.ollama.model import Ollama, Prompt, ISOLanguage, Proption
+from app.support.ollama.model import Ollama, Prompt, ISOLanguage, Proption, WriterRule
 from app.support.ollama.schemas import (LlmResponseSchema, OllamaCreate, PromptCreate,
-                                        PromptRead, PromptUpdate,
+                                        PromptRead, PromptUpdate, WriterRuleRead, WriterRuleCreate, WriterRuleUpdate,
                                         ISOLanguageCreate, ISOLanguageRead, ISOLanguageUpdate,
                                         ProptionRead, ProptionCreate, ProptionUpdate)
 from app.support.ollama.service import LLMService, OllamaService
@@ -213,3 +213,22 @@ class ProptionRouter(BaseRouter):
                                background_tasks: BackgroundTasks,
                                session: AsyncSession = Depends(get_db)) -> ProptionRead:
         return await super().update_or_create(data, background_tasks, session)
+
+
+class WriterRuleRouter(BaseRouter):
+    def __init__(self):
+        super().__init__(model=WriterRule, prefix="/writerrules")
+
+        async def create(self, data: WriterRuleCreate, session: AsyncSession = Depends(get_db)) -> WriterRuleRead:
+            return await super().create(data, session)
+
+        async def patch(
+            self, id: int, data: WriterRuleUpdate, background_tasks: BackgroundTasks,
+            session: AsyncSession = Depends(get_db)
+        ) -> WriterRuleRead:
+            return await super().patch(id, data, background_tasks, session)
+
+        async def update_or_create(
+            self, data: WriterRuleCreate, background_tasks: BackgroundTasks, session: AsyncSession = Depends(get_db)
+        ) -> WriterRuleRead:
+            return await super().update_or_create(data, background_tasks, session)

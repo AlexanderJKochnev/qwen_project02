@@ -6,6 +6,22 @@ from app.core.schemas.base import PkSchema, BaseModel
 # from app.support.ollama.model import Prompt
 
 
+class WriterRuleCreate(BaseModel):
+    name: str
+    prompt: str
+
+
+class WriterRuleRead(BaseModel):
+    id: int
+    name: str
+    prompt: str
+
+
+class WriterRuleUpdate(BaseModel):
+    name: Optional[str] = None
+    prompt: Optional[str] = None
+
+
 class ProptionCustom(BaseModel):
     # system_prompt: Optional[str] = Field(None, description="Инструкция для модели")
     num_ctx: Optional[int] = Field(4096, ge=1, le=131072)

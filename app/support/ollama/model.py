@@ -189,3 +189,19 @@ class ISOLanguage(Base, BaseAt):
 
     def __str__(self):
         return f"{self.iso_639_3} {self.name_en}" or ""
+
+
+class WriterRule(Base, BaseAt):
+    """
+        правила написания текста пример:
+        Напиши статью о "{phrase}" (3-4 предложения) на {lang} языке.
+        Правила: смысловая точность прежде всего,
+        можно немного подумать про себя и сразу переходи к ответу,
+        не анализируй запрос вслух, Пиши только финальный текст
+    """
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    prompt: Mapped[str] = mapped_column(String)
+    
+    def __str__(self):
+        return self.name or ""
