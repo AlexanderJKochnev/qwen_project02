@@ -120,7 +120,7 @@ class OllamaRouter(BaseRouter):
             preset: Preset = Query(None, description="Типовые настройки качество/скорость"),
             writer: Writers = Query(None, description="Типовые правила генерации текста"),
             langs: Languages = Query('ru', description="Язык текста 2-3 значный код"),
-            is_verify: bool = Query(False, description='Верифицировать перевод или нет'),
+            verify: bool = Query(False, description='Верифицировать перевод или нет'),
             session: AsyncSession = Depends(get_db)
     ) -> dict:
         """
@@ -130,7 +130,7 @@ class OllamaRouter(BaseRouter):
            ## 3. prompt
         """
         try:
-            result = await self.service.get_novel(phrase, llmodel, prompt, preset, writer, langs, session)
+            result = await self.service.get_novel(phrase, llmodel, prompt, preset, writer, langs, verify, session)
             return result
         except Exception as e:
             raise HTTPException(status_code=501, detail=e)

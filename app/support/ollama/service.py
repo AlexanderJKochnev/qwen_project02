@@ -107,7 +107,7 @@ class OllamaService(Service):
                               preset_dict: dict,
                               writer: str,
                               llm_repository: (
-            LLMRepository)):
+            LLMRepository)) -> dict:
         """ описание на одном языке """
         try:
             """source: str = (f'Напиши статью о "{phrase}" (3-4 предложения) на {lang} язык, '
@@ -132,17 +132,15 @@ class OllamaService(Service):
     async def write_the_novel_with_verification(
         cls, phrase: str, lang: str, llmodel: str, prompt_dict: dict, preset_dict: dict, writer: str,
         llm_repository: (LLMRepository)
-    ):
+    ) -> dict:
         """ описание на одном языке """
         try:
-            """source: str = (f'Напиши статью о "{phrase}" (3-4 предложения) на {lang} язык, '
-                           f'Правила: смысловая точность перевода прежде всего, '
-                           f'можно немного подумать про себя и сразу переходи к ответу, '
-                           f'не анализируй запрос вслух, Пиши только финальный текст')"""
             kwargs = {'lang': lang, 'phrase': phrase}
             source: str = writer.format(**kwargs)
             prompt_dict.update(preset_dict)
             payload: dict = build_ollama_payload(prompt_dict, source, llmodel, 'generate')
+            from app.core.utils.common_utils import jprint
+            jprint(payload)
             response = await llm_repository.get_translate(payload)
             total_duration_ns = response.get('total_duration')
             tmp: dict = {'source': phrase, 'response': response.get('response'), 'llmodel': llmodel,
@@ -222,6 +220,7 @@ class OllamaService(Service):
                         search_preset: str,
                         search_write: str,
                         langs: str,
+                        verify: bool,
                         session: AsyncSession) -> dict:
         """
         генерация описаний
@@ -265,16 +264,16 @@ class OllamaService(Service):
                 equa='icontains', field='name'
             )
             writer = wrt.prompt
-            result = await cls.write_the_novel(phrase, language, llmodel, prompt_dict, preset_dict,
-                                               writer, llm_repository)
+            if not verify:
+                result = await cls.write_the_novel(phrase, language, llmodel, prompt_dict, preset_dict,
+                                                   writer, llm_repository)
+            else:
+                result = await cls.write_the_novel_with_verification(
+                    phrase, language, llmodel, prompt_dict, preset_dict, writer, llm_repository
+                    )
+            
             return result
 
-            """
-            # 4. подготовка к параллельному запуску: НЕ НУЖНО
-            tasks = [cls.translate_to_language(phrase, lang, llmodel, prompt_dict,
-                                               llm_repository) for lang in languages]
-            result = await asyncio.gather(*tasks)
-            return result"""
         except ValueError as e:
             # Обрабатываем ошибки валидации/поиска
             logger.error(f"Validation error: {e}")

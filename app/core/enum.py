@@ -40,9 +40,3 @@ LLmodel = Enum("Llmodel", {v: v for v in data['models']}, type=str)
 Prompts = Enum("Prompts", {v: v for v in data['prompts']}, type=str)
 Languages = Enum("Languages", {v: v for v in data['language']}, type=str)
 Writers = Enum("writer", {v: v for v in data['writer']}, type=str)
-
-
-class BoolOptions(str, Enum):
-    """ класс для выпадающего списка в swagger """
-    true = "True"
-    false = "False"
