@@ -111,12 +111,12 @@ class OllamaService(Service):
         """ описание на одном языке """
         try:
             # source: str = f'Write a 3-4 sentence article about {phrase} in the style of The Oxford Companion to Wine'
-            source: str = (f'Напиши статью о "{phrase}" (3-4 предложения) на {lang} язык, '
+            """source: str = (f'Напиши статью о "{phrase}" (3-4 предложения) на {lang} язык, '
                            f'Правила: смысловая точность перевода прежде всего, '
                            f'можно немного подумать про себя и сразу переходи к ответу, '
-                           f'не анализируй запрос вслух, Пиши только финальный текст')
-            # kwargs = {'lang': lang, 'phrase': phrase}
-            # source: str = writer.format(**kwargs)
+                           f'не анализируй запрос вслух, Пиши только финальный текст')"""
+            kwargs = {'lang': lang, 'phrase': phrase}
+            source: str = writer.format(**kwargs)
             prompt_dict.update(preset_dict)
             payload: dict = build_ollama_payload(prompt_dict, source, llmodel, 'generate')
             response = await llm_repository.get_translate(payload)
