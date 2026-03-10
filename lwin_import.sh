@@ -1,6 +1,7 @@
 #!/bin/bash
 # Имя сервиса из docker-compose
-SERVICE_NAME="wine_host"
+SERVICE_NAME="test-wine_host-1"
+# SERVICE_NAME="prod-wine_host-1"
 DB_NAME="wine_db"
 # Имя пользователя БД (замените, если отличается)
 DB_USER="wine"
