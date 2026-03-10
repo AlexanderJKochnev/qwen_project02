@@ -131,6 +131,12 @@ class BaseRouter:
                                   self.get_all, methods=["GET"],
                                   response_model=self.nonpaginated_response,  # List[self.read_response])
                                   openapi_extra={'x-request-schema': None})
+        # get full
+        self.router.add_api_route("/full",
+                                  self.get_full,
+                                  methods=["GET"],
+                                  # response_model=self.nonpaginated_response,
+                                  openapi_extra={'x-request-schema': None})
         self.router.add_api_route("/fill_index",
                                   self.fill_index, methods=["GET"],
                                   response_model=IndexFillResponse,
