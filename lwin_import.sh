@@ -13,7 +13,7 @@ FILE_NAME="upload_volume/LWIN_clear.txt"
 echo "--- Начинаю импорт lwin в контейнер $SERVICE_NAME ---"
 
 # Создаем дамп
-cat $FILE_NAME | docker exec -i $SERVICE_NAME psql -U $DB_USER -d $DB_NAME -c "\copy lwins FROM STDIN WITH (FORMAT csv, HEADER true, DELIMITER E'\t', NULL '')"
+cat $FILE_NAME | docker exec -i $SERVICE_NAME psql -U $DB_USER -d $DB_NAME -c "\copy lwins FROM STDIN WITH (FORMAT csv, HEADER true, DELIMITER E'\t', QUOTE E'\b', NULL '')"
 
 if [ $? -eq 0 ]; then
     echo "--- импорт успешно сделан ---"
