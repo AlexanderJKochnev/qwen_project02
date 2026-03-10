@@ -216,6 +216,17 @@ class Service(metaclass=ServiceMeta):
         return result
 
     @classmethod
+    async def get_full_with_pagination(
+        cls, page: int, page_size: int, repository: Type[Repository], model: ModelType,
+        session: AsyncSession
+    ) -> Dict[str, Any]:
+        # Запрос с загрузкой связей и пагинацией
+        skip = (page - 1) * page_size
+        items, total = await repository.get_full_with_pagination(skip, page_size, model, session)
+        result = make_paginated_response(items, total, page, page_size)
+        return result
+
+    @classmethod
     async def get_by_id(
             cls, id: int, repository: Type[Repository],
             model: ModelType, session: AsyncSession) -> Optional[ModelType]:

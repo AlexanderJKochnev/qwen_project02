@@ -137,6 +137,11 @@ class BaseRouter:
                                   methods=["GET"],
                                   # response_model=self.nonpaginated_response,
                                   openapi_extra={'x-request-schema': None})
+        # get full
+        self.router.add_api_route("/full_page",
+                                  self.get_full_with_pagination,
+                                  methods=["GET"],
+                                  openapi_extra={'x-request-schema': None})
         self.router.add_api_route("/fill_index",
                                   self.fill_index, methods=["GET"],
                                   response_model=IndexFillResponse,
@@ -343,7 +348,26 @@ class BaseRouter:
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                 detail=f"Internal server error. {e}")
-    
+
+    async def get_full_with_pagination(self,
+                                       page: int = Query(1, ge=1),
+                                       page_size: int = Query(paging.get('def', 20),
+                                                              ge=paging.get('min', 1),
+                                                              le=paging.get('max', 1000)),
+                                       session: AsyncSession = Depends(get_db)
+                                       ) -> PaginatedResponse:
+        """
+            Получение постранично всех записей после заданной даты.
+            По умолчанию задана дата - 2 года от сейчас
+            input_valudation_chema None
+            response_model PaginatedResponse[<>ReadRelation>]
+        """
+        # print(f"📥 GET request for {self.model.__name__} from")
+        response = await self.service.get_full_with_pagination(page, page_size, self.repo, self.model, session)
+        # type_checking(response, 'get')
+        result = self.paginated_response(**response)
+        return result
+
     async def search(self, search: str = Query(None, description="Поисковый запрос. "
                                                "В случае пустого запроса будут "
                                                "выведены все данные "),
