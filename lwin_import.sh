@@ -8,7 +8,7 @@ DB_USER="wine"
 # Имя файла
 # cat /путь/к/файлу.csv | docker exec -i имя_контейнера psql -U имя_пользователя -d имя_базы -c "\copy имя_таблицы FROM STDIN WITH (FORMAT csv, HEADER true, DELIMITER ';')"
 # BACKUP_NAME="pg_backup_$(date +%Y%m%d_%H%M%S).sql"
-FILE_NAME="/upload_volume/LWIN_clear.txt"
+FILE_NAME="upload_volume/LWIN_clear.txt"
 
 echo "--- Начинаю импорт lwin в контейнер $SERVICE_NAME ---"
 
