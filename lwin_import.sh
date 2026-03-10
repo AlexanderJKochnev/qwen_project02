@@ -17,7 +17,7 @@ echo "--- Начинаю импорт lwin в контейнер $SERVICE_NAME -
 # Создаем дамп
 # cat $FILE_NAME | docker exec -i $SERVICE_NAME psql -U $DB_USER -d $DB_NAME -c "\copy lwins  FROM STDIN WITH (FORMAT csv, HEADER true, DELIMITER E'\t', QUOTE E'\b', NULL '')"
 
-cat $FILE_NAME | sed 's/\r//g' | docker exec -i $SERVICE_NAME psql -U $DB_USER -d $DB_NAME -c "\copy lwins $COLUMNS FROM STDIN WITH (FORMAT csv, HEADER true, DELIMITER E'\t', QUOTE E'\b')"
+cat $FILE_NAME | sed 's/\r//g' | docker exec -i $SERVICE_NAME psql -U $DB_USER -d $DB_NAME -c "\copy lwins $COLUMNS FROM STDIN WITH (FORMAT csv, HEADER true, DELIMITER E'\t', QUOTE E'\b', ENCODING 'WIN1251')"
 
 
 if [ $? -eq 0 ]; then
