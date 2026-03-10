@@ -46,6 +46,7 @@ from app.support.parser.router import (StatusRouter, CodeRouter, NameRouter, Orc
                                        ImageRouter, RawdataRouter, RegistryRouter)
 from app.support.websearch.router import router as web_router
 from app.support.ollama.router import OllamaRouter, PromptRouter, ISOLanguageRouter, ProptionRouter, WriterRuleRouter
+from app.support.lwin.router import LwinRouter
 # from app.arq_worker_routes import router as ArqWorkerRouter
 # from app.support.warehouse.router import WarehouseRouter
 
@@ -149,6 +150,7 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)  # минимальный 
 app.include_router(ApiRouter().router)
 app.include_router(GemmaRouter().router)
 app.include_router(web_router)
+app.include_router(LwinRouter().router)
 app.include_router(PromptRouter().router)
 app.include_router(ProptionRouter().router)
 app.include_router(WriterRuleRouter().router)
