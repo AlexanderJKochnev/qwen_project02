@@ -30,20 +30,36 @@ docker exec -i $SERVICE_NAME psql -U $DB_USER -d $DB_NAME \
 
 echo "--- 3. Перенос данных в основную таблицу lwins с конвертацией ---"
 docker exec -i $SERVICE_NAME psql -U $DB_USER -d $DB_NAME -c "
-    INSERT INTO lwins ($COL_NAMES)
+    -- Если нужно очистить таблицу перед импортом, расскомментируйте строку ниже:
+    -- TRUNCATE TABLE lwins RESTART IDENTITY;
+
+    INSERT INTO lwins (
+        lwin, status, display_name, producer_title, producer_name, wine,
+        country, region, sub_region, site, parcel, colour, type, sub_type,
+        designation, classification, vintage_config, first_vintage,
+        final_vintage, date_added, date_updated
+    )
     SELECT
         NULLIF(lwin, '')::BIGINT,
-        status, display_name, producer_title, producer_name, wine, country, region, sub_region, site, parcel, colour, type, sub_type, designation, classification, vintage_config, first_vintage, final_vintage,
-        -- Обработка даты: если формат совпадает, конвертируем, иначе NULL
+        status, display_name, producer_title, producer_name, wine,
+        country, region, sub_region, site, parcel, colour, type, sub_type,
+        designation, classification, vintage_config, first_vintage,
+        final_vintage,
+        -- Обработка даты создания
         CASE
             WHEN date_added ~ '^\d{2}\.\d{2}\.\d{4}' THEN to_timestamp(date_added, 'DD.MM.YYYY HH24:MI')
             ELSE NULL
         END,
+        -- Обработка даты обновления
         CASE
             WHEN date_updated ~ '^\d{2}\.\d{2}\.\d{4}' THEN to_timestamp(date_updated, 'DD.MM.YYYY HH24:MI')
             ELSE NULL
         END
-    FROM lwins_temp;
+    FROM lwins_temp
+    -- ГЛАВНОЕ: Игнорируем строки, где LWIN пустой или не является числом
+    WHERE lwin IS NOT NULL
+      AND lwin != ''
+      AND lwin ~ '^[0-9]+$';
 
     DROP TABLE lwins_temp;
 "
