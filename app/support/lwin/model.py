@@ -2,7 +2,6 @@
 
 from datetime import datetime
 from sqlalchemy import String, DateTime
-# from sqlalchemy.dialects.postgresql import JSONB  # Если используете PostgreSQL
 from sqlalchemy.orm import Mapped, mapped_column
 from app.core.models.base_model import Base
 
