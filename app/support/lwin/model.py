@@ -34,7 +34,7 @@ class Lwin(Base):
     FINAL_VINTAGE: Mapped[str] = mapped_column(String(255), index=True, nullable=True)
     DATE_ADDED: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
     DATE_UPDATED: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
-    REFERENCE: Mapped[str] = mapped_column(String(255), index=True, nullable=True)
+    # REFERENCE: Mapped[str] = mapped_column(String(255), index=True, nullable=True)
 
     def __str__(self):
         return self.LWIN or ""
