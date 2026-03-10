@@ -30,9 +30,16 @@ echo "--- Начинаю импорт lwin в контейнер $SERVICE_NAME -
 # docker exec -i $SERVICE_NAME psql -U $DB_USER -d $DB_NAME \
 # -c "\copy lwins $COLUMNS FROM STDIN WITH (FORMAT csv, DELIMITER E'\t', QUOTE E'\b', ENCODING 'WIN1251')"
 
+# (echo "SET datestyle = 'ISO, DMY';"; \
+# echo "\copy lwins $COLUMNS FROM STDIN WITH (FORMAT csv, HEADER true, DELIMITER E'\t', QUOTE E'\b', ENCODING 'WIN1251')"; \
+# cat $FILE_NAME | sed 's/\r//g') | \
+
 (echo "SET datestyle = 'ISO, DMY';"; \
- echo "\copy lwins $COLUMNS FROM STDIN WITH (FORMAT csv, HEADER true, DELIMITER E'\t', QUOTE E'\b', ENCODING 'WIN1251')"; \
- cat $FILE_NAME | sed 's/\r//g') | \
+ echo "\copy lwins $COLUMNS FROM STDIN WITH (FORMAT csv, HEADER true, DELIMITER E'\t', QUOTE E'\b')"; \
+ iconv -f cp1251 -t utf-8 $FILE_NAME | sed 's/\r//g') | \
+ docker exec -i $SERVICE_NAME psql -U $DB_USER -d $DB_NAME
+
+
  docker exec -i $SERVICE_NAME psql -U $DB_USER -d $DB_NAME
 
 
