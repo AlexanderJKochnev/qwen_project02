@@ -3,4 +3,4 @@ from app.core.services.service import Service
 
 
 class LwinService(Service):
-    default = ['LWIN']
+    default = ['lwin']
