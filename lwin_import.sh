@@ -10,7 +10,7 @@ COLUMNS="(lwin, status, display_name, producer_title, producer_name, wine, count
 # Имя файла
 # cat /путь/к/файлу.csv | docker exec -i имя_контейнера psql -U имя_пользователя -d имя_базы -c "\copy имя_таблицы FROM STDIN WITH (FORMAT csv, HEADER true, DELIMITER ';')"
 # BACKUP_NAME="pg_backup_$(date +%Y%m%d_%H%M%S).sql"
-FILE_NAME="upload_volume/LWIN_clear.txt"
+FILE_NAME="upload_volume/LWIN_clear.tsv"
 
 echo "--- Начинаю импорт lwin в контейнер $SERVICE_NAME ---"
 
@@ -19,8 +19,8 @@ echo "--- Начинаю импорт lwin в контейнер $SERVICE_NAME -
 
 # cat $FILE_NAME | sed 's/\r//g' | docker exec -i $SERVICE_NAME psql -U $DB_USER -d $DB_NAME -c "\copy lwins $COLUMNS FROM STDIN WITH (FORMAT csv, HEADER true, DELIMITER E'\t', QUOTE E'\b', ENCODING 'WIN1251')"
 
-# cat $FILE_NAME | sed 's/\r//g' | docker exec -i $SERVICE_NAME psql -U $DB_USER -d $DB_NAME \
-# -c "SET datestyle = 'ISO, DMY'; \copy lwins $COLUMNS FROM STDIN WITH (FORMAT csv, HEADER true, DELIMITER E'\t', QUOTE E'\b', ENCODING 'WIN1251')"
+cat $FILE_NAME | sed 's/\r//g' | docker exec -i $SERVICE_NAME psql -U $DB_USER -d $DB_NAME \
+ -c "SET datestyle = 'ISO, DMY'; \copy lwins $COLUMNS FROM STDIN WITH (FORMAT csv, HEADER true, DELIMITER E'\t', QUOTE E'\b')"
 
 # (echo "SET datestyle = 'ISO, DMY';"; cat $FILE_NAME | sed 's/\r//g') | \
 # docker exec -i $SERVICE_NAME psql -U $DB_USER -d $DB_NAME \
@@ -34,10 +34,10 @@ echo "--- Начинаю импорт lwin в контейнер $SERVICE_NAME -
 # echo "\copy lwins $COLUMNS FROM STDIN WITH (FORMAT csv, HEADER true, DELIMITER E'\t', QUOTE E'\b', ENCODING 'WIN1251')"; \
 # cat $FILE_NAME | sed 's/\r//g') | \
 
-(echo "SET datestyle = 'ISO, DMY';"; \
- echo "\copy lwins $COLUMNS FROM STDIN WITH (FORMAT csv, HEADER true, DELIMITER E'\t', QUOTE E'\b')"; \
- iconv -f cp1251 -t utf-8 $FILE_NAME | sed 's/\r//g') | \
- docker exec -i $SERVICE_NAME psql -U $DB_USER -d $DB_NAME
+# (echo "SET datestyle = 'ISO, DMY';"; \
+#  echo "\copy lwins $COLUMNS FROM STDIN WITH (FORMAT csv, HEADER true, DELIMITER E'\t', QUOTE E'\b')"; \
+#  iconv -f cp1251 -t utf-8 $FILE_NAME | sed 's/\r//g') | \
+#  docker exec -i $SERVICE_NAME psql -U $DB_USER -d $DB_NAME
 
 
  docker exec -i $SERVICE_NAME psql -U $DB_USER -d $DB_NAME
