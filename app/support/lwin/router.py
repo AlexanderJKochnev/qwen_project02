@@ -11,7 +11,7 @@ from app.support.lwin.schemas import LwinCreate, LwinRead, LwinUpdate
 class LwinRouter(BaseRouter):
     def __init__(self):
         super().__init__(model=Lwin, prefix="/lwin")
-        self.service = LwinService
+        # self.service = LwinService
 
     async def create(self, data: LwinCreate, session: AsyncSession = Depends(get_db)) -> LwinRead:
         return await super().create(data, session)
