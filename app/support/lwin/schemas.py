@@ -6,35 +6,34 @@ from app.core.schemas.base import BaseModel
 
 
 class LwinCommon:
-    STATUS: Optional[str] = None
-    DISPLAY_NAME: Optional[str] = None
-    PRODUCER_TITLE: Optional[str] = None
-    PRODUCER_NAME: Optional[str] = None
-    WINE: Optional[str] = None
-    COUNTRY: Optional[str] = None
-    REGION: Optional[str] = None
-    SUB_REGION: Optional[str] = None
-    SITE: Optional[str] = None
-    PARCEL: Optional[str] = None
-    COLOUR: Optional[str] = None
-    TYPE: Optional[str] = None
-    SUB_TYPE: Optional[str] = None
-    DESIGNATION: Optional[str] = None
-    CLASSIFICATION: Optional[str] = None
-    VINTAGE_CONFIG: Optional[str] = None
-    FIRST_VINTAGE: Optional[str] = None
-    FINAL_VINTAGE: Optional[str] = None
-    DATE_ADDED: Optional[datetime] = None
-    DATE_UPDATED: Optional[datetime] = None
-    REFERENCE: Optional[str] = None
+    status: Optional[str] = None
+    display_name: Optional[str] = None
+    producer_title: Optional[str] = None
+    producer_name: Optional[str] = None
+    wine: Optional[str] = None
+    country: Optional[str] = None
+    region: Optional[str] = None
+    sub_region: Optional[str] = None
+    site: Optional[str] = None
+    parcel: Optional[str] = None
+    colour: Optional[str] = None
+    type: Optional[str] = None
+    sub_type: Optional[str] = None
+    designation: Optional[str] = None
+    classification: Optional[str] = None
+    vintage_config: Optional[str] = None
+    first_vintage: Optional[str] = None
+    final_vintage: Optional[str] = None
+    date_added: Optional[datetime] = None
+    date_updated: Optional[datetime] = None
 
 
 class LwinCreate(BaseModel, LwinCommon):
-    LWIN: str
+    lwin: str
 
 
 class LwinUpdate(BaseModel, LwinCommon):
-    LWIN: Optional[str] = None
+    lwin: Optional[str] = None
 
 
 class LwinRead(LwinCreate):
