@@ -31,7 +31,8 @@ from app.support.subregion.model import Subregion
 from app.support.subcategory.model import Subcategory
 from app.support.parser.model import Name, Image, Code, Rawdata, Registry
 from app.support.field_keys.model import FieldKey
-from app.support.ollama.model import Ollama, Prompt, ISOLanguage
+from app.support.ollama.model import Ollama, Prompt, ISOLanguage, Proption, WriterRule
+from app.support.lwin.model import Lwin
 
 
 # this is the Alembic Config object, which provides
