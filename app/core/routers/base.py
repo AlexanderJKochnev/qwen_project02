@@ -317,6 +317,7 @@ class BaseRouter:
         """
         # print(f"📥 GET request for {self.model.__name__} from")
         after_date = back_to_the_future(after_date)
+        logger.warning(f'{self.service=}')
         response = await self.service.get_all(after_date, page, page_size, self.repo, self.model, session)
         # type_checking(response, 'get')
         result = self.paginated_response(**response)
