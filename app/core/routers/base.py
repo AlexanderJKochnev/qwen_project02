@@ -55,7 +55,7 @@ class BaseRouter:
         self.model = model
         self.repo = get_repo(model)
         self.service: TService = get_service(model)
-        logger.warning(f'{self.repo=} , {self.service=} ========================')
+        logger.warning(f'{self.repo=} , {self.service=} ===={self.model.__name__}====')
 
         self.auth_dependency = auth_dependency
         # input py schema for simple create without relation
@@ -317,7 +317,6 @@ class BaseRouter:
         """
         # print(f"📥 GET request for {self.model.__name__} from")
         after_date = back_to_the_future(after_date)
-        logger.warning(f'{self.service=}')
         response = await self.service.get_all(after_date, page, page_size, self.repo, self.model, session)
         # type_checking(response, 'get')
         result = self.paginated_response(**response)
