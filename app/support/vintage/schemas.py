@@ -1,7 +1,6 @@
 # app.support.vintage.schemas.py
-from typing import Optional
 from app.core.schemas.base import (CreateSchema, ReadSchema, UpdateSchema,
-                                   DetailView, ListView, CreateSchemaSub)
+                                   DetailView, ListView)
 """
 1. Create
 2. Update
