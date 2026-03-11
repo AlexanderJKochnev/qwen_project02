@@ -58,6 +58,7 @@ from app.support.superfood.service import SuperfoodService
 from app.support.sweetness.service import SweetnessService
 from app.support.varietal.service import VarietalService
 from app.support.parser.service import StatusService, CodeService,  NameService, ImageService, RawdataService
+from app.support.producer.service import ProducerService, ProducerTitleService
 
 # from app.support.warehouse.service import WarehouseService
 from app.support.warehouse.repository import WarehouseRepository
