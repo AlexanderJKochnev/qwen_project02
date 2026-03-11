@@ -4,6 +4,7 @@
     модели с ForeignKey должны должны быть выше моделей на которые они ссылаются
 """
 # flake8: noqa: F401
+# models
 from app.support.varietal.model import Varietal
 from app.support.item.model import Item
 from app.support.drink.model import Drink
@@ -18,7 +19,10 @@ from app.support.sweetness.model import Sweetness
 from app.support.warehouse.model import Warehouse
 from app.support.customer.model import Customer
 from app.support.parser.model import Name, Code, Rawdata, Image, Status
+from app.support.lwin.model import Lwin
+from app.support.producer.model import Producer, ProducerTitle
 
+# schemas
 from app.support.varietal.schemas import VarietalRead
 from app.support.item.schemas import (ItemRead, ItemCreate, ItemUpdate,
                                       ItemCreateRelation, ItemReadRelation)

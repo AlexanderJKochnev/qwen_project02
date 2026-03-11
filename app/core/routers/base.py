@@ -55,6 +55,8 @@ class BaseRouter:
         self.model = model
         self.repo = get_repo(model)
         self.service: TService = get_service(model)
+        logger.warning(f'{self.repo=} , {self.service=} ========================')
+
         self.auth_dependency = auth_dependency
         # input py schema for simple create without relation
         self.create_schema = get_pyschema(model, 'Create')
