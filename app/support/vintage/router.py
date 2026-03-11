@@ -5,11 +5,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config.database.db_async import get_db
 from app.core.routers.base import BaseRouter
 from app.support.vintage.model import VintageConfig, Designation, Classification
-# from app.support.producer.repository import ProducerRepository
+from app.support.vintage.repository import (ClassificationRepository, DesignationRepository,  # noqa: F401
+                                            VintageConfigRepository)  # noqa: F401
 from app.support.vintage.schemas import (VintageConfigUpdate, VintageConfigCreate, VintageConfigRead,
                                          DesignationUpdate, DesignationRead, DesignationCreate,
                                          ClassificationCreate, ClassificationUpdate, ClassificationRead)
-# from app.support.producer.service import ProducerService
+from app.support.vintage.service import ClassificationService, DesignationService, VintageConfigService  # noqa: F401
 
 
 class VintageConfigRouter(BaseRouter):
