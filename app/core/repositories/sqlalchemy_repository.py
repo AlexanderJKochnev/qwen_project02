@@ -306,8 +306,12 @@ class Repository(metaclass=RepositoryMeta):
             Запрос с загрузкой связей и пагинацией
             return Tuple[List[instances], int]
         """
-        stmt = (cls.get_query(model).where(model.updated_at > after_date)
-                .order_by(model.id.asc()))
+        stmt = cls.get_query(model)
+        if hasattr(model, 'updated_at'):
+            stmt = stmt.where(model.updated_at > after_date)
+        stmt = stmt.order_by(model.id.asc())
+        # stmt = (cls.get_query(model).where(model.updated_at > after_date)
+        #         .order_by(model.id.asc()))
         result = await cls.pagination(stmt, skip, limit, session)
         return result
         """

@@ -357,10 +357,7 @@ class BaseRouter:
                                        session: AsyncSession = Depends(get_db)
                                        ) -> PaginatedResponse:
         """
-            Получение постранично всех записей после заданной даты.
-            По умолчанию задана дата - 2 года от сейчас
-            input_valudation_chema None
-            response_model PaginatedResponse[<>ReadRelation>]
+            Получение постранично всех записей
         """
         # print(f"📥 GET request for {self.model.__name__} from")
         response = await self.service.get_full_with_pagination(page, page_size, self.repo, self.model, session)
