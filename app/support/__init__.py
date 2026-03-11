@@ -21,6 +21,7 @@ from app.support.customer.model import Customer
 from app.support.parser.model import Name, Code, Rawdata, Image, Status
 from app.support.lwin.model import Lwin
 from app.support.producer.model import Producer, ProducerTitle
+from app.support.vintage.model import VintageConfig, Designation, Classification
 
 # schemas
 from app.support.varietal.schemas import VarietalRead
@@ -59,6 +60,7 @@ from app.support.sweetness.service import SweetnessService
 from app.support.varietal.service import VarietalService
 from app.support.parser.service import StatusService, CodeService,  NameService, ImageService, RawdataService
 from app.support.producer.service import ProducerService, ProducerTitleService
+from app.support.vintage.service import VintageConfigService, DesignationService, ClassificationService
 
 # from app.support.warehouse.service import WarehouseService
 from app.support.warehouse.repository import WarehouseRepository
