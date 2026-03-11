@@ -3,7 +3,7 @@
 from datetime import datetime
 from sqlalchemy import String, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
-from app.core.models.base_model import Base
+from app.core.models.base_model import Base, BaseAt
 
 
 class Lwin(Base):
