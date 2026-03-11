@@ -48,6 +48,7 @@ from app.support.websearch.router import router as web_router
 from app.support.ollama.router import OllamaRouter, PromptRouter, ISOLanguageRouter, ProptionRouter, WriterRuleRouter
 from app.support.lwin.router import LwinRouter
 from app.support.producer.router import ProducerRouter, ProducerTitleRouter
+from app.support.vintage.router import VintageConfigRouter, DesignationRouter, ClassificationRouter
 # from app.arq_worker_routes import router as ArqWorkerRouter
 # from app.support.warehouse.router import WarehouseRouter
 
@@ -169,6 +170,9 @@ app.include_router(DrinkRouter().router)
 app.include_router(ISOLanguageRouter().router)
 app.include_router(ProducerTitleRouter().router)
 app.include_router(ProducerRouter().router)
+app.include_router(VintageConfigRouter().router)
+app.include_router(DesignationRouter().router)
+app.include_router(ClassificationRouter().router)
 app.include_router(CategoryRouter().router)
 app.include_router(SubcategoryRouter().router)
 app.include_router(CountryRouter().router)
