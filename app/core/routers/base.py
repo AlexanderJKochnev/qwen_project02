@@ -55,7 +55,6 @@ class BaseRouter:
         self.model = model
         self.repo = get_repo(model)
         self.service: TService = get_service(model)
-        logger.warning(f'{self.repo=} , {self.service=} ===={self.model.__name__}====')
 
         self.auth_dependency = auth_dependency
         # input py schema for simple create without relation
@@ -192,7 +191,6 @@ class BaseRouter:
          Создание нескольких записей без зависимостей
         """
         try:
-            logger.warning(data)
             obj = await self.service.batch_get_or_create(data, self.repo, self.model, session)
             return obj
         except Exception as e:
@@ -382,7 +380,6 @@ class BaseRouter:
             input_valudation_chema None
             response_model PaginatedResponse[<>ReadRelation>]
         """
-        logger.warning(f'search {self.model.__name__}')
         result = await self.service.search(search, page, page_size, self.repo, self.model, session)
         return result
 
