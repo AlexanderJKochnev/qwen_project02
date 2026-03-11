@@ -329,7 +329,11 @@ class Repository(metaclass=RepositoryMeta):
             Запрос с загрузкой связей NO PAGINATION
             return List[instance]
         """
-        stmt = cls.get_query(model).where(model.updated_at > after_date).order_by(model.id.asc())
+        # stmt = cls.get_query(model).where(model.updated_at > after_date).order_by(model.id.asc())
+        stmt = cls.get_query(model)
+        if hasattr(model, 'updated_at'):
+            stmt = stmt.where(model.updated_at > after_date)
+        stmt = stmt.order_by(model.id.asc())
         result = await cls.nonpagination(stmt, session)
         return result
 
