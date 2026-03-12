@@ -27,6 +27,9 @@ paging = get_paging
 
 
 class ApiRouter(ItemRouter):
+    """
+    роутер для связи с приложением - не трогать ничего - выход неизменный
+    """
     def __init__(self):
         super().__init__(prefix='/api', auth_dependency=get_current_api_user)
         self.paginated_response = PaginatedResponse[ItemApi]
