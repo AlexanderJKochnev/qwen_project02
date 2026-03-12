@@ -327,7 +327,8 @@ class OllamaService(Service):
             # Обрабатываем непредвиденные ошибки
             logger.error(f"Unexpected error in get_novel: {e}", exc_info=True)
             raise RuntimeError(f"Internal server error during get_novel: {str(e)}")
-
+    @classmethod
+    async def prepaire(cls, ):
 
 class PromptService(Service):
     default = ['role']

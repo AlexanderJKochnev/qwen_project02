@@ -1,5 +1,6 @@
 # app/core/utils/translation_utils.py
 import asyncio  # noqa: F401
+from collections import defaultdict
 from ollama import AsyncClient
 import httpx
 import time
@@ -338,10 +339,12 @@ async def fill_missing_translations(data: Dict[str, Any], test: bool = False) ->
     return updated_data
 
 
-async def fill_missing_translations2(data: Dict[str, Any], test: bool = False) -> Dict[str, Any]:
+async def fill_missing_translations2(data: Dict[str, Any], only_empty: bool = True, **kwargs) -> Dict[str, Any]:
     """
     сервис перевода - на входе словарь с данными для перевода
     на выходе он же с переведенными данными
+    only_empty: true=переводим только пустые, false=все
+
     app.suport.ollama.router.get_translate
     app.suport.ollama.service.OllamaService.get_translate:
                             phrase: str,
@@ -353,19 +356,86 @@ async def fill_missing_translations2(data: Dict[str, Any], test: bool = False) -
                             session: AsyncSession
     entry:
     {
-      "description": "Beer ...",
-      "description_fr": "La bière ...",
-      "description_es": "La cerveza ...",
-      "description_it": "La birra ...",
-      "description_de": "Bier ...",
-      "description_zh": "啤酒是一种受欢迎的酒精饮料 ...",
-      "name": "Beer",
-      "name_ru": "Пиво",
-      "name_fr": "Bière",
-      "name_es": "Cerveza",
-      "name_it": "Birra",
-      "name_de": "Bier",
-      "name_zh": "啤酒"
+      "title_ru": "Insignia 2004",
+      "title_fr": "Insigne 2004 <машинный перевод>",
+      "title_es": null,
+      "title_it": null,
+      "title_de": null,
+      "title_zh": null,
+      "subtitle": "Joseph Phelps Vineyards",
+      "subtitle_ru": "Joseph Phelps Vineyards",
+      "subtitle_fr": "Vignobles Joseph Phelps <машинный перевод>",
+      "subtitle_es": null,
+      "subtitle_it": null,
+      "subtitle_de": null,
+      "subtitle_zh": null,
+      "description": "Wine ...",
+      "description_ru": "Вино ...",
+      "description_fr": "Vin ...",
+      "description_es": null,
+      "description_it": null,
+      "description_de": null,
+      "description_zh": null,
+      "recommendation": "",
+      "recommendation_ru": "",
+      "recommendation_fr": "",
+      "recommendation_es": null,
+      "recommendation_it": null,
+      "recommendation_de": null,
+      "recommendation_zh": null,
+      "madeof": "",
+      "madeof_ru": "",
+      "madeof_fr": "",
+      "madeof_es": null,
+      "madeof_it": null,
+      "madeof_de": null,
+      "madeof_zh": null,
+      "title": "Insignia 2004",
+      "subcategory_id": 1,
+      "sweetness_id": null,
+      "subregion_id": 2,
+      "alc": 14.5,
+      "sugar": null,
+      "age": "",
+      "image_id": "68e7f8052dc65c2a1d0a3290",
+      "image_path": "-LymmshrtckRTovERsnP.png",
+      "foods": [
+        {
+          "id": 3
+        },
+        {
+          "id": 4
+        },
+        {
+          "id": 5
+        },
+        {
+          "id": 6
+        }
+      ],
+      "varietals": [
+        {
+          "id": 3,
+          "percentage": 72
+        },
+        {
+          "id": 4,
+          "percentage": 14
+        },
+        {
+          "id": 5,
+          "percentage": 12
+        },
+        {
+          "id": 6,
+          "percentage": 2
+        }
+      ],
+      "vol": 0.75,
+      "price": null,
+      "count": 0,
+      "id": 2,
+      "drink_id": 2
     }
     interim result:
     [
@@ -405,70 +475,88 @@ async def fill_missing_translations2(data: Dict[str, Any], test: bool = False) -
         "duration": " 41.17"
       }
     ]
-    для всех полей кроме description - одинаковые настрокйи перевода (Type I)
+    для всех полей кроме description - одинаковые настройки перевода (Type I)
     для полей description (+ другие ) - настройки Type II (генерация)
+    **kwargs
     """
     if not data:
         # если на входе ничего - возвращаем ничего
         return data
     # копируем исходные данные
     updated_data = data.copy()
-    # нужно получить имя поля, список недостающих языков, текст для перевода
     # language
-    langs = settings.LANGUAGES  # список языков в приложении;
-    default_lang = settings.DEFAULT_LANG  # язык по умолчанию;
-    localized_fields = settings.FIELDS_LOCALIZED  # поля локализованные;
-    mark = settings.MACHINE_TRANSLATION_MARK      # маркировка машинного перевода;
-    generation_fields = settings.type2_fields      # поля для генерации текста; генерация занимает от 4 до 10 сек на
-    # язык,
-    
-    # Group fields by their base name {'name': ['name', 'name_ru', 'name_fr', ...], ...}
-    field_groups = get_group_localized_fields(langs, default_lang, localized_fields)
-    # Process each group of related fields
-    trans_func = gemma_translate
-    for base_name, fields in field_groups.items():
-        # Check which fields are filled
-        # {'name': 'text', 'name_ru': 'текст', ...}
-        filled_fields = {field: data.get(field) for field in fields if data.get(field)}
+    langs: List[str] = settings.LANGUAGES  # список языков в приложении, отсортированы по приоритету источника для
+    # перевода - первое непустое поле будет использовано для перевода;
+    default_lang: str = settings.DEFAULT_LANG  # язык по умолчанию;
+    localized_fields: List[str] = settings.FIELDS_LOCALIZED    # поля локализованные;
+    mark: str = settings.MACHINE_TRANSLATION_MARK        # маркировка машинного перевода;
+    fields_type_ii: List[str] = settings.type2_fields          # поля для генерации текста; генерация занимает от 4 до
+    # 10 сек на язык
+    tier1: dict = {}
+    tier1['model']: str = settings.MODEL_I                 # llm модель для перевода
+    tier1['prompt']: str = settings.PROMPT_I               # промпт для перевода
+    tier1['writer']: str = settings.WRITER_I               # размер текста для перевода
+    tier1['preset']: str = settings.PRESET_I               # предустановки для перевода
+    tier2: dict = {}
+    tier2['model']: str = settings.MODEL_II               # модель для генерации
+    tier2['prompt']: str = settings.PROMPT_II             # промпт для генерации
+    tier2['writer']: str = settings.WRITER_II             # размер текста для генерации
+    tier2['preset']: str = settings.PRESET_II             # предустановки для генерации
+    # словарь с обрабатываемыми полями
+    main_dict = {key: val for key, val in updated_data.items() if key.startswith(tuple(localized_fields))}
+    # словарь для передачи в перевод {field: (phrase, (en, ru, fr))...}
+    translate_dict: dict = get_translate_source2(main_dict, langs, default_lang, only_empty)
+    # словарь для генерации текста
+    generate_dict: dict = {}
+    keys = translate_dict.keys()
+    for key, val in keys:
+        if key in fields_type_ii:
+            generate_dict[key] = translate_dict.pop(key, None)
+    if translate_dict:
+        tier1['data'] = generate_dict
 
-        # Skip if no source for translation
-        if not filled_fields:
-            continue
+    if generate_dict:
+        tier2['date'] = translate_dict
 
-        # Determine source field priority: prefer First in language, then Second, then Next
-        source_field = None
-        source_value = None
 
-        # Find source -- first non empty fields
-        for lang in langs:
-            for field_name, value in filled_fields.items():
-                if get_field_language(field_name) == lang and value:
-                    source_field = field_name
-                    source_value = value
-                    source_lang = lang
-                    break
-            if source_field:
-                break
+def get_translate_source(source: dict, langs: List[str]) -> dict:
+    """
+        data_dict см в fill_missing_translations2
+        langs ('en', ru', ...)
+        result: dict {field: (phrase, (langs...)), ...}
+        не учитывет уже переведенные поля
+    """
+    result = dict((key.split('_')[0], (val, [la for la in langs if la != lang]))
+                  for n, lang in enumerate(langs[::-1]) for key, val in source.items()
+                  if val and ((lang == "en" and '_' not in key) or (key.endswith(f'_{lang}'))))
+    return result
 
-        if not source_value:    # no source found
-            continue            # skip translation
 
-        # Fill missing translations
-        for field in fields:
-            if field not in filled_fields:  # Field is missing
-                target_lang = get_field_language(field)
-                if target_lang and target_lang != source_lang:
-                    # Translate from source to target
-                    translated_text = await trans_func(
-                        source_value,
-                        target_lang=target_lang,
-                        mark=mark,
-                        source_lang=source_lang,
-                    )
-
-                    if translated_text:
-                        updated_data[field] = translated_text
-    return updated_data
+def get_translate_source2(source: dict, langs: List[str], default_lang: str, only_empty: bool) -> dict:
+    """
+        data_dict см в fill_missing_translations2
+        langs ('en', ru', ...)
+        result: dict {field: (phrase, (langs...)), ...}
+        учитывет уже переведенные поля
+    """
+    result = dict((key.split('_')[0], (val, lang))
+                  for n, lang in enumerate(langs[::-1]) for key, val in source.items()
+                  if val and ((lang == default_lang and '_' not in key) or (key.endswith(f'_{lang}'))))
+    # переводим только пустые поля
+    if only_empty:
+        tmp = [(key.split('_')[0], y[1] if len(y := key.split('_')) == 2 else default_lang)
+               for key, val in source.items() if val]
+        filled_lang = defaultdict(list)
+        for key, value in tmp:
+            filled_lang[key].append(value)
+        f_lang = dict(filled_lang)
+    for key in f_lang.keys():
+        val, lang = result.get(key)
+        fill = f_lang[key]
+        fill.append(lang)
+        diff_lang = list(set(langs) - set(fill))
+        result[key] = val, diff_lang
+    return result
 
 
 # --- ТОЧКА ВХОДА ДЛЯ ЗАПУСКА ИЗ ТЕРМИНАЛА ---

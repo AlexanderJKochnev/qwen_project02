@@ -290,7 +290,7 @@ class Settings(BaseSettings):
         return strtolist(self.ILIST_VIEW)
 
     @property
-    def LANGUAGES(self):
+    def LANGUAGES(self) -> list:
         """
         return list of languages codes ['en', 'ru, 'fr' ...]
         """
