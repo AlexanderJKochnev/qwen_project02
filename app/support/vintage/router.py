@@ -33,7 +33,7 @@ class DesignationRouter(BaseRouter):
     def __init__(self):
         super().__init__(
             model=Designation,
-            prefix="/vintage_config",
+            prefix="/designation",
         )
 
     async def create(self, data: DesignationCreate,
@@ -49,7 +49,7 @@ class ClassificationRouter(BaseRouter):
     def __init__(self):
         super().__init__(
             model=Classification,
-            prefix="/vintage_config",
+            prefix="/classification",
         )
 
     async def create(self, data: ClassificationCreate,
