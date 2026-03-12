@@ -248,7 +248,6 @@ class OllamaService(Service):
                                                llm_repository) for lang in languages]
             result = await asyncio.gather(*tasks)
             return result
-            return result
         except ValueError as e:
             # Обрабатываем ошибки валидации/поиска
             logger.error(f"Validation error: {e}")

@@ -338,6 +338,139 @@ async def fill_missing_translations(data: Dict[str, Any], test: bool = False) ->
     return updated_data
 
 
+async def fill_missing_translations2(data: Dict[str, Any], test: bool = False) -> Dict[str, Any]:
+    """
+    сервис перевода - на входе словарь с данными для перевода
+    на выходе он же с переведенными данными
+    app.suport.ollama.router.get_translate
+    app.suport.ollama.service.OllamaService.get_translate:
+                            phrase: str,
+                            search_model: str,
+                            search_prompt: str,
+                            search_preset: str,
+                            search_write: str,
+                            langs: str,
+                            session: AsyncSession
+    entry:
+    {
+      "description": "Beer ...",
+      "description_fr": "La bière ...",
+      "description_es": "La cerveza ...",
+      "description_it": "La birra ...",
+      "description_de": "Bier ...",
+      "description_zh": "啤酒是一种受欢迎的酒精饮料 ...",
+      "name": "Beer",
+      "name_ru": "Пиво",
+      "name_fr": "Bière",
+      "name_es": "Cerveza",
+      "name_it": "Birra",
+      "name_de": "Bier",
+      "name_zh": "啤酒"
+    }
+    interim result:
+    [
+      {
+        "lang": "English",
+        "response": "Cognac",
+        "llmodel": "translategemma:latest",
+        "prompt": "universal_translator",
+        "duration": " 41.07"
+      },
+      {
+        "lang": "German",
+        "response": "Cognac",
+        "llmodel": "translategemma:latest",
+        "prompt": "universal_translator",
+        "duration": " 41.26"
+      },
+      {
+        "lang": "Spanish",
+        "response": "Cognac",
+        "llmodel": "translategemma:latest",
+        "prompt": "universal_translator",
+        "duration": " 41.35"
+      },
+      {
+        "lang": "Chinese",
+        "response": "康尼亞克",
+        "llmodel": "translategemma:latest",
+        "prompt": "universal_translator",
+        "duration": " 40.98"
+      },
+      {
+        "lang": "Italian",
+        "response": "Cognac",
+        "llmodel": "translategemma:latest",
+        "prompt": "universal_translator",
+        "duration": " 41.17"
+      }
+    ]
+    для всех полей кроме description - одинаковые настрокйи перевода (Type I)
+    для полей description (+ другие ) - настройки Type II (генерация)
+    """
+    if not data:
+        # если на входе ничего - возвращаем ничего
+        return data
+    # копируем исходные данные
+    updated_data = data.copy()
+    # нужно получить имя поля, список недостающих языков, текст для перевода
+    # language
+    langs = settings.LANGUAGES  # список языков в приложении;
+    default_lang = settings.DEFAULT_LANG  # язык по умолчанию;
+    localized_fields = settings.FIELDS_LOCALIZED  # поля локализованные;
+    mark = settings.MACHINE_TRANSLATION_MARK      # маркировка машинного перевода;
+    generation_fields = settings.type2_fields      # поля для генерации текста; генерация занимает от 4 до 10 сек на
+    # язык,
+    
+    # Group fields by their base name {'name': ['name', 'name_ru', 'name_fr', ...], ...}
+    field_groups = get_group_localized_fields(langs, default_lang, localized_fields)
+    # Process each group of related fields
+    trans_func = gemma_translate
+    for base_name, fields in field_groups.items():
+        # Check which fields are filled
+        # {'name': 'text', 'name_ru': 'текст', ...}
+        filled_fields = {field: data.get(field) for field in fields if data.get(field)}
+
+        # Skip if no source for translation
+        if not filled_fields:
+            continue
+
+        # Determine source field priority: prefer First in language, then Second, then Next
+        source_field = None
+        source_value = None
+
+        # Find source -- first non empty fields
+        for lang in langs:
+            for field_name, value in filled_fields.items():
+                if get_field_language(field_name) == lang and value:
+                    source_field = field_name
+                    source_value = value
+                    source_lang = lang
+                    break
+            if source_field:
+                break
+
+        if not source_value:    # no source found
+            continue            # skip translation
+
+        # Fill missing translations
+        for field in fields:
+            if field not in filled_fields:  # Field is missing
+                target_lang = get_field_language(field)
+                if target_lang and target_lang != source_lang:
+                    # Translate from source to target
+                    translated_text = await trans_func(
+                        source_value,
+                        target_lang=target_lang,
+                        mark=mark,
+                        source_lang=source_lang,
+                    )
+
+                    if translated_text:
+                        updated_data[field] = translated_text
+    return updated_data
+
+
 # --- ТОЧКА ВХОДА ДЛЯ ЗАПУСКА ИЗ ТЕРМИНАЛА ---
 # docker exec -it app python3 -m app.core.utils.translation_utils
 if __name__ == "__main__":

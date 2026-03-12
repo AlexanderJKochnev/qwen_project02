@@ -147,11 +147,6 @@ class Settings(BaseSettings):
     MONGO_EXPRESS_PORT: int = 8081
     # Application
     API_V1_STR: str = "/api/v1"
-    ME_CONFIG_MONGODB_ADMINUSERNAME: str = "admin"
-    ME_CONFIG_MONGODB_ADMINPASSWORD: str = "admin"
-    ME_CONFIG_MONGODB_SERVER: str = "mongo"
-    ME_CONFIG_BASICAUTH_USERNAME: str = "admin"
-    ME_CONFIG_BASICAUTH_PASSWORD: str = "admin"
     ME_OUT_PORT: int = "8081"
     ME_INN_PORT: int = "8081"
     # IMAGE SIZING в пикселях
@@ -195,7 +190,7 @@ class Settings(BaseSettings):
     EMAIL_USE_TLS: bool = True
     EMAIL_USE_SSL: bool = False
 
-    # === MYMEMORY TRANSLATION SERVICE ===
+    # === MYMEMORY TRANSLATION SERVICE удалить ===
     MYMEMORY_API_EMAIL: str = "akochnev66@gmail.com"
     MYMEMORY_API_BASE_URL: str = "https://api.mymemory.translated.net/get"
     MYMEMORY_REQUESTS_PER_MINUTE: int = 10  # Rate limit for MyMemory API
@@ -225,6 +220,18 @@ class Settings(BaseSettings):
     SEARXNG_SECRET_KEY: str
     SEARXNG_BASE_URL: str = "http://localhost"
     SEARXNG_PORT: int = 8080
+    # перевод и генерация текста
+    # генерация
+    TYPEII_FIELDS: str = "description, some_else"
+    MODEL_II: str = 'llama31:8b'
+    PROMPT_II: str = 'sommelier'
+    PRESET_II: str = 'balanced'
+    WRITER_II: str = 'novel'
+    # === Type I точный перевод - все остальные локализованные поля
+    MODEL_I: str = 'translategemma:latest'
+    PROMPT_I: str = 'wine_translator'
+    PRESET_I: str = 'translation'
+    WRITER_I: str = 'translate'
 
     model_config = SettingsConfigDict(env_file=get_path_to_root(),
                                       env_file_encoding='utf-8',
@@ -261,6 +268,10 @@ class Settings(BaseSettings):
     @property
     def ignored_fields(self) -> list:
         return strtolist(self.IGNORED_FLDS)
+
+    @property
+    def type2_fields(self) -> list:
+        return strtolist(self.TYPEII_FIELDS)
 
     @property
     def international_fields(self) -> list:
