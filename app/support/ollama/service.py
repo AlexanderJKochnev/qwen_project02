@@ -205,44 +205,10 @@ class OllamaService(Service):
                             session: AsyncSession):
         """ перевод на несколько  языков """
         try:
-            llm_repository = LLMRepository()
-            # 1. Поиск и получение ll model
-            response = await cls.get_datas(search_model, OllamaRepository, Ollama, session,
-                                           order_by='size', asc=True, equa='icontains',
-                                           field='model')
-            llmodel: str = response.model
-
-            # 2. Поиск и получение prompt
-            prompt: Prompt = await cls.get_datas(search_prompt, PromptRepository, Prompt, session,
-                                                 order_by='role', asc=True, equa='icontains',
-                                                 field='role')
-            prompt_dict = prompt.to_dict()
-            # 2.1. Поиск и получение preset
-            preset: Proption = await cls.get_datas(search_preset, ProptionRepository, Proption, session,
-                                                   order_by='preset', asc=True, equa='icontains', field='preset')
-            preset_dict = preset.to_dict()
-            # 3. получение списка языков
-            if langs and isinstance(langs, str):
-                iso = [lang.strip() for lang in langs.split(',')]
-            else:
-                iso = ['ru', 'en', 'zh']
-            # определяем 3 или 2 знака
-            match len(iso[0]):
-                case 2:
-                    conditions = {'iso_639_1': iso}
-                case 3:
-                    conditions = {'iso_639_3': iso}
-                case _:
-                    conditions = {'name_en': iso}
-            repo = ISOLanguageRepository
-            result: List[ISOLanguage] = await repo.search_by_conditions(conditions, ISOLanguage, session)
-            languages = [val.name_en for val in result]
-            # 4. получение writer
-            wrt: WriterRule = await cls.get_datas(
-                search_write, WriterRuleRepository, WriterRule, session, order_by='name', asc=True,
-                equa='icontains', field='name'
-            )
-            writer = wrt.prompt
+            llm_repository = LLMRepository
+            llmodel, prompt_dict, preset_dict, writer, languages = cls.prepaire(search_model, search_prompt,
+                                                                                search_preset, search_write,
+                                                                                langs, session)
             # 5. подготовка к параллельному запуску:
             tasks = [cls.translate_to_language(phrase, lang, llmodel, prompt_dict, preset_dict, writer,
                                                llm_repository) for lang in languages]
