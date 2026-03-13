@@ -241,7 +241,7 @@ class OllamaService(Service):
             llmodel, prompt_dict, preset_dict, writer, languages = await cls.prepaire(
                 search_model, search_prompt, search_preset, search_write, langs, session
             )
-            language = languages[0].name_en
+            language = languages[0]
             if not verify:
                 result: dict = await cls.write_the_novel(phrase, language, llmodel, prompt_dict, preset_dict,
                                                          writer, llm_repository)
@@ -308,6 +308,7 @@ class OllamaService(Service):
         repo = ISOLanguageRepository
         result: List[ISOLanguage] = await repo.search_by_conditions(conditions, ISOLanguage, session)
         languages: str = [val.name_en for val in result]
+        logger.warning(f'{languages=}')
         # 4. получение writer
         wrt: WriterRule = await cls.get_datas(
             search_write, WriterRuleRepository, WriterRule, session, order_by='name', asc=True,
