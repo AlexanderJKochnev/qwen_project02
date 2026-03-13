@@ -87,7 +87,7 @@ class ForeignOneToMany:
 
 
 @registers_search_update("item")
-class Drink(Base, BaseAt, Lang):
+class Drink(Base, BaseAt, Lang, ForeignOneToMany):
     lazy = settings.LAZY
     cascade = settings.CASCADE
     single_name = 'drink'
