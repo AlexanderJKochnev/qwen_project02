@@ -209,11 +209,6 @@ class OllamaService(Service):
             llmodel, prompt_dict, preset_dict, writer, languages = await cls.prepaire(search_model, search_prompt,
                                                                                       search_preset, search_write,
                                                                                       langs, session)
-            logger.warning(f'{llmodel=}')
-            logger.warning(f'{prompt_dict=}')
-            logger.warning(f'{preset_dict=}')
-            logger.warning(f'{writer=}')
-            logger.warning(f'{languages=}')
             # 5. подготовка к параллельному запуску:
             tasks = [cls.translate_to_language(phrase, lang, llmodel, prompt_dict, preset_dict, writer,
                                                llm_repository) for lang in languages]
@@ -243,44 +238,10 @@ class OllamaService(Service):
         """
         try:
             llm_repository = LLMRepository()
-            # 1. Поиск и получение ll model
-            response = await cls.get_datas(search_model, OllamaRepository, Ollama, session,
-                                           order_by='size', asc=True, equa='icontains',
-                                           field='model')
-            llmodel: str = response.model
-            # 2. Поиск и получение prompt
-            prompt: Prompt = await cls.get_datas(search_prompt, PromptRepository, Prompt, session,
-                                                 order_by='role', asc=True, equa='icontains',
-                                                 field='role')
-            prompt_dict = prompt.to_dict()
-            # 2.1. Поиск и получение preset
-            preset: Proption = await cls.get_datas(search_preset, ProptionRepository, Proption, session,
-                                                   order_by='preset', asc=True, equa='icontains',
-                                                   field='preset')
-            preset_dict = preset.to_dict()
-            # 3. получение языка
-            if langs and isinstance(langs, str):
-                iso = [langs.strip()]
-            else:
-                iso = ['ru']
-            # определяем 3 или 2 знака
-            match len(iso[0]):
-                case 2:
-                    conditions = {'iso_639_1': iso}
-                case 3:
-                    conditions = {'iso_639_3': iso}
-                case _:
-                    conditions = {'name_en': iso}
-            repo = ISOLanguageRepository
-            result: List[ISOLanguage] = await repo.search_by_conditions(conditions, ISOLanguage, session)
-            # получение первого языка а не всех!
-            language = result[0].name_en
-            # 4. получение writer
-            wrt: WriterRule = await cls.get_datas(
-                search_write, WriterRuleRepository, WriterRule, session, order_by='name', asc=True,
-                equa='icontains', field='name'
+            llmodel, prompt_dict, preset_dict, writer, languages = await cls.prepaire(
+                search_model, search_prompt, search_preset, search_write, langs, session
             )
-            writer: str = wrt.prompt
+            language = languages[0].name_en
             if not verify:
                 result: dict = await cls.write_the_novel(phrase, language, llmodel, prompt_dict, preset_dict,
                                                          writer, llm_repository)
