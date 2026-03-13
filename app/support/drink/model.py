@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, List
 
 from sqlalchemy import (CheckConstraint, Column, ForeignKey, Integer, UniqueConstraint, Boolean)
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, declared_attr
 from sqlalchemy.types import DECIMAL
 from decimal import Decimal
 from app.core.config.project_config import settings
@@ -83,7 +83,10 @@ class Lwn:
 class ForeignOneToMany:
     __abstract__ = True
     source_id: Mapped[int | None] = mapped_column(ForeignKey("sources.id"), nullable=True, index=True)
-    source: Mapped["Source"] = relationship(back_populates="drinks")
+
+    @declared_attr
+    def source(cls) -> Mapped["Source"]:
+        return relationship(back_populates="drinks")
 
 
 @registers_search_update("item")
