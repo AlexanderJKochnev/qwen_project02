@@ -50,6 +50,7 @@ from app.support.lwin.router import LwinRouter
 from app.support.producer.router import ProducerRouter, ProducerTitleRouter
 from app.support.vintage.router import VintageConfigRouter, DesignationRouter, ClassificationRouter
 from app.support.parcel.router import ParcelRouter, SiteRouter
+from app.support.source.router import SourceRouter
 # from app.arq_worker_routes import router as ArqWorkerRouter
 # from app.support.warehouse.router import WarehouseRouter
 
@@ -185,6 +186,7 @@ app.include_router(SweetnessRouter().router)
 app.include_router(FoodRouter().router)
 app.include_router(SuperfoodRouter().router)
 app.include_router(VarietalRouter().router)
+app.include_router(SourceRouter().router)
 app.include_router(StatusRouter().router)
 app.include_router(CodeRouter().router)
 app.include_router(NameRouter().router)
