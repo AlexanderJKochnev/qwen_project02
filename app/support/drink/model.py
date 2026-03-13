@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     # from app.support.subcategory.model import Subcategory
     # from app.support.subregion.model import Subregion
     # from app.support.food.model import Food
-    from app.support import Source, Sweetness, Subregion, Subcategory, Food
+    from app.support import Source, Sweetness, Subregion, Subcategory, Food, Producer
 
 
 class Lang:
@@ -83,9 +83,14 @@ class Lwn:
 class ForeignOneToMany:
     __abstract__ = True
     source_id: Mapped[int | None] = mapped_column(ForeignKey("sources.id"), nullable=True, index=True)
+    producer_id: Mapped[int | None] = mapped_column(ForeignKey("producers.id"), nullable=True, index=True)
 
     @declared_attr
     def source(cls) -> Mapped["Source"]:
+        return relationship(back_populates="drinks")
+
+    @declared_attr
+    def producer(cls) -> Mapped["Producer"]:
         return relationship(back_populates="drinks")
 
 

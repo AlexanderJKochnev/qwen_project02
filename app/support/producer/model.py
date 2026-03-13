@@ -8,7 +8,7 @@ from app.core.models.base_model import BaseFull, plural, BaseFullFree
 from app.service_registry import registers_search_update
 
 
-# @registers_search_update("pruducer.drink.item")
+@registers_search_update("producer.drink.item")
 class ProducerTitle(BaseFullFree):
     lazy = settings.LAZY
     single_name = 'producertitle'
@@ -20,6 +20,7 @@ class ProducerTitle(BaseFullFree):
     )
 
 
+@registers_search_update("drink.item")
 class Producer(BaseFull):
     lazy = settings.LAZY
     single_name = 'producer'
@@ -28,6 +29,6 @@ class Producer(BaseFull):
     # Обратная связь: many to one
     producertitle_id: Mapped[int] = mapped_column(ForeignKey("producertitles.id"), nullable=True, index=True)
     producertitle: Mapped["ProducerTitle"] = relationship(back_populates=plural_name, lazy=lazy)
-    # drinks = relationship(
-    #     "Drink", back_populates=single_name, cascade=cascade, lazy=lazy
-    #     )
+    drinks = relationship(
+        "Drink", back_populates=single_name, cascade=cascade, lazy=lazy
+    )
