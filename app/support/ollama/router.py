@@ -124,7 +124,7 @@ class OllamaRouter(BaseRouter):
             # langs: Languages = Query('ru', description="Язык текста 2-3 значный код"),
             verify: bool = Query(False, description='Верифицировать перевод или нет'),
             session: AsyncSession = Depends(get_db)
-    ) -> dict:
+    ) -> List[dict]:
         """
            # тестирование моделей для генерации текста:
            ## 1. наименование для генерации описания
