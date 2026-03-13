@@ -12,10 +12,11 @@ from app.core.models.base_model import (Base, BaseAt, boolnone, descr, plural, s
 from app.service_registry import registers_search_update
 
 if TYPE_CHECKING:
-    from app.support.sweetness.model import Sweetness
-    from app.support.subcategory.model import Subcategory
-    from app.support.subregion.model import Subregion
-    from app.support.food.model import Food
+    # from app.support.sweetness.model import Sweetness
+    # from app.support.subcategory.model import Subcategory
+    # from app.support.subregion.model import Subregion
+    # from app.support.food.model import Food
+    from app.support import Source, Sweetness, Subregion, Subcategory, Food
 
 
 class Lang:
@@ -77,6 +78,12 @@ class Lwn:
     """ для того что бы отличать от других"""
     __abstract__ = True
     lwin: Mapped[bool] = mapped_column(Boolean, nullable=True)
+
+
+class ForeignOneToMany:
+    __abstract__ = True
+    source_id: Mapped[int | None] = mapped_column(ForeignKey("sources.id"), nullable=True, index=True)
+    source: Mapped["Source"] = relationship(back_populates="drinks")
 
 
 @registers_search_update("item")

@@ -3,8 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.services.service import Service
 from app.support.category.model import Category
-from app.support.category.service import CategoryService
 from app.support.category.repository import CategoryRepository
+from app.support.category.service import CategoryService
 from app.support.subcategory.model import Subcategory
 from app.support.subcategory.repository import SubcategoryRepository
 from app.support.subcategory.schemas import SubcategoryCreate, SubcategoryCreateRelation, SubcategoryRead

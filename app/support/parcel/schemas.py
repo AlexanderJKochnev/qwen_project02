@@ -1,9 +1,8 @@
 # app.support.parcel.schemas.py
-# app/support/producer/schemas.py
 from typing import Optional
-from app.core.schemas.base import (CreateSchema, ReadSchema, UpdateSchema,
-                                   DetailView, ListView, CreateSchemaSub)
-from app.support.subregion.schemas import SubregionRead, SubregionCreate
+
+from app.core.schemas.base import (CreateSchema, CreateSchemaSub, DetailView, ListView, ReadSchema, UpdateSchema)
+from app.support.subregion.schemas import SubregionCreate, SubregionRead
 
 """
 1. Create

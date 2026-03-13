@@ -23,6 +23,7 @@ from app.support.lwin.model import Lwin
 from app.support.producer.model import Producer, ProducerTitle
 from app.support.vintage.model import VintageConfig, Designation, Classification
 from app.support.parcel.model import Site, Parcel
+from app.support.source.model import Source
 
 # schemas
 from app.support.varietal.schemas import VarietalRead
