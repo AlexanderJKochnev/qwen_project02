@@ -247,7 +247,7 @@ class OllamaService(Service):
                 phrase, lang, llmodel, prompt_dict, preset_dict, writer, llm_repository
             ) for lang in languages]
             result = await asyncio.gather(*tasks)
-
+            return result
             # all bellow are generation with verification. this is double long procedure therefore ii works for one
             # language per request
             language = languages[0]
