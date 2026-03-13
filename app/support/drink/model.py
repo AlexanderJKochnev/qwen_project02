@@ -3,10 +3,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, List
 
-from sqlalchemy import (CheckConstraint, Column, ForeignKey, Integer, UniqueConstraint)
+from sqlalchemy import (CheckConstraint, Column, ForeignKey, Integer, UniqueConstraint, Boolean)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import DECIMAL
-
+from decimal import Decimal
 from app.core.config.project_config import settings
 from app.core.models.base_model import (Base, BaseAt, boolnone, descr, plural, str_null_false, str_null_true)
 from app.service_registry import registers_search_update
@@ -73,6 +73,12 @@ class Lang:
     madeof_zh: Mapped[descr]
 
 
+class Lwn:
+    """ для того что бы отличать от других"""
+    __abstract__ = True
+    lwin: Mapped[bool] = mapped_column(Boolean, nullable=True)
+
+
 @registers_search_update("item")
 class Drink(Base, BaseAt, Lang):
     lazy = settings.LAZY
@@ -80,17 +86,14 @@ class Drink(Base, BaseAt, Lang):
     single_name = 'drink'
     plural_name = plural(single_name)
     # наименование на языке производителя
-    alc = mapped_column(DECIMAL(6, 2), nullable=True, default=0.0)
-    # alc: Mapped[percent]
-    sugar = mapped_column(DECIMAL(6, 2), nullable=True)  # , default = 0.0)
-    # sugar: Mapped[percent]
-    # aging: Mapped[ion]
+    alc: Mapped[Decimal | None] = mapped_column(DECIMAL(6, 2), nullable=True, default=0.0)
+    sugar: Mapped[Decimal | None] = mapped_column(DECIMAL(6, 2), nullable=True)  # , default = 0.0)
     age: Mapped[str_null_true]
     sparkling: Mapped[boolnone]
     # Foreign Keys on-to-many
     subcategory_id: Mapped[int] = mapped_column(ForeignKey("subcategories.id"), nullable=False, index=True)
     subregion_id: Mapped[int] = mapped_column(ForeignKey("subregions.id"), nullable=False, index=True)
-    sweetness_id: Mapped[int] = mapped_column(ForeignKey("sweetness.id"), nullable=True, index=True)
+    sweetness_id: Mapped[int | None] = mapped_column(ForeignKey("sweetness.id"), nullable=True, index=True)
 
     # Relationships fields (
     subcategory: Mapped["Subcategory"] = relationship(back_populates="drinks")
