@@ -209,6 +209,11 @@ class OllamaService(Service):
             llmodel, prompt_dict, preset_dict, writer, languages = await cls.prepaire(search_model, search_prompt,
                                                                                       search_preset, search_write,
                                                                                       langs, session)
+            logger.warning(f'{llmodel=}')
+            logger.warning(f'{prompt_dict=}')
+            logger.warning(f'{preset_dict=}')
+            logger.warning(f'{writer=}')
+            logger.warning(f'{languages=}')
             # 5. подготовка к параллельному запуску:
             tasks = [cls.translate_to_language(phrase, lang, llmodel, prompt_dict, preset_dict, writer,
                                                llm_repository) for lang in languages]
