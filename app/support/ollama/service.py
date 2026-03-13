@@ -205,7 +205,7 @@ class OllamaService(Service):
                             session: AsyncSession):
         """ перевод на несколько  языков """
         try:
-            llm_repository = LLMRepository
+            llm_repository = LLMRepository()
             llmodel, prompt_dict, preset_dict, writer, languages = await cls.prepaire(search_model, search_prompt,
                                                                                       search_preset, search_write,
                                                                                       langs, session)
