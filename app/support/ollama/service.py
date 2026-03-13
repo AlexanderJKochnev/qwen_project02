@@ -206,9 +206,9 @@ class OllamaService(Service):
         """ перевод на несколько  языков """
         try:
             llm_repository = LLMRepository
-            llmodel, prompt_dict, preset_dict, writer, languages = cls.prepaire(search_model, search_prompt,
-                                                                                search_preset, search_write,
-                                                                                langs, session)
+            llmodel, prompt_dict, preset_dict, writer, languages = await cls.prepaire(search_model, search_prompt,
+                                                                                      search_preset, search_write,
+                                                                                      langs, session)
             # 5. подготовка к параллельному запуску:
             tasks = [cls.translate_to_language(phrase, lang, llmodel, prompt_dict, preset_dict, writer,
                                                llm_repository) for lang in languages]
