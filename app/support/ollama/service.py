@@ -59,7 +59,7 @@ class OllamaService(Service):
 
     @classmethod
     async def get_datas(cls, search: str, repo: Type[Repository],
-                        model: ModelType, session: AsyncSession, **kwargs) -> ModelType:
+                        model: Type[ModelType], session: AsyncSession, **kwargs) -> ModelType:
         """
             получение данных из базы данных (модель, prompt)
             сделать кэширование
@@ -302,16 +302,17 @@ class OllamaService(Service):
                     conditions = {'name_en': iso}
             repo = ISOLanguageRepository
             result: List[ISOLanguage] = await repo.search_by_conditions(conditions, ISOLanguage, session)
+            # получение первого языка а не всех!
             language = result[0].name_en
             # 4. получение writer
             wrt: WriterRule = await cls.get_datas(
                 search_write, WriterRuleRepository, WriterRule, session, order_by='name', asc=True,
                 equa='icontains', field='name'
             )
-            writer = wrt.prompt
+            writer: str = wrt.prompt
             if not verify:
-                result = await cls.write_the_novel(phrase, language, llmodel, prompt_dict, preset_dict,
-                                                   writer, llm_repository)
+                result: dict = await cls.write_the_novel(phrase, language, llmodel, prompt_dict, preset_dict,
+                                                         writer, llm_repository)
             else:
                 result = await cls.write_the_novel_with_verification(
                     phrase, language, llmodel, prompt_dict, preset_dict, writer, llm_repository
@@ -327,8 +328,62 @@ class OllamaService(Service):
             # Обрабатываем непредвиденные ошибки
             logger.error(f"Unexpected error in get_novel: {e}", exc_info=True)
             raise RuntimeError(f"Internal server error during get_novel: {str(e)}")
+
     @classmethod
-    async def prepaire(cls, ):
+    async def prepaire(cls, search_model: str, search_prompt: str, search_preset: str,
+                       search_write: str,
+                       langs: str,  # 'ru,en,fr'
+                       session: AsyncSession) -> tuple:
+        """
+        получение
+        ll_model: str
+        prompt: dict
+        preset: dict
+        writer:
+        langs: list
+        """
+        # 1. Поиск и получение ll model
+        response = await cls.get_datas(
+            search_model, OllamaRepository, Ollama, session, order_by='size', asc=True, equa='icontains',
+            field='model'
+        )
+        llmodel: str = response.model
+        # 2. Поиск и получение prompt
+        prompt: Prompt = await cls.get_datas(
+            search_prompt, PromptRepository, Prompt, session, order_by='role', asc=True, equa='icontains',
+            field='role'
+        )
+        prompt_dict = prompt.to_dict()
+        # 3. Поиск и получение preset
+        preset: Proption = await cls.get_datas(
+            search_preset, ProptionRepository, Proption, session, order_by='preset', asc=True, equa='icontains',
+            field='preset'
+        )
+        preset_dict = preset.to_dict()
+        # 3. получение списка языков
+        if langs and isinstance(langs, str):
+            iso = [lang.strip() for lang in langs.split(',')]
+        else:
+            iso = ['ru', 'en', 'zh']
+        # определяем 3 или 2 знака
+        match len(iso[0]):
+            case 2:
+                conditions = {'iso_639_1': iso}
+            case 3:
+                conditions = {'iso_639_3': iso}
+            case _:
+                conditions = {'name_en': iso}
+        repo = ISOLanguageRepository
+        result: List[ISOLanguage] = await repo.search_by_conditions(conditions, ISOLanguage, session)
+        languages: str = [val.name_en for val in result]
+        # 4. получение writer
+        wrt: WriterRule = await cls.get_datas(
+            search_write, WriterRuleRepository, WriterRule, session, order_by='name', asc=True,
+            equa='icontains', field='name'
+        )
+        writer: str = wrt.prompt
+        return llmodel, prompt_dict, preset_dict, writer, languages
+
 
 class PromptService(Service):
     default = ['role']

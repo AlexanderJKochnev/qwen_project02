@@ -1,7 +1,7 @@
-import asyncio
+# import asyncio
 import time
 from difflib import SequenceMatcher
-from typing import List, Dict
+from typing import List
 import httpx
 
 # Настройки для теста

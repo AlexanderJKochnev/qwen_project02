@@ -1,10 +1,17 @@
 # app/admin/create_superuser.py
 import asyncio
 import getpass
-from app.core.config.database.db_async import DatabaseManager
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
 from app.auth.models import User
 from app.auth.repository import UserRepository
-from sqlalchemy import select
+from app.core.config.database.db_async import DatabaseManager
+from app.core.config.database.db_config import settings_db
+
+engine = create_async_engine(settings_db.database_url, echo=False, pool_pre_ping=True)
+AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
 
 async def create_superuser_interactive():

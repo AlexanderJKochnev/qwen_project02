@@ -8,8 +8,9 @@ from abc import ABCMeta
 import re
 from datetime import datetime
 from loguru import logger
-from typing import Any, Dict, List, Optional, Tuple, Type, Union
-from sqlalchemy import and_, func, select, Select, update, desc, cast, Text, text, literal, literal_column, or_
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
+from sqlalchemy import and_, func, Row, RowMapping, select, Select, update, desc, cast, Text, text, literal, \
+    literal_column, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql.elements import Label
@@ -475,7 +476,7 @@ class Repository(metaclass=RepositoryMeta):
 
     @classmethod
     async def search_all(
-            cls, search: str, model: Type[ModelType], session: AsyncSession) -> Optional[List[ModelType]]:
+            cls, search: str, model: Type[ModelType], session: AsyncSession) -> Sequence[Row[Any] | RowMapping | Any]:
         """
         Поиск по всем заданным текстовым полям основной таблицы
         если указана pagination - возвращвет pagination

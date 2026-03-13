@@ -2,6 +2,8 @@
 import asyncio
 import time
 from difflib import SequenceMatcher
+
+from app.core.utils.translation_utils import INDUSTRY_PROMPTS
 from app.support.gemma.schemas import BenchmarkRequest
 
 

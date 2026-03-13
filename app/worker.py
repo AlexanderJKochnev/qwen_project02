@@ -1,6 +1,6 @@
 # app/support/worker.py
 
-from arq import create_pool
+# from arq import create_pool
 from arq.connections import RedisSettings
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from app.core.config.database.db_config import settings_db
