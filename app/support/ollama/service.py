@@ -242,6 +242,15 @@ class OllamaService(Service):
                 search_model, search_prompt, search_preset, search_write, langs, session
             )
             language = languages[0]
+            # 5. подготовка к параллельному запуску:
+            tasks = [cls.write_the_novel(
+                phrase, lang, llmodel, prompt_dict, preset_dict, writer, llm_repository
+            ) for lang in languages]
+            result = await asyncio.gather(*tasks)
+
+            # all bellow are generation with verification. this is double long procedure therefore ii works for one
+            # language per request
+            language = languages[0]
             if not verify:
                 result: dict = await cls.write_the_novel(phrase, language, llmodel, prompt_dict, preset_dict,
                                                          writer, llm_repository)

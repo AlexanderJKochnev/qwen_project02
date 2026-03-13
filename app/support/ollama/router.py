@@ -119,7 +119,9 @@ class OllamaRouter(BaseRouter):
             prompt: Prompts = Query(None, description="Имя промпта в базе данных"),
             preset: Preset = Query(None, description="Типовые настройки качество/скорость"),
             writer: Writers = Query(None, description="Типовые правила генерации текста"),
-            langs: Languages = Query('ru', description="Язык текста 2-3 значный код"),
+            langs: str = Query('ru, en',
+                               description="Язык (языки) перевода двух-значные коды через запятую"),
+            # langs: Languages = Query('ru', description="Язык текста 2-3 значный код"),
             verify: bool = Query(False, description='Верифицировать перевод или нет'),
             session: AsyncSession = Depends(get_db)
     ) -> dict:
