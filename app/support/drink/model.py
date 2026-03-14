@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     # from app.support.subregion.model import Subregion
     # from app.support.food.model import Food
     from app.support import (Source, Sweetness, Subregion, Subcategory, Food, Producer, VintageConfig,
-                             Classification, Designation, Site)
+                             Classification, Designation, Site, Parcel)
 
 
 class Lang:
@@ -89,7 +89,8 @@ class ForeignOneToMany:
     classification_id: Mapped[int | None] = mapped_column(ForeignKey("classifications.id"), nullable=True,
                                                           index=True)
     designation_id: Mapped[int | None] = mapped_column(ForeignKey("designations.id"), nullable=True, index=True)
-    site_id: Mapped[int | None] = mapped_column(ForeignKey("sites.id"), nullable=True, index=True)
+    # site_id: Mapped[int | None] = mapped_column(ForeignKey("sites.id"), nullable=True, index=True)
+    parcel_id: Mapped[int | None] = mapped_column(ForeignKey("parcels.id"), nullable=True, index=True)
 
     @declared_attr
     def source(cls) -> Mapped["Source"]:
@@ -112,7 +113,7 @@ class ForeignOneToMany:
         return relationship(back_populates="drinks")
 
     @declared_attr
-    def site(cls) -> Mapped["Site"]:
+    def parcel(cls) -> Mapped["Parcel"]:
         return relationship(back_populates="drinks")
 
 
