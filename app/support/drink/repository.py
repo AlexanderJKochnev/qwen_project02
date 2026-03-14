@@ -28,17 +28,13 @@ class DrinkRepository(Repository):
             Обратить внимание! для последовательной загрузки использовать точку.
             параллельно запятая
         """
-        return select(Drink).options(selectinload(Drink.subregion).
-                                     selectinload(Subregion.region).
-                                     selectinload(Region.country),
-                                     selectinload(Drink.subcategory).
-                                     selectinload(Subcategory.category),
-                                     selectinload(Drink.sweetness),
-                                     # selectinload(Drink.foods),
-                                     selectinload(Drink.food_associations),  # .joinedload(DrinkFood.food),
-                                     # selectinload(Drink.varietals),
-                                     selectinload(Drink.varietal_associations),
-                                     )
+        return select(Drink).options(
+            selectinload(Drink.subregion).selectinload(Subregion.region).selectinload(Region.country),
+            selectinload(Drink.subcategory).selectinload(Subcategory.category),
+            selectinload(Drink.sweetness),
+            selectinload(Drink.food_associations),
+            selectinload(Drink.varietal_associations),
+        )
 
     @classmethod
     async def search_in_main_table(cls,

@@ -16,7 +16,8 @@ if TYPE_CHECKING:
     # from app.support.subcategory.model import Subcategory
     # from app.support.subregion.model import Subregion
     # from app.support.food.model import Food
-    from app.support import Source, Sweetness, Subregion, Subcategory, Food, Producer
+    from app.support import (Source, Sweetness, Subregion, Subcategory, Food, Producer, VintageConfig,
+                             Classification, Designation, Site)
 
 
 class Lang:
@@ -84,6 +85,11 @@ class ForeignOneToMany:
     __abstract__ = True
     source_id: Mapped[int | None] = mapped_column(ForeignKey("sources.id"), nullable=True, index=True)
     producer_id: Mapped[int | None] = mapped_column(ForeignKey("producers.id"), nullable=True, index=True)
+    vintageconfig_id: Mapped[int | None] = mapped_column(ForeignKey("vintageconfigs.id"), nullable=True, index=True)
+    classification_id: Mapped[int | None] = mapped_column(ForeignKey("classifications.id"), nullable=True,
+                                                          index=True)
+    designation_id: Mapped[int | None] = mapped_column(ForeignKey("designations.id"), nullable=True, index=True)
+    site_id: Mapped[int | None] = mapped_column(ForeignKey("sites.id"), nullable=True, index=True)
 
     @declared_attr
     def source(cls) -> Mapped["Source"]:
@@ -91,6 +97,22 @@ class ForeignOneToMany:
 
     @declared_attr
     def producer(cls) -> Mapped["Producer"]:
+        return relationship(back_populates="drinks")
+
+    @declared_attr
+    def vintageconfig(cls) -> Mapped["VintageConfig"]:
+        return relationship(back_populates="drinks")
+
+    @declared_attr
+    def classification(cls) -> Mapped["Classification"]:
+        return relationship(back_populates="drinks")
+
+    @declared_attr
+    def designation(cls) -> Mapped["Designation"]:
+        return relationship(back_populates="drinks")
+
+    @declared_attr
+    def site(cls) -> Mapped["Site"]:
         return relationship(back_populates="drinks")
 
 

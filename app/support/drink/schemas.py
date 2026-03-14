@@ -57,9 +57,7 @@ class LangMixin:
 
 
 class LangMixinExclude:
-    """
-        для вычисляемых столбцов
-    """
+    # для вычисляемых столбцов
     title: Optional[str] = Field(exclude=True)
     title_ru: Optional[str] = Field(exclude=True)
     title_fr: Optional[str] = Field(exclude=True)
