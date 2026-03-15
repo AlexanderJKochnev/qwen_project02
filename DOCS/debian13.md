@@ -71,3 +71,7 @@
     6. lsmod | grep nvidia
     7. nvidia-smi
 20. ПРЕДОСТАЛВЕНИЕ ПРАВ НА ЗАПИСЬ / ЧТЕНИЕ ДИРЕКТОРИИ
+21. commands
+    1. sudo dmidecode -s baseboard-product-name
+    2. sudo dmidecode -t baseboard
+    3. sudo inxi -M

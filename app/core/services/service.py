@@ -692,3 +692,12 @@ class Service(metaclass=ServiceMeta):
         except Exception as e:
             logger.error(f'search_geans_all.error: {e}')
             raise HTTPException(status_code=501, detail=f'{e}')
+
+    @classmethod
+    async def null_slave_add(cls, ):
+        """
+            если модель имеет зависимую модель унаследованную от BaseFullFree
+            добавляются в зависимую модель записи с Name = Null (для вновь созданных зависимых моделей
+        """
+        # 1. получение
+        pass
