@@ -1,5 +1,5 @@
 #!/bin/bash
-SERVICE_NAME="test-wine_host-1"
+SERVICE_NAME="prod-wine_host-1"
 DB_NAME="wine_db"
 DB_USER="wine"
 FILE_NAME="upload_volume/LWIN_clear.tsv"
