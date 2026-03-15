@@ -89,7 +89,7 @@ class ForeignOneToMany:
     classification_id: Mapped[int | None] = mapped_column(ForeignKey("classifications.id"), nullable=True,
                                                           index=True)
     designation_id: Mapped[int | None] = mapped_column(ForeignKey("designations.id"), nullable=True, index=True)
-    site_id: Mapped[int | None] = mapped_column(ForeignKey("sites.id"), nullable=False, index=True)
+    # site_id: Mapped[int | None] = mapped_column(ForeignKey("sites.id"), nullable=False, index=True)
     parcel_id: Mapped[int | None] = mapped_column(ForeignKey("parcels.id"), nullable=True, index=True)
 
     @declared_attr
@@ -116,9 +116,9 @@ class ForeignOneToMany:
     def parcel(cls) -> Mapped["Parcel"]:
         return relationship(back_populates="drinks")
 
-    @declared_attr
-    def site(cls) -> Mapped["Site"]:
-        return relationship(back_populates="sites")
+    # @declared_attr
+    # def site(cls) -> Mapped["Site"]:
+    #     return relationship(back_populates="sites")
 
 
 @registers_search_update("item")
@@ -134,12 +134,12 @@ class Drink(Base, BaseAt, Lang, ForeignOneToMany):
     sparkling: Mapped[boolnone]
     # Foreign Keys on-to-many
     subcategory_id: Mapped[int] = mapped_column(ForeignKey("subcategories.id"), nullable=False, index=True)
-    # subregion_id: Mapped[int] = mapped_column(ForeignKey("subregions.id"), nullable=False, index=True)
+    subregion_id: Mapped[int] = mapped_column(ForeignKey("subregions.id"), nullable=False, index=True)
     sweetness_id: Mapped[int | None] = mapped_column(ForeignKey("sweetness.id"), nullable=True, index=True)
 
     # Relationships fields (
     subcategory: Mapped["Subcategory"] = relationship(back_populates="drinks")
-    # subregion: Mapped["Subregion"] = relationship(back_populates="drinks")
+    subregion: Mapped["Subregion"] = relationship(back_populates="drinks")
     sweetness: Mapped["Sweetness"] = relationship(back_populates="drinks")
 
     # обратная связь

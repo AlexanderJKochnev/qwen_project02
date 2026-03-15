@@ -7,7 +7,7 @@
    4. sh alembic.sh
    5. docker exec <имя_контейнера> alembic revision --autogenerate -m "Initial"
 2. сложная ручная миграция
-   1. docker compose exec app alembic revision -m "move_drinks_to_sites"
+   1. docker compose -f docker-compose.xeon.yaml exec app alembic revision -m "move_drinks_to_sites"
    2. Alembic создаст файл в папке alembic/versions/. Открой его и замени содержимое функций upgrade и downgrade на код из move_drinks_to_sites
    3. docker compose exec app alembic upgrade head
    4. docker compose exec app alembic downgrade -1  # если что-то пошло не так
