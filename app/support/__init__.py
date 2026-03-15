@@ -7,7 +7,7 @@
 # models
 from app.support.varietal.model import Varietal
 from app.support.item.model import Item
-from app.support.drink.model import Drink
+from app.support.drink.model import Drink, DrinkFood, DrinkVarietal
 from app.support.category.model import Category
 from app.support.subcategory.model import Subcategory
 from app.support.food.model import Food

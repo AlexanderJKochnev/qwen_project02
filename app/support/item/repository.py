@@ -1,23 +1,16 @@
 # app/support/Item/repository.py
 
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
-from loguru import logger
 from sqlalchemy import func, literal_column, or_, select, Select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlalchemy.types import String
-from sqlalchemy.dialects import postgresql
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.utils.alchemy_utils import create_enum_conditions, create_search_conditions2
 from app.core.types import ModelType
-from app.support.category.model import Category
-from app.support.country.model import Country
-from app.support.drink.model import Drink, DrinkFood, DrinkVarietal
 from app.support.drink.repository import DrinkRepository  # , get_drink_search_expression
-from app.support.item.model import Item
-from app.support.region.model import Region
-from app.support.subcategory.model import Subcategory
-from app.support.subregion.model import Subregion
+from app.support import (Item, Region, Subcategory, Category, Country, Drink, DrinkFood, DrinkVarietal,
+                         Site, Subregion)
 from app.core.config.project_config import settings
 from app.core.utils.alchemy_utils import build_search_condition, SearchType
 
@@ -33,7 +26,8 @@ class ItemRepository(Repository):
         query = select(Item).options(
             selectinload(Item.drink).options(
                 # Уровень 1: Drink -> ...
-                selectinload(Drink.subregion).selectinload(Subregion.region).selectinload(Region.country),
+                selectinload(Drink.site).selectinload(Site.subregion).selectinload(Subregion.region).selectinload(Region.country),
+
                 selectinload(Drink.subcategory).selectinload(Subcategory.category),
                 selectinload(Drink.sweetness),
 
