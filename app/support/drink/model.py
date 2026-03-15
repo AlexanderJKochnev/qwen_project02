@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     # from app.support.subcategory.model import Subcategory
     # from app.support.subregion.model import Subregion
     # from app.support.food.model import Food
-    from app.support import (Source, Sweetness, Subregion, Subcategory, Food, Producer, VintageConfig,
+    from app.support import (Source, Sweetness, Subcategory, Food, Producer, VintageConfig,
                              Classification, Designation, Site, Parcel)
 
 
@@ -118,7 +118,7 @@ class ForeignOneToMany:
 
     @declared_attr
     def site(cls) -> Mapped["Site"]:
-        return relationship(back_populates="sites")
+        return relationship(back_populates="drinks")
 
 
 @registers_search_update("item")
