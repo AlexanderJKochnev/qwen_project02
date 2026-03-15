@@ -38,8 +38,8 @@ class Site(BaseFullFree):
     plural_name = plural(single_name)
     subregion_id: Mapped[int] = mapped_column(ForeignKey("subregions.id"), nullable=False, index=True)
     subregion: Mapped["Subregion"] = relationship(back_populates=plural_name, lazy=lazy)
-    # drinks = relationship("Drink", back_populates=single_name,
-    #                       cascade=cascade,
-    #                       lazy=lazy)
+    drinks = relationship("Drink", back_populates=single_name,
+                          cascade=cascade,
+                          lazy=lazy)
 
     __table_args__ = (UniqueConstraint('name', 'subregion_id', name='uq_site1_name_subregion'),)

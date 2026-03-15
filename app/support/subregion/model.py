@@ -24,8 +24,8 @@ class Subregion(BaseFullFree):
     region: Mapped["Region"] = relationship(back_populates=plural_name, lazy=lazy)
 
     sites = relationship("Site", back_populates=single_name, cascade=cascade, lazy=lazy)
-    drinks = relationship("Drink", back_populates=single_name,
-                          cascade=cascade,
-                          lazy=lazy)
+    # drinks = relationship("Drink", back_populates=single_name,
+    #                       cascade=cascade,
+    #                       lazy=lazy)
     # name: Mapped[str_null_false]
     __table_args__ = (UniqueConstraint('name', 'region_id', name='uq_subregion_name_region'),)
