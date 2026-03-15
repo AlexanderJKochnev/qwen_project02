@@ -6,10 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.repositories.sqlalchemy_repository import ModelType, Repository
-from app.support.drink.model import Drink
-from app.support.region.model import Region
-from app.support.subcategory.model import Subcategory
-from app.support.subregion.model import Subregion
+from app.support import Drink, Region, Subregion, Subcategory, Site
 # from app.support.item.model import Item
 
 
@@ -29,7 +26,7 @@ class DrinkRepository(Repository):
             параллельно запятая
         """
         return select(Drink).options(
-            selectinload(Drink.subregion).selectinload(Subregion.region).selectinload(Region.country),
+            selectinload(Drink.site).selectinload(Site.subregion).selectinload(Subregion.region).selectinload(Region.country),
             selectinload(Drink.subcategory).selectinload(Subcategory.category),
             selectinload(Drink.sweetness),
             selectinload(Drink.food_associations),
