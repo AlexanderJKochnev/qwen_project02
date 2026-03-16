@@ -4,7 +4,7 @@ from typing import List, Optional, Type
 from sqlalchemy import func, select, exists
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-
+from app.support.producer.model import Producer
 from app.core.repositories.sqlalchemy_repository import ModelType, Repository
 from app.support import Drink, Region, Subregion, Subcategory, Site
 # from app.support.item.model import Item
@@ -31,6 +31,12 @@ class DrinkRepository(Repository):
             selectinload(Drink.sweetness),
             selectinload(Drink.food_associations),
             selectinload(Drink.varietal_associations),
+            selectinload(Drink.source),
+            selectinload(Drink.producer).selectinload(Producer.producertitle),
+            selectinload(Drink.parcel),
+            selectinload(Drink.designation),
+            selectinload(Drink.classification),
+            selectinload(Drink.vintageconfig)
         )
 
     @classmethod

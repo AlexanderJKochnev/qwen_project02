@@ -27,14 +27,11 @@ class ItemRepository(Repository):
             selectinload(Item.drink).options(
                 # Уровень 1: Drink -> ...
                 selectinload(Drink.site).selectinload(Site.subregion).selectinload(Subregion.region).selectinload(Region.country),
-
                 selectinload(Drink.subcategory).selectinload(Subcategory.category),
                 selectinload(Drink.sweetness),
-
                 # Работа с Food (загружаем и ассоциацию, и прямой список)
                 # selectinload(Drink.food_associations).selectinload(DrinkFood.food),
                 selectinload(Drink.foods),
-
                 # Работа с Varietals (загружаем и ассоциацию, и прямой список)
                 selectinload(Drink.varietal_associations).selectinload(DrinkVarietal.varietal),
                 # selectinload(Drink.varietals)
