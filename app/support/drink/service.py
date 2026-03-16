@@ -1,36 +1,45 @@
 # app.support.drink.service.py
 from typing import Optional, Type
-from fastapi import HTTPException, BackgroundTasks
+
+from fastapi import BackgroundTasks, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.services.service import ModelType, Service
 from app.core.utils.alchemy_utils import model_to_dict
 from app.core.utils.common_utils import flatten_dict
-
 from app.support.drink.drink_food_repo import DrinkFoodRepository
 from app.support.drink.drink_varietal_repo import DrinkVarietalRepository
-from app.support.drink.schemas import (DrinkCreateRelation, DrinkRead,
-                                       DrinkCreate, DrinkUpdate)
+from app.support.drink.model import Drink
 from app.support.drink.repository import DrinkRepository
-
+from app.support.drink.schemas import (DrinkCreate, DrinkCreateRelation, DrinkRead, DrinkUpdate)
 from app.support.food.repository import FoodRepository
+from app.support.food.service import FoodService
+from app.support.parcel.model import Parcel, Site
+from app.support.parcel.repository import ParcelRepository, SiteRepository
+from app.support.parcel.service import ParcelService, SiteService
+from app.support.producer.model import Producer
+from app.support.producer.repository import ProducerRepository
+from app.support.producer.service import ProducerService
+from app.support.source.model import Source
+from app.support.source.repository import SourceRepository
+from app.support.source.service import SourceService
+from app.support.subcategory.model import Subcategory
+from app.support.subcategory.repository import SubcategoryRepository
+from app.support.subcategory.service import SubcategoryService
+from app.support.sweetness.model import Sweetness
+from app.support.sweetness.repository import SweetnessRepository
+from app.support.sweetness.service import SweetnessService
+from app.support.varietal.model import Varietal
+from app.support.varietal.repository import VarietalRepository
+from app.support.varietal.service import VarietalService
+from app.support.vintage.model import Classification, Designation, VintageConfig
+from app.support.vintage.repository import ClassificationRepository, DesignationRepository, VintageConfigRepository
+from app.support.vintage.service import ClassificationService, DesignationService, VintageConfigService
+
 
 # from app.support.subregion.repository import SubregionRepository
 # from app.support.subregion.service import SubregionService
-
-from app.support import (SweetnessService, SiteService, ProducerService, SubcategoryService,
-                         SourceService, VintageConfigService, ClassificationService, DesignationService,
-                         ParcelService, FoodService, VarietalService)
-from app.support import (Site, Sweetness, Producer, Subcategory, Source, VintageConfig,
-                         Classification, Designation, Parcel, Drink, Varietal)
-from app.support.varietal.repository import VarietalRepository
-from app.support.sweetness.repository import SweetnessRepository
-from app.support.producer.repository import ProducerRepository
-from app.support.source.repository import SourceRepository
-from app.support.vintage.repository import VintageConfigRepository, ClassificationRepository, DesignationRepository
-from app.support.parcel.repository import ParcelRepository, SiteRepository
-from app.support.subcategory.repository import SubcategoryRepository
 
 
 class DrinkService(Service):
