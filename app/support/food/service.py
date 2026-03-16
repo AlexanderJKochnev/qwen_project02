@@ -15,7 +15,7 @@ class FoodService(Service):
     @classmethod
     async def create_relation(
             cls, data: FoodCreateRelation, repository: Type[FoodRepository], model: Type[Food],
-            session: AsyncSession) -> FoodRead:
+            session: AsyncSession, **kwargs) -> FoodRead:
         # pydantic model -> dict
         food_data: dict = data.model_dump(exclude={'superfood'}, exclude_unset=True)
         if data.superfood:

@@ -1,17 +1,21 @@
 # app/support/drink/schemas.py
-from typing import List, Optional
 from datetime import datetime
-from pydantic import field_serializer, Field
-from app.core.schemas.base import (BaseModel, CreateNoNameSchema, CreateResponse,
-                                   ReadNoNameSchema, UpdateNoNameSchema)
-from app.support.drink.drink_varietal_schema import (DrinkVarietalRelation, DrinkVarietalRelationFlat,
-                                                     DrinkVarietalId)
+from typing import List, Optional
+
+from pydantic import Field, field_serializer
+
+from app.core.schemas.base import (BaseModel, CreateNoNameSchema, CreateResponse, ReadNoNameSchema, UpdateNoNameSchema)
 from app.support.drink.drink_food_schema import DrinkFoodRelation
-from app.support.food.schemas import FoodCreateRelation, FoodRead, FoodId
+from app.support.drink.drink_varietal_schema import (DrinkVarietalId, DrinkVarietalRelation, DrinkVarietalRelationFlat)
+from app.support.food.schemas import FoodCreateRelation, FoodId, FoodRead
+from app.support.parcel.schemas import SiteRead, SiteCreateRelation
+from app.support.producer.schemas import ProducerRead
+from app.support.source.schemas import SourceRead
 from app.support.subcategory.schemas import SubcategoryCreateRelation, SubcategoryRead, SubcategoryReadRelation
-from app.support.subregion.schemas import SubregionCreateRelation, SubregionRead, SubregionReadRelation
+# from app.support.subregion.schemas import SubregionCreateRelation, SubregionRead, SubregionReadRelation
 from app.support.sweetness.schemas import SweetnessCreateRelation, SweetnessRead, SweetnessReadRelation
 from app.support.varietal.schemas import VarietalRead
+from app.support.vintage.schemas import (ClassificationRead, DesignationRead, VintageConfigRead)
 
 
 class LangMixin:
@@ -99,11 +103,55 @@ class LangMixinExclude:
     madeof_zh: Optional[str] = Field(exclude=True)
 
 
-class CustomUpdSchema(LangMixin):
+class NewUpdSchema:
+    producer_id: Optional[int] = None
+    source_id: Optional[int] = None
+    vintageconfig_id: Optional[int] = None
+    classification_id: Optional[int] = None
+    designation_id: Optional[int] = None
+    site_id: Optional[int] = None
+    first_vintage: Optional[int] = Field(default=None, ge=1000, le=3000)
+    last_vintage: Optional[int] = Field(default=None, ge=1000, le=3000)
+
+
+class NewCreateSchema:
+    producer_id: Optional[int] = None
+    source_id: int
+    vintageconfig_id: Optional[int] = None
+    classification_id: Optional[int] = None
+    designation_id: Optional[int] = None
+    site_id: Optional[int] = None
+    first_vintage: Optional[int] = Field(default=None, ge=1000, le=3000)
+    last_vintage: Optional[int] = Field(default=None, ge=1000, le=3000)
+
+
+class NewReadSchema:
+    producer: Optional[ProducerRead] = None
+    source: SourceRead
+    classification: Optional[ClassificationRead]
+    vintageconfig: Optional[VintageConfigRead]
+    designation: Optional[DesignationRead]
+    site: SiteRead
+    first_vintage: Optional[int] = Field(default=None, ge=1000, le=3000)
+    last_vintage: Optional[int] = Field(default=None, ge=1000, le=3000)
+
+
+class NewCreateRelationsSchema:
+    producer: Optional[ProducerRead] = None
+    source: SourceRead
+    classification: Optional[ClassificationRead]
+    vintageconfig: Optional[VintageConfigRead]
+    designation: Optional[DesignationRead]
+    site: SiteCreateRelation
+    first_vintage: Optional[int] = Field(default=None, ge=1000, le=3000)
+    last_vintage: Optional[int] = Field(default=None, ge=1000, le=3000)
+
+
+class CustomUpdSchema(LangMixin, NewUpdSchema):
     title: Optional[str] = None
     subcategory_id: Optional[int] = None
     sweetness_id: Optional[int] = None
-    subregion_id: Optional[int] = None
+    # subregion_id: Optional[int] = None
     alc: Optional[float] = None
     sugar: Optional[float] = None
     age: Optional[str] = None
@@ -111,11 +159,11 @@ class CustomUpdSchema(LangMixin):
     varietals: Optional[List[DrinkVarietalId]] = None
 
 
-class CustomCreateSchema(LangMixin):
+class CustomCreateSchema(LangMixin, NewCreateSchema):
     title: str
     subcategory_id: int
     sweetness_id: Optional[int] = None
-    subregion_id: int
+    # subregion_id: int
     alc: Optional[float] = None
     sugar: Optional[float] = None
     age: Optional[str] = None
@@ -126,14 +174,14 @@ class DrinkFoodVarietalSchema:
     varietals: Optional[List[DrinkVarietalRelation]] = None
 
 
-class CustomCreateDrinkItem(LangMixin):
+class CustomCreateDrinkItem(LangMixin, NewCreateSchema):
     """
          для  схемы ItemDrinkCreate
     """
     title: str
     subcategory_id: Optional[int] = Field(exclude=True)
     sweetness_id: Optional[int] = Field(exclude=True)
-    subregion_id: Optional[int] = Field(exclude=True)
+    # subregion_id: Optional[int] = Field(exclude=True)
     alc: Optional[float] = Field(exclude=True)
     sugar: Optional[float] = Field(exclude=True)
     age: Optional[str] = Field(exclude=True)
@@ -141,11 +189,11 @@ class CustomCreateDrinkItem(LangMixin):
     varietals: Optional[List[DrinkVarietalId]] = None
 
 
-class CustomCreateRelation(LangMixin):
+class CustomCreateRelation(LangMixin, NewCreateRelationsSchema):
     title: str
     subcategory: SubcategoryCreateRelation
     sweetness: Optional[SweetnessCreateRelation] = None
-    subregion: SubregionCreateRelation
+    # subregion: SubregionCreateRelation
     alc: Optional[float] = None
     sugar: Optional[float] = None
     age: Optional[str] = None
@@ -153,11 +201,11 @@ class CustomCreateRelation(LangMixin):
     varietals: Optional[List[DrinkVarietalRelation]] = None
 
 
-class CustomReadRelation(LangMixin):
+class CustomReadRelation(LangMixin, NewReadSchema):
     title: str
     subcategory: SubcategoryReadRelation
     sweetness: Optional[SweetnessReadRelation] = None
-    subregion: SubregionReadRelation
+    # subregion: SubregionReadRelation
     alc: Optional[float] = None
     sugar: Optional[float] = None
     age: Optional[str] = None
@@ -175,11 +223,11 @@ class CustomReadRelation(LangMixin):
     #     return [assoc.model_dump() for assoc in self.food_associations]
 
 
-class CustomReadSchema(LangMixin):
+class CustomReadSchema(LangMixin, NewReadSchema):
     title: Optional[str] = None
     subcategory: SubcategoryRead
     sweetness: Optional[SweetnessRead] = None
-    subregion: Optional[SubregionRead] = None
+    # subregion: Optional[SubregionRead] = None
     alc: Optional[float] = None
     sugar: Optional[float] = None
     age: Optional[str] = None
@@ -219,6 +267,7 @@ class DrinkReadRelation(ReadNoNameSchema, CustomReadSchema):
 
 class DrinkCreate1(CreateNoNameSchema, CustomCreateSchema, DrinkFoodVarietalSchema):
     """
+        drink
         костыль: # app.support.drink.service.py разобраться должен полдойти просто DrinkCreate
     """
     pass

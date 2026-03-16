@@ -1,35 +1,23 @@
 # app.support.subregion.service.py
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.services.service import Service
-from app.support.country.model import Country
 from app.support.country.repository import CountryRepository
 from app.support.country.service import CountryService
-from app.support.region.model import Region
-from app.support.region.schemas import RegionCreate, RegionCreateRelation, RegionRead
+from app.support.subregion.schemas import SubregionCreate, SubregionCreateRelation, SubregionRead
 from app.support.region.repository import RegionRepository
 from app.support.region.service import RegionService
-from app.support.subregion.model import Subregion
-from app.support.subregion.schemas import SubregionCreate
 from app.support.subregion.repository import SubregionRepository
+from app.support import Region, Subregion
 
 
 class SubregionService(Service):
     default: list = ['name', 'region_id']
 
     @classmethod
-    async def create_relation(cls, data: RegionCreateRelation, repository: type(SubregionRepository),
-                              model: type(Subregion), session: AsyncSession) -> RegionRead:
-        # pydantic model -> dict
-        # subregion_data: dict = data.model_dump(exclude={'country'}, exclude_unset=True)
-        if data.region:
-            region_data: dict = data.region.model_dump(exclude={'country'}, exclude_unset=True)
-            if data.region.country:
-                result, _ = await CountryService.get_or_create(data.region.country, CountryRepository, Country, session)
-                region_data['country_id'] = result.id
-            region = RegionCreate(**region_data)
-            result, _ = await RegionService.get_or_create(region, RegionRepository, Region, session)
-        subregion_data: dict = data.model_dump(exclude={'region'}, exclude_unset=True)
-        subregion_data['region_id'] = result.id
-        subregion = SubregionCreate(**subregion_data)
-        result, _ = await SubregionService.get_or_create(subregion, SubregionRepository, Subregion, session)
-        return result
+    async def create_relation(cls, data: SubregionCreateRelation, repository: SubregionRepository,
+                              model: Subregion, session: AsyncSession, **kwargs) -> SubregionRead:
+        kwargs['parent'] = 'region'
+        kwargs['parent_repo'] = RegionRepository
+        kwargs['parent_model'] = Region
+        kwargs['parent_service'] = RegionService
+        return super().create_relation(data, repository, model, session, **kwargs)

@@ -15,20 +15,13 @@ class ParcelService(Service):
 
 
 class SiteService(Service):
-    default: list = ['name']
+    default: list = ['name', 'subregion_id']
 
     @classmethod
-    async def create_relation(cls,
-                              data: SiteCreateRelation,
-                              repository: SiteRepository,
-                              model: Site, session: AsyncSession,
-                              **kwargs) -> SiteRead:
-        # pydantic model -> dict
-        data: dict = data.model_dump(exclude={'subregion'}, exclude_unset=True)
-        if data.subregion:
-            result, _ = await SubregionService.get_or_create(data.country, SubregionRepository, Subregion,
-                                                             session)
-            data['subregion_id'] = result.id
-        site = SiteCreate(**data)
-        result, _ = await cls.get_or_create(site, SiteRepository, Site, session)
-        return result
+    async def create_relation(cls, data: SiteCreateRelation, repository: SiteRepository,
+                              model: Site, session: AsyncSession, **kwargs) -> SiteRead:
+        kwargs['parent'] = 'subregion'
+        kwargs['parent_repo'] = SubregionRepository
+        kwargs['parent_model'] = Subregion
+        kwargs['parent_service'] = SubregionService
+        return super().create_relation(data, repository, model, session, **kwargs)

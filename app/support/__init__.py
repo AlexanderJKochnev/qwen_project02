@@ -46,7 +46,7 @@ from app.support.parser.schemas import (StatusCreate, StatusCreateResponseSchema
                                         CodeCreate, CodeCreateResponseSchema, CodeRead, CodeUpdate,
                                         NameCreate, NameCreateResponseSchema, NameRead, NameUpdate,
                                         ImageCreate, ImageCreateResponseSchema, ImageRead, ImageUpdate,
-                                        RawdataCreate, RawdataCreateResponseSchema,RawdataRead, RawdataUpdate)
+                                        RawdataCreate, RawdataCreateResponseSchema, RawdataRead, RawdataUpdate)
 
 
 from app.support.category.service import CategoryService
@@ -61,9 +61,11 @@ from app.support.subregion.service import SubregionService
 from app.support.superfood.service import SuperfoodService
 from app.support.sweetness.service import SweetnessService
 from app.support.varietal.service import VarietalService
-from app.support.parser.service import StatusService, CodeService,  NameService, ImageService, RawdataService
+from app.support.parser.service import StatusService, CodeService, NameService, ImageService, RawdataService
 from app.support.producer.service import ProducerService, ProducerTitleService
 from app.support.vintage.service import VintageConfigService, DesignationService, ClassificationService
+from app.support.parcel.service import ParcelService, SiteService
+from app.support.source.service import SourceService
 
 # from app.support.warehouse.service import WarehouseService
 from app.support.warehouse.repository import WarehouseRepository

@@ -121,8 +121,14 @@ class ForeignOneToMany:
         return relationship(back_populates="drinks")
 
 
+class Vintage:
+    __abstract__ = True
+    first_vintage = Mapped[int | None] = mapped_column(nullable=True)
+    last_vintage = Mapped[int | None] = mapped_column(nullable=True)
+
+
 @registers_search_update("item")
-class Drink(Base, BaseAt, Lang, ForeignOneToMany):
+class Drink(Base, BaseAt, Lang, ForeignOneToMany, Vintage):
     lazy = settings.LAZY
     cascade = settings.CASCADE
     single_name = 'drink'
@@ -178,7 +184,11 @@ class Drink(Base, BaseAt, Lang, ForeignOneToMany):
 
     # Важно: viewonly=False — позволяет SQLAlchemy корректно обновлять связь через .foods
     _table_args__ = (CheckConstraint('alc >= 0 AND alc <= 100.00', name='alc_range_check'),
-                     UniqueConstraint('title', 'subtitle', name='uq_title_subtitle_unique'))
+                     UniqueConstraint('title', 'subtitle', name='uq_title_subtitle_unique'),
+                     CheckConstraint("(first_vintage IS NULL) OR (first_vintage >= 1000 AND first_vintage <= 3000)",
+                                     name="check_first_vintage_range_or_null"),
+                     CheckConstraint("(last_vintage IS NULL) OR (last_vintage >= 1000 AND last_vintage <= 3000)",
+                                     name="check_last_vintage_range_or_null"))
 
     def __str__(self):
         return f"{self.title}"

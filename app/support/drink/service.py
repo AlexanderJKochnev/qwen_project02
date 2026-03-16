@@ -10,30 +10,27 @@ from app.core.utils.common_utils import flatten_dict
 
 from app.support.drink.drink_food_repo import DrinkFoodRepository
 from app.support.drink.drink_varietal_repo import DrinkVarietalRepository
-from app.support.drink.model import Drink
-from app.support.drink.schemas import (DrinkCreate1, DrinkCreateRelation, DrinkRead,
+from app.support.drink.schemas import (DrinkCreateRelation, DrinkRead,
                                        DrinkCreate, DrinkUpdate)
 from app.support.drink.repository import DrinkRepository
 
-from app.support.food.service import FoodService
 from app.support.food.repository import FoodRepository
 
-from app.support.subcategory.model import Subcategory
-from app.support.subcategory.repository import SubcategoryRepository
-from app.support.subcategory.service import SubcategoryService
+# from app.support.subregion.repository import SubregionRepository
+# from app.support.subregion.service import SubregionService
 
-from app.support.subregion.model import Subregion
-from app.support.subregion.repository import SubregionRepository
-from app.support.subregion.service import SubregionService
-
-from app.support.sweetness.model import Sweetness
-from app.support.sweetness.repository import SweetnessRepository
-from app.support.sweetness.service import SweetnessService
-
-
-from app.support.varietal.model import Varietal
+from app.support import (SweetnessService, SiteService, ProducerService, SubcategoryService,
+                         SourceService, VintageConfigService, ClassificationService, DesignationService,
+                         ParcelService, FoodService, VarietalService)
+from app.support import (Site, Sweetness, Producer, Subcategory, Source, VintageConfig,
+                         Classification, Designation, Parcel, Drink, Varietal)
 from app.support.varietal.repository import VarietalRepository
-from app.support.varietal.service import VarietalService
+from app.support.sweetness.repository import SweetnessRepository
+from app.support.producer.repository import ProducerRepository
+from app.support.source.repository import SourceRepository
+from app.support.vintage.repository import VintageConfigRepository, ClassificationRepository, DesignationRepository
+from app.support.parcel.repository import ParcelRepository, SiteRepository
+from app.support.subcategory.repository import SubcategoryRepository
 
 
 class DrinkService(Service):
@@ -62,71 +59,8 @@ class DrinkService(Service):
             print(f'drink.service..get_by_id error {e}')
 
     @classmethod
-    async def create_relation(cls, data: DrinkCreateRelation,
-                              repository: DrinkRepository, model: Drink,
-                              session: AsyncSession, **kwargs) -> DrinkRead:
-        # pydantic model -> dict
-        try:
-            drink_data: dict = data.model_dump(exclude={'subregion', 'subcategory', 'color',
-                                                        'sweetness', 'varietals', 'foods'},
-                                               exclude_unset=True)
-            if data.subregion:
-                result = await SubregionService.create_relation(data.subregion, SubregionRepository,
-                                                                Subregion, session)
-                drink_data['subregion_id'] = result.id
-
-            if data.subcategory:
-                result = await SubcategoryService.create_relation(data.subcategory, SubcategoryRepository,
-                                                                  Subcategory, session)
-                drink_data['subcategory_id'] = result.id
-
-            if data.sweetness:
-                result, _ = await SweetnessService.get_or_create(data.sweetness,
-                                                                 SweetnessRepository, Sweetness, session)
-                drink_data['sweetness_id'] = result.id
-            # костыль DrinkCreate1
-            drink = DrinkCreate1(**drink_data)
-            drink_instance, new = await cls.get_or_create(drink, DrinkRepository, Drink, session)
-            # проверку ниже включить если нет массовых добавлений с обновлениями
-            # if not new:
-            #     raise Exception(f"запись '{drink}' существует. Если необходимо обновить ее, "
-            #                     f"воспользуйтесь формой 'Edit'")
-            drink_id = drink_instance.id
-
-            if isinstance(data.foods, list):
-                food_ids = []
-                # 1. get_or_create foods in Food
-                for item in data.foods:
-                    result = await FoodService.create_relation(item, FoodRepository, FoodService, session)
-                    food_ids.append(result.id)
-                # 2. set drink_food
-                await DrinkFoodRepository.set_drink_foods(drink_id, food_ids, session)
-            if isinstance(data.varietals, list):
-                varietal_ids = []
-                varietal_percentage = {}
-                # 1. get_or_create varietals in Varietal
-                # data.varietals is List[{varietal: VarietalCreateRelation
-                #                         percentage: float}]
-                for dvschema in data.varietals:
-                    item = dvschema.varietal
-                    percentage = dvschema.percentage
-                    result, _ = await VarietalService.get_or_create(item, VarietalRepository, Varietal, session)
-                    varietal_percentage[result.id] = percentage
-                    varietal_ids.append(result.id)
-                # 2. set drink_varietal
-                await DrinkVarietalRepository.set_drink_varietals(drink_id, varietal_ids, session)
-                # 3. set up percentage
-                for key, val in varietal_percentage.items():
-                    await DrinkVarietalRepository.update_percentage(drink_id, key, val, session)
-            await session.flush()
-            await session.refresh(drink_instance)
-            return drink_instance
-        except Exception as e:
-            print(f'drink_create_relation error: {e}')
-
-    @classmethod
     async def create(cls, data: DrinkCreate, repository: Type[Repository],
-                     model: Drink, session: AsyncSession) -> ModelType:
+                     model: Drink, session: AsyncSession, **kwargs) -> ModelType:
         """ create & return record """
         try:
             # remove unset and 'varietals', 'foods' items and back to pydantci schema
@@ -206,3 +140,122 @@ class DrinkService(Service):
              }
         """
         return result
+
+    """
+    @classmethod
+    async def create_relatio1(cls, data: DrinkCreateRelation,
+                              repository: DrinkRepository, model: Drink,
+                              session: AsyncSession, **kwargs) -> DrinkRead:
+        # pydantic model -> dict
+        try:
+            drink_data: dict = data.model_dump(exclude={'subregion', 'subcategory', 'color',
+                                                        'sweetness', 'varietals', 'foods'},
+                                               exclude_unset=True)
+            if data.subregion:
+                result = await SubregionService.create_relation(data.subregion, SubregionRepository,
+                                                                Subregion, session)
+                drink_data['subregion_id'] = result.id
+
+            if data.subcategory:
+                result = await SubcategoryService.create_relation(data.subcategory, SubcategoryRepository,
+                                                                  Subcategory, session)
+                drink_data['subcategory_id'] = result.id
+
+            if data.sweetness:
+                result, _ = await SweetnessService.get_or_create(data.sweetness,
+                                                                 SweetnessRepository, Sweetness, session)
+                drink_data['sweetness_id'] = result.id
+            # костыль DrinkCreate1
+            drink = DrinkCreate1(**drink_data)
+            drink_instance, new = await cls.get_or_create(drink, DrinkRepository, Drink, session)
+            # проверку ниже включить если нет массовых добавлений с обновлениями
+            # if not new:
+            #     raise Exception(f"запись '{drink}' существует. Если необходимо обновить ее, "
+            #                     f"воспользуйтесь формой 'Edit'")
+            drink_id = drink_instance.id
+
+            if isinstance(data.foods, list):
+                food_ids = []
+                # 1. get_or_create foods in Food
+                for item in data.foods:
+                    result = await FoodService.create_relation(item, FoodRepository, FoodService, session)
+                    food_ids.append(result.id)
+                # 2. set drink_food
+                await DrinkFoodRepository.set_drink_foods(drink_id, food_ids, session)
+            if isinstance(data.varietals, list):
+                varietal_ids = []
+                varietal_percentage = {}
+                # 1. get_or_create varietals in Varietal
+                # data.varietals is List[{varietal: VarietalCreateRelation
+                #                         percentage: float}]
+                for dvschema in data.varietals:
+                    item = dvschema.varietal
+                    percentage = dvschema.percentage
+                    result, _ = await VarietalService.get_or_create(item, VarietalRepository, Varietal, session)
+                    varietal_percentage[result.id] = percentage
+                    varietal_ids.append(result.id)
+                # 2. set drink_varietal
+                await DrinkVarietalRepository.set_drink_varietals(drink_id, varietal_ids, session)
+                # 3. set up percentage
+                for key, val in varietal_percentage.items():
+                    await DrinkVarietalRepository.update_percentage(drink_id, key, val, session)
+            await session.flush()
+            await session.refresh(drink_instance)
+            return drink_instance
+        except Exception as e:
+            print(f'drink_create_relation error: {e}')
+
+"""
+
+    @classmethod
+    async def create_relation(cls, data: DrinkCreateRelation,
+                              repository: DrinkRepository, model: Drink,
+                              session: AsyncSession, **kwargs) -> DrinkRead:
+        source = {}
+        source['site'] = (SiteRepository, Site, SiteService)
+        source['subcategory'] = (SubcategoryRepository, Subcategory, SubcategoryService)
+        source['sweetness'] = (SweetnessRepository, Sweetness, SweetnessService)
+        source['source'] = (SourceRepository, Source, SourceService)
+        source['producer'] = (ProducerRepository, Producer, ProducerService)
+        source['vintageconfig'] = (VintageConfigRepository, VintageConfig, VintageConfigService)
+        source['classification'] = (ClassificationRepository, Classification, ClassificationService)
+        source['designation'] = (DesignationRepository, Designation, DesignationService)
+        source['parcel'] = (ParcelRepository, Parcel, ParcelService)
+        exclude_set = set(source.keys())
+        data_dict: dict = data.model_dump(exclude=exclude_set, exclude_unset=True)
+        for key, val in source.items():
+            parent, parent_repo, parent_model, parent_service = val
+            if parent_data := getattr(data, parent):
+                result, _ = await parent_service.get_or_create(parent_data, parent_repo, parent_model, session)
+                data_dict[f'{parent}_id'] = result.id
+        drink_instance, _ = await cls.get_or_create(data_dict, repository, model, session)
+        drink_id = drink_instance.id
+
+        if isinstance(data.foods, list):
+            food_ids = []
+            # 1. get_or_create foods in Food
+            for item in data.foods:
+                result = await FoodService.create_relation(item, FoodRepository, FoodService, session)
+                food_ids.append(result.id)
+            # 2. set drink_food
+            await DrinkFoodRepository.set_drink_foods(drink_id, food_ids, session)
+        if isinstance(data.varietals, list):
+            varietal_ids = []
+            varietal_percentage = {}
+            # 1. get_or_create varietals in Varietal
+            # data.varietals is List[{varietal: VarietalCreateRelation
+            #                         percentage: float}]
+            for dvschema in data.varietals:
+                item = dvschema.varietal
+                percentage = dvschema.percentage
+                result, _ = await VarietalService.get_or_create(item, VarietalRepository, Varietal, session)
+                varietal_percentage[result.id] = percentage
+                varietal_ids.append(result.id)
+            # 2. set drink_varietal
+            await DrinkVarietalRepository.set_drink_varietals(drink_id, varietal_ids, session)
+            # 3. set up percentage
+            for key, val in varietal_percentage.items():
+                await DrinkVarietalRepository.update_percentage(drink_id, key, val, session)
+        await session.flush()
+        await session.refresh(drink_instance)
+        return drink_instance

@@ -1,6 +1,6 @@
 # app/support/category/repository.py
 
-from sqlalchemy import select, exists
+from sqlalchemy import exists
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.support.item.model import Item
 from app.support.drink.model import Drink

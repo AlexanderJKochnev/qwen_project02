@@ -14,5 +14,6 @@
 3. посмотреть таблицу
    1. docker exec test-wine_host-1 psql -U wine -d wine_db -c "\d sites"
    2. docker exec test-wine_host-1 psql -U wine -d wine_db -c "\d drinks"
-
+4. Update
+   1. docker exec prod-wine_host-1 psql -U wine -d wine_db -c "UPDATE drinks SET source_id = 1;"
 

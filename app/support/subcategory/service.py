@@ -2,12 +2,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.services.service import Service
-from app.support.category.model import Category
 from app.support.category.repository import CategoryRepository
 from app.support.category.service import CategoryService
-from app.support.subcategory.model import Subcategory
+from app.support import Subcategory, Category
 from app.support.subcategory.repository import SubcategoryRepository
-from app.support.subcategory.schemas import SubcategoryCreate, SubcategoryCreateRelation, SubcategoryRead
+from app.support.subcategory.schemas import SubcategoryCreateRelation, SubcategoryRead
 
 
 class SubcategoryService(Service):
@@ -15,12 +14,9 @@ class SubcategoryService(Service):
 
     @classmethod
     async def create_relation(cls, data: SubcategoryCreateRelation, repository: SubcategoryRepository,
-                              model: Subcategory, session: AsyncSession) -> SubcategoryRead:
-        # pydantic model -> dict
-        category_data: dict = data.model_dump(exclude={'category'}, exclude_unset=True)
-        if data.category:
-            result, _ = await CategoryService.get_or_create(data.category, CategoryRepository, Category, session)
-            category_data['category_id'] = result.id
-        subcategory = SubcategoryCreate(**category_data)
-        result, _ = await cls.get_or_create(subcategory, SubcategoryRepository, Subcategory, session)
-        return result
+                              model: Subcategory, session: AsyncSession, **kwargs) -> SubcategoryRead:
+        kwargs['parent'] = 'category'
+        kwargs['parent_repo'] = CategoryRepository
+        kwargs['parent_model'] = Category
+        kwargs['parent_service'] = CategoryService
+        return super().create_relation(data, repository, model, session, **kwargs)

@@ -18,7 +18,7 @@ from app.core.utils.alchemy_utils import has_column, formatted_query
 from app.core.utils.common_utils import flatten_dict_with_localized_fields
 from app.core.utils.pydantic_utils import make_paginated_response, prepare_search_string, get_data_for_search, get_repo
 from app.service_registry import register_service, get_search_dependencies
-from app.core.schemas.base import IndexFillResponse
+from app.core.schemas.base import IndexFillResponse, BaseModel
 from app.mongodb.service import ThumbnailImageService
 
 joint = '. '
@@ -63,11 +63,10 @@ class Service(metaclass=ServiceMeta):
         lookup_dict = {key: val for key, val in data_dict.items() if key in default}
         # поиск существующей записи по совпадению объектов по уникальным полям
         instance = await repository.get_by_fields(lookup_dict, model, session)
-        logger.info(f'{instance=} ========================')
         return instance
 
     @classmethod
-    async def create(cls, data: ModelType, repository: Type[Repository], model: ModelType,
+    async def create(cls, data: BaseModel, repository: Repository, model: ModelType,
                      session: AsyncSession, **kwargs) -> ModelType:
         """ create & return record """
         # удаляет пустые поля
@@ -78,8 +77,8 @@ class Service(metaclass=ServiceMeta):
         return result
 
     @classmethod
-    async def get_or_create(cls, data: ModelType, repository: Type[Repository],
-                            model: ModelType, session: AsyncSession,
+    async def get_or_create(cls, data: Union[BaseModel, dict], repository: Repository,
+                            model: Type[ModelType], session: AsyncSession,
                             default: List[str] = None, **kwargs) -> Tuple[ModelType, bool]:
         """
             находит или создaет запись
@@ -88,7 +87,9 @@ class Service(metaclass=ServiceMeta):
         try:
             if default is None:
                 default = cls.default
-            data_dict = data.model_dump(exclude_unset=True)
+            if not isinstance(data, dict):
+                # если исходные данные не словарь
+                data_dict = data.model_dump(exclude_unset=True)
             default_dict = {key: val for key, val in data_dict.items() if key in default}
             # ошибка НУЖЕН ПОИСК ПО УНИКАЛЬНЫМ И СВЯЗАННЫМ ПОЛЯМ
             # поиск существующей записи по совпадению объектов по уникальным полям
@@ -142,8 +143,8 @@ class Service(metaclass=ServiceMeta):
             raise Exception(f"UNKNOWN_ERROR: {str(e)}") from e
 
     @classmethod
-    async def update_or_create(cls, data: ModelType, repository: Type[Repository],
-                               model: ModelType, background_tasks: BackgroundTasks, session: AsyncSession,
+    async def update_or_create(cls, data: BaseModel, repository: Type[Repository],
+                               model: Type[ModelType], background_tasks: BackgroundTasks, session: AsyncSession,
                                default: List[str] = None, **kwargs) -> Tuple[ModelType, bool]:
         """
             находит и обновляет запись или создает если ее нет.
@@ -170,24 +171,25 @@ class Service(metaclass=ServiceMeta):
             raise Exception(e)
 
     @classmethod
-    async def create_relation(cls, data: ModelType,
-                              repository: Type[Repository], model: ModelType, session: AsyncSession,
+    async def create_relation(cls, data: BaseModel,
+                              repository: Repository, model: Type[ModelType], session: AsyncSession,
                               **kwargs) -> ModelType:
         """
-        создание записей из json - со связями
+            создание записей из json - со связями, если нет связей - просто get_or_create
         """
-
-        data_dict = data.model_dump(exclude_unset=True)
-        result = await repository.get_by_obj(data_dict, model, session)
-        if result:
-            return result
-        else:
-            obj = model(**data_dict)
-
-            result = await repository.create(obj, model, session)
-            await session.commit()
-            # тут можно добавить преобразования результата потом commit в роутере
-            return result
+        parent: str = kwargs.get('parent')
+        parent_repo = kwargs.get('parent_repo')
+        parent_model = kwargs.get('parent_model')
+        parent_service = kwargs.get('parent_service')
+        # pydantic model -> dict & exclude parent
+        data_dict: dict = data.model_dump(exclude={parent}, exclude_unset=True)
+        # get parent pydantic model, get_or_create parent_id, add parent_id to data_dict
+        if parent_data := getattr(data, parent):
+            result, _ = await parent_service.get_or_create(parent_data, parent_repo, parent_model, session)
+            data_dict[f'{parent}_id'] = result.id
+        # get_or_create
+        result, _ = await cls.get_or_create(data_dict, repository, model, session)
+        return result
 
     @classmethod
     async def get_all(cls, ater_date: datetime,

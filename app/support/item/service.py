@@ -19,11 +19,10 @@ from app.core.utils.converters import read_convert_json, list_move, lang_suffix_
 from app.core.utils.pydantic_utils import make_paginated_response
 # from app.core.schemas.base import PaginatedResponse
 from app.mongodb.service import ThumbnailImageService
-from app.support.drink.model import Drink
 from app.support.drink.repository import DrinkRepository
 from app.support.drink.service import DrinkService
 from app.support.drink.schemas import DrinkCreate, DrinkUpdate
-from app.support.item.model import Item
+from app.support import Item, Drink
 from app.support.item.repository import ItemRepository
 from app.support.item.schemas import (ItemCreate, ItemCreateRelation, ItemRead, ItemReadRelation,
                                       ItemCreatePreact, ItemUpdatePreact, ItemUpdate,
@@ -286,29 +285,13 @@ class ItemService(Service):
         return result
 
     @classmethod
-    async def create_relation(cls, data: ItemCreateRelation,
-                              repository: ItemRepository, model: Item,
-                              session: AsyncSession, **kwargs) -> ItemReadRelation:
-        try:
-            item_data: dict = data.model_dump(exclude={'drink', 'warehouse'},
-                                              exclude_unset=True)
-            if data.drink:
-                try:
-                    result = await DrinkService.create_relation(data.drink, DrinkRepository, Drink, session)
-                    await session.commit()
-                    item_data['drink_id'] = result.id
-                except Exception as e:
-                    print('data.drink.error::', result, e)
-            # if data.warehouse:
-            #     result = await WarehouseService.create_relation(data.warehouse, WarehouseRepository,
-            #                                                     Warehouse, session)
-            #     item_data['warehouse_id'] = result.id
-            item = ItemCreate(**item_data)
-            item_instance, new = await cls.get_or_create(item, ItemRepository, Item, session)
-            await session.commit()
-            return item_instance  # new
-        except Exception as e:
-            raise Exception(f'itemservice.create_relation. {e}')
+    async def create_relation(cls, data: ItemCreateRelation, repository: ItemRepository,
+                              model: Item, session: AsyncSession, **kwargs) -> ItemRead:
+        kwargs['parent'] = 'drink'
+        kwargs['parent_repo'] = DrinkRepository
+        kwargs['parent_model'] = Drink
+        kwargs['parent_service'] = DrinkService
+        return super().create_relation(data, repository, model, session, **kwargs)
 
     @classmethod
     async def create_item_drink(cls, data: ItemCreatePreact,

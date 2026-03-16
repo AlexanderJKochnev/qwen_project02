@@ -3,10 +3,7 @@
 from sqlalchemy import select, exists
 from sqlalchemy.orm import selectinload
 from app.core.repositories.sqlalchemy_repository import ModelType, Repository
-from app.support.drink.model import Drink
-from app.support.item.model import Item
-from app.support.region.model import Region
-from app.support.subregion.model import Subregion
+from app.support import Site, Drink, Item, Region, Subregion
 
 
 class SubregionRepository(Repository):
@@ -16,7 +13,8 @@ class SubregionRepository(Repository):
     def item_exists(cls, id: int):
         return exists().where(
             Drink.id == Item.drink_id,
-            Drink.subregion_id == id
+            Site.id == Drink.site_id,
+            Site.subregion_id == id
         )
 
     @classmethod

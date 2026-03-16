@@ -2,7 +2,7 @@
 from typing import Optional
 
 from app.core.schemas.base import (CreateSchema, CreateSchemaSub, DetailView, ListView, ReadSchema, UpdateSchema)
-from app.support.subregion.schemas import SubregionCreate, SubregionRead
+from app.support.subregion.schemas import SubregionRead, SubregionCreateRelation
 
 """
 1. Create
@@ -60,4 +60,4 @@ class SiteListView(DetailView):
 
 
 class SiteCreateRelation(CreateSchemaSub):
-    subregion: SubregionCreate
+    subregion: SubregionCreateRelation
