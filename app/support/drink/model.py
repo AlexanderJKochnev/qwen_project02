@@ -123,8 +123,8 @@ class ForeignOneToMany:
 
 class Vintage:
     __abstract__ = True
-    first_vintage = Mapped[int | None] = mapped_column(nullable=True)
-    last_vintage = Mapped[int | None] = mapped_column(nullable=True)
+    first_vintage = Mapped[int] = mapped_column(nullable=True)
+    last_vintage = Mapped[int] = mapped_column(nullable=True)
 
 
 @registers_search_update("item")
