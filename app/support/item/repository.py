@@ -1,18 +1,28 @@
 # app/support/Item/repository.py
 
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
+
 from sqlalchemy import func, literal_column, or_, select, Select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlalchemy.types import String
-from app.core.repositories.sqlalchemy_repository import Repository
-from app.core.utils.alchemy_utils import create_enum_conditions, create_search_conditions2
-from app.core.types import ModelType
-from app.support.drink.repository import DrinkRepository  # , get_drink_search_expression
-from app.support import (Item, Region, Subcategory, Category, Country, Drink, DrinkFood, DrinkVarietal,
-                         Site, Subregion)
+
 from app.core.config.project_config import settings
-from app.core.utils.alchemy_utils import build_search_condition, SearchType
+from app.core.repositories.sqlalchemy_repository import Repository
+from app.core.types import ModelType
+from app.core.utils.alchemy_utils import build_search_condition, create_enum_conditions, create_search_conditions2, \
+    SearchType
+from app.support.category.model import Category
+from app.support.country.model import Country
+from app.support.drink.model import Drink, DrinkFood, DrinkVarietal
+from app.support.drink.repository import DrinkRepository  # , get_drink_search_expression
+from app.support.item.model import Item
+from app.support.parcel.model import Site
+from app.support.producer.model import Producer
+from app.support.region.model import Region
+from app.support.subcategory.model import Subcategory
+from app.support.subregion.model import Subregion
+
 
 # from app.core.config.database.db_noclass import get_db
 
@@ -25,18 +35,15 @@ class ItemRepository(Repository):
     def get_query(cls, model: ModelType):
         query = select(Item).options(
             selectinload(Item.drink).options(
-                # Уровень 1: Drink -> ...
-                selectinload(Drink.site).selectinload(Site.subregion).selectinload(Subregion.region).selectinload(Region.country),
-                selectinload(Drink.subcategory).selectinload(Subcategory.category),
-                selectinload(Drink.sweetness),
-                # Работа с Food (загружаем и ассоциацию, и прямой список)
-                # selectinload(Drink.food_associations).selectinload(DrinkFood.food),
-                selectinload(Drink.foods),
-                # Работа с Varietals (загружаем и ассоциацию, и прямой список)
-                selectinload(Drink.varietal_associations).selectinload(DrinkVarietal.varietal),
-                # selectinload(Drink.varietals)
-            )
-        )
+                selectinload(Drink.site).selectinload(Site.subregion).selectinload(Subregion.region).selectinload(
+                    Region.country
+                ), selectinload(Drink.subcategory).selectinload(Subcategory.category),
+                selectinload(Drink.sweetness), selectinload(Drink.food_associations),
+                selectinload(Drink.varietal_associations), selectinload(Drink.source),
+                selectinload(Drink.producer).selectinload(Producer.producertitle), selectinload(Drink.parcel),
+                selectinload(Drink.designation), selectinload(Drink.classification),
+                selectinload(Drink.vintageconfig)
+            ))
         return query
 
     @classmethod
