@@ -18,7 +18,7 @@ from app.core.utils.converters import lang_suffix_list, lang_suffix_dict
 from app.core.utils.alchemy_utils import formatted_query
 from app.core.config.project_config import settings
 from app.core.schemas.base import PaginatedResponse
-from app.support.item.schemas import (ItemApiLangNonLocalized, ItemApiLangLocalized, ItemApiLang, ItemApi,
+from app.support.item.schemas import (ItemApiLangNonLocalized, ItemApiLang, ItemApi,
                                       ItemApiLangLocalizedInterim)
 
 
@@ -88,7 +88,7 @@ class ApiService(ItemService):
                 many_to_many = cls.add_manytomany_fields(item, lang_suff)
                 dict_lang.update(many_to_many)
                 validated_result = ItemApiLang.model_validate(dict_lang)
-                result[key] = validated_result.model_dump(exclude_none=True)
+                result[key] = validated_result.model_dump(exclude_none=True, exclude_unset=True)
             validated_result = ItemApi.model_validate(result)
             return validated_result
         except Exception as e:
