@@ -35,6 +35,9 @@ class VintageConfigListView(ListView):
     pass
 
 
+class VintageConfigCreateRelation(VintageConfigCreate):
+    pass
+
 class ClassificationCreate(CreateSchema):
     pass
 
@@ -55,6 +58,10 @@ class ClassificationListView(ListView):
     pass
 
 
+class ClassificationCreateRelation(ClassificationCreate):
+    pass
+
+
 class DesignationCreate(CreateSchema):
     pass
 
@@ -72,4 +79,8 @@ class DesignationDetailView(DetailView):
 
 
 class DesignationListView(ListView):
+    pass
+
+
+class DesignationCreateRelation(DesignationCreate):
     pass

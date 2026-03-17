@@ -9,13 +9,14 @@ from app.support.drink.drink_food_schema import DrinkFoodRelation
 from app.support.drink.drink_varietal_schema import (DrinkVarietalId, DrinkVarietalRelation, DrinkVarietalRelationFlat)
 from app.support.food.schemas import FoodCreateRelation, FoodId, FoodRead
 from app.support.parcel.schemas import SiteRead, SiteCreateRelation
-from app.support.producer.schemas import ProducerRead
-from app.support.source.schemas import SourceRead
+from app.support.producer.schemas import ProducerRead, ProducerCreateRelation
+from app.support.source.schemas import SourceRead, SourceCreateRelation
 from app.support.subcategory.schemas import SubcategoryCreateRelation, SubcategoryRead, SubcategoryReadRelation
 # from app.support.subregion.schemas import SubregionCreateRelation, SubregionRead, SubregionReadRelation
 from app.support.sweetness.schemas import SweetnessCreateRelation, SweetnessRead, SweetnessReadRelation
 from app.support.varietal.schemas import VarietalRead
-from app.support.vintage.schemas import (ClassificationRead, DesignationRead, VintageConfigRead)
+from app.support.vintage.schemas import (ClassificationRead, DesignationRead, VintageConfigRead,
+                                         ClassificationCreateRelation, DesignationCreateRelation, VintageConfigCreateRelation)
 
 
 class LangMixin:
@@ -137,11 +138,11 @@ class NewReadSchema:
 
 
 class NewCreateRelationsSchema:
-    producer: Optional[ProducerRead] = None
-    source: SourceRead
-    classification: Optional[ClassificationRead]
-    vintageconfig: Optional[VintageConfigRead]
-    designation: Optional[DesignationRead]
+    producer: Optional[ProducerCreateRelation] = None
+    source: SourceCreateRelation
+    classification: Optional[ClassificationCreateRelation]
+    vintageconfig: Optional[VintageConfigCreateRelation]
+    designation: Optional[DesignationCreateRelation]
     site: SiteCreateRelation
     first_vintage: Optional[int] = Field(default=None, ge=1000, le=3000)
     last_vintage: Optional[int] = Field(default=None, ge=1000, le=3000)

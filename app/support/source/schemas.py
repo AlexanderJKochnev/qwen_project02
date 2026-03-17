@@ -33,3 +33,6 @@ class SourceDetailView(DetailView):
 
 class SourceListView(ListView):
     pass
+
+class SourceCreateRelation(SourceDetailView):
+    pass
