@@ -87,8 +87,12 @@ class ApiService(ItemService):
                 # add many-to-many fields
                 many_to_many = cls.add_manytomany_fields(item, lang_suff)
                 dict_lang.update(many_to_many)
+                from app.core.utils.common_utils import jprint
+                jprint(dict_lang)
                 validated_result = ItemApiLang.model_validate(dict_lang)
                 result[key] = validated_result.model_dump(exclude_none=True, exclude_unset=True)
+                print('==========================')
+                jprint(result[key])
             validated_result = ItemApi.model_validate(result)
             return validated_result
         except Exception as e:
