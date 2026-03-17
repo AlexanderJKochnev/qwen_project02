@@ -78,6 +78,8 @@ class ApiService(ItemService):
                         lt = localized_field_with_replacement(subregion, 'name', lang_suff, 'subregion')
                         lf['region'] = f"{lf['region']}. {lt['subregion']}".replace('None', '').replace('..', '.').strip()
                     elif k == 'type':  # subcategory for other
+                        from app.core.utils.common_utils import jprint
+                        jprint(item)
                         if subcategory := item.get('subcategory'):
                             lf = localized_field_with_replacement(subcategory, 'name', lang_suff, k)
                     else:
@@ -90,8 +92,6 @@ class ApiService(ItemService):
                 validated_result = ItemApiLang.model_validate(dict_lang)
                 result[key] = validated_result.model_dump(exclude_none=True, exclude_unset=True)
             validated_result = ItemApi.model_validate(result)
-            from app.core.utils.common_utils import jprint
-            jprint(validated_result.model_dump(exclude_none=True, exclude_unset=True))
             return validated_result
         except Exception as e:
             print(f'__api_view__.error {e} {item.get("id")=}')
