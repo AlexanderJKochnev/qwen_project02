@@ -123,7 +123,7 @@ class ApiRouter(ItemRouter):
         result = await service.get_item_api_view(id, session)
         # validate_result = ItemApi.model_validate(result)
         # print('==========================')
-        return validate_result
+        return result
 
     async def get_all(self, after_date: datetime = Query(
         (datetime.now(timezone.utc) - relativedelta(years=2)).isoformat(),
