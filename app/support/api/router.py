@@ -32,7 +32,7 @@ class ApiRouter(ItemRouter):
     """
     def __init__(self):
         super().__init__(prefix='/api', auth_dependency=get_current_api_user)
-        self.paginated_response = PaginatedResponse[ItemApi]
+        self.paginated_response = PaginatedResponse[dict]
         self.nonpaginated_response = List[self.read_schema]
         self.repo = ItemRepository
         self.service = ApiService
