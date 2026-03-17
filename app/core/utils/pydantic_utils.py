@@ -250,3 +250,24 @@ def get_data_for_search(obj):
             res.append(get_data_for_search(value))
 
     return " ".join(res)
+
+
+def convert_lwin_relation(source: dict) -> dict:
+    naming: dict = {'producer_title': 'producertitle',
+                    'producer_name': 'producer',
+                    'name': 'drink',
+                    'sub_region': 'subregion',
+                    'type': 'category',
+                    'sub_type': 'subcategory',
+                    'vintage_config': 'vintageconfig',
+                    'final_vintage': 'last_vintage'}
+    relation: list = ['producer.producertitle',
+                      'site.subregion.region.coutry',
+                      ]
+    # преобразуем к внутрнним именам:
+    tmp: dict = {naming.get(key, key): val for key, val in source.items()}
+
+    template: dict = {'site': 'site.sub_region.region.country',
+                      'producer': 'producer_name.producer_title',
+                      }
+    return {}
