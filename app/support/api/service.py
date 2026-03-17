@@ -71,7 +71,7 @@ class ApiService(ItemService):
                 # add localized subfields to localized fields
                 from app.core.utils.common_utils import jprint
                 print('=====================item==========================')
-                jprint(item)
+                jprint(get_field_name(ItemApiLangLocalizedInterim))
                 for k in get_field_name(ItemApiLangLocalizedInterim):
                     if k == 'site':  # вложенные сущности
                         site = item.get('site')
