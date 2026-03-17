@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, UniqueConstraint
+from sqlalchemy import ForeignKey, Index
 from sqlalchemy.orm import (Mapped, mapped_column, relationship)
 
 from app.core.config.project_config import settings
@@ -28,4 +28,7 @@ class Subregion(BaseFullFree):
     #                       cascade=cascade,
     #                       lazy=lazy)
     # name: Mapped[str_null_false]
-    __table_args__ = (UniqueConstraint('name', 'region_id', name='uq_subregion_name_region'),)
+    # __table_args__ = (UniqueConstraint('name', 'region_id', name='uq_subregion_name_region'),)
+    __table_args__ = (Index(
+        "uq_subregions_name_null_idx", "region_id", unique=True, postgresql_where="name IS NULL"  # Просто строкой
+    ),)

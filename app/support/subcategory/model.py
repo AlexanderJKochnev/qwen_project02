@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, UniqueConstraint
+from sqlalchemy import ForeignKey, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.config.project_config import settings
@@ -27,4 +27,7 @@ class Subcategory(BaseFullFree):
                           cascade=cascade,
                           lazy=lazy)
     # name: Mapped[str_null_true]
-    __table_args__ = (UniqueConstraint('name', 'category_id', name='uq_subcategory_name_category'),)
+    # __table_args__ = (UniqueConstraint('name', 'category_id', name='uq_subcategory_name_category'),)
+    __table_args__ = (Index(
+        "uq_subc_name_null_idx", "category_id", unique=True, postgresql_where="name IS NULL"  # Просто строкой
+    ),)

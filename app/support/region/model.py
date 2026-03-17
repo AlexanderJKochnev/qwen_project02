@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, UniqueConstraint, Index
+from sqlalchemy import ForeignKey, Index
 from sqlalchemy.orm import (Mapped, mapped_column, relationship)
 
 from app.core.config.project_config import settings
