@@ -17,4 +17,6 @@
    2. docker exec test-wine_host-1 psql -U wine -d wine_db -c "\d drinks"
 4. Update
    1. docker exec prod-wine_host-1 psql -U wine -d wine_db -c "UPDATE drinks SET source_id = 1;"
+   2. docker exec prod-wine_host-1 psql -U wine -d wine_db -c "INSERT INTO countries (name) SELECT DISTINCT country FROM lwins WHERE country IS NOT NULL AND country <> '' ON CONFLICT (name) DO NOTHING;
+
 
