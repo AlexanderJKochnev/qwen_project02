@@ -29,6 +29,9 @@ class ApiService(ItemService):
             что на входе?
         """
         try:
+            from app.core.utils.common_utils import jprint
+            jprint(item)
+            
             # задаем порядок замещения пустых полей
             language: list = settings.LANGUAGES
             # список языковых суффиксов
