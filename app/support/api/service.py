@@ -79,14 +79,14 @@ class ApiService(ItemService):
                         region = subregion.get('region')
                         print('region===============================')
                         jprint(region)
-                        lf = localized_field_with_replacement(region, 'name', lang_suff, 'subregion')
+                        lf = localized_field_with_replacement(region, 'name', lang_suff, 'region')
                         print('2region====lf=======================')
                         jprint(lf)
-                        lt = localized_field_with_replacement(subregion, 'name', lang_suff)
+                        lt = localized_field_with_replacement(subregion, 'name', lang_suff, 'subregion')
                         print(f'------lt---------')
                         jprint(lt)
-                        print(f"======={lf['region']}. {lt['name']}========")
-                        lf['region'] = f"{lf['region']}. {lt['name']}".replace('None', '').replace('..', '.')
+                        print(f"======={lf['region']}. {lt['subregion']}========")
+                        lf['region'] = f"{lf['region']}. {lt['subregion']}".replace('None', '').replace('..', '.')
                         print('4region===============================')
                     elif k == 'type':  # subcategory for other
                         if subcategory := item.get('type'):
