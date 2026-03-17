@@ -12,5 +12,19 @@ FROM lwins l
 JOIN subregions s ON l.sub_region = s.name
 WHERE l.site IS NOT NULL AND l.site <> ''
 ON CONFLICT (name, subregion_id) DO NOTHING;"
+# добиваем пустыми
+docker exec -i $SERVICE_NAME psql -U wine -d wine_db -c "INSERT INTO regions (country_id)
+SELECT id FROM countries
+ON CONFLICT (name, country_id) DO NOTHING;"
+
+docker exec -i $SERVICE_NAME psql -U wine -d wine_db -c "INSERT INTO subregions (region_id)
+SELECT id FROM regions
+ON CONFLICT (name, region_id) DO NOTHING;"
+
+docker exec -i $SERVICE_NAME psql -U wine -d wine_db -c "INSERT INTO sites (subregion_id)
+SELECT id FROM subregions
+ON CONFLICT (name, subregion_id) DO NOTHING;"
+
+
 # проверяем
 docker exec -i $SERVICE_NAME psql -U wine -d wine_db -c "SELECT id, name FROM sites"
