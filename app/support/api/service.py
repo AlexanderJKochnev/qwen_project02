@@ -38,10 +38,7 @@ class ApiService(ItemService):
             lang_dict = lang_suffix_dict(language)
             # перенос вложенных словарей на верхний уровень (drink -> root)
             item = cls._level_up_(lang_prefixes, item)
-            logger.warning('after========')
             item['changed_at'] = item.pop('updated_at')
-            from app.core.utils.common_utils import jprint
-            jprint(item)
             result: dict = {}
             # добавление корневых не локализованных полей
             # country enum - только на англ enum
@@ -76,9 +73,13 @@ class ApiService(ItemService):
                         site = item.get('site')
                         subregion = site.get('subregion')
                         region = subregion.get('region')
+                        logger.warning('region===============================')
                         lf = localized_field_with_replacement(region, 'name', lang_suff, k)
+                        logger.warning('2region===============================')
                         lt = localized_field_with_replacement(subregion, 'name', lang_suff)
+                        logger.warning('3region===============================')
                         lf['region'] = f"{lf['region']}. {lt['name']}".replace('None', '').replace('..', '.')
+                        logger.warning('4region===============================')
                     elif k == 'type':  # subcategory for other
                         if subcategory := item.get('type'):
                             lf = localized_field_with_replacement(subcategory, 'name', lang_suff, k)
