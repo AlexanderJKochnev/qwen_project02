@@ -208,8 +208,6 @@ class ItemRepository(Repository):
         result = []
         for item in items:
             result.append(item.to_dict())
-        from app.core.utils.common_utils import jprint
-        jprint(result)
         return result
 
     @classmethod
