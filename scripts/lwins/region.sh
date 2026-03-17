@@ -11,6 +11,6 @@ SELECT DISTINCT l.region, c.id
 FROM lwins l
 JOIN countries c ON l.country = c.name
 WHERE l.region IS NOT NULL AND l.region <> ''
-ON CONFLICT (name) DO NOTHING;"
+ON CONFLICT (name, country_id) DO NOTHING;"
 # проверяем
 docker exec -i $SERVICE_NAME psql -U wine -d wine_db -c "SELECT id, name FROM regions"
