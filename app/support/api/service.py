@@ -77,7 +77,11 @@ class ApiService(ItemService):
                         lf = localized_field_with_replacement(region, 'name', lang_suff, k)
                         logger.warning('2region===============================')
                         lt = localized_field_with_replacement(subregion, 'name', lang_suff)
-                        logger.warning('3region===============================')
+                        logger.warning(f'3region=--')
+                        from app.core.utils.common_utils import jprint
+                        jprint(lt)
+                        print('====================================================')
+                        jprint(lf)
                         lf['region'] = f"{lf['region']}. {lt['name']}".replace('None', '').replace('..', '.')
                         logger.warning('4region===============================')
                     elif k == 'type':  # subcategory for other
