@@ -183,7 +183,7 @@ class ItemService(Service):
         for key in localized_fields:
             match key:
                 case 'country':
-                    keys = ['subregion', 'region', 'country']
+                    keys = ['site', 'subregion', 'region', 'country']
                     value = reduce(lambda d, k: d.get(k) if isinstance(d, dict) else None, keys, drink_dict)
                     if isinstance(value, dict):
                         lf = localized_field_with_replacement(value, 'name', lang_prefixes, key)
