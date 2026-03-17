@@ -276,7 +276,7 @@ class ItemApiLangNonLocalized(BaseModel):
 
 
 class ItemApiLangLocalized(ItemDetailLocalized):
-    site: Optional[str] = None  # Region. Subregion. Site
+    # site: Optional[str] = None  # Region. Subregion. Site
     region: Optional[str] = None  # Region. Subregion
     type: Optional[str] = None  # subcategory for category other
 
