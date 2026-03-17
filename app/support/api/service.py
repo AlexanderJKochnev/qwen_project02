@@ -78,8 +78,6 @@ class ApiService(ItemService):
                         lt = localized_field_with_replacement(subregion, 'name', lang_suff, 'subregion')
                         lf['region'] = f"{lf['region']}. {lt['subregion']}".replace('None', '').replace('..', '.').strip()
                     elif k == 'type':  # subcategory for other
-                        from app.core.utils.common_utils import jprint
-                        jprint(item)
                         if subcategory := item.get('subcategory'):
                             if ((category := subcategory.get('category')) and
                                     (cat_name := category.get('name'))) and (cat_name in ('Wine', 'wine')):
@@ -92,11 +90,10 @@ class ApiService(ItemService):
                 # add many-to-many fields
                 many_to_many = cls.add_manytomany_fields(item, lang_suff)
                 dict_lang.update(many_to_many)
-                validated_result = ItemApiLang.model_validate(dict_lang)
-                result[key] = validated_result.model_dump(exclude_none=True, exclude_unset=True)
+                result[key] = dict_lang
+                # validated_result = ItemApiLang.model_validate(dict_lang)
+                # result[key] = validated_result.model_dump(exclude_none=True, exclude_unset=True)
             validated_result = ItemApi.model_validate(result)
-            # validated_dict = validated_result.model_dump(exclude_none=True, exclude_unset=True)
-            # result = ItemApi.model_validate(validated_dict)
             return validated_result.model_dump(exclude_none=True, exclude_unset=True)
         except Exception as e:
             print(f'__api_view__.error {e} {item.get("id")=}')
