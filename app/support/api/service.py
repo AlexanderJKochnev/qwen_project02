@@ -85,7 +85,7 @@ class ApiService(ItemService):
                         lt = localized_field_with_replacement(subregion, 'name', lang_suff)
                         print(f'------lt---------')
                         jprint(lt)
-                        print('====================================================')
+                        print(f"======={lf['region']}. {lt['name']}========")
                         lf['region'] = f"{lf['region']}. {lt['name']}".replace('None', '').replace('..', '.')
                         print('4region===============================')
                     elif k == 'type':  # subcategory for other
