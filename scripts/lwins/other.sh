@@ -9,8 +9,7 @@ SERVICE_NAME="test-wine_host-1"
 docker exec -i $SERVICE_NAME psql -U wine -d wine_db -c "
 INSERT INTO producertitles (name)
 SELECT DISTINCT producer_title FROM lwins
-WHERE producer_title IS NOT NULL AND producer_title <> ''
-ON CONFLICT (name) DO NOTHING;"
+WHERE producer_title IS NOT NULL AND producer_title <> ''"
 # проверяем
 docker exec -i $SERVICE_NAME psql -U wine -d wine_db -c "SELECT id, name FROM producertitles"
 
