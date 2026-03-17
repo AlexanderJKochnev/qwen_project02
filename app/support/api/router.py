@@ -69,7 +69,7 @@ class ApiRouter(ItemRouter):
                                   response_model=dict,
                                   openapi_extra={'x-request-schema': None})"""
         self.router.add_api_route("/{id}", self.get_api, methods=["GET"],
-                                  response_model=ItemApi,
+                                  response_model=dict,
                                   openapi_extra={'x-request-schema': None})
         self.router.add_api_route("/image/{id}", self.get_image_by_id, methods=["GET"],
                                   openapi_extra={'x-request-schema': None},
@@ -115,15 +115,16 @@ class ApiRouter(ItemRouter):
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
 
-    async def get_api(self, id: int, session: AsyncSession = Depends(get_db)) -> ItemApi:
+    async def get_api(self, id: int, session: AsyncSession = Depends(get_db)) -> dict:
         """
              Получение одной записи по id.
         """
         service = ApiService
-        result = await service.get_item_api_view(id, session)
+        result: ItemApi = await service.get_item_api_view(id, session)
+        response = result.model_dump(exclude_none=True, exclude_unset=True)
         # validate_result = ItemApi.model_validate(result)
         # print('==========================')
-        return result
+        return response
 
     async def get_all(self, after_date: datetime = Query(
         (datetime.now(timezone.utc) - relativedelta(years=2)).isoformat(),
