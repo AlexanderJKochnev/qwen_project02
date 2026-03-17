@@ -71,29 +71,19 @@ class ApiService(ItemService):
                 for k in get_field_name(ItemApiLangLocalized):
                     if k == 'site':  # вложенные сущности
                         site = item.get('site')
-                        from app.core.utils.common_utils import jprint
-                        jprint(site)
                         subregion = site.get('subregion')
-                        print('=============subregion===================')
-                        jprint(subregion)
                         region = subregion.get('region')
-                        print('region===============================')
-                        jprint(region)
                         lf = localized_field_with_replacement(region, 'name', lang_suff, 'region')
-                        print('2region====lf=======================')
-                        jprint(lf)
                         lt = localized_field_with_replacement(subregion, 'name', lang_suff, 'subregion')
-                        print(f'------lt---------')
-                        jprint(lt)
-                        print(f"======={lf['region']}. {lt['subregion']}========")
-                        lf['region'] = f"{lf['region']}. {lt['subregion']}".replace('None', '').replace('..', '.')
-                        print('last lf====================')
-                        jprint(lf)
+                        lf['region'] = f"{lf['region']}. {lt['subregion']}".replace('None', '').replace('..', '.').strip()
                     elif k == 'type':  # subcategory for other
                         if subcategory := item.get('type'):
                             lf = localized_field_with_replacement(subcategory, 'name', lang_suff, k)
                     else:
                         lf = localized_field_with_replacement(item, k, lang_suff)
+                    from app.core.utils.common_utils import jprint
+                    print('=====================lf==========================')
+                    jprint(lf)
                     if lf:
                         dict_lang.update(lf)
 
