@@ -196,6 +196,8 @@ class ItemDetailNonLocalized(BaseModel):
     alc: Optional[str] = None
     age: Optional[str] = None
     image_id: Optional[str] = None  # Item.image_id
+    first_vintage: Optional[int] = None
+    last_vintage: Optional[int] = None
 
 
 class ItemDetailForeignLocalized(BaseModel):
@@ -205,6 +207,15 @@ class ItemDetailForeignLocalized(BaseModel):
     region: Optional[str] = None
     subregion: Optional[str] = None
     sweetness: Optional[str] = None
+
+    site: Optional[str] = None
+    source: Optional[str] = None
+    producer: Optional[str] = None
+    producertitle: Optional[str] = None
+    vintageconfig: Optional[str] = None
+    classification: Optional[str] = None
+    designation: Optional[str] = None
+    parcel: Optional[str] = None
 
 
 class ItemDetailLocalized(BaseModel):
@@ -265,7 +276,8 @@ class ItemApiLangNonLocalized(BaseModel):
 
 
 class ItemApiLangLocalized(ItemDetailLocalized):
-    region: Optional[str] = None  # Region. Subregion
+    site: Optional[str] = None  # Region. Subregion. Site
+    # region: Optional[str] = None  # Region. Subregion
     type: Optional[str] = None  # subcategory for category other
 
 

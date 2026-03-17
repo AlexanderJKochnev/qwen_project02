@@ -69,8 +69,9 @@ class ApiService(ItemService):
                     dict_lang[k] = v
                 # add localized subfields to localized fields
                 for k in get_field_name(ItemApiLangLocalized):
-                    if k == 'region':  # вложенные сущности
-                        subregion = item.get('subregion')
+                    if k == 'site':  # вложенные сущности
+                        site = item.get('site')
+                        subregion = site.get('subregion')
                         region = subregion.get('region')
                         lf = localized_field_with_replacement(region, 'name', lang_suff, k)
                         lt = localized_field_with_replacement(subregion, 'name', lang_suff)
