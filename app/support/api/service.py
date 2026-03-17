@@ -70,8 +70,6 @@ class ApiService(ItemService):
                     dict_lang[k] = v
                 # add localized subfields to localized fields
                 from app.core.utils.common_utils import jprint
-                print('=====================item==========================')
-                jprint(get_field_name(ItemApiLangLocalizedInterim))
                 for k in get_field_name(ItemApiLangLocalizedInterim):
                     if k == 'site':  # вложенные сущности
                         site = item.get('site')
@@ -81,13 +79,16 @@ class ApiService(ItemService):
                         lt = localized_field_with_replacement(subregion, 'name', lang_suff, 'subregion')
                         lf['region'] = f"{lf['region']}. {lt['subregion']}".replace('None', '').replace('..', '.').strip()
                     elif k == 'type':  # subcategory for other
-                        if subcategory := item.get('type'):
+                        if subcategory := item.get('subcategory'):
                             lf = localized_field_with_replacement(subcategory, 'name', lang_suff, k)
+                            print('-----------type-----------------')
+                            jprint(lf)
                     else:
                         lf = localized_field_with_replacement(item, k, lang_suff)
                     if lf:
                         dict_lang.update(lf)
-
+                    print('--------------dict_lang-------------------')
+                    jprint(dict_lang)
                 # add many-to-many fields
                 many_to_many = cls.add_manytomany_fields(item, lang_suff)
                 dict_lang.update(many_to_many)
