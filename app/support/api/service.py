@@ -18,7 +18,8 @@ from app.core.utils.converters import lang_suffix_list, lang_suffix_dict
 from app.core.utils.alchemy_utils import formatted_query
 from app.core.config.project_config import settings
 from app.core.schemas.base import PaginatedResponse
-from app.support.item.schemas import ItemApiLangNonLocalized, ItemApiLangLocalized, ItemApiLang, ItemApi
+from app.support.item.schemas import (ItemApiLangNonLocalized, ItemApiLangLocalized, ItemApiLang, ItemApi,
+                                      ItemApiLangLocalizedInterim)
 
 
 class ApiService(ItemService):
@@ -68,7 +69,7 @@ class ApiService(ItemService):
                         v = f"{v:.03g}"
                     dict_lang[k] = v
                 # add localized subfields to localized fields
-                for k in get_field_name(ItemApiLangLocalized):
+                for k in get_field_name(ItemApiLangLocalizedInterim):
                     if k == 'site':  # вложенные сущности
                         site = item.get('site')
                         subregion = site.get('subregion')
@@ -81,9 +82,9 @@ class ApiService(ItemService):
                             lf = localized_field_with_replacement(subcategory, 'name', lang_suff, k)
                     else:
                         lf = localized_field_with_replacement(item, k, lang_suff)
-                    from app.core.utils.common_utils import jprint
-                    print('=====================lf==========================')
-                    jprint(lf)
+                    # from app.core.utils.common_utils import jprint
+                    # print('=====================lf==========================')
+                    # jprint(lf)
                     if lf:
                         dict_lang.update(lf)
 

@@ -281,6 +281,13 @@ class ItemApiLangLocalized(ItemDetailLocalized):
     type: Optional[str] = None  # subcategory for category other
 
 
+class ItemApiLangLocalizedInterim(ItemDetailLocalized):
+    """ эта модель для обработки """
+    site: Optional[str] = None  # Region. Subregion. Site
+    # region: Optional[str] = None  # Region. Subregion
+    type: Optional[str] = None  # subcategory for category other
+
+
 class ItemApiLang(ItemDetailManyToManyLocalized, ItemApiLangLocalized, ItemApiLangNonLocalized):
     pass
 
