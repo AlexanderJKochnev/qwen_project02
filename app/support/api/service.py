@@ -29,9 +29,6 @@ class ApiService(ItemService):
             что на входе?
         """
         try:
-            from app.core.utils.common_utils import jprint
-            jprint(item)
-            
             # задаем порядок замещения пустых полей
             language: list = settings.LANGUAGES
             # список языковых суффиксов
@@ -42,6 +39,8 @@ class ApiService(ItemService):
             # перенос вложенных словарей на верхний уровень (drink -> root)
             item = cls._level_up_(lang_prefixes, item)
             item['changed_at'] = item.pop('updated_at')
+            from app.core.utils.common_utils import jprint
+            jprint(item)
             result: dict = {}
             # добавление корневых не локализованных полей
             # country enum - только на англ enum
