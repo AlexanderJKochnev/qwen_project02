@@ -121,10 +121,10 @@ class ApiRouter(ItemRouter):
         """
         service = ApiService
         result: ItemApi = await service.get_item_api_view(id, session)
-        response = result.model_dump(exclude_none=True, exclude_unset=True)
+        # response = result.model_dump(exclude_none=True, exclude_unset=True)
         # validate_result = ItemApi.model_validate(result)
         # print('==========================')
-        return response
+        return result
 
     async def get_all(self, after_date: datetime = Query(
         (datetime.now(timezone.utc) - relativedelta(years=2)).isoformat(),
