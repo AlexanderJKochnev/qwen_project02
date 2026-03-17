@@ -81,6 +81,9 @@ class ApiService(ItemService):
                         from app.core.utils.common_utils import jprint
                         jprint(item)
                         if subcategory := item.get('subcategory'):
+                            if ((category := subcategory.get('category')) and
+                                    (cat_name := category.get('name'))) and (cat_name in ('Wine', 'wine')):
+                                continue
                             lf = localized_field_with_replacement(subcategory, 'name', lang_suff, k)
                     else:
                         lf = localized_field_with_replacement(item, k, lang_suff)
