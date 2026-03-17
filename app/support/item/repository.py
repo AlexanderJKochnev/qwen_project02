@@ -104,17 +104,22 @@ class ItemRepository(Repository):
         """
             get_query для запроса list_view - без varietals & foods
         """
-        return select(Item).options(
+        query = select(Item).options(
             selectinload(Item.drink).options(
-                selectinload(Drink.subregion).options(
-                    selectinload(Subregion.region).options(
-                        selectinload(Region.country)
-                    )
-                ),
-                selectinload(Drink.subcategory).selectinload(Subcategory.category),
-                selectinload(Drink.sweetness)
+                selectinload(Drink.site).selectinload(Site.subregion).selectinload(
+                    Subregion.region
+                ).selectinload(
+                    Region.country
+                ), selectinload(Drink.subcategory).selectinload(Subcategory.category),
+                selectinload(Drink.sweetness),
+                # selectinload(Drink.food_associations),
+                # selectinload(Drink.varietal_associations), selectinload(Drink.source),
+                selectinload(Drink.producer).selectinload(Producer.producertitle), selectinload(Drink.parcel),
+                selectinload(Drink.designation), selectinload(Drink.classification),
+                selectinload(Drink.vintageconfig)
             )
         )
+        return query
 
     @classmethod
     async def search_in_main_table(cls,
