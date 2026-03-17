@@ -80,14 +80,14 @@ class ApiService(ItemService):
                         print('region===============================')
                         jprint(region)
                         lf = localized_field_with_replacement(region, 'name', lang_suff, 'subregion')
-                        logger.warning('2region====lf=======================')
+                        print('2region====lf=======================')
                         jprint(lf)
                         lt = localized_field_with_replacement(subregion, 'name', lang_suff)
-                        logger.warning(f'------lt---------')
+                        print(f'------lt---------')
                         jprint(lt)
                         print('====================================================')
                         lf['region'] = f"{lf['region']}. {lt['name']}".replace('None', '').replace('..', '.')
-                        logger.warning('4region===============================')
+                        print('4region===============================')
                     elif k == 'type':  # subcategory for other
                         if subcategory := item.get('type'):
                             lf = localized_field_with_replacement(subcategory, 'name', lang_suff, k)
