@@ -37,7 +37,6 @@ class ApiService(ItemService):
             # списки языков отсортированы в порядке очередности замены для каждого языка
             lang_dict = lang_suffix_dict(language)
             # перенос вложенных словарей на верхний уровень (drink -> root)
-            logger.warning(f'{lang_prefixes=}')
             item = cls._level_up_(lang_prefixes, item)
             logger.warning('after========')
             item['changed_at'] = item.pop('updated_at')

@@ -41,19 +41,22 @@ class ItemService(Service):
             внутренний метод
             перенос вложенных словарей на верхний уровень (drink -> item)
         """
-        extra = [f'description{lang}' for lang in lang_prefixes]
-        if drink := item.pop('drink'):
-            drink.pop('id', None)
-            # вложенные в drink словари тоже на верхний уровень
-            for key in ('subcategory.category', 'subregion.region', 'subregion.region.country'):
-                tmp = drink
-                for k in key.split('.'):
-                    tmp = tmp.get(k)
-                for x in extra:
-                    tmp.pop(x, None)
-                drink[k] = tmp
-            item.update(drink)
-        return item
+        try:
+            extra = [f'description{lang}' for lang in lang_prefixes]
+            if drink := item.pop('drink'):
+                drink.pop('id', None)
+                # вложенные в drink словари тоже на верхний уровень
+                for key in ('subcategory.category', 'site.subregion.region', 'site.subregion.region.country'):
+                    tmp = drink
+                    for k in key.split('.'):
+                        tmp = tmp.get(k)
+                    for x in extra:
+                        tmp.pop(x, None)
+                    drink[k] = tmp
+                item.update(drink)
+            return item
+        except Exception as e:
+            logger.error(f'app.support.item.service._level_up_.error: {e}')
 
     @classmethod
     def add_manytomany_fields(cls, item: dict, lang_prefixes: list) -> dict:
