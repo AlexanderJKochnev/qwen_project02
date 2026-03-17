@@ -95,7 +95,7 @@ class ApiService(ItemService):
                 validated_result = ItemApiLang.model_validate(dict_lang)
                 result[key] = validated_result.model_dump(exclude_none=True, exclude_unset=True)
             validated_result = ItemApi.model_validate(result)
-            return validated_result.model_dump(exclude_none=True, exclude_unset=True)
+            return validated_result
         except Exception as e:
             print(f'__api_view__.error {e} {item.get("id")=}')
             raise HTTPException(status_code=503, detail=f'error.__api_view__.{e}')
@@ -135,6 +135,8 @@ class ApiService(ItemService):
         if not item:
             return None
         result = cls.__api_view__(item)
+        from app.core.utils.common_utils import jprint
+        jprint(result)
         return result
 
     @classmethod

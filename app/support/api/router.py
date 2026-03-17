@@ -121,9 +121,8 @@ class ApiRouter(ItemRouter):
         """
         service = ApiService
         result = await service.get_item_api_view(id, session)
-        print('-------------------------')
-        validate_result = ItemApi.model_validate(result)
-        print('==========================')
+        # validate_result = ItemApi.model_validate(result)
+        # print('==========================')
         return validate_result
 
     async def get_all(self, after_date: datetime = Query(
