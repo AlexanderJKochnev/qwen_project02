@@ -71,17 +71,21 @@ class ApiService(ItemService):
                 for k in get_field_name(ItemApiLangLocalized):
                     if k == 'site':  # вложенные сущности
                         site = item.get('site')
+                        from app.core.utils.common_utils import jprint
+                        jprint(site)
                         subregion = site.get('subregion')
+                        print('=============subregion===================')
+                        jprint(subregion)
                         region = subregion.get('region')
                         logger.warning('region===============================')
+                        jprint(region)
                         lf = localized_field_with_replacement(region, 'name', lang_suff, k)
-                        logger.warning('2region===============================')
+                        logger.warning('2region====lf=======================')
+                        jprint(lf)
                         lt = localized_field_with_replacement(subregion, 'name', lang_suff)
-                        logger.warning(f'3region=--')
-                        from app.core.utils.common_utils import jprint
+                        logger.warning(f'------lt---------')
                         jprint(lt)
                         print('====================================================')
-                        jprint(lf)
                         lf['region'] = f"{lf['region']}. {lt['name']}".replace('None', '').replace('..', '.')
                         logger.warning('4region===============================')
                     elif k == 'type':  # subcategory for other
