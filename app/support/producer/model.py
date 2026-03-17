@@ -9,7 +9,7 @@ from app.service_registry import registers_search_update
 
 
 @registers_search_update("producer.drink.item")
-class ProducerTitle(BaseFullFree):
+class ProducerTitle(BaseFull):
     lazy = settings.LAZY
     single_name = 'producertitle'
     plural_name = plural(single_name)
