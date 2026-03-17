@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import ForeignKey, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.config.project_config import settings
-from app.core.models.base_model import plural, BaseFullFree
+from app.core.models.base_model import plural, BaseFullFree, BaseFull
 from app.service_registry import registers_search_update
 
 
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 
 @registers_search_update("producer.drink.item")
-class Parcel(BaseFullFree):
+class Parcel(BaseFull):
     """
         часть виноградника (верхняя, нижняя, возле леса - неуникальное имя)
     """

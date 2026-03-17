@@ -20,13 +20,27 @@ INSERT INTO producers (name, producertitle_id)
 SELECT DISTINCT ON (l.producer_name) l.producer_name, s.id
 FROM lwins l
 JOIN producertitles s ON l.producer_title = s.name
-WHERE l.producer_name IS NOT NULL AND l.producer_name <> '';"
+WHERE l.producer_name IS NOT NULL AND l.producer_name <> ''
+ON CONFLICT (name) DO NOTHING;"
+
 
 docker exec -i $SERVICE_NAME psql -U wine -d wine_db -c "
-INSERT INTO producers (name, producertitle_id)
-SELECT DISTINCT ON (l.producer_name) l.producer_name, l.wine
+INSERT INTO producers (name)
+SELECT DISTINCT ON (l.producer_name) l.producer_name
 FROM lwins l
-WHERE l.producer_name IS NOT NULL AND l.producer_name <> '' AND producer_title IS NULL;
+WHERE l.producer_name IS NOT NULL AND l.producer_name <> '' AND producer_title IS NULL
+ON CONFLICT (name) DO NOTHING;"
+
+docker exec -i $SERVICE_NAME psql -U wine -d wine_db -c "
+INSERT INTO parcels (name)
+SELECT DISTINCT ON (parcel) parcel
+FROM lwins
+WHERE parcel IS NOT NULL AND parcel <> ''
+ON CONFLICT (name) DO NOTHING;
 "
+
+
+
+
 
 # docker exec -i test-wine_host-1 psql -U wine -d wine_db -c ""
