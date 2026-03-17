@@ -40,26 +40,26 @@ class ApiRouter(ItemRouter):
     def setup_routes(self):
         self.router.add_api_route("", self.get, methods=["GET"],
                                   # get -> service.get_list_api_view_page -> repository.get_all
-                                  response_model=PaginatedResponse[ItemApi],
+                                  response_model=PaginatedResponse[dict],
                                   openapi_extra={'x-request-schema': None})
         self.router.add_api_route("/all", self.get_all, methods=["GET"],
-                                  response_model=List[ItemApi],
+                                  response_model=List[dict],
                                   # response_model=List[self.read_schema],
                                   openapi_extra={'x-request-schema': None})
         # поиск api.service.search_geans -> core.repository.search_fts_all
         self.router.add_api_route("/search", self.search_geans, methods=["GET"],
-                                  response_model=PaginatedResponse[ItemApi],
+                                  response_model=PaginatedResponse[dict],
                                   openapi_extra={'x-request-schema': None}
                                   )
         # поиск api.search_geans_all -> core.repository.search_fts
         self.router.add_api_route("/search_all", self.search_geans_all,
                                   methods=["GET"],
-                                  response_model=List[ItemApi],
+                                  response_model=List[dict],
                                   openapi_extra={'x-request-schema': None}
                                   )
         self.router.add_api_route("/get_by_ids", self.search_by_ids,
                                   methods=["GET"],
-                                  response_model=List[ItemApi],
+                                  response_model=List[dict],
                                   openapi_extra={'x-request-schema': None}
                                   )
         """self.router.add_api_route("/mongo", self.get_images_after_date, methods=["GET"],
@@ -120,7 +120,7 @@ class ApiRouter(ItemRouter):
              Получение одной записи по id.
         """
         service = ApiService
-        result: ItemApi = await service.get_item_api_view(id, session)
+        result = await service.get_item_api_view(id, session)
         # response = result.model_dump(exclude_none=True, exclude_unset=True)
         # validate_result = ItemApi.model_validate(result)
         # print('==========================')
