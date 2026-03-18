@@ -72,7 +72,7 @@ WHERE id IN (786847, 786848, 789248, 791216)
 
 docker exec -i $SERVICE_NAME psql -U wine -d wine_db -c "
 UPDATE lwins
-SET type = 'Other', sub_type = Whiskies
+SET type = 'Other', sub_type = 'Whiskies'
 WHERE id = 787255
 "
 
