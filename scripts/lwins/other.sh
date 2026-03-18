@@ -39,7 +39,42 @@ WHERE parcel IS NOT NULL AND parcel <> ''
 ON CONFLICT (name) DO NOTHING;
 "
 
+docker exec -i $SERVICE_NAME psql -U wine -d wine_db -c "
+INSERT INTO designations (name)
+SELECT DISTINCT ON (designation) designation
+FROM lwins
+WHERE designation IS NOT NULL AND designation <> ''
+ON CONFLICT (name) DO NOTHING;
+"
 
+
+docker exec -i $SERVICE_NAME psql -U wine -d wine_db -c "
+INSERT INTO classifications (name)
+SELECT DISTINCT ON (classification) classification
+FROM lwins
+WHERE classification IS NOT NULL AND classification <> ''
+ON CONFLICT (name) DO NOTHING;
+"
+
+docker exec -i $SERVICE_NAME psql -U wine -d wine_db -c "
+INSERT INTO vintageconfigs (name)
+SELECT DISTINCT ON (vintage_config) vintage_config
+FROM lwins
+WHERE vintage_config IS NOT NULL AND vintage_config <> ''
+ON CONFLICT (name) DO NOTHING;
+"
+
+docker exec -i $SERVICE_NAME psql -U wine -d wine_db -c "
+UPDATE lwins
+SET type = 'Wine', sub_type = NULL
+WHERE id IN (786847, 786848, 789248, 791216)
+"
+
+docker exec -i $SERVICE_NAME psql -U wine -d wine_db -c "
+UPDATE lwins
+SET type = 'Other', sub_type = Whiskies
+WHERE id = 787255
+"
 
 
 
