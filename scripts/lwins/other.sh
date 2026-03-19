@@ -86,6 +86,45 @@ UPDATE lwins
 SET type='Other'
 WHERE type='Spirit';
 "
-
+# CHAMPAGNE TO WINE SPARKLING
+docker exec -i $SERVICE_NAME psql -U wine -d wine_db -c "
+UPDATE lwins
+SET type='Wine'
+WHERE type='Champagne';
+"
+# SPARKLING IS THE SUBTYPE
+docker exec -i $SERVICE_NAME psql -U wine -d wine_db -c "
+UPDATE lwins
+SET colour=sub_type, sub_type=colour
+WHERE colour='Sparkling';
+"
+# FORTIFIED_WINE -> WINE.PORT
+docker exec -i $SERVICE_NAME psql -U wine -d wine_db -c "
+UPDATE lwins
+SET type='Wine', sub_type='Port'
+WHERE type='Fortified Wine';
+"
+# Cider -> Other.Cider
+docker exec -i $SERVICE_NAME psql -U wine -d wine_db -c "
+UPDATE lwins
+SET type='Other', sub_type='Cider'
+WHERE type='Cider';
+"
+# Other.Brandy -> Cognac
+docker exec -i $SERVICE_NAME psql -U wine -d wine_db -c "
+UPDATE lwins
+SET type='Cognac', sub_type=NULL
+WHERE sub_type='Brandy';
+"
+# ADD TYPES
+docker exec -i $SERVICE_NAME psql -U wine -d wine_db -c "INSERT INTO categories (name) SELECT DISTINCT type
+FROM lwins WHERE type IS NOT NULL AND type <> '' ON CONFLICT (name) DO NOTHING;"
+# ADD SUBTYPES
+docker exec -i $SERVICE_NAME psql -U wine -d wine_db -c "INSERT INTO subcategories (name, category_id)
+SELECT DISTINCT l.region, c.id
+FROM lwins l
+JOIN categories c ON l.sub_typr = c.name
+WHERE l.sub_type IS NOT NULL AND l.sub_type <> ''
+ON CONFLICT (name, category_id) DO NOTHING;"
 
 # docker exec -i test-wine_host-1 psql -U wine -d wine_db -c ""

@@ -28,6 +28,11 @@ class Subcategory(BaseFullFree):
                           lazy=lazy)
     # name: Mapped[str_null_true]
     # __table_args__ = (UniqueConstraint('name', 'category_id', name='uq_subcategory_name_category'),)
-    __table_args__ = (Index(
-        "uq_subc_name_null_idx", "category_id", unique=True, postgresql_where="name IS NULL"  # Просто строкой
-    ),)
+    __table_args__ = (
+        #    Index("uq_subc_name_null_idx", "category_id",
+        #          unique=True, postgresql_where="name IS NULL"  # для Postgers bellow 15
+        # ),
+        Index("uq_name_category_unique", "name", "category_id",
+              unique=True, postgresql_nulls_not_distinct=True  # Ключевой параметр для Postgres > 15
+              ),
+    )
