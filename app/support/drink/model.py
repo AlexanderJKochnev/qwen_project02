@@ -247,17 +247,17 @@ class Drink(Base, BaseAt, Lang, ForeignOneToMany, Vintage, Lwn, DisplayName):
 
     # Важно: viewonly=False — позволяет SQLAlchemy корректно обновлять связь через .foods
     __table_args__ = (CheckConstraint('alc >= 0 AND alc <= 100.00', name='alc_range_check'),
-                     CheckConstraint("(first_vintage IS NULL) OR (first_vintage >= 1000 AND first_vintage <= 3000)",
-                                     name="check_first_vintage_range_or_null"),
-                     CheckConstraint("(last_vintage IS NULL) OR (last_vintage >= 1000 AND last_vintage <= 3000)",
-                                     name="check_last_vintage_range_or_null"),
-                     # UniqueConstraint('title', 'subtitle', 'producer_id',
-                     # 'site_id', 'parcel_id', 'lwn', 'anno', name='uq_title_subtitle_unique'),
-                     Index("uq_title_unique", "title", "subtitle", "producer_id",
-                           "parcel_id", "lwin", "anno", "display_name",
-                           unique=True, postgresql_nulls_not_distinct=True  # Ключевой параметр
-                           ),
-                     )
+                      CheckConstraint("(first_vintage IS NULL) OR (first_vintage >= 1000 AND first_vintage <= 3000)",
+                                      name="check_first_vintage_range_or_null"),
+                      CheckConstraint("(last_vintage IS NULL) OR (last_vintage >= 1000 AND last_vintage <= 3000)",
+                                      name="check_last_vintage_range_or_null"),
+                      # UniqueConstraint('title', 'subtitle', 'producer_id',
+                      # 'site_id', 'parcel_id', 'lwn', 'anno', name='uq_title_subtitle_unique'),
+                      Index("uq_title_unique", "title", "subtitle", "producer_id", "site_id",
+                            "parcel_id", "lwin", "anno", "display_name",
+                            unique=True, postgresql_nulls_not_distinct=True  # Ключевой параметр
+                            ),
+                      )
 
     def __str__(self):
         return f"{self.title}"
