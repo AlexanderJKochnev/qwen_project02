@@ -223,7 +223,7 @@ class Drink(Base, BaseAt, Lang, ForeignOneToMany, Vintage, Lwn, DisplayName):
                      # UniqueConstraint('title', 'subtitle', 'producer_id',
                      # 'site_id', 'parcel_id', 'lwn', 'anno', name='uq_title_subtitle_unique'),
                      Index("uq_title_unique", "title", "subtitle", "producer_id",
-                           "site_id", "parcel_id", "lwn", "anno", "display_name",
+                           "site_id", "parcel_id", "lwin", "anno", "display_name",
                            unique=True, postgresql_nulls_not_distinct=True  # Ключевой параметр
                            ),
                      )
