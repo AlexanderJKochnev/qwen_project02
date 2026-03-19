@@ -1,6 +1,6 @@
 #!/bin/bash
 # Имя сервиса из docker-compose
-SERVICE_NAME="mongo"
+SERVICE_NAME="prod-mongo-1"
 HOST="mongodb"
 PORT="27017"
 USERNAME="admin"
