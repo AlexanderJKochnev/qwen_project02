@@ -17,8 +17,9 @@ if TYPE_CHECKING:
 
 class Item(Base, BaseAt, ImageMixin, Search):
     __table_args__ = (UniqueConstraint('vol', 'drink_id', name='uq_items_unique'),
-                      Index('idx_items_fts', 'search_vector', postgresql_using='gin')
-                      )
+                      Index('idx_items_fts', 'search_vector', postgresql_using='gin'),
+                      Index("uq_unique", "drin_id", "vol", "price", "count",
+                            unique=True, postgresql_nulls_not_distinct=True))
 
     vol: Mapped[volume]  # объем тары
     price: Mapped[money]    # цена

@@ -8,7 +8,7 @@ SERVICE_NAME="test-wine_host-1"
 # вставляем записи в region
 docker exec -i $SERVICE_NAME psql -U wine -d wine_db -c "
 INSERT INTO regions (name, country_id)
-SELECT DISTINCT l.region, c.id
+SELECT DISTINCT ON (l.region, l.country) l.region, c.id
 FROM lwins l
 JOIN countries c ON l.country = c.name
 ON CONFLICT (name, country_id) DO NOTHING;"
