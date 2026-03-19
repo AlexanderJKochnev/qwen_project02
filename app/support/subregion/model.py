@@ -30,5 +30,6 @@ class Subregion(BaseFullFree):
     # name: Mapped[str_null_false]
     # __table_args__ = (UniqueConstraint('name', 'region_id', name='uq_subregion_name_region'),)
     __table_args__ = (Index(
-        "uq_subregions_name_null_idx", "region_id", unique=True, postgresql_where="name IS NULL"  # Просто строкой
+        "uq_  name_region_unique", "name", "region_id", unique=True, postgresql_nulls_not_distinct=True
+        # Ключевой параметр
     ),)

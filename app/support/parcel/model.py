@@ -43,11 +43,7 @@ class Site(BaseFullFree):
                           lazy=lazy)
 
     # __table_args__ = (UniqueConstraint('name', 'subregion_id', name='uq_site1_name_subregion'),)
-    __table_args__ = (
-        Index(
-            "uq_sites_name_null_idx",
-            "subregion_id",
-            unique=True,
-            postgresql_where="name IS NULL"  # Просто строкой
-        ),
-    )
+    __table_args__ = (Index(
+        "uq_  name_subregion_unique", "name", "subregion_id", unique=True, postgresql_nulls_not_distinct=True
+        # Ключевой параметр
+    ),)
