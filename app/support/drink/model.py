@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, List
 
-from sqlalchemy import (CheckConstraint, Column, ForeignKey, Integer, UniqueConstraint, String, Index)
+from sqlalchemy import (CheckConstraint, Column, ForeignKey, Integer, String, Index)
 from sqlalchemy.orm import Mapped, mapped_column, relationship, declared_attr, validates
 from sqlalchemy.types import DECIMAL
 from decimal import Decimal
@@ -152,8 +152,15 @@ class Vintage:
     last_vintage: Mapped[int | None] = mapped_column(nullable=True)
 
 
+class DisplayName:
+    __abstract__ = True
+    display_name: Mapped[str | None] = mapped_column(
+        String(255), nullable=True, index=True
+    )
+
+
 @registers_search_update("item")
-class Drink(Base, BaseAt, Lang, ForeignOneToMany, Vintage, Lwn):
+class Drink(Base, BaseAt, Lang, ForeignOneToMany, Vintage, Lwn, DisplayName):
     lazy = settings.LAZY
     cascade = settings.CASCADE
     single_name = 'drink'
@@ -216,7 +223,7 @@ class Drink(Base, BaseAt, Lang, ForeignOneToMany, Vintage, Lwn):
                      # UniqueConstraint('title', 'subtitle', 'producer_id',
                      # 'site_id', 'parcel_id', 'lwn', 'anno', name='uq_title_subtitle_unique'),
                      Index("uq_title_unique", "title", "subtitle", "producer_id",
-                           "site_id", "parcel_id", "lwn", "anno",
+                           "site_id", "parcel_id", "lwn", "anno", "display_name",
                            unique=True, postgresql_nulls_not_distinct=True  # Ключевой параметр
                            ),
                      )
