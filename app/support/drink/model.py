@@ -253,10 +253,10 @@ class Drink(Base, BaseAt, Lang, ForeignOneToMany, Vintage, Lwn, DisplayName):
                                      name="check_last_vintage_range_or_null"),
                      # UniqueConstraint('title', 'subtitle', 'producer_id',
                      # 'site_id', 'parcel_id', 'lwn', 'anno', name='uq_title_subtitle_unique'),
-                     Index("uq_title_unique", "title", "subtitle", "producer_id",
-                           "parcel_id", "lwin", "anno", "display_name",
-                           unique=True, postgresql_nulls_not_distinct=True  # Ключевой параметр
-                           ),
+                     # Index("uq_title_unique", "title", "subtitle", "producer_id",
+                     #       "parcel_id", "lwin", "anno", "display_name",
+                     #       unique=True, postgresql_nulls_not_distinct=True  # Ключевой параметр
+                     #       ),
                      )
 
     def __str__(self):
