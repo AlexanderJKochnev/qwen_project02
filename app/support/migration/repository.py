@@ -9,7 +9,7 @@ from app.support import Site, Subregion
 class MigrationRepository(Repository):
     model = Migration
 
-    async def tieer_one(self, session: AsyncSession):
+    async def tier_one(self, session: AsyncSession):
         stmt1 = insert(Site).from_select(
             [Site.subregion_id, Site.name], select(Subregion.id, null())
         )

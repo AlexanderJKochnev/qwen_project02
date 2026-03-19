@@ -24,7 +24,7 @@ from app.support.producer.model import Producer, ProducerTitle
 from app.support.vintage.model import VintageConfig, Designation, Classification
 from app.support.parcel.model import Site, Parcel
 from app.support.source.model import Source
-from app.support.migration.model import Migration
+# from app.support.migration.model import Migration
 
 # schemas
 from app.support.varietal.schemas import VarietalRead
