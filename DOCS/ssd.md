@@ -10,4 +10,8 @@
 7. lspci -vvv -s $(lspci | grep "Non-Volatile memory controller" | head -1 | cut -d' ' -f1)  # скорость соедиения
 8. watch -n 1 sudo nvme smart-log /dev/ng1n1
 
-## форматирование диска
+## форматирование диска и замена
+1. # Показать все точки монтирования с информацией о файловой системе
+   findmnt -D
+   # Или более детальная информация
+   df -hT
