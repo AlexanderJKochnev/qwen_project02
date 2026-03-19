@@ -1,6 +1,6 @@
 #!/bin/bash
 # Имя сервиса из docker-compose
-SERVICE_NAME="wine_host"
+SERVICE_NAME="prod-wine_host-1"
 # Имя пользователя БД (замените, если отличается)
 DB_USER="wine"
 # Имя файла бэкапа
