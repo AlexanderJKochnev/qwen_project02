@@ -1,6 +1,6 @@
 #!/bin/bash
 # Имя сервиса из docker-compose
-SERVICE_NAME="mongo"
+SERVICE_NAME="test-mongo-1"
 HOST="mongodb"
 PORT="27017"
 USERNAME="admin"
@@ -8,7 +8,7 @@ PASSWORD="admin"
 BACKUP_NAME="mg_backup.gz"
 
 echo "--- Начинаю бэкап базы данных из контейнера $SERVICE_NAME ---"
-docker exec $SERVICE_NAME mongodump --host=test-mongo-1 \
+docker exec $SERVICE_NAME mongodump --host=mongo \
                                --port=27017 \
                                --username=admin \
                                --password='admin' \
