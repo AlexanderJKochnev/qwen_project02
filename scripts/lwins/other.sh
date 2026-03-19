@@ -101,7 +101,7 @@ WHERE colour='Sparkling';
 # FORTIFIED_WINE -> WINE.PORT
 docker exec -i $SERVICE_NAME psql -U wine -d wine_db -c "
 UPDATE lwins
-SET type='Wine', sub_type='Port'
+SET type='Port'
 WHERE type='Fortified Wine';
 "
 # Cider -> Other.Cider
@@ -120,11 +120,12 @@ WHERE sub_type='Brandy';
 docker exec -i $SERVICE_NAME psql -U wine -d wine_db -c "INSERT INTO categories (name) SELECT DISTINCT type
 FROM lwins WHERE type IS NOT NULL AND type <> '' ON CONFLICT (name) DO NOTHING;"
 # ADD SUBTYPES
-docker exec -i $SERVICE_NAME psql -U wine -d wine_db -c "INSERT INTO subcategories (name, category_id)
-SELECT DISTINCT l.region, c.id
+docker exec -i $SERVICE_NAME psql -U wine -d wine_db -c "
+INSERT INTO subcategories (name, category_id)
+SELECT DISTINCT l.sub_type, c.id
 FROM lwins l
-JOIN categories c ON l.sub_typr = c.name
-WHERE l.sub_type IS NOT NULL AND l.sub_type <> ''
+JOIN categories c ON l.type = c.name
 ON CONFLICT (name, category_id) DO NOTHING;"
+
 
 # docker exec -i test-wine_host-1 psql -U wine -d wine_db -c ""

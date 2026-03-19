@@ -30,10 +30,7 @@ class Region(BaseFullFree):
     # __table_args__ = (UniqueConstraint('name', 'country_id', name='uq_region_name_country'),)
 
     __table_args__ = (
-        Index(
-            "uq_regions_name_null_idx",
-            "country_id",
-            unique=True,
-            postgresql_where="name IS NULL"  # Просто строкой
-        ),
+        Index("uq_  name_country_unique", "name", "country_id", unique=True,
+              postgresql_nulls_not_distinct=True  # Ключевой параметр
+              )
     )
