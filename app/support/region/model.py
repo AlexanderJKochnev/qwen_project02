@@ -32,5 +32,5 @@ class Region(BaseFullFree):
     __table_args__ = (
         Index("uq_  name_country_unique", "name", "country_id", unique=True,
               postgresql_nulls_not_distinct=True  # Ключевой параметр
-              )
+              ),
     )
