@@ -145,7 +145,7 @@ class BaseInt:
 class BaseIntFree:
     """ общие поля для всех таблиц на англ. языке """
     __abstract__ = True
-    name: Mapped[str_null_true]
+    name: Mapped[str_null_index]
     description: Mapped[descr]
 
 

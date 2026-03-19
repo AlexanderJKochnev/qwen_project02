@@ -128,4 +128,4 @@ JOIN categories c ON l.type = c.name
 ON CONFLICT (name, category_id) DO NOTHING;"
 
 
-# docker exec -i test-wine_host-1 psql -U wine -d wine_db -c ""
+# docker exec -i test-wine_host-1 psql -U wine -d wine_db -c "SELECT name FROM "
