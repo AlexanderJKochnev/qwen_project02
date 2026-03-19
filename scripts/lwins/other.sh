@@ -75,7 +75,17 @@ UPDATE lwins
 SET type = 'Other', sub_type = 'Whiskies'
 WHERE id = 787255
 "
+docker exec -i $SERVICE_NAME psql -U wine -d wine_db -c "
+UPDATE lwins
+SET type=sub_type, sub_type = NULL
+WHERE sub_type IN ('Whiskies', 'Vodka', 'Rum', 'Tequila');
+"
 
+docker exec -i $SERVICE_NAME psql -U wine -d wine_db -c "
+UPDATE lwins
+SET type='Other'
+WHERE type='Spirit';
+"
 
 
 # docker exec -i test-wine_host-1 psql -U wine -d wine_db -c ""

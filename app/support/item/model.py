@@ -26,7 +26,6 @@ class Item(Base, BaseAt, ImageMixin, Search):
 
     drink_id: Mapped[int] = mapped_column(ForeignKey("drinks.id"), nullable=False, index=True)
     # warehouse_id: Mapped[int] = mapped_column(ForeignKey("warehouses.id"), nullable=True)
-
     # warehouse: Mapped["Warehouse"] = relationship(back_populates="items")
     drink: Mapped["Drink"] = relationship(back_populates="items")
 

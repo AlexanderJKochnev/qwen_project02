@@ -71,7 +71,24 @@
     6. lsmod | grep nvidia
     7. nvidia-smi
 20. ПРЕДОСТАЛВЕНИЕ ПРАВ НА ЗАПИСЬ / ЧТЕНИЕ ДИРЕКТОРИИ
-21. commands
+21. commands информация о железе
     1. sudo dmidecode -s baseboard-product-name
     2. sudo dmidecode -t baseboard
     3. sudo inxi -M
+## логи
+1. sudo nano /etc/systemd/journald.conf
+2. [Journal]
+    # Включает постоянное хранение на диске
+    Storage=persistent
+    # Ограничение по времени (удалять логи старше 7 дней)
+    MaxRetentionSec=1week
+    # Ограничение по объему (например, не более 500 МБ)
+    SystemMaxUse=500M
+    # Как часто проверять ограничения
+    MaxFileSec=1day
+3. sudo systemctl restart systemd-journald
+4. вывод ошибок:
+   1. journalctl -b -1 -u NetworkManager -u networking -u wpa_supplicant -p err..notice --no-pager 
+   2. journalctl -b -1 -i | grep -Ei 'eth0|wlan0|link down|reason|failed|disconnected'
+
+

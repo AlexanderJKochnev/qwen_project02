@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, List
 
-from sqlalchemy import (CheckConstraint, Column, ForeignKey, Integer, UniqueConstraint, Boolean)
-from sqlalchemy.orm import Mapped, mapped_column, relationship, declared_attr
+from sqlalchemy import (CheckConstraint, Column, ForeignKey, Integer, UniqueConstraint, String, Index)
+from sqlalchemy.orm import Mapped, mapped_column, relationship, declared_attr, validates
 from sqlalchemy.types import DECIMAL
 from decimal import Decimal
 from app.core.config.project_config import settings
@@ -76,9 +76,34 @@ class Lang:
 
 
 class Lwn:
-    """ для того что бы отличать от других"""
+    """  для связи с lwin """
     __abstract__ = True
-    lwin: Mapped[bool] = mapped_column(Boolean, nullable=True)
+    lwin: Mapped[str | None] = mapped_column(String(7),
+                                             CheckConstraint("lwin ~ '^[0-9]*$'", name="check_digits_only"),
+                                             nullable=True, index=True
+                                             )
+
+    @validates("lwin")
+    def validate_lwin(self, key, value):
+        if value is not None:
+            if not value.isdigit():
+                raise ValueError("Поле должно содержать только цифры")
+            if len(value) > 7:
+                raise ValueError("Длина не должна превышать 7 символов")
+        return value
+
+    anno: Mapped[str | None] = mapped_column(
+        String(4), CheckConstraint("anno ~ '^[0-9]*$'", name="check_digits_only"), nullable=True, index=True
+    )
+
+    @validates("anno")
+    def validate_anno(self, key, value):
+        if value is not None:
+            if not value.isdigit():
+                raise ValueError("Поле должно содержать только цифры")
+            if len(value) > 7:
+                raise ValueError("Длина не должна превышать 4 символов")
+        return value
 
 
 class ForeignOneToMany:
@@ -128,7 +153,7 @@ class Vintage:
 
 
 @registers_search_update("item")
-class Drink(Base, BaseAt, Lang, ForeignOneToMany, Vintage):
+class Drink(Base, BaseAt, Lang, ForeignOneToMany, Vintage, Lwn):
     lazy = settings.LAZY
     cascade = settings.CASCADE
     single_name = 'drink'
@@ -184,12 +209,17 @@ class Drink(Base, BaseAt, Lang, ForeignOneToMany, Vintage):
 
     # Важно: viewonly=False — позволяет SQLAlchemy корректно обновлять связь через .foods
     _table_args__ = (CheckConstraint('alc >= 0 AND alc <= 100.00', name='alc_range_check'),
-                     UniqueConstraint('title', 'subtitle', 'producer_id', 'site_id', 'parcel_id',
-                                      name='uq_title_subtitle_unique'),
                      CheckConstraint("(first_vintage IS NULL) OR (first_vintage >= 1000 AND first_vintage <= 3000)",
                                      name="check_first_vintage_range_or_null"),
                      CheckConstraint("(last_vintage IS NULL) OR (last_vintage >= 1000 AND last_vintage <= 3000)",
-                                     name="check_last_vintage_range_or_null"))
+                                     name="check_last_vintage_range_or_null"),
+                     # UniqueConstraint('title', 'subtitle', 'producer_id',
+                     # 'site_id', 'parcel_id', 'lwn', 'anno', name='uq_title_subtitle_unique'),
+                     Index("uq_title_unique", "title", "subtitle", "producer_id",
+                           "site_id", "parcel_id", "lwn", "anno",
+                           unique=True, postgresql_nulls_not_distinct=True  # Ключевой параметр
+                           ),
+                     )
 
     def __str__(self):
         return f"{self.title}"
