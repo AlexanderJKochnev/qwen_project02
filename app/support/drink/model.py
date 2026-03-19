@@ -88,6 +88,8 @@ class Lwn:
         if value is not None:
             if not value.isdigit():
                 raise ValueError("Поле должно содержать только цифры")
+            if len(value) < 7:
+                raise ValueError("Длина не должна меньше 7 символов")
             if len(value) > 7:
                 raise ValueError("Длина не должна превышать 7 символов")
         return value
@@ -101,7 +103,9 @@ class Lwn:
         if value is not None:
             if not value.isdigit():
                 raise ValueError("Поле должно содержать только цифры")
-            if len(value) > 7:
+            if len(value) < 4:
+                raise ValueError("Длина не должна меньше 4 символов")
+            if len(value) > 4:
                 raise ValueError("Длина не должна превышать 4 символов")
         return value
 
@@ -148,8 +152,35 @@ class ForeignOneToMany:
 
 class Vintage:
     __abstract__ = True
-    first_vintage: Mapped[int | None] = mapped_column(nullable=True)
-    last_vintage: Mapped[int | None] = mapped_column(nullable=True)
+    first_vintage: Mapped[str | None] = mapped_column(
+        String(4), CheckConstraint("first_vintage ~ '^[0-9]*$'", name="check_digits_only"), nullable=True, index=True
+    )
+
+    @validates("first_vintage")
+    def validate_first_vintage(self, key, value):
+        if value is not None:
+            if not value.isdigit():
+                raise ValueError("Поле должно содержать только цифры")
+            if len(value) < 4:
+                raise ValueError("Длина не должна меньше 4 символов")
+            if len(value) > 4:
+                raise ValueError("Длина не должна превышать 4 символов")
+        return value
+
+    last_vintage: Mapped[str | None] = mapped_column(
+        String(4), CheckConstraint("last_vintage ~ '^[0-9]*$'", name="check_digits_only"), nullable=True, index=True
+    )
+
+    @validates("last_vintage")
+    def validate_last_vintage(self, key, value):
+        if value is not None:
+            if not value.isdigit():
+                raise ValueError("Поле должно содержать только цифры")
+            if len(value) < 4:
+                raise ValueError("Длина не должна меньше 4 символов")
+            if len(value) > 4:
+                raise ValueError("Длина не должна превышать 4 символов")
+        return value
 
 
 class DisplayName:
