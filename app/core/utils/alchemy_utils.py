@@ -18,7 +18,7 @@ from app.core.config.project_config import get_path_to_root
 function = {1: or_, 2: and_}
 
 
-def get_field_list(model: Type[DeclarativeBase], starts: tuple, ends: tuple):
+def get_field_list(model: Type[DeclarativeBase], starts: tuple = None, ends: tuple = None):
     """
          возвращает список полей sqlalchemy model
          starts -список префиксов полей
