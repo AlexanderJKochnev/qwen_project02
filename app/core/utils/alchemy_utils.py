@@ -24,9 +24,9 @@ def get_field_list(model: Type[DeclarativeBase], starts: tuple = None, ends: tup
          starts -список префиксов полей
          ends - список суффиксов
     """
-    # valid_columns = {col for col in inspect(model).columns}
-    # relationships = {rel for rel in inspect(model).relationships}
-    valid_fields = inspect(model).columns | inspect(model).relationships
+    valid_columns = {col for col in inspect(model).columns}
+    relationships = {rel for rel in inspect(model).relationships}
+    valid_fields = valid_columns | relationships
     result: list = []
     if starts:
         start = [col for col in valid_fields if col.name.startswith(starts)]
