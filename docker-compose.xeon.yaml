@@ -202,7 +202,7 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_NAME: ${POSTGRES_DB}
       AUTH_TYPE: scram-sha-256
-      POOL_MODE: transaction
+      POOL_MODE: session
       MAX_CLIENT_CONN: 500
       SERVER_IDLE_TIMEOUT: 600
       QUERY_TIMEOUT: 60
