@@ -28,11 +28,11 @@ def get_field_list(model: Type[DeclarativeBase], starts: tuple = None, ends: tup
     relationships = {rel.key for rel in inspect(model).relationships}
     valid_fields = valid_columns | relationships
     result: list = []
-    if s := tuple(starts):
-        start = [col for col in valid_fields if col.startswith(s)]
+    if starts:
+        start = [col for col in valid_fields if col.startswith(starts)]
         result.extend(start)
-    if s := tuple(ends):
-        finish = [col for col in valid_fields if col.endswith(s)]
+    if ends:
+        finish = [col for col in valid_fields if col.endswith(ends)]
         result.extend(finish)
     return result or valid_fields
 
