@@ -34,7 +34,7 @@ def get_field_list(model: Type[DeclarativeBase], starts: tuple = None, ends: tup
     if ends:
         finish = [col.key for col in valid_fields if col.key.endswith(ends)]
         result.extend(finish)
-        res = [getattr(model, name) for name in result]
+    res = [getattr(model, name) for name in result]
     return res
 
 
