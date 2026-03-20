@@ -196,12 +196,9 @@ class Service(metaclass=ServiceMeta):
                       page: int, page_size: int, repository: Type[Repository], model: ModelType,
                       session: AsyncSession) -> Dict[str, Any]:
         # Запрос с загрузкой связей и пагинацией
-        logger.info('get paginated request service layer')
         skip = (page - 1) * page_size
         items, total = await repository.get_all(ater_date, skip, page_size, model, session)
-        logger.info('get response from repo')
         result = make_paginated_response(items, total, page, page_size)
-        logger.info('result after pagination in service layer')
         return result
 
     @classmethod

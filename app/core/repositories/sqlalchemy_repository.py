@@ -58,11 +58,11 @@ class Repository(metaclass=RepositoryMeta):
         compiled_pg = count_stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
         logger.info(f"total numbers request: {compiled_pg}")
         total = await session.scalar(count_stmt) or 0
-        logger.info(f"i've got it {total}")
+        logger.info(f"result is {total=} records")
         if total == 0:
             return None, total
         stmt = stmt.offset(skip).limit(limit)
-        compiled_pg = count_stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
+        compiled_pg = stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
         logger.info(f"paginated req: {compiled_pg}")
         result = await session.execute(stmt)
         logger.info("i've got an answer")
