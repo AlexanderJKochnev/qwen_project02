@@ -24,15 +24,15 @@ def get_field_list(model: Type[DeclarativeBase], starts: tuple = None, ends: tup
          starts -список префиксов полей
          ends - список суффиксов
     """
-    valid_columns = {col.name for col in inspect(model).columns}
-    relationships = {rel.key for rel in inspect(model).relationships}
-    valid_fields = valid_columns | relationships
+    # valid_columns = {col for col in inspect(model).columns}
+    # relationships = {rel for rel in inspect(model).relationships}
+    valid_fields = inspect(model).columns | inspect(model).relationships
     result: list = []
     if starts:
-        start = [col for col in valid_fields if col.startswith(starts)]
+        start = [col for col in valid_fields if col.name.startswith(starts)]
         result.extend(start)
     if ends:
-        finish = [col for col in valid_fields if col.endswith(ends)]
+        finish = [col for col in valid_fields if col.name.endswith(ends)]
         result.extend(finish)
     return result or valid_fields
 
