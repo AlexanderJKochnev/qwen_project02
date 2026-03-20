@@ -53,12 +53,16 @@ class Repository(metaclass=RepositoryMeta):
             получает запрос, сдвиг и размер страницы, сессию
             возвращает список instances и кол-во записей
         """
+        logger.info("i'm going to get total numbers of records")
         count_stmt = select(func.count()).select_from(stmt)
         total = await session.scalar(count_stmt) or 0
+        logger.info(f"i've got it {total}")
         if total == 0:
             return None, total
         stmt = stmt.offset(skip).limit(limit)
+        logger.info("i send paginated reqeust to pg")
         result = await session.execute(stmt)
+        logger.info("i've an answer !!")
         items = result.scalars().all()
         return items, total
 
@@ -316,7 +320,7 @@ class Repository(metaclass=RepositoryMeta):
         #         .order_by(model.id.asc()))
         logger.info("i'm still in repo before request")
         result = await cls.pagination(stmt, skip, limit, session)
-        logger.info("I'be got an answer and i am sending it to service layer" )
+        logger.info("I'be got an answer and i am sending it to service layer")
         return result
         """
         count_stmt = select(func.count()).select_from(stmt)
