@@ -314,10 +314,13 @@ class BaseRouter:
             response_model PaginatedResponse[<>ReadRelation>]
         """
         # print(f"📥 GET request for {self.model.__name__} from")
+        logger.info('start get paginated request')
         after_date = back_to_the_future(after_date)
         response = await self.service.get_all(after_date, page, page_size, self.repo, self.model, session)
+        logger.info('get RESPONSE')
         # type_checking(response, 'get')
         result = self.paginated_response(**response)
+        logger.info('GET RESULT AFTER PAGINATIONM')
         return result
 
     async def get_all(
