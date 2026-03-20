@@ -203,6 +203,8 @@ services:
       DB_NAME: ${POSTGRES_DB}
       AUTH_TYPE: scram-sha-256
       POOL_MODE: session
+      SERVER_RESET_QUERY: DISCARD ALL
+      SERVER_CHECK_QUERY: select 1
       MAX_CLIENT_CONN: 500
       SERVER_IDLE_TIMEOUT: 600
       QUERY_TIMEOUT: 60
