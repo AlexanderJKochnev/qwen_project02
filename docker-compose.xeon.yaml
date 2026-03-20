@@ -66,7 +66,7 @@ services:
     build: .
     restart: unless-stopped
     # command: uvicorn app.main:app --host 0.0.0.0 --port ${API_PORT} --loop auto --workers ${APP_WORKERS} --backlog 2048
-    command: uvicorn main:app --host 0.0.0.0 --port ${API_PORT} --reload
+    command: uvicorn app.main:app --host 0.0.0.0 --port ${API_PORT} --reload
     depends_on:
       pgbouncer:
         condition: service_healthy
