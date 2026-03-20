@@ -53,7 +53,7 @@ class Repository(metaclass=RepositoryMeta):
         """
             Возвращает список модели только с нужными полями остальные None
             - использовать для list_view и вообще где только можно.
-            По умолчанию — без связей.
+            для моделей с зависимостями - переопределить
         """
         fields = get_field_list(model, starts=fields)
         logger.warning(fields)
