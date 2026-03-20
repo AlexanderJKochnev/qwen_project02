@@ -318,6 +318,7 @@ class BaseRouter:
         response = await self.service.get_all(after_date, page, page_size, self.repo, self.model, session)
         # type_checking(response, 'get')
         result = self.paginated_response(**response)
+        logger.info('результат получен в эндпойнт и сечес будет возвращен')
         return result
 
     async def get_all(
