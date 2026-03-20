@@ -56,6 +56,7 @@ class Repository(metaclass=RepositoryMeta):
             По умолчанию — без связей.
         """
         fields = get_field_list(model, starts=fields)
+        logger.warning(fields)
         return select(model).options(load_only(*fields))
 
     @classmethod
