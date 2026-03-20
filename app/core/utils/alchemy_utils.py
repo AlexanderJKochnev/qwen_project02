@@ -29,12 +29,13 @@ def get_field_list(model: Type[DeclarativeBase], starts: tuple = None, ends: tup
     valid_fields = valid_columns | relationships
     result: list = []
     if starts:
-        start = [col for col in valid_fields if col.key.startswith(starts)]
+        start = [col.key for col in valid_fields if col.key.startswith(starts)]
         result.extend(start)
     if ends:
-        finish = [col for col in valid_fields if col.key.endswith(ends)]
+        finish = [col.key for col in valid_fields if col.key.endswith(ends)]
         result.extend(finish)
-    return result or valid_fields
+        res = [getattr(model, name) for name in result]
+    return res
 
 
 def get_sqlalchemy_fields(model: Type[DeclarativeBase],
