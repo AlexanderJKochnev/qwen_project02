@@ -127,4 +127,136 @@
    echo "=== Текущие записи в fstab ==="
    grep -n "/mnt/hdd_data" /etc/fstab
 
-## STEP.6.
+## STEP.6. SWAP
+1. # Сначала размонтируем все bind mounts (обратный порядок)
+   sudo umount /var/lib/docker/volumes
+   sudo umount /home/alex/dockers/wine/upload_volume
+   sudo umount /home/alex/dockers/wine/templates
+   sudo umount /home/alex/dockers/wine/preact_front/src
+   sudo umount /home/alex/dockers/wine/preact_front/public
+   sudo umount /home/alex/dockers/wine/preact_front/package.json
+   sudo umount /home/alex/dockers/wine/pg_dump
+   sudo umount /home/alex/dockers/wine/pg_data
+   sudo umount /home/alex/dockers/wine/nginx/static
+   sudo umount /home/alex/dockers/wine/nginx/conf.d
+   sudo umount /home/alex/dockers/wine/mongodb_data
+   sudo umount /home/alex/dockers/wine/migration_volume
+   sudo umount /var/log
+2. # Проверим процессы, использующие /var/log
+   sudo lsof | grep /var/log
+3. # Также проверим монтирования внутри /var/log
+   mount | grep /var/log
+4. # Останавливаем fail2ban
+   sudo systemctl stop fail2ban
+5. # Останавливаем proftpd
+   sudo systemctl stop proftpd
+6. # Проверяем, что они остановлены
+   sudo systemctl status fail2ban --no-pager
+   sudo systemctl status proftpd --no-pager
+7. # Сначала проверяем, не появились ли новые процессы
+   sudo lsof | grep /var/log
+8. # Если ничего нет, размонтируем
+   sudo umount /var/log
+9. # Проверяем результат
+   mount | grep /var/log
+
+10. # Проверим, что никто не использует
+   sudo lsof | grep /mnt/hdd_data
+11. # Размонтируем основной диск
+   sudo umount /mnt/hdd_data
+12. # Проверим результат
+   lsblk /dev/sda
+   mount | grep /dev/sda
+
+## STEP.6.2. монтируем новый диск
+1. # Получаем UUID нового диска
+   sudo blkid /dev/nvme1n1p1
+2. # Создаем резервную копию текущего fstab
+   sudo cp /etc/fstab /etc/fstab.backup.$(date +%Y%m%d_%H%M%S)
+3. # Редактируем fstab
+   sudo nano /etc/fstab
+4. # Заменить строку 20 строкой
+   UUID=новый_uuid /mnt/hdd_data btrfs defaults,noatime 0 2
+5. # Перезагружаем systemd
+   sudo systemctl daemon-reload
+6. # Монтируем все согласно новому fstab
+   sudo mount -a
+7. # Проверяем результат
+   df -h /mnt/hdd_data
+   lsblk /dev/nvme1n1
+   mount | grep nvme1n1
+8. # Проверяем ключевые точки
+   df -h /var/lib/docker/volumes
+   df -h /home/alex/dockers/wine/pg_data
+   df -h /var/log
+
+## STEP.7. запуск сервисов
+1. # Запускаем Docker
+   sudo systemctl start docker
+2. # Проверяем статус
+   sudo systemctl status docker --no-pager
+3. # Проверяем, что Docker видит свои volumes
+   docker volume ls
+4. # Запускаем fail2ban и proftpd
+   sudo systemctl start fail2ban
+   sudo systemctl start proftpd
+5. # Проверяем их статус
+   sudo systemctl status fail2ban --no-pager
+   sudo systemctl status proftpd --no-pager
+6. # Создадим тестовую запись в логах
+   logger "Test log entry after disk replacement"
+7. # Проверим, что появилась запись
+   tail -n 5 /var/log/syslog 2>/dev/null || tail -n 5 /var/log/messages 2>/dev/null
+
+## STEP.8. Восстановление баз данных
+1. # Проверим права на директорию PostgreSQL
+   ls -la /home/alex/dockers/wine/pg_data/
+2. # Если PostgreSQL запускается в Docker, запустите контейнер
+   cd /home/alex/dockers/wine  # или где у вас docker-compose.yml
+   docker-compose up -d postgres  # или имя вашего сервиса
+3. # Проверим логи PostgreSQL
+   docker logs <имя_контейнера_postgres> --tail 50
+4. # Запускаем MongoDB контейнер
+   docker-compose up -d mongodb  # или имя вашего сервиса
+5. # Проверяем логи
+   docker logs <имя_контейнера_mongodb> --tail 50
+6. # Проверяем использование диска
+   df -h
+7. # Проверяем, что все сервисы работают
+   systemctl status docker fail2ban proftpd --no-pager
+8. # Проверяем, что новые данные пишутся на новый диск
+9. # Создадим тестовый файл в volumes
+   touch /var/lib/docker/volumes/test_file
+   ls -la /var/lib/docker/volumes/
+
+## STEP.9. очистка
+1. # Размонтируем временную точку
+   sudo umount /mnt/new_disk_temp
+   sudo rmdir /mnt/new_disk_temp
+2. # Удаляем временную копию логов (если создавали)
+   sudo rm -rf /var/log.tmp 2>/dev/null
+3. # Проверим, что старый диск не используется
+   lsblk /dev/sda
+4. # Можно затереть служебные метки (чтобы случайно не примонтировать)
+   sudo wipefs -a /dev/sda
+
+## STEP.10. НАСТРОЙКА SNAPSHOTS
+1. # Создадим скрипт для снапшотов
+   sudo mkdir -p /usr/local/bin
+   sudo nano /usr/local/bin/make_snapshot.sh
+#!/bin/bash
+SNAPSHOT_DIR="/mnt/hdd_data/.snapshots"
+DATE=$(date +%Y%m%d_%H%M%S)
+
+# Создаем директорию для снапшотов если нет
+mkdir -p $SNAPSHOT_DIR
+
+# Создаем снапшот
+btrfs subvolume snapshot -r /mnt/hdd_data $SNAPSHOT_DIR/snap_$DATE
+
+# Удаляем снапшоты старше 7 дней
+find $SNAPSHOT_DIR -name "snap_*" -type d -mtime +7 -exec btrfs subvolume delete {} \;
+
+2. sudo crontab -e
+   # Добавить строку для снапшота каждые 15 минут:
+   */15 * * * * /usr/local/bin/make_snapshot.sh
