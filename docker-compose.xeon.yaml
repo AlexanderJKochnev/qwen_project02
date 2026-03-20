@@ -1,6 +1,4 @@
 # docker-compose.xeon.yaml
-# Для запуска: docker compose -f docker-compose.project1.yaml --env-file .env.project1 up -d --build
-
 services:
   wine_host: # this is the name of the service and name of the host (POSTGRES_HOST)
     logging:
