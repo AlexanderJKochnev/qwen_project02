@@ -755,6 +755,7 @@ def flatten_dict_with_localized_fields(data: Dict[str, Any],
     :return:
     :rtype:
     """
+    jprint(data)
     if not fields:
         result = {'id': data['id']} if 'id' in data else {}
         return result
