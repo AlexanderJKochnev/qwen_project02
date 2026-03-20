@@ -18,6 +18,25 @@ from app.core.config.project_config import get_path_to_root
 function = {1: or_, 2: and_}
 
 
+def get_field_list(model: Type[DeclarativeBase], starts: tuple, ends: tuple):
+    """
+         возвращает список полей sqlalchemy model
+         starts -список префиксов полей
+         ends - список суффиксов
+    """
+    valid_columns = {col.name for col in inspect(model).columns}
+    relationships = {rel.key for rel in inspect(model).relationships}
+    valid_fields = valid_columns | relationships
+    result: list = []
+    if s := tuple(starts):
+        start = [col for col in valid_fields if col.startswith(s)]
+        result.extend(start)
+    if s := tuple(ends):
+        finish = [col for col in valid_fields if col.endswith(s)]
+        result.extend(finish)
+    return result or valid_fields
+
+
 def get_sqlalchemy_fields(model: Type[DeclarativeBase],
                           exclude_list: List[str] = None,
                           default_exclude: Union[List[str], None] = None) -> Dict[str, ColumnElement]:
@@ -822,7 +841,7 @@ def formatted_query(query: str, patt: int = 1, sign: int = 30, operand: str = '&
 
     clean_len = sum(len(w) for w in words)
     original_len = len(query) - query.count(" ")
-    
+
     if clean_len * 100 < original_len * sign:
         return None
     if words:

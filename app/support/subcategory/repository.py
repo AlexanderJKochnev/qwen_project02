@@ -1,9 +1,10 @@
 # app/support/subcategory/repository.py
 from sqlalchemy import select, exists
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, load_only
 
 from app.core.repositories.sqlalchemy_repository import ModelType, Repository
 from app.support.subcategory.model import Subcategory
+from app.support.category.model import Category
 from app.support.item.model import Item
 from app.support.drink.model import Drink
 

@@ -5,19 +5,20 @@
     get_by_id   result.scalar_one_or_none()
 """
 from abc import ABCMeta
-import re
+from re import search as research
 from datetime import datetime
 from loguru import logger
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
 from sqlalchemy import and_, func, Row, RowMapping, select, Select, update, desc, cast, Text, text, literal, \
     literal_column, or_
+from sqlalchemy.orm import load_only
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql.elements import Label
 # from sqlalchemy.dialects import postgresql
 # from sqlalchemy.sql.elements import ColumnElement
 from app.core.utils.alchemy_utils import (create_enum_conditions, get_sqlalchemy_fields,
-                                          create_search_conditions2)
+                                          create_search_conditions2, get_field_list)
 from app.service_registry import register_repo
 from app.core.types import ModelType
 
@@ -46,6 +47,16 @@ class Repository(metaclass=RepositoryMeta):
             По умолчанию — без связей.
         """
         return select(model)
+
+    @classmethod
+    def get_short_query(cls, model: ModelType, fields: tuple = ('id', 'name')):
+        """
+            Возвращает список модели только с нужными полями остальные None
+            - использовать для list_view и вообще где только можно.
+            По умолчанию — без связей.
+        """
+        fields = get_field_list(model, starts=fields)
+        return select(model).options(load_only(*fields))
 
     @classmethod
     async def pagination(cls, stmt: Select, skip: int, limit: int, session: AsyncSession):
@@ -132,38 +143,6 @@ class Repository(metaclass=RepositoryMeta):
             raise Exception(f'fault of invalidate_search_index. {e}')
 
     @classmethod
-    def get_short_query(cls, model: ModelType):
-        """
-            Переопределяемый метод.
-            Возвращает select() только с нужными полями - использовать для list_view.
-            По умолчанию — без связей.
-        """
-        """ пример
-        stmt = (
-        select(
-            Drink.id,
-            Drink.name,
-            Subregion.name.label('subregion_name'),
-            Region.name.label('region_name'),
-            Country.name.label('country_name'),
-            Subcategory.name.label('subcategory_name'),
-            Category.name.label('category_name')
-        )
-        .select_from(Drink)
-        .join(Drink.subregion)
-        .join(Subregion.region)
-        .join(Region.country)
-        .join(Drink.subcategory)
-        .join(Subcategory.category)
-        .options(
-            selectinload(Drink.foods).load_only(Food.id, Food.name),
-            selectinload(Drink.varietals).load_only(Varietal.id, Varietal.name)
-            )
-        )
-        """
-        return select(model)
-
-    @classmethod
     async def create(cls, obj: ModelType, model: ModelType, session: AsyncSession) -> ModelType:
         """ создание записи """
         session.add(obj)
@@ -232,12 +211,12 @@ class Repository(metaclass=RepositoryMeta):
         # Example parsing for PostgreSQL unique constraint violations
         if 'duplicate key value violates unique constraint' in error_message.lower():
             # Extract table and field names
-            table_match = re.search(r'"([^"]+)"', error_message)
+            table_match = research(r'"([^"]+)"', error_message)
             if table_match:
                 field_info['table'] = table_match.group(1)
 
             # Extract the duplicate value
-            value_match = re.search(r'\(([^)]+)\)=\(([^)]+)\)', error_message)
+            value_match = research(r'\(([^)]+)\)=\(([^)]+)\)', error_message)
             if value_match:
                 field_info['field'] = value_match.group(1)
                 field_info['value'] = value_match.group(2)
@@ -515,10 +494,9 @@ class Repository(metaclass=RepositoryMeta):
     @classmethod
     async def get_list_paging(cls, skip: int, limit: int,
                               model: ModelType, session: AsyncSession, ) -> Tuple[List[Dict], int]:
-        """Запрос с загрузкой связей и пагинацией - ListView плиткой"""
+        """Запрос с загрузкой связей и пагинацией - ListView плиткой ? не используется?"""
         stmt = cls.get_short_query(model).offset(skip).limit(limit)
         fields = get_sqlalchemy_fields(stmt, exclude_list=['description*',])
-        logger.warning(fields)
         stmt = select(*fields)
 
         # получение результата всех записей
