@@ -1,6 +1,6 @@
 # app/support/subcategory/repository.py
 from sqlalchemy import select, exists
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload
 
 from app.core.repositories.sqlalchemy_repository import ModelType, Repository
 from app.support.subcategory.model import Subcategory
@@ -14,7 +14,7 @@ class SubcategoryRepository(Repository):
     @classmethod
     def get_query(cls, model: ModelType):
         # Добавляем загрузку связи с relationships
-        return select(Subcategory).options(selectinload(Subcategory.category))
+        return select(Subcategory).options(joinedload(Subcategory.category))
 
     @classmethod
     def item_exists(cls, id: int):
