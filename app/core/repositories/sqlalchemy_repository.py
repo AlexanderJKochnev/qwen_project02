@@ -518,6 +518,7 @@ class Repository(metaclass=RepositoryMeta):
         """Запрос с загрузкой связей и пагинацией - ListView плиткой"""
         stmt = cls.get_short_query(model).offset(skip).limit(limit)
         fields = get_sqlalchemy_fields(stmt, exclude_list=['description*',])
+        logger.warning(fields)
         stmt = select(*fields)
 
         # получение результата всех записей
