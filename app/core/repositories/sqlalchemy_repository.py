@@ -53,16 +53,19 @@ class Repository(metaclass=RepositoryMeta):
             получает запрос, сдвиг и размер страницы, сессию
             возвращает список instances и кол-во записей
         """
-        logger.info("i'm going to get total numbers of records")
+        from sqlalchemy.dialects import postgresql
         count_stmt = select(func.count()).select_from(stmt)
+        compiled_pg = count_stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
+        logger.info(f"total numbers request: {compiled_pg}")
         total = await session.scalar(count_stmt) or 0
         logger.info(f"i've got it {total}")
         if total == 0:
             return None, total
         stmt = stmt.offset(skip).limit(limit)
-        logger.info("i send paginated reqeust to pg")
+        compiled_pg = count_stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
+        logger.info(f"paginated req: {compiled_pg}")
         result = await session.execute(stmt)
-        logger.info("i've an answer !!")
+        logger.info("i've got an answer")
         items = result.scalars().all()
         return items, total
 
