@@ -104,9 +104,11 @@ class ApiService(ItemService):
 
     @classmethod
     def convert_list_api_view(cls, items: List[ModelType]) -> List[Dict[str, Any]]:
+        logger.warning('before conv')
         api_view = cls.__api_view__
         result = ItemApiAdapter.validate_python([api_view(item.to_dict()) for item in items])
         cleaned_list = [item.model_dump(exclude_none=True, exclude_defaults=True) for item in result]
+        logger.warning('after conv')
         return cleaned_list
 
     @classmethod
