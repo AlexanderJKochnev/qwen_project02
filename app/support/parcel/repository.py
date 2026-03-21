@@ -34,7 +34,7 @@ class SiteRepository(Repository):
             selectinload(Site.subregion).selectinload(Subregion.region).selectinload(Region.country)
         )
 
-@classmethod
+    @classmethod
     def get_short_query(cls, model: Site, field1: tuple = ('id', 'name', 'country_id', 'region_id', 'subregion_id')):
         """
             Возвращает список модели только с нужными полями остальные None
@@ -45,9 +45,9 @@ class SiteRepository(Repository):
         fields = get_field_list(model, starts=field1)
         subcat = get_field_list(Country, starts=field1)
         tier3 = get_field_list(Region, starts=field1)
-        tier3 = get_field_list(Subregion, starts = field1)
+        tier4 = get_field_list(Subregion, starts=field1)
         return select(model).options(
-            joinedload(model.subregion).joinedload(Subregion.region).load_only(*tier3)
+            joinedload(model.subregion).load_only(*tier4).joinedload(Subregion.region).load_only(*tier3)
             .joinedload(Region.country).load_only(*subcat),
             load_only(*fields)
         )
