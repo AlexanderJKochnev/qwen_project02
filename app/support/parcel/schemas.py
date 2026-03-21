@@ -54,7 +54,7 @@ class SiteDetailView(DetailView):
     subregion: Optional[SubregionRead] = None
 
 
-class SiteListView(DetailView):
+class SiteListView(ListView):
     pass
     # subregion: Optional[SiteTitleRead] = None
 

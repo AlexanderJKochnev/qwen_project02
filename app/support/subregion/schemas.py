@@ -4,7 +4,7 @@ from typing import Optional
 
 from app.core.schemas.base import (CreateResponse, CreateSchemaSub, FullSchema,
                                    ReadApiSchema, ReadSchema, UpdateSchema, DetailView, ListView)
-from app.support.region.schemas import RegionCreateRelation, RegionReadApiSchema, RegionRead, RegionListView
+from app.support.region.schemas import RegionCreateRelation, RegionReadApiSchema, RegionRead
 
 
 class SubregionReadApiSchema(ReadApiSchema):
@@ -56,8 +56,10 @@ class SubregionCreateResponseSchema(SubregionCreate, CreateResponse):
 
 
 class SubregionDetailView(DetailView):
-    region: Optional[RegionListView] = None
+    # region: Optional[RegionListView] = None
+    pass
 
 
 class SubregionListView(ListView):
-    region: Optional[RegionListView] = None
+    # region: Optional[RegionListView] = None
+    pass
