@@ -156,13 +156,8 @@ class ApiService(ItemService):
                                 session: AsyncSession,):
         """ Получение списка элементов для api view """
         items = await repository.get(after_date, model, session)
-        result = []
-        for item in items:
-            item_dict = item.to_dict()
-            result.append(clean_dict(cls.__api_view__(item_dict)))
-        items = clean_list_of_dict(ItemApiAdapter.validate_python(result))
-        cleaned_list = [item.model_dump(exclude_none=True, exclude_defaults=True) for item in items]
-        return cleaned_list
+        result = cls.convert_list_api_view(items)
+        return result
 
     @classmethod
     async def get_list_api_view_page(cls, ater_date: datetime, page: int, page_size: int,
