@@ -901,3 +901,10 @@ def clean_list_of_dict(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         очистка списка плоских словарей от пустых значений
     """
     return [{k: v for k, v in d.items() if v not in (None, [], "")} for d in data]
+
+
+def clean_dict(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+        очистка плоских словарей от пустых значений
+    """
+    return {k: v for k, v in data.items() if v not in (None, [], "")}

@@ -8,7 +8,7 @@ from loguru import logger
 # from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.types import ModelType
 from app.core.utils.pydantic_utils import get_field_name, make_paginated_response
-from app.core.utils.common_utils import camel_to_enum
+from app.core.utils.common_utils import camel_to_enum, clean_dict
 from app.support.item.service import ItemService
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.support.item.repository import ItemRepository
@@ -148,7 +148,7 @@ class ApiService(ItemService):
         result = []
         for item in items:
             item_dict = item.to_dict()
-            result.append(cls.__api_view__(item_dict))
+            result.append(clean_dict(cls.__api_view__(item_dict)))
         # result = [cls.__api_view(item.to_dict()) for item in items]
 
         return result
