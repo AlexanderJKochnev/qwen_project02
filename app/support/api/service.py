@@ -9,7 +9,7 @@ from loguru import logger
 # from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.types import ModelType
 from app.core.utils.pydantic_utils import get_field_name, make_paginated_response
-from app.core.utils.common_utils import camel_to_enum, clean_dict, clean_list_of_dict
+from app.core.utils.common_utils import camel_to_enum
 from app.support.item.service import ItemService
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.support.item.repository import ItemRepository
@@ -19,7 +19,7 @@ from app.core.utils.converters import lang_suffix_list, lang_suffix_dict
 from app.core.utils.alchemy_utils import formatted_query
 from app.core.config.project_config import settings
 from app.core.schemas.base import PaginatedResponse
-from app.support.item.schemas import (ItemApiLangNonLocalized, ItemApiLang, ItemApi,
+from app.support.item.schemas import (ItemApiLangNonLocalized, ItemApi,
                                       ItemApiLangLocalizedInterim)
 
 
@@ -97,11 +97,6 @@ class ApiService(ItemService):
                 result[key] = dict_lang
                 # validated_result = ItemApiLang.model_validate(dict_lang)
                 # result[key] = validated_result.model_dump(exclude_none=True, exclude_unset=True)
-            from app.core.utils.common_utils import jprint
-            jprint(result)
-            print('----------------------------------------------------')
-            # validated_result = ItemApi.model_validate(result)
-            # return validated_result.model_dump(exclude_none=True, exclude_unset=True)
             return result
         except Exception as e:
             print(f'__api_view__.error {e} {item.get("id")=}')
@@ -180,12 +175,8 @@ class ApiService(ItemService):
         """Поиск с пагинацией и локализацией"""
         skip = (page - 1) * page_size
         items, total = await repository.search(search, skip, page_size, model, session)
-        result = []
-        for item in items:
-            if item_dict := item.to_dict():
-                result.append(cls.__api_view__(item_dict))
-        result = make_paginated_response(result, total, page, page_size)
-        return result
+        result = cls.convert_list_api_view(items)
+        return make_paginated_response(result, total, page, page_size)
 
     @classmethod
     async def search_all(cls, search: str,
@@ -193,10 +184,7 @@ class ApiService(ItemService):
                          session: AsyncSession) -> PaginatedResponse[ItemApi]:
         """Поиск с пагинацией и локализацией"""
         items = await repository.search_all(search, model, session)
-        result = []
-        for item in items:
-            if item_dict := item.to_dict():
-                result.append(cls.__api_view__(item_dict))
+        result = cls.convert_list_api_view(items)
         return result
 
     @classmethod
@@ -235,11 +223,7 @@ class ApiService(ItemService):
                     items = await repository.search_fts_all(formatted_search, model, session)
                 else:
                     items = await repository.search_by_drink_title_subtitle_only(search, session)
-            result = []
-            for item in items:
-                if item_dict := item.to_dict():
-                    x = cls.__api_view__(item_dict)
-                    result.append(x)
+            result = cls.convert_list_api_view(items)
             return result
         except Exception as e:
             logger.error(f'search_gens_all. {e}')
@@ -254,8 +238,5 @@ class ApiService(ItemService):
         comma_separator = ','
         ids_set = tuple(int(b) for a in set(ids.split(comma_separator)) if (b := a.strip()).isdigit())
         items = await repository.get_by_ids(ids_set, model, session)
-        result = []
-        for item in items:
-            item_dict = item.to_dict()
-            result.append(cls.__api_view__(item_dict))
+        result = cls.convert_list_api_view(items)
         return result
