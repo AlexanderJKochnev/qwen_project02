@@ -21,6 +21,10 @@ from app.core.utils.alchemy_utils import (create_enum_conditions, get_sqlalchemy
                                           create_search_conditions2, get_field_list)
 from app.service_registry import register_repo
 from app.core.types import ModelType
+from app.core.config.project_config import settings
+
+# длина списка поисковой выдачи
+search_site = min(settings.PAGE_DEFAULT, 20)
 
 
 class RepositoryMeta(ABCMeta):
@@ -100,7 +104,7 @@ class Repository(metaclass=RepositoryMeta):
         """
         stmt = (select(model.id, relevance)
                 .where(cast(literal(search), Text).op("<%")(model.search_content))
-                .order_by(desc(text("rank"))))
+                .order_by(desc(text("rank")))).limit(search_site)
         if skip:
             stmt.offset(skip).limit(limit)
         response = await session.execute(stmt)
