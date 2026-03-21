@@ -93,6 +93,9 @@ class ApiService(ItemService):
                 result[key] = dict_lang
                 # validated_result = ItemApiLang.model_validate(dict_lang)
                 # result[key] = validated_result.model_dump(exclude_none=True, exclude_unset=True)
+            from app.core.utils.common_utils import jprint
+            jprint(result)
+            print('----------------------------------------------------')
             validated_result = ItemApi.model_validate(result)
             return validated_result.model_dump(exclude_none=True, exclude_unset=True)
         except Exception as e:
