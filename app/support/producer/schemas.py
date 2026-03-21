@@ -52,7 +52,7 @@ class ProducerDetailView(DetailView):
     producertitle: Optional[ProducerTitleRead] = None
 
 
-class ProducerListView(DetailView):
+class ProducerListView(ListView):
     pass
     # producertitle: Optional[ProducerTitleRead] = None
 
