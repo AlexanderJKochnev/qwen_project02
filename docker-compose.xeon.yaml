@@ -200,7 +200,8 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_NAME: ${POSTGRES_DB}
       AUTH_TYPE: scram-sha-256
-      POOL_MODE: session
+      # POOL_MODE: session
+      POOL_MODE: transaction
       SERVER_RESET_QUERY: DISCARD ALL
       SERVER_CHECK_QUERY: select 1
       MAX_CLIENT_CONN: 500
