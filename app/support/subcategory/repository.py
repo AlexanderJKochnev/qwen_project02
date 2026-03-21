@@ -18,7 +18,7 @@ class SubcategoryRepository(Repository):
         return select(Subcategory).options(joinedload(Subcategory.category))
 
     @classmethod
-    def get_short_query(cls, model: Subcategory, field1: tuple = ('id', 'name', 'category_id')):
+    def get_short_query(cls, model: Subcategory, field1: tuple = ('id', 'name')):
         """
             Возвращает список модели только с нужными полями остальные None
             - использовать для list_view и вообще где только можно.
@@ -27,7 +27,7 @@ class SubcategoryRepository(Repository):
 
         fields = get_field_list(model, starts=field1)
         subcat = get_field_list(model, starts=field1)
-        return select(model).options(joinedload(model.category).options(load_only(*subcat)),
+        return select(model).options(joinedload(model.category).load_only(*subcat),
                                      load_only(*fields))
 
     @classmethod
