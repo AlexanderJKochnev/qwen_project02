@@ -10,4 +10,5 @@ docker exec -i test-mongo-1 mongorestore \
   --authenticationDatabase=admin \
   --archive \
   --gzip \
+  --drop \
   --nsInclude="wine_database.*" < backup/mg_backup.gz
