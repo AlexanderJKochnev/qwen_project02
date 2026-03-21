@@ -45,6 +45,7 @@ class ProducerRepository(Repository):
 
         fields = get_field_list(model, starts=field1)
         subcat = get_field_list(ProducerTitle, starts=field1)
-        return select(model).options(
-            joinedload(model.producertitle).load_only(*subcat), load_only(*fields)
-        )
+        return select(model).options(load_only(*fields))
+        # return select(model).options(
+        #     joinedload(model.producertitle).load_only(*subcat), load_only(*fields)
+        # )
