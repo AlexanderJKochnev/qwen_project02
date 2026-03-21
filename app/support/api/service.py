@@ -9,7 +9,7 @@ from loguru import logger
 # from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.types import ModelType
 from app.core.utils.pydantic_utils import get_field_name, make_paginated_response
-from app.core.utils.common_utils import camel_to_enum, clean_dict
+from app.core.utils.common_utils import camel_to_enum, clean_dict, clean_list_of_dict
 from app.support.item.service import ItemService
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.support.item.repository import ItemRepository
@@ -153,8 +153,9 @@ class ApiService(ItemService):
         for item in items:
             item_dict = item.to_dict()
             result.append(clean_dict(cls.__api_view__(item_dict)))
-        result = ItemApiAdapter.validate_python(result)
-        return result
+        items = clean_list_of_dict(ItemApiAdapter.validate_python(result))
+        cleaned_list = [item.model_dump(exclude_none=True, exclude_defaults=True) for item in items]
+        return cleaned_list
 
     @classmethod
     async def get_list_api_view_page(cls, ater_date: datetime, page: int, page_size: int,
