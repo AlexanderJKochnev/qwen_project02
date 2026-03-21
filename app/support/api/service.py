@@ -108,6 +108,13 @@ class ApiService(ItemService):
             raise HTTPException(status_code=503, detail=f'error.__api_view__.{e}')
 
     @classmethod
+    def convert_list_api_view(cls, items: List[ModelType]) -> List[Dict[str, Any]]:
+        api_view = cls.__api_view__
+        result = ItemApiAdapter.validate_python([api_view(item.to_dict()) for item in items])
+        cleaned_list = [item.model_dump(exclude_none=True, exclude_defaults=True) for item in result]
+        return cleaned_list
+
+    @classmethod
     async def get_item_api_view(cls, id: int, session: AsyncSession):
         """
             Получение представления элемента с локализацией by lang
@@ -163,10 +170,11 @@ class ApiService(ItemService):
         """Получение списка элементов для ListView с пагинацией и локализацией"""
         skip = (page - 1) * page_size
         items, total = await repository.get_all(ater_date, skip, page_size, model, session)
-        result = []
-        for item in items:
-            if item_dict := item.to_dict():
-                result.append(cls.__api_view__(item_dict))
+        result = cls.convert_list_api_view(items)
+        # result = []
+        # for item in items:
+        #     if item_dict := item.to_dict():
+        #         result.append(cls.__api_view__(item_dict))
         return make_paginated_response(result, total, page, page_size)
 
     @classmethod
