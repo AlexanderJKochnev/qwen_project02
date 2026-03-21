@@ -1,4 +1,5 @@
 # app.support.api.service.py
+from pydantic import TypeAdapter
 from decimal import Decimal
 from fastapi import HTTPException
 from typing import List, Dict, Any
@@ -20,6 +21,9 @@ from app.core.config.project_config import settings
 from app.core.schemas.base import PaginatedResponse
 from app.support.item.schemas import (ItemApiLangNonLocalized, ItemApiLang, ItemApi,
                                       ItemApiLangLocalizedInterim)
+
+
+ItemApiAdapter: TypeAdapter = TypeAdapter[List[ItemApi]]
 
 
 class ApiService(ItemService):
@@ -149,8 +153,7 @@ class ApiService(ItemService):
         for item in items:
             item_dict = item.to_dict()
             result.append(clean_dict(cls.__api_view__(item_dict)))
-        # result = [cls.__api_view(item.to_dict()) for item in items]
-
+        result = ItemApiAdapter.validate_python(result)
         return result
 
     @classmethod
