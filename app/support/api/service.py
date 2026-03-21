@@ -30,6 +30,8 @@ lang_prefixes: list = lang_suffix_list(language)
 # словарь {'en': ['', '_ru': '_fr'],...}
 # списки языков отсортированы в порядке очередности замены для каждого языка
 lang_dict = lang_suffix_dict(language)
+itemapilangnonlocalized = get_field_name(ItemApiLangNonLocalized)
+itemapilanglocalized = get_field_name(ItemApiLangLocalizedInterim)
 
 
 class ApiService(ItemService):
@@ -67,13 +69,13 @@ class ApiService(ItemService):
             for key, lang_suff in lang_dict.items():
                 dict_lang = {}
                 # add non-localized subfields to localized fields
-                for k in get_field_name(ItemApiLangNonLocalized):
+                for k in itemapilangnonlocalized:
                     v = item.get(k)
                     if isinstance(v, (float, Decimal)):
                         v = f"{v:.03g}"
                     dict_lang[k] = v
                 # add localized subfields to localized fields
-                for k in get_field_name(ItemApiLangLocalizedInterim):
+                for k in itemapilanglocalized:
                     if k == 'site':  # вложенные сущности
                         site = item.get('site')
                         subregion = site.get('subregion')
