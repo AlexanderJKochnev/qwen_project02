@@ -26,7 +26,7 @@ class SubcategoryRepository(Repository):
         """
 
         fields = get_field_list(model, starts=field1)
-        subcat = get_field_list(model, starts=field1)
+        subcat = get_field_list(Category, starts=field1)
         return select(model).options(joinedload(model.category).load_only(*subcat),
                                      load_only(*fields))
 
