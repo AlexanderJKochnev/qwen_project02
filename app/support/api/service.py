@@ -24,23 +24,23 @@ from app.support.item.schemas import (ItemApiLangNonLocalized, ItemApi,
 
 
 ItemApiAdapter: TypeAdapter = TypeAdapter(List[ItemApi])
+language: list = settings.LANGUAGES
+# список языковых суффиксов
+lang_prefixes: list = lang_suffix_list(language)
+# словарь {'en': ['', '_ru': '_fr'],...}
+# списки языков отсортированы в порядке очередности замены для каждого языка
+lang_dict = lang_suffix_dict(language)
 
 
 class ApiService(ItemService):
 
     @classmethod
     def __api_view__(cls, item: dict) -> dict:
-        """ логика метода get_api_view
-            что на входе?
+        """
+            логика метода get_api_view
         """
         try:
             # задаем порядок замещения пустых полей
-            language: list = settings.LANGUAGES
-            # список языковых суффиксов
-            lang_prefixes: list = lang_suffix_list(language)
-            # словарь {'en': ['', '_ru': '_fr'],...}
-            # списки языков отсортированы в порядке очередности замены для каждого языка
-            lang_dict = lang_suffix_dict(language)
             # перенос вложенных словарей на верхний уровень (drink -> root)
             item = cls._level_up_(lang_prefixes, item)
             item['changed_at'] = item.pop('updated_at')
