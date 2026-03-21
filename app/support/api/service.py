@@ -23,7 +23,7 @@ from app.support.item.schemas import (ItemApiLangNonLocalized, ItemApiLang, Item
                                       ItemApiLangLocalizedInterim)
 
 
-ItemApiAdapter: TypeAdapter = TypeAdapter[List[ItemApi]]
+ItemApiAdapter: TypeAdapter = TypeAdapter(List[ItemApi])
 
 
 class ApiService(ItemService):
