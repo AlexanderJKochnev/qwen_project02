@@ -894,3 +894,10 @@ def compare_lists_compact(old_list: List[Dict], new_list: List[Dict], key: str =
     # разобраться с changed - теряет подтянутые значения из details
     # return {"added": [new[k] for k in new.keys() - old.keys()], "removed": [old[k] for k in old.keys() - new.keys()],
     #         "changed": [new[k] for k in old.keys() & new.keys() if old[k] != new[k]]}
+
+
+def clean_list_of_dict(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """
+        очистка списка плоских словарей от пустых значений
+    """
+    return [{k: v for k, v in d.items() if v not in (None, [], "")} for d in data]

@@ -96,9 +96,9 @@ class ApiService(ItemService):
             from app.core.utils.common_utils import jprint
             jprint(result)
             print('----------------------------------------------------')
-            validated_result = ItemApi.model_validate(result)
-            return validated_result.model_dump(exclude_none=True, exclude_unset=True)
-            # return result
+            # validated_result = ItemApi.model_validate(result)
+            # return validated_result.model_dump(exclude_none=True, exclude_unset=True)
+            return result
         except Exception as e:
             print(f'__api_view__.error {e} {item.get("id")=}')
             raise HTTPException(status_code=503, detail=f'error.__api_view__.{e}')
@@ -145,10 +145,12 @@ class ApiService(ItemService):
                                 session: AsyncSession,):
         """ Получение списка элементов для api view """
         items = await repository.get(after_date, model, session)
-        result = []
-        for item in items:
-            item_dict = item.to_dict()
-            result.append(cls.__api_view__(item_dict))
+        # result = []
+        # for item in items:
+        #     item_dict = item.to_dict()
+        #     result.append(cls.__api_view__(item_dict))
+        result = [cls.__api_view(item.to_dict()) for item in items]
+
         return result
 
     @classmethod
