@@ -104,11 +104,14 @@ class Repository(metaclass=RepositoryMeta):
         """
         stmt = (select(model.id, relevance)
                 .where(cast(literal(search), Text).op("<%")(model.search_content))
-                .order_by(desc(text("rank")))).limit(search_site)
+                .order_by(desc(text("rank"))))
         if skip:
-            stmt.offset(skip).limit(limit)
+            stmt = stmt.offset(skip).limit(limit)
+        else:
+            stmt = stmt.limit(search_site)
         response = await session.execute(stmt)
         matching_ids = [row[0] for row in response.fetchall()]
+        logger.warning(f'{len(matching_ids)=}')
         return matching_ids
 
     @classmethod
