@@ -107,8 +107,6 @@ class Repository(metaclass=RepositoryMeta):
                 .order_by(desc(text("rank"))))
         if skip:
             stmt = stmt.offset(skip).limit(limit)
-        else:
-            stmt = stmt.limit(search_site)
         response = await session.execute(stmt)
         matching_ids = [row[0] for row in response.fetchall()]
         logger.warning(f'{len(matching_ids)=}')
@@ -659,7 +657,7 @@ class Repository(metaclass=RepositoryMeta):
             # formatted_query = " & ".join([f"{word}:*" for word in search.split()])
             condition = model.search_vector.bool_op("@@")(func.to_tsquery(literal_column("'simple'"),
                                                                           search))
-            stmp = cls.get_query(model).where(condition)
+            stmp = cls.get_query(model).where(condition).limit(search_site)
             # compiled = stmp.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
             # logger.error(f'{compiled=}')
             result = await session.execute(stmp)
