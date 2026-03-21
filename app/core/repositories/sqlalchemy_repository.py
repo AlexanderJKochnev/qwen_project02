@@ -56,7 +56,6 @@ class Repository(metaclass=RepositoryMeta):
             для моделей с зависимостями - переопределить
         """
         fields = get_field_list(model, starts=fields)
-        logger.warning(fields)
         return select(model).options(load_only(*fields))
 
     @classmethod
@@ -65,19 +64,15 @@ class Repository(metaclass=RepositoryMeta):
             получает запрос, сдвиг и размер страницы, сессию
             возвращает список instances и кол-во записей
         """
-        from sqlalchemy.dialects import postgresql
+        # from sqlalchemy.dialects import postgresql
         count_stmt = select(func.count()).select_from(stmt)
-        compiled_pg = count_stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
-        logger.info(f"total numbers request: {compiled_pg}")
+        # compiled_pg = count_stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
         total = await session.scalar(count_stmt) or 0
-        logger.info(f"result is {total=} records")
         if total == 0:
             return None, total
         stmt = stmt.offset(skip).limit(limit)
-        compiled_pg = stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
-        logger.info(f"paginated req: {compiled_pg}")
+        # compiled_pg = stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
         result = await session.execute(stmt)
-        logger.info("i've got an answer")
         items = result.scalars().all()
         return items, total
 

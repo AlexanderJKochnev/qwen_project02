@@ -26,7 +26,7 @@ class SubregionRepository(Repository):
                                          selectinload(Region.country))
 
     @classmethod
-    def get_short_query(cls, model: Region, field1: tuple = ('id', 'name', 'country_id', 'region_id')):
+    def get_short_query(cls, model: Subregion, field1: tuple = ('id', 'name', 'country_id', 'region_id')):
         """
             Возвращает список модели только с нужными полями остальные None
             - использовать для list_view и вообще где только можно.
