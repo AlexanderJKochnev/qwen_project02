@@ -665,4 +665,4 @@ def lang_sorted(lang: str, source: list = []) -> tuple:
     tmp: list = source.copy()
     tmp.remove(lang)
     tmp.insert(0, lang)
-    return tuple('' if lang == default_lang else f'_{lang}' for lang in source)
+    return tuple('' if lang == default_lang else f'_{lang}' for lang in tmp)
