@@ -153,7 +153,8 @@ class ReadSchema(PkSchema, LangSchema):
     @model_serializer
     def serialize_model(self) -> dict[str, Any]:
         # Фильтруем пустые строки на выходе
-        return {k: v for k, v in self.__dict__.items() if v != ""}
+        return {k: v for k, v in self.__dict__.items() if v not in ("", None)}
+
 
 class ReadApiSchema(NameSchema):
     pass
@@ -165,7 +166,7 @@ class ReadNoNameSchema(PkSchema, DescriptionSchema):
     @model_serializer
     def serialize_model(self) -> dict[str, Any]:
         # Фильтруем пустые строки на выходе
-        return {k: v for k, v in self.__dict__.items() if v != ""}
+        return {k: v for k, v in self.__dict__.items() if v not in ("", None)}
 
 
 class FullSchema(ReadSchema, DateSchema):
