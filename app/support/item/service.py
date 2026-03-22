@@ -17,7 +17,7 @@ from app.core.utils.common_utils import localized_field_with_replacement
 from app.core.types import ModelType
 from app.core.utils.pydantic_utils import get_field_name
 from app.core.utils.common_utils import flatten_dict_with_localized_fields, jprint  # , delta_data
-from app.core.utils.converters import read_convert_json, list_move, lang_suffix_list
+from app.core.utils.converters import lang_sorted, read_convert_json, list_move, lang_suffix_list
 from app.core.utils.pydantic_utils import make_paginated_response
 # from app.core.schemas.base import PaginatedResponse
 from app.mongodb.service import ThumbnailImageService
@@ -198,9 +198,8 @@ class ItemService(Service):
         if not item:    # если ничего нет
             return None
         # задаем порядок замещения пустых полей
-        language: list = list_move(settings.LANGUAGES, lang)
-        lang_prefixes: list = lang_suffix_list(language)
-
+        language = lang_sorted(lang)
+        jprint(language)
         item = transform(item, lang, tuple(language))
         # item = cls._level_up_(lang_prefixes, item)
         # level_up(item, 'drink')
