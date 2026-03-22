@@ -33,9 +33,9 @@ class ItemRepository(Repository):
 
     @classmethod
     def get_query(cls, model: ModelType):
-        subquery = DrinkRepository.get_query(Drink)
-        query = select(Item).options(subquery)
-        
+        subquery = DrinkRepository.get_selectin()
+        query = select(Item).options(selectinload(Item.drink).options(*subquery))
+
         query1 = select(Item).options(
             selectinload(Item.drink).options(
                 selectinload(Drink.site).selectinload(Site.subregion).selectinload(Subregion.region).selectinload(
