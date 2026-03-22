@@ -437,6 +437,7 @@ class ItemService(Service):
             #                                   page, page_size, repository, model, session)
             response = await cls.search_fts(search, page, page_size, repository, model, session)
             items = response.pop('items')
+            logger.warning(f'{type(items[0])}')
             total = response.get('total')
             if total == 0:
                 result = []
