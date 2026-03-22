@@ -940,7 +940,7 @@ def transform(source: dict, lang: str, languages: tuple) -> dict:
             for va in d.get("varietal_associations", [])
         ],
         "varietal2": [
-            get_multilang(va.get('varietal', {}), 'name', lang, languages)
+            va.get('varietal', {})
             for va in d.get("varietal_associations", [])],
         "pairing": [
             get_multilang(fa.get("food", {}), "name", lang, languages)
