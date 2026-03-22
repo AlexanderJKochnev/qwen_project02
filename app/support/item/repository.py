@@ -155,9 +155,9 @@ class ItemRepository(Repository):
         query = cls.get_query(Item).where(Item.id == id)
         result = await session.execute(query)
         item = result.scalar_one_or_none()
-        from app.core.utils.common_utils import jprint
-        jprint(item.to_dict())
-        print('--------------------------')
+        # from app.core.utils.common_utils import jprint
+        # jprint(item.to_dict())
+        # print('--------------------------')
         if not item:
             return None
         return item

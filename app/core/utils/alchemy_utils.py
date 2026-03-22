@@ -3,7 +3,7 @@ import json
 import re
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Type, TypeVar, Union
+from typing import Dict, List, Optional, Tuple, Type, TypeVar, Union, Set
 from fastapi import Query
 from pydantic import BaseModel, create_model, Field
 from sqlalchemy import and_, Column, ColumnElement, func, inspect, or_, String, Text, Unicode, UnicodeText
@@ -49,7 +49,6 @@ def exclude_field_list(model: Type[DeclarativeBase], fields_exc: tuple):
     filtered = [col.key for col in valid_fields if col.key not in fields_exc]
     res = [getattr(model, name) for name in filtered]
     return res
-
 
 
 def get_sqlalchemy_fields(model: Type[DeclarativeBase],
@@ -863,3 +862,22 @@ def formatted_query(query: str, patt: int = 1, sign: int = 30, operand: str = '&
         jointer = f" {operand} "
         return jointer.join([f"{word}:*" for word in words])
     return None
+
+
+def level_up(source: dict, key: str, rename: Set[str] = ['id']) -> dict:
+    """
+        поднятие словаря key на верхний уровень
+        с переименовением ключей из list
+    """
+    target = source.pop(key, None)
+    if not isinstance(target, dict):
+        return source
+    if rename:
+        for k in rename:
+            # Проверка 'in target' быстрее, чем 'in target.keys()'
+            if k in target:
+                # Берем значение старого ключа и удаляем его, записываем в новый
+                target[f"{key}_{k}"] = target.pop(k)
+        # 3. Слияние (в CPython реализовано на C, очень быстро)
+    source.update(target)
+    return source

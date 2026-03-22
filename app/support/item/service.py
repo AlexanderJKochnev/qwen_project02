@@ -12,6 +12,7 @@ from fastapi import HTTPException, BackgroundTasks
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.services.service import Service
 from app.core.config.project_config import settings
+from app.core.utils.alchemy_utils import level_up
 from app.core.utils.common_utils import localized_field_with_replacement
 from app.core.types import ModelType
 from app.core.utils.pydantic_utils import get_field_name
@@ -200,7 +201,8 @@ class ItemService(Service):
         # задаем порядок замещения пустых полей
         language: list = list_move(settings.LANGUAGES, lang)
         lang_prefixes: list = lang_suffix_list(language)
-        item = cls._level_up_(lang_prefixes, item)
+        # item = cls._level_up_(lang_prefixes, item)
+        level_up(item, 'drink')
         jprint(item)
         logger.warning('=======TEST===========')
         # список всех локализованных полей приложения
