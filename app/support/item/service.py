@@ -63,47 +63,7 @@ class ItemService(Service):
     @classmethod
     def add_manytomany_fields(cls, item: dict, lang_prefixes: list) -> dict:
         """
-        добавляет foods и varietals в api и detail views
-        items.keys():
-            'drink_id',
-            'vol',
-            'created_at',
-            'image_path',
-            'price', 'count',
-            'id',
-            'image_id',
-            'sugar',
-            'sweetness_id',
-            'subtitle_ru',
-            'madeof',
-            'age',
-            'subtitle_fr',
-            'madeof_ru',
-            'description',
-            'madeof_fr',
-            'description_ru',
-            'title',
-            'description_fr',
-            'sparkling',
-            'title_ru',
-            'recommendation',
-            'alc',
-            'subcategory_id',
-            'title_fr',
-            'recommendation_ru',
-            'subregion_id',
-            'subtitle',
-            'recommendation_fr',
-            'subcategory',
-            'foods',
-            'varietal_associations',
-            'subregion',
-            'sweetness',
-            'items',
-            'category',
-            'region',
-            'country',
-            'changed_at'
+            добавляет food и varietals в api и detail views
         """
         try:
             dict_lang: dict = {}
@@ -111,7 +71,7 @@ class ItemService(Service):
                 match field:
                     case 'pairing':
                         pairing: list = []
-                        tmp: list = item.get('foods')
+                        tmp: list = item.get('food_associations')
                         if tmp and isinstance(tmp, (list, tuple)) and tmp != [None]:
                             for food_dict in tmp:
                                 if tf := localized_field_with_replacement(food_dict, 'name', lang_prefixes, 'food'):

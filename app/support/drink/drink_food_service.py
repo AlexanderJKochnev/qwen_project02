@@ -12,7 +12,7 @@ class DrinkFoodService:
         drink = await cls.repo.get_drink_with_foods(drink_id, session)
         if not drink:
             return []
-        return [food.__str__() for food in drink.foods]
+        return [food.__str__() for food in drink.food_associations]
 
     @classmethod
     async def get_food_drinks_str(cls, food_id: int, session: AsyncSession) -> List[str]:

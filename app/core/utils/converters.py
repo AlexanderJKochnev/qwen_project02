@@ -99,7 +99,7 @@ def convert_custom(dict1: Dict[str, Any]) -> Dict[str, Any]:
     get_subregion(drink_dict, language_key, delim)
     # 3. subcategory->category
     get_subcategory(drink_dict, language_key, delim)
-    # 4. pairing -> foods
+    # 4. pairing -> food's
     get_pairing(drink_dict, language_key, delim)
     # 5. varietals
     get_varietal(drink_dict, language_key)
@@ -165,7 +165,6 @@ def get_pairing(drink_dict: dict, language_key: dict,
         pair: dict = {}
         pair2: list = []
         for lang in language_key.values():
-            # foods = dict_pop(drink_dict, f'pairing{lang}')
             foods = drink_dict.pop(f'pairing{lang}', None)
             if not foods:  # если нет pairing в исходных данных
                 return True

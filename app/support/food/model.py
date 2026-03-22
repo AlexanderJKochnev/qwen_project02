@@ -24,14 +24,6 @@ class Food(BaseFull):
     superfood: Mapped["Superfood"] = relationship(back_populates=plural_name, lazy=lazy)
 
     # Связь с промежуточной таблицей
-    """
-    drink_associations: Mapped[List["DrinkFood"]] = relationship("DrinkFood",
-                                                                 back_populates="food",
-                                                                 cascade="all, delete-orphan",
-                                                                 overlaps="drinks,foods")
-    drinks = relationship("Drink", secondary="drink_food_associations", back_populates="foods",
-                          lazy="selectin", overlaps="drink_associations,food,drink,food_associations")
-    """
     # --- NEW VERSION ---
 
     # 1. Связь через промежуточную таблицу (Association Object)

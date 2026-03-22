@@ -165,7 +165,7 @@ class CustomUpdSchema(LangMixin, NewUpdSchema):
     alc: Optional[float] = None
     sugar: Optional[float] = None
     age: Optional[str] = None
-    foods: Optional[List[FoodId]] = None
+    # foods: Optional[List[FoodId]] = None
     varietals: Optional[List[DrinkVarietalId]] = None
 
 
@@ -180,9 +180,10 @@ class CustomCreateSchema(LangMixin, NewCreateSchema):
 
 
 class DrinkFoodVarietalSchema:
-    foods: Optional[List[FoodCreateRelation]] = None
-    varietals: Optional[List[DrinkVarietalRelation]] = None
-
+    # foods: Optional[List[FoodCreateRelation]] = None
+    # varietals: Optional[List[DrinkVarietalRelation]] = None
+    pass
+    
 
 class CustomCreateDrinkItem(LangMixin, NewCreateSchema):
     """
@@ -195,8 +196,8 @@ class CustomCreateDrinkItem(LangMixin, NewCreateSchema):
     alc: Optional[float] = Field(exclude=True)
     sugar: Optional[float] = Field(exclude=True)
     age: Optional[str] = Field(exclude=True)
-    foods: Optional[List[FoodId]] = None
-    varietals: Optional[List[DrinkVarietalId]] = None
+    # foods: Optional[List[FoodId]] = None
+    # varietals: Optional[List[DrinkVarietalId]] = None
 
 
 class CustomCreateRelation(LangMixin, NewCreateRelationsSchema):
@@ -207,8 +208,8 @@ class CustomCreateRelation(LangMixin, NewCreateRelationsSchema):
     alc: Optional[float] = None
     sugar: Optional[float] = None
     age: Optional[str] = None
-    foods: Optional[List[FoodCreateRelation]] = None
-    varietals: Optional[List[DrinkVarietalRelation]] = None
+    # foods: Optional[List[FoodCreateRelation]] = None
+    # varietals: Optional[List[DrinkVarietalRelation]] = None
 
 
 class CustomReadRelation(LangMixin, NewReadSchema):
@@ -220,17 +221,17 @@ class CustomReadRelation(LangMixin, NewReadSchema):
     sugar: Optional[float] = None
     age: Optional[str] = None
     varietal_associations: Optional[List[DrinkVarietalRelation]] = Field(exclude=True)
-    foods: Optional[list] = []
-    # food_associations: Optional[List[DrinkFoodRelation]] = Field(exclude=True)
+    # foods: Optional[list] = []
+    food_associations: Optional[List[DrinkFoodRelation]] = Field(exclude=True)
 
     @property
     def varietals(self):
         return [{"varietal": assoc.varietal, "percentage": assoc.percentage}
                 for assoc in self.varietal_associations]
 
-    # @property
-    # def foods(self):
-    #     return [assoc.model_dump() for assoc in self.food_associations]
+    @property
+    def foods(self):
+        return [assoc.model_dump() for assoc in self.food_associations]
 
 
 class CustomReadSchema(LangMixin, NewReadSchema):
@@ -241,9 +242,9 @@ class CustomReadSchema(LangMixin, NewReadSchema):
     alc: Optional[float] = None
     sugar: Optional[float] = None
     age: Optional[str] = None
-    foods: List[FoodRead]
+    # foods: List[FoodRead]
     varietals: List[VarietalRead]
-    varietal_associations: Optional[List[DrinkVarietalRelationFlat]]
+    varietal_associations: Optional[List[DrinkVarietalRelationFlat]] = []
     food_associations: List[DrinkFoodRelation] = []
     updated_at: Optional[datetime] = None
 
@@ -284,8 +285,9 @@ class DrinkCreate1(CreateNoNameSchema, CustomCreateSchema, DrinkFoodVarietalSche
 
 
 class DrinkCreate(CreateNoNameSchema, CustomCreateSchema):
-    foods: Optional[List[FoodId]] = None
-    varietals: Optional[List[DrinkVarietalId]] = None
+    # foods: Optional[List[FoodId]] = None
+    # varietals: Optional[List[DrinkVarietalId]] = None
+    pass
 
 
 class DrinkCreateRelation(CreateNoNameSchema, CustomCreateRelation):
