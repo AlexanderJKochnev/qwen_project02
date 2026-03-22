@@ -451,6 +451,9 @@ class ItemService(Service):
     ) -> Optional[ItemRead]:
         """Получение записи по ID"""
         result = await repository.get_by_id(id, model, session)
+        from app.core.utils.common_utils import jprint
+        jprint(result.to_dict())
+        print('---------')
         return result
 
     @classmethod

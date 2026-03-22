@@ -109,7 +109,7 @@ class Repository(metaclass=RepositoryMeta):
             stmt = stmt.offset(skip).limit(limit)
         response = await session.execute(stmt)
         matching_ids = [row[0] for row in response.fetchall()]
-        logger.warning(f'{len(matching_ids)=}')
+        # logger.warning(f'{len(matching_ids)=}')
         return matching_ids
 
     @classmethod
