@@ -73,7 +73,7 @@ class DrinkService(Service):
         """ create & return record """
         try:
             # remove unset and 'varietals', 'foods' items and back to pydantci schema
-            data_dict: dict = data.model_dump(exclude={'varietals', 'foods'},
+            data_dict: dict = data.model_dump(exclude={'varietals', 'food_associations'},
                                               exclude_unset=True)
             """
                 "foods": [{"id": 5}, ...],
@@ -87,8 +87,8 @@ class DrinkService(Service):
                                 f"воспользуйтесь формой 'Edit'")
             drink_id = drink_instance.id
             # добавляем drink_foods & drink_varietals
-            if isinstance(data.foods, list):
-                food_ids = [item.id for item in data.foods]
+            if isinstance(data.food_associations, list):
+                food_ids = [item.id for item in data.food_associations]
                 await DrinkFoodRepository.set_drink_foods(drink_id, food_ids, session)
             if isinstance(data.varietals, list):
                 # convert [{'id':4, 'percentage': null},...] -> {4: null, ...}
@@ -113,7 +113,7 @@ class DrinkService(Service):
             raise HTTPException(status_code=404, detail=f'drink.update запись c {id=} не найдена')
         data_dict = data.model_dump()
         varietals = data_dict.pop('varietals', None)
-        foods = data_dict.pop('foods', None)
+        foods = data_dict.pop('food_associations', None)
 
         # Filter out None values for required fields to prevent NOT NULL constraint violations
         # These fields are required in the database but optional in the schema
@@ -150,72 +150,6 @@ class DrinkService(Service):
         """
         return result
 
-    """
-    @classmethod
-    async def create_relatio1(cls, data: DrinkCreateRelation,
-                              repository: DrinkRepository, model: Drink,
-                              session: AsyncSession, **kwargs) -> DrinkRead:
-        # pydantic model -> dict
-        try:
-            drink_data: dict = data.model_dump(exclude={'subregion', 'subcategory', 'color',
-                                                        'sweetness', 'varietals', 'foods'},
-                                               exclude_unset=True)
-            if data.subregion:
-                result = await SubregionService.create_relation(data.subregion, SubregionRepository,
-                                                                Subregion, session)
-                drink_data['subregion_id'] = result.id
-
-            if data.subcategory:
-                result = await SubcategoryService.create_relation(data.subcategory, SubcategoryRepository,
-                                                                  Subcategory, session)
-                drink_data['subcategory_id'] = result.id
-
-            if data.sweetness:
-                result, _ = await SweetnessService.get_or_create(data.sweetness,
-                                                                 SweetnessRepository, Sweetness, session)
-                drink_data['sweetness_id'] = result.id
-            # костыль DrinkCreate1
-            drink = DrinkCreate1(**drink_data)
-            drink_instance, new = await cls.get_or_create(drink, DrinkRepository, Drink, session)
-            # проверку ниже включить если нет массовых добавлений с обновлениями
-            # if not new:
-            #     raise Exception(f"запись '{drink}' существует. Если необходимо обновить ее, "
-            #                     f"воспользуйтесь формой 'Edit'")
-            drink_id = drink_instance.id
-
-            if isinstance(data.foods, list):
-                food_ids = []
-                # 1. get_or_create foods in Food
-                for item in data.foods:
-                    result = await FoodService.create_relation(item, FoodRepository, FoodService, session)
-                    food_ids.append(result.id)
-                # 2. set drink_food
-                await DrinkFoodRepository.set_drink_foods(drink_id, food_ids, session)
-            if isinstance(data.varietals, list):
-                varietal_ids = []
-                varietal_percentage = {}
-                # 1. get_or_create varietals in Varietal
-                # data.varietals is List[{varietal: VarietalCreateRelation
-                #                         percentage: float}]
-                for dvschema in data.varietals:
-                    item = dvschema.varietal
-                    percentage = dvschema.percentage
-                    result, _ = await VarietalService.get_or_create(item, VarietalRepository, Varietal, session)
-                    varietal_percentage[result.id] = percentage
-                    varietal_ids.append(result.id)
-                # 2. set drink_varietal
-                await DrinkVarietalRepository.set_drink_varietals(drink_id, varietal_ids, session)
-                # 3. set up percentage
-                for key, val in varietal_percentage.items():
-                    await DrinkVarietalRepository.update_percentage(drink_id, key, val, session)
-            await session.flush()
-            await session.refresh(drink_instance)
-            return drink_instance
-        except Exception as e:
-            print(f'drink_create_relation error: {e}')
-
-"""
-
     @classmethod
     async def create_relation(cls, data: DrinkCreateRelation,
                               repository: DrinkRepository, model: Drink,
@@ -240,10 +174,10 @@ class DrinkService(Service):
         drink_instance, _ = await cls.get_or_create(data_dict, repository, model, session)
         drink_id = drink_instance.id
 
-        if isinstance(data.foods, list):
+        if isinstance(data.food_associations, list):
             food_ids = []
             # 1. get_or_create foods in Food
-            for item in data.foods:
+            for item in data.food_associations:
                 result = await FoodService.create_relation(item, FoodRepository, FoodService, session)
                 food_ids.append(result.id)
             # 2. set drink_food
