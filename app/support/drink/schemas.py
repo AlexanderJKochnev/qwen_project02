@@ -1,6 +1,6 @@
 # app/support/drink/schemas.py
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Any
 
 from pydantic import Field, field_serializer, model_serializer
 
