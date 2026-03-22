@@ -955,17 +955,9 @@ def transform(source: dict, lang: str, languages: tuple) -> dict:
         "first_vintage": d.get("first_vintage"),
         "last_vintage": d.get("last_vintage"),
         "display_name": d.get("display_name"),
-        "producer": producer
+        "producer": producer,
+        "anno": d.get("anno"),
+        "classification": d.get("classification"),
+        "vintageconfig": d.get("vintageconfig"),
+        "designation": d.get("designation")
     }
-
-"""
-anno: Optional[str] = None
-    producer: Optional[str] = None
-    source: Optional[str] = None
-    classification: Optional[str] = None
-    vintageconfig: Optional[str] = None
-    designation: Optional[str] = None
-    site: Optional[str] = None
-    first_vintage: Optional[int] = None
-    last_vintage: Optional[int] = None
-"""
