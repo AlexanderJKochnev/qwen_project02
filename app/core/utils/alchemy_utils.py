@@ -906,14 +906,16 @@ def transform(source: dict, lang: str, languages: tuple) -> dict:
     subreg = site.get("subregion") or {}
     reg = subreg.get("region") or {}
     country = reg.get("country") or {}
-
+    if alcv := d.get('alc'):
+        alc = f"{alcv}%"
+    else:
+        alc = None
     return {
         "id": source.get("id"),
         "vol": source.get("vol"),
         "count": source.get("count"),
         "image_id": source.get("image_id"),
-        "alc": f"{d.get('alc')}%",
-
+        "alc": alc,
         # Текстовые поля с coalesce
         "title": get_multilang(d, "title", languages),
         "subtitle": get_multilang(d, "subtitle", languages),
