@@ -194,6 +194,9 @@ class ItemService(Service):
         """Получение детального представления элемента с локализацией"""
         item_instance = await repository.get_detail_view(id, model, session)
         item: dict = item_instance.to_dict()
+        from app.core.utils.common_utils import jprint
+        jprint(item)
+        logger.warning('=======TEST===========')
         if not item:    # если ничего нет
             return None
         # задаем порядок замещения пустых полей
