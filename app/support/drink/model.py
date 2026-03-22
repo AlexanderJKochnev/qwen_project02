@@ -224,6 +224,7 @@ class Drink(Base, BaseAt, Lang, ForeignOneToMany, Vintage, Lwn, DisplayName):
         lazy="selectin"
     )
 
+    """
     # 2. Прямая связь Many-to-Many
     foods: Mapped[List["Food"]] = relationship(
         secondary="drink_food_associations",
@@ -232,7 +233,7 @@ class Drink(Base, BaseAt, Lang, ForeignOneToMany, Vintage, Lwn, DisplayName):
         viewonly=True
         # Загрузит список объектов Food автоматически
     )
-
+    """
     varietal_associations = relationship(
         "DrinkVarietal",
         back_populates="drink",
