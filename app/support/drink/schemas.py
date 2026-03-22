@@ -105,6 +105,9 @@ class LangMixinExclude:
 
 
 class NewUpdSchema:
+    lwin: Optional[str] = None
+    display_name: Optional[str] = None
+    anno: Optional[str] = None
     producer_id: Optional[int] = None
     source_id: Optional[int] = None
     vintageconfig_id: Optional[int] = None
@@ -116,6 +119,9 @@ class NewUpdSchema:
 
 
 class NewCreateSchema:
+    lwin: Optional[str] = None
+    display_name: Optional[str] = None
+    anno: Optional[str] = None
     producer_id: Optional[int] = None
     source_id: int
     vintageconfig_id: Optional[int] = None
@@ -127,6 +133,9 @@ class NewCreateSchema:
 
 
 class NewReadSchema:
+    lwin: Optional[str] = None
+    display_name: Optional[str] = None
+    anno: Optional[str] = None
     producer: Optional[ProducerRead] = None
     source: SourceRead
     classification: Optional[ClassificationRead]
@@ -232,10 +241,10 @@ class CustomReadSchema(LangMixin, NewReadSchema):
     alc: Optional[float] = None
     sugar: Optional[float] = None
     age: Optional[str] = None
-    foods: List[FoodRead]
-    varietals: List[VarietalRead]
-    varietal_associations: Optional[List[DrinkVarietalRelationFlat]]
-    food_associations: List[DrinkFoodRelation] = []
+    # foods: List[FoodRead]
+    # varietals: List[VarietalRead]
+    # varietal_associations: Optional[List[DrinkVarietalRelationFlat]]
+    # food_associations: List[DrinkFoodRelation] = []
     updated_at: Optional[datetime] = None
 
     @field_serializer('alc', when_used='unless-none')
