@@ -200,9 +200,6 @@ class ItemService(Service):
         # задаем порядок замещения пустых полей
         language: list = list_move(settings.LANGUAGES, lang)
         lang_prefixes: list = lang_suffix_list(language)
-        logger.warning('++++++++++++++++++++++++++++++++')
-        jprint(item)
-        logger.warning('================================')
 
         item = transform(item, lang, tuple(language))
         # item = cls._level_up_(lang_prefixes, item)

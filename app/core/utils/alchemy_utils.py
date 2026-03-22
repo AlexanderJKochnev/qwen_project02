@@ -939,9 +939,6 @@ def transform(source: dict, lang: str, languages: tuple) -> dict:
             f"{get_multilang(va.get('varietal', {}), 'name', lang, languages)} {va.get('percentage', 0)} %"
             for va in d.get("varietal_associations", [])
         ],
-        "varietal2": [
-            va.get('varietal', {})
-            for va in d.get("varietal_associations", [])],
         "pairing": [
             get_multilang(fa.get("food", {}), "name", lang, languages)
             for fa in d.get("food_associations", [])
