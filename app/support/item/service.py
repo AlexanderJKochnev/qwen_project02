@@ -123,6 +123,7 @@ class ItemService(Service):
     @classmethod
     def transform_item_for_list_view(cls, item: dict, lang: str = 'en'):
         """
+        DELETE
         Преобразование элемента из текущего формата в требуемый для ListView
 
         :param item: Элемент в текущем формате (с вложенными объектами)
@@ -175,11 +176,6 @@ class ItemService(Service):
                                                       lang, tuple(language)) for
                                                       item in items])
         return result
-        result = []
-        for item in items:
-            transformed_item = cls.transform_item_for_list_view(item, lang)
-            result.append(transformed_item)
-        return result
 
     @classmethod
     async def get_list_view_page(cls, page: int, page_size: int,
@@ -192,14 +188,6 @@ class ItemService(Service):
         result = ItemListViewAdapter.validate_python([transform_list_view(item,
                                                                           lang, tuple(language)
                                                                           ) for item in items])
-        return make_paginated_response(result, total, page, page_size)
-
-        result = []
-
-        result = []
-        for item in items:
-            transformed_item = cls.transform_item_for_list_view(item, lang)
-            result.append(transformed_item)
         return make_paginated_response(result, total, page, page_size)
 
     @classmethod
@@ -296,10 +284,9 @@ class ItemService(Service):
                                                                        session,
                                                                        skip,
                                                                        page_size)
-        result = []
-        for item in items:
-            transformed_item = cls.transform_item_for_list_view(item, lang)
-            result.append(transformed_item)
+        language = lang_sorted(lang)
+        result = ItemListViewAdapter.validate_python([transform_list_view(item, lang, tuple(language))
+                                                      for item in items])
         return make_paginated_response(result, total, page, page_size)
 
     @classmethod
@@ -312,10 +299,9 @@ class ItemService(Service):
         """
         skip = (page - 1) * page_size
         items, total = await repository.search_by_trigram_index(search_str, model, session, skip, page_size)
-        result = []
-        for item in items:
-            transformed_item = cls.transform_item_for_list_view(item, lang)
-            result.append(transformed_item)
+        language = lang_sorted(lang)
+        result = ItemListViewAdapter.validate_python([transform_list_view(item, lang, tuple(language))
+                                                      for item in items])
         return make_paginated_response(result, total, page, page_size)
 
     @classmethod
@@ -455,11 +441,9 @@ class ItemService(Service):
             if total == 0:
                 result = []
             else:
-                result = []
-                for item in items:
-                    item_dict = item.to_dict()
-                    transformed_item = cls.transform_item_for_list_view(item_dict, lang)
-                    result.append(transformed_item)
+                language = lang_sorted(lang)
+                result = ItemListViewAdapter.validate_python([transform_list_view(item, lang, tuple(language))
+                                                              for item in items])
             response = make_paginated_response(result, total, page, page_size)
             return response
         except Exception as e:
@@ -475,11 +459,10 @@ class ItemService(Service):
             # items: list = await cls.search_geans_all(search, similarity_threshold,
             #                                          repository, model, session)
             items = await cls.search_fts_all(search, repository, model, session)
-            result = []
-            for item in items:
-                item_dict = item.to_dict()
-                transformed_item = cls.transform_item_for_list_view(item_dict, lang)
-                result.append(transformed_item)
+            language = lang_sorted(lang)
+            result = ItemListViewAdapter.validate_python(
+                [transform_list_view(item, lang, tuple(language)) for item in items]
+            )
             return result
         except Exception as e:
             logger.error(f'search_gens_all. {e}')
