@@ -38,6 +38,20 @@ def get_field_list(model: Type[DeclarativeBase], starts: tuple = None, ends: tup
     return res
 
 
+def exclude_field_list(model: Type[DeclarativeBase], fields_exc: tuple):
+    """
+         возвращает список полей sqlalchemy model
+         за исключением указанных в fields_exc
+    """
+    valid_columns = {col for col in inspect(model).columns}
+    relationships = {rel for rel in inspect(model).relationships}
+    valid_fields = valid_columns | relationships
+    filtered = [col.key for col in valid_fields if col.key not in fields_exc]
+    res = [getattr(model, name) for name in filtered]
+    return res
+
+
+
 def get_sqlalchemy_fields(model: Type[DeclarativeBase],
                           exclude_list: List[str] = None,
                           default_exclude: Union[List[str], None] = None) -> Dict[str, ColumnElement]:

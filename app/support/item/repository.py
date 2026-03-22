@@ -4,14 +4,14 @@ from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
 from sqlalchemy import func, literal_column, or_, select, Select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, load_only
 from sqlalchemy.types import String
 
 from app.core.config.project_config import settings
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.types import ModelType
 from app.core.utils.alchemy_utils import build_search_condition, create_enum_conditions, create_search_conditions2, \
-    SearchType
+    exclude_field_list, SearchType
 from app.support.category.model import Category
 from app.support.country.model import Country
 from app.support.drink.model import Drink, DrinkFood, DrinkVarietal
@@ -34,7 +34,7 @@ class ItemRepository(Repository):
     @classmethod
     def get_query(cls, model: ModelType):
         subquery = DrinkRepository.get_selectin()
-        query = select(Item).options(selectinload(Item.drink).options(*subquery))
+        query = select(Item).options(load_only(*exclude_field_list(Item, ('search_vector',))), selectinload(Item.drink).options(*subquery))
         return query
 
     @classmethod
