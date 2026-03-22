@@ -98,31 +98,34 @@ class Base(AsyncAttrs, DeclarativeBase):
         return str(self)
 
     def to_dict(self, seen=None) -> dict:
-        """
-        преобразует sqlalchemy instance в словарь
-        foreign filed with lazy load преобразует во вложенные словари любой губины
-        """
         if seen is None:
             seen = set()
-        if self is None:
-            return None
 
-        # Уникальный ключ объекта для защиты от циклов
-        obj_id = (self.__class__, inspect(self).identity)
+        state = inspect(self)
+        # 1. Защита от циклов. Используем identity (первичный ключ), если он есть
+        obj_id = (self.__class__, state.identity or id(self))
         if obj_id in seen:
             return None
         seen.add(obj_id)
 
         cls = self.__class__
-        # Инициализируем кэш имен атрибутов один раз для класса
         if cls._cached_cols is None:
-            mapper = inspect(cls)
-            cls._cached_cols = [c.key for c in mapper.column_attrs]
-            cls._cached_rels = [r.key for r in mapper.relationships]
+            cls._cached_cols = [c.key for c in state.mapper.column_attrs]
+            cls._cached_rels = [r.key for r in state.mapper.relationships]
 
         result = {}
-        # 1. Быстрая итерация по колонкам (через сохраненные имена)
+        loaded_data = state.dict
+
+        # 2. Обработка колонок
         for key in cls._cached_cols:
+            # ВАЖНО: используем getattr для колонок.
+            # Для простых колонок (не связей) это безопасно в асинхронке,
+            # так как они либо загружены, либо помечены как deferred.
+            # Если поле в defer(), getattr вернет ошибку MissingGreenlet,
+            # поэтому проверяем, загружено ли оно.
+            if key in state.unloaded:
+                continue
+
             value = getattr(self, key)
             if isinstance(value, (datetime, date)):
                 result[key] = value.isoformat()
@@ -131,11 +134,12 @@ class Base(AsyncAttrs, DeclarativeBase):
             else:
                 result[key] = value
 
-        # 2. Итерация по связям (только если они загружены)
-        unloaded = inspect(self).unloaded
+        # 3. Обработка связей (relationships)
         for key in cls._cached_rels:
-            if key not in unloaded:
-                value = getattr(self, key)
+            # Для связей проверка через .dict ОБЯЗАТЕЛЬНА,
+            # чтобы не спровоцировать Lazy Load и ошибку Greenlet
+            if key in loaded_data:
+                value = loaded_data[key]
                 if value is None:
                     result[key] = None
                 elif isinstance(value, list):
