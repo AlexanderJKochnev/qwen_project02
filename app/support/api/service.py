@@ -145,6 +145,10 @@ class ApiService(ItemService):
         model = Item
         item_instance = await repository.get_detail_view(id, model, session)
         item: dict = item_instance.to_dict()
+        from app.core.utils.common_utils import jprint
+        logger.warning('===========')
+        jprint(item)
+        logger.warning('+++++++++++++')
         if not item:
             return None
         result: dict = cls.__api_view__(item)

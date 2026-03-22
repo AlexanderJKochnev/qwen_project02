@@ -210,7 +210,6 @@ class ItemRepository(Repository):
         query = cls.get_query(Item).where(Item.id == id)
         result = await session.execute(query)
         item = result.scalar_one_or_none()
-
         if not item:
             return None
         return item

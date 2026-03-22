@@ -302,14 +302,7 @@ class Repository(metaclass=RepositoryMeta):
         #         .order_by(model.id.asc()))
         result = await cls.pagination(stmt, skip, limit, session)
         return result
-        """
-        count_stmt = select(func.count()).select_from(stmt)
-        total = await session.scalar(count_stmt) or 0
-        stmt = stmt.offset(skip).limit(limit)
-        result = await session.execute(stmt)
-        items = result.scalars().all()
-        return items, total
-        """
+
 
     @classmethod
     async def get(cls, after_date: datetime, model: ModelType, session: AsyncSession, ) -> list:
