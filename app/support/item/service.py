@@ -199,7 +199,7 @@ class ItemService(Service):
             return None
         # задаем порядок замещения пустых полей
         language = lang_sorted(lang)
-        jprint(language)
+        jprint(f'{language=} | {lang}')
         item = transform(item, lang, tuple(language))
         # item = cls._level_up_(lang_prefixes, item)
         # level_up(item, 'drink')
