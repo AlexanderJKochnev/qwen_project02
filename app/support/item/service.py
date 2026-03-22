@@ -26,11 +26,10 @@ from app.support.drink.service import DrinkService
 from app.support.drink.schemas import DrinkCreate, DrinkUpdate
 from app.support import Item, Drink
 from app.support.item.repository import ItemRepository
-from app.support.item.schemas import (ItemCreate, ItemCreateRelation, ItemRead, ItemReadRelation,
-                                      ItemCreatePreact, ItemUpdatePreact, ItemUpdate,
-                                      ItemDetailNonLocalized, ItemDetailLocalized, ItemDetailForeignLocalized,
-                                      ItemDetailManyToManyLocalized, ItemListView,
-                                      # ItemApiLangNonLocalized, ItemApiLangLocalized, ItemApiLang, ItemApi
+from app.support.item.schemas import (ItemCreate, ItemCreateRelation, ItemDetailView, ItemRead, ItemReadRelation,
+                                      ItemCreatePreact, ItemUpdatePreact, ItemUpdate, ItemDetailNonLocalized,
+                                      ItemDetailLocalized, ItemDetailForeignLocalized, ItemDetailManyToManyLocalized,
+                                      ItemListView, # ItemApiLangNonLocalized, ItemApiLangLocalized, ItemApiLang, ItemApi
                                       )
 
 itemdetailmanytomanylocalized = get_field_name(ItemDetailManyToManyLocalized)
@@ -205,6 +204,7 @@ class ItemService(Service):
         level_up(item, 'drink')
         jprint(item)
         logger.warning('=======TEST===========')
+        jprint(list(ItemDetailView.model_fields.keys()))
         # список всех локализованных полей приложения
         result: dict = {}
         # добавление non-localized fields
