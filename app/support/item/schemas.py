@@ -228,7 +228,7 @@ class ItemApiLang(ItemDetailManyToManyLocalized, ItemApiLangLocalized, ItemApiLa
     pass
 
 
-class ItemApiRoot(BaseModel):
+class ItemApiRoot(BaseModel, ModelSerializer):
     """
       fields for root levele of api_items
       SHALL be equal .env API_ROOT_FIELDS
@@ -241,7 +241,7 @@ class ItemApiRoot(BaseModel):
     changed_at: datetime = Field(exclude=True)
 
 
-class ItemApi(ItemApiRoot, ModelSerializer):
+class ItemApi(ItemApiRoot):
     en: ItemApiLang
     ru: ItemApiLang
     fr: ItemApiLang
