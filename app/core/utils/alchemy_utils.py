@@ -936,7 +936,7 @@ def transform(source: dict, lang: str, languages: tuple) -> dict:
 
         # СПИСКИ С ФОРМАТИРОВАНИЕМ
         "varietal": [
-            f"{get_multilang(va.get('varietal', {}), 'name', lang, languages)} {va.get('percentage', 0)} %"
+            f"{get_multilang(va.get('varietal') or {}, 'name', lang, languages)} {va.get('percentage', 0)} %".strip()
             for va in d.get("varietal_associations", [])
         ],
 
