@@ -294,10 +294,10 @@ class BaseRouter:
             response_model <>ReadRelatio
         """
         obj = await self.service.get_by_id(id, self.repo, self.model, session)
-        # validated_res = self.read_schema.validate(obj)
+        validated_res = self.read_schema.validate(obj)
         if obj is None:
             raise HTTPException(status_code=404, detail=f'Запрашиваемый файл {id} не найден на сервере')
-        return obj  # validated_res.model_dump(exclude_none=True, exclude_unset=True)
+        return validated_res.model_dump(exclude_none=True, exclude_unset=True)
 
     async def get(self,
                   after_date: datetime = Query(delta,
