@@ -33,8 +33,11 @@ class ItemRepository(Repository):
 
     @classmethod
     def get_query(cls, model: ModelType):
+        excl = exclude_field_list(Item, ('search_vector',))
+        from loguru import logger
+        logger.warning(excl)
         subquery = DrinkRepository.get_selectin()
-        query = select(Item).options(load_only(*exclude_field_list(Item, ('search_vector',))), selectinload(Item.drink).options(*subquery))
+        query = select(Item).options(load_only(*excl), selectinload(Item.drink).options(*subquery))
         return query
 
     @classmethod
