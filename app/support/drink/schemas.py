@@ -2,7 +2,7 @@
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import Field, field_serializer
+from pydantic import Field, field_serializer, model_serializer
 
 from app.core.schemas.base import (BaseModel, CreateNoNameSchema, CreateResponse, ReadNoNameSchema, UpdateNoNameSchema)
 from app.support.drink.drink_food_schema import DrinkFoodRelation
@@ -269,6 +269,11 @@ class DrinkRead(ReadNoNameSchema, CustomReadSchema):
                               exclude_none=True)
     """
     pass
+
+    @model_serializer
+    def serialize_model(self) -> dict[str, Any]:
+        # Фильтруем пустые строки на выходе
+        return {k: v for k, v in self.__dict__.items() if v != ""}
 
 
 class DrinkReadRelation(ReadNoNameSchema, CustomReadSchema):
