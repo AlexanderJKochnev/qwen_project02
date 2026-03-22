@@ -169,9 +169,9 @@ class ItemService(Service):
     @classmethod
     async def get_list_view(cls, lang: str, repository: ItemRepository, model: Item, session: AsyncSession):
         """Получение списка элементов для ListView с локализацией"""
-        items: ModelType = await repository.get_list_view(model, session)
+        items = await repository.get_list_view(model, session)
         language = lang_sorted(lang)
-        result = ItemListViewAdapter.validate_python([transform_list_view(item.to_dict(),
+        result = ItemListViewAdapter.validate_python([transform_list_view(item,
                                                       lang, tuple(language)) for
                                                       item in items])
         return result
@@ -189,7 +189,7 @@ class ItemService(Service):
         skip = (page - 1) * page_size
         items, total = await repository.get_list_view_page(skip, page_size, model, session)
         language = lang_sorted(lang)
-        result = ItemListViewAdapter.validate_python([transform_list_view(item.to_dict(),
+        result = ItemListViewAdapter.validate_python([transform_list_view(item,
                                                                           lang, tuple(language)
                                                                           ) for item in items])
         return make_paginated_response(result, total, page, page_size)
