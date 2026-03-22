@@ -33,7 +33,7 @@ class ItemRepository(Repository):
 
     @classmethod
     def get_query(cls, model: ModelType):
-        excl = exclude_field_list(Item, ('search_vector','drink'))
+        excl = exclude_field_list(Item, ('search_vector', 'drink', 'search_content'))
         from loguru import logger
         logger.warning(excl)
         subquery = DrinkRepository.get_selectin()
