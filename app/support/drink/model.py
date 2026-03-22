@@ -229,7 +229,7 @@ class Drink(Base, BaseAt, Lang, ForeignOneToMany, Vintage, Lwn, DisplayName):
         secondary="drink_food_associations",
         back_populates="drinks",
         lazy="selectin",
-        viewonly=True
+        viewonly=False, overlaps="food_associations,drink"
         # Загрузит список объектов Food автоматически
     )
 
