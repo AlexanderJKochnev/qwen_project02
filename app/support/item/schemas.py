@@ -109,6 +109,11 @@ class ItemListView(BaseModel):
     category: str  # Item.drink.subcategoory.category.name + Item.drink.subcategoory.name
     country: str  # Country.name or country.name_ru, or country.name_fr зависит от параметра lang в роуте
 
+    @model_serializer
+    def serialize_model(self) -> dict[str, Any]:
+        # Фильтруем пустые строки на выходе
+        return {k: v for k, v in self.__dict__.items() if v not in ("", None, [])}
+
 
 class ItemDetailNonLocalized(BaseModel):
     # поля не зависят от параметра lang в роуте

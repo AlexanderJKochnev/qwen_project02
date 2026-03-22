@@ -1,4 +1,5 @@
 # app.support.item.service.py
+from pydantic import TypeAdapter
 from functools import reduce
 from typing import Any, Dict, List, Optional, Type
 
@@ -13,7 +14,7 @@ from app.core.config.project_config import settings
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.services.service import Service
 from app.core.types import ModelType
-from app.core.utils.alchemy_utils import transform
+from app.core.utils.alchemy_utils import transform, transform_list_view
 from app.core.utils.common_utils import flatten_dict_with_localized_fields, jprint, \
     localized_field_with_replacement  # , delta_data
 from app.core.utils.converters import lang_sorted, lang_suffix_list, list_move, read_convert_json
@@ -30,6 +31,7 @@ from app.support.item.schemas import (ItemCreate, ItemCreatePreact, ItemCreateRe
                                       ItemUpdatePreact)  # ItemApiLangNonLocalized, ItemApiLangLocalized, ItemApiLang,
 
 itemdetailmanytomanylocalized = get_field_name(ItemDetailManyToManyLocalized)
+ItemListViewAdapter: TypeAdapter = TypeAdapter(List[ItemListView])
 
 
 class ItemService(Service):
@@ -167,7 +169,12 @@ class ItemService(Service):
     @classmethod
     async def get_list_view(cls, lang: str, repository: ItemRepository, model: Item, session: AsyncSession):
         """Получение списка элементов для ListView с локализацией"""
-        items = await repository.get_list_view(model, session)
+        items: ModelType = await repository.get_list_view(model, session)
+        language = lang_sorted(lang)
+        result = ItemListViewAdapter.validate_python([transform_list_view(item.to_dict(),
+                                                      lang, tuple(language)) for
+                                                      item in items])
+        return result
         result = []
         for item in items:
             transformed_item = cls.transform_item_for_list_view(item, lang)
@@ -181,6 +188,14 @@ class ItemService(Service):
         """Получение списка элементов для ListView с пагинацией и локализацией"""
         skip = (page - 1) * page_size
         items, total = await repository.get_list_view_page(skip, page_size, model, session)
+        language = lang_sorted(lang)
+        result = ItemListViewAdapter.validate_python([transform_list_view(item.to_dict(),
+                                                                          lang, tuple(language)
+                                                                          ) for item in items])
+        return make_paginated_response(result, total, page, page_size)
+
+        result = []
+
         result = []
         for item in items:
             transformed_item = cls.transform_item_for_list_view(item, lang)
