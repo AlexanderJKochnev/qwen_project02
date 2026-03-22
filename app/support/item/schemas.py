@@ -1,8 +1,8 @@
 # app/support/item/schemas.py
 
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Any
 from datetime import datetime
-from pydantic import Field
+from pydantic import Field, model_serializer
 from app.core.schemas.image_mixin import ImageUrlMixin
 from app.core.schemas.base import BaseModel, CreateResponse
 from app.support.drink.schemas import (DrinkCreateRelation,
@@ -154,29 +154,6 @@ class ItemCreateRelation(BaseModel, CustomCreateRelation, ImageUrlMixin):
 
 # -------------------preact schemas-----------------------
 
-"""
-class DrinkPreactDetailView:
-    #  похоже нигде не используется
-    id: int
-    drink: DrinkReadApi
-
-
-class DrinkPreactListView:
-    id: int
-    drink: int
-    vol: Optional[float] = None
-
-
-class DrinkPreactUpdate:
-    id: int
-
-
-class DrinkPreactCreate:
-    title: str
-    title_ru: Optional[str]
-    title_fr: Optional[str]
-"""
-
 
 class ItemListView(BaseModel):
     # поля не зависят от параметра lang в роуте
@@ -225,6 +202,11 @@ class ItemDetailLocalized(BaseModel):
     recommendation: Optional[str] = None   # Drink.recommendation (_ru, _fr)
     madeof: Optional[str] = None  # Drink.madeof (_ru, _fr)
     description: Optional[str] = None  # Drink.description (_ru, _fr)
+
+    @model_serializer
+    def serialize_model(self) -> dict[str, Any]:
+        # Фильтруем пустые строки на выходе
+        return {k: v for k, v in self.__dict__.items() if v not in ("", None)}
 
 
 class ItemDetailManyToManyLocalized(BaseModel):

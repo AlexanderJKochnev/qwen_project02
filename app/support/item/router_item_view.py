@@ -150,9 +150,7 @@ class ItemViewRouter:
         # Create ItemDetailView instance
         result = ItemDetailView.validate(item)
         return result
-        # Return the model dump with empty values removed
-        # return result.model_dump(exclude_none=True, exclude_unset=True)
-
+        
     async def search_by_drink_title_subtitle_paginated(self,
                                                        lang: str = Path(..., description="Язык локализации"),
                                                        search: str = Query(

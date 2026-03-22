@@ -1,36 +1,33 @@
 # app.support.item.service.py
-from deepdiff import DeepDiff
-from loguru import logger
-
 from functools import reduce
-from decimal import Decimal
-from typing import Type, Optional, Dict, Any, List
+from typing import Any, Dict, List, Optional, Type
+
+from deepdiff import DeepDiff
+# from sqlalchemy.sql.elements import Label
+from fastapi import BackgroundTasks, HTTPException
+from loguru import logger
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
-# from sqlalchemy.sql.elements import Label
-from fastapi import HTTPException, BackgroundTasks
+
+from app.core.config.project_config import settings
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.services.service import Service
-from app.core.config.project_config import settings
-from app.core.utils.alchemy_utils import level_up, transform
-from app.core.utils.common_utils import localized_field_with_replacement
 from app.core.types import ModelType
-from app.core.utils.pydantic_utils import get_field_name
-from app.core.utils.common_utils import flatten_dict_with_localized_fields, jprint  # , delta_data
-from app.core.utils.converters import lang_sorted, read_convert_json, list_move, lang_suffix_list
-from app.core.utils.pydantic_utils import make_paginated_response
+from app.core.utils.alchemy_utils import transform
+from app.core.utils.common_utils import flatten_dict_with_localized_fields, jprint, \
+    localized_field_with_replacement  # , delta_data
+from app.core.utils.converters import lang_sorted, lang_suffix_list, list_move, read_convert_json
+from app.core.utils.pydantic_utils import get_field_name, make_paginated_response
 # from app.core.schemas.base import PaginatedResponse
 from app.mongodb.service import ThumbnailImageService
+from app.support import Drink, Item
 from app.support.drink.repository import DrinkRepository
-from app.support.drink.service import DrinkService
 from app.support.drink.schemas import DrinkCreate, DrinkUpdate
-from app.support import Item, Drink
+from app.support.drink.service import DrinkService
 from app.support.item.repository import ItemRepository
-from app.support.item.schemas import (ItemCreate, ItemCreateRelation, ItemDetailView, ItemRead, ItemReadRelation,
-                                      ItemCreatePreact, ItemUpdatePreact, ItemUpdate, ItemDetailNonLocalized,
-                                      ItemDetailLocalized, ItemDetailForeignLocalized, ItemDetailManyToManyLocalized,
-                                      ItemListView,  # ItemApiLangNonLocalized, ItemApiLangLocalized, ItemApiLang,
-                                      )
+from app.support.item.schemas import (ItemCreate, ItemCreatePreact, ItemCreateRelation, ItemDetailManyToManyLocalized,
+                                      ItemListView, ItemRead, ItemReadRelation, ItemUpdate,
+                                      ItemUpdatePreact)  # ItemApiLangNonLocalized, ItemApiLangLocalized, ItemApiLang,
 
 itemdetailmanytomanylocalized = get_field_name(ItemDetailManyToManyLocalized)
 
@@ -200,8 +197,6 @@ class ItemService(Service):
         # задаем порядок замещения пустых полей
         language = lang_sorted(lang)
         item = transform(item, lang, tuple(language))
-        jprint(item)
-        logger.warning('=======TEST===========')
         # список всех локализованных полей приложения
         return item
 
