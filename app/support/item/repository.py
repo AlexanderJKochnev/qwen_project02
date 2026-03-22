@@ -34,8 +34,6 @@ class ItemRepository(Repository):
     @classmethod
     def get_query(cls, model: ModelType):
         excl = exclude_field_list(Item, ('search_vector', 'drink', 'search_content'))
-        from loguru import logger
-        logger.warning(excl)
         subquery = DrinkRepository.get_selectin()
         query = select(Item).options(load_only(*excl), selectinload(Item.drink).options(*subquery))
         return query
@@ -209,7 +207,10 @@ class ItemRepository(Repository):
         """Получение детального представления элемента для DetailView"""
         query = cls.get_query(Item).where(Item.id == id)
         result = await session.execute(query)
+        from app.core.utils.common_utils import jprint
         item = result.scalar_one_or_none()
+        jprint(item.to_dict())
+        print('--------------------------')
         if not item:
             return None
         return item
