@@ -1,6 +1,7 @@
 # app.support.item.service.py
 from deepdiff import DeepDiff
 from loguru import logger
+
 from functools import reduce
 from decimal import Decimal
 from typing import Type, Optional, Dict, Any, List
@@ -194,7 +195,6 @@ class ItemService(Service):
         """Получение детального представления элемента с локализацией"""
         item_instance = await repository.get_detail_view(id, model, session)
         item: dict = item_instance.to_dict()
-        from app.core.utils.common_utils import jprint
         if not item:    # если ничего нет
             return None
         # задаем порядок замещения пустых полей
@@ -414,9 +414,6 @@ class ItemService(Service):
     ) -> Optional[ItemRead]:
         """Получение записи по ID"""
         result = await repository.get_by_id(id, model, session)
-        from app.core.utils.common_utils import jprint
-        jprint(result.to_dict())
-        print('---------')
         return result
 
     @classmethod
