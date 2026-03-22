@@ -150,7 +150,7 @@ class BaseRouter:
         # get one buy id
         self.router.add_api_route("/{id}",
                                   self.get_one, methods=["GET"],
-                                  # response_model=self.read_schema,
+                                  response_model=self.read_schema,
                                   openapi_extra={'x-request-schema': None})
 
         self.router.add_api_route("",
@@ -294,10 +294,10 @@ class BaseRouter:
             response_model <>ReadRelatio
         """
         obj = await self.service.get_by_id(id, self.repo, self.model, session)
-        validated_res = self.read_schema.validate(obj)
+        # validated_res = self.read_schema.validate(obj)
         if obj is None:
             raise HTTPException(status_code=404, detail=f'Запрашиваемый файл {id} не найден на сервере')
-        return obj.to_dict()
+        return obj
 
     async def get(self,
                   after_date: datetime = Query(delta,
