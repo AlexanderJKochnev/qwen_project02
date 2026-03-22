@@ -438,12 +438,12 @@ class ItemService(Service):
         foods = [{'id': item.food_id} for item in food_associations if item]
         drink_dict = drink.to_dict()
         item_dict['drink_id'] = drink.id
-        if varietals:
-            drink_dict.pop('varietals', None)
-            drink_dict['varietals'] = varietals
-        if foods:
-            drink_dict.pop('foods', None)
-            drink_dict['foods'] = foods
+        # if varietals:
+        #     drink_dict.pop('varietals', None)
+        drink_dict['varietals'] = varietals
+        # if foods:
+        # drink_dict.pop('foods', None)
+        drink_dict['foods'] = foods
         tmp = DrinkCreate(**drink_dict)
         drink_dict = tmp.model_dump(exclude_unset=True, exclude_none=True)
         item_dict.update(drink_dict)

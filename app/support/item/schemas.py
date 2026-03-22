@@ -262,7 +262,7 @@ class ItemDrinkPreactSchema(LangMixin, ImageUrlMixin, BaseModel):
     # Drink - DrinkVarietal
     varietals: Optional[List[Tuple[int, float]]] = None
     # Drink - DrinkFood
-    foods: Optional[List[int]] = None
+    # foods: Optional[List[int]] = None
     # Item - Drink
     vol: Optional[float] = None
     price: Optional[float] = None
