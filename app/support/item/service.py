@@ -461,7 +461,7 @@ class ItemService(Service):
             items = await cls.search_fts_all(search, repository, model, session)
             language = lang_sorted(lang)
             result = ItemListViewAdapter.validate_python(
-                [transform_list_view(item, lang, tuple(language)) for item in items]
+                [transform_list_view(item.to_dict(), lang, tuple(language)) for item in items]
             )
             return result
         except Exception as e:

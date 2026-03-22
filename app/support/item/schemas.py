@@ -4,7 +4,7 @@ from typing import Optional, List, Tuple, Any
 from datetime import datetime
 from pydantic import Field, model_serializer
 from app.core.schemas.image_mixin import ImageUrlMixin
-from app.core.schemas.base import BaseModel, CreateResponse
+from app.core.schemas.base import BaseModel, CreateResponse, ModelSerializer
 from app.support.drink.schemas import (DrinkCreateRelation,
                                        DrinkReadRelation, DrinkCreate, LangMixin)
 
@@ -241,7 +241,7 @@ class ItemApiRoot(BaseModel):
     changed_at: datetime = Field(exclude=True)
 
 
-class ItemApi(ItemApiRoot):
+class ItemApi(ItemApiRoot, ModelSerializer):
     en: ItemApiLang
     ru: ItemApiLang
     fr: ItemApiLang

@@ -987,3 +987,30 @@ def transform_list_view(source: dict, lang: str, languages: tuple) -> dict:
         "category": get_multilang(cat, "name", languages),
         "country": get_multilang(country, "name", languages),
     }
+
+
+def transform_api_list_view(source: dict, lang: str, languages: tuple) -> dict:
+    """
+    трансформация для api
+
+    """
+    d = source.get("drink", {})
+    subcat = d.get("subcategory", {})
+    cat = subcat.get("category", {})
+
+    # Навигация по географии (с защитой от None)
+    site = d.get("site") or {}
+    subreg = site.get("subregion") or {}
+    reg = subreg.get("region") or {}
+    country = reg.get("country") or {}
+
+    return {
+        "id": source.get("id"),
+        "vol": source.get("vol"),
+        "image_id": source.get("image_id"),
+        # Текстовые поля с coalesce
+        "title": get_multilang(d, "title", languages),
+        # География и категории
+        "category": get_multilang(cat, "name", languages),
+        "country": get_multilang(country, "name", languages),
+    }

@@ -61,6 +61,13 @@ class PkSchema(BaseModel):
     id: int
 
 
+class ModelSerializer:
+    @model_serializer
+    def serialize_model(self) -> dict[str, Any]:
+        # Фильтруем пустые строки на выходе
+        return {k: v for k, v in self.__dict__.items() if v not in ("", None, [])}
+
+
 class DateSchema(BaseModel):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
