@@ -3,7 +3,7 @@ from pydantic import Field
 from typing import List, Optional
 from app.core.schemas.base import BaseModel, ConfigDict
 # from app.core.schemas.api_mixin import LangMixin
-from app.support.varietal.schemas import VarietalCreateRelation
+from app.support.varietal.schemas import VarietalCreateRelation, VarietalRead
 
 
 class DrinkVarietalId(BaseModel):
@@ -27,7 +27,7 @@ class DrinkVarietalRelationFlat(BaseModel):
                               extra='allow',
                               populate_by_name=True,
                               exclude_none=True)
-    varietal: VarietalCreateRelation
+    varietal: VarietalRead
     percentage: Optional[float]
 
 
