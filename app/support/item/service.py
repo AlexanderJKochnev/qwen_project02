@@ -195,14 +195,14 @@ class ItemService(Service):
         item_instance = await repository.get_detail_view(id, model, session)
         item: dict = item_instance.to_dict()
         from app.core.utils.common_utils import jprint
-        jprint(item)
-        logger.warning('=======TEST===========')
         if not item:    # если ничего нет
             return None
         # задаем порядок замещения пустых полей
         language: list = list_move(settings.LANGUAGES, lang)
         lang_prefixes: list = lang_suffix_list(language)
         item = cls._level_up_(lang_prefixes, item)
+        jprint(item)
+        logger.warning('=======TEST===========')
         # список всех локализованных полей приложения
         result: dict = {}
         # добавление non-localized fields
