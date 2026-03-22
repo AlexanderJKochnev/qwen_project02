@@ -915,25 +915,25 @@ def transform(source: dict, lang: str, languages: tuple) -> dict:
         "alc": d.get("alc"),
 
         # Текстовые поля с coalesce
-        "title": get_multilang(d, "title", lang, languages),
-        "subtitle": get_multilang(d, "subtitle", lang, languages),
-        "description": get_multilang(d, "description", lang, languages),
+        "title": get_multilang(d, "title", languages),
+        "subtitle": get_multilang(d, "subtitle", languages),
+        "description": get_multilang(d, "description", languages),
 
         # География и категории
-        "country": get_multilang(country, "name", lang, languages),
-        "region": get_multilang(reg, "name", lang, languages),
-        "subregion": get_multilang(subreg, "name", lang, languages),
-        "site": get_multilang(site, "name", lang, languages),
-        "category": get_multilang(cat, "name", lang, languages),
-        "subcategory": get_multilang(subcat, "name", lang, languages),
+        "country": get_multilang(country, "name", languages),
+        "region": get_multilang(reg, "name", languages),
+        "subregion": get_multilang(subreg, "name", languages),
+        "site": get_multilang(site, "name", languages),
+        "category": get_multilang(cat, "name", languages),
+        "subcategory": get_multilang(subcat, "name", languages),
 
         # СПИСКИ С ФОРМАТИРОВАНИЕМ
         "varietal": [
-            f"{get_multilang(va.get('varietal', {}), 'name', lang, languages)} {va.get('percentage', 0)} %"
+            f"{get_multilang(va.get('varietal', {}), 'name', languages)} {va.get('percentage', 0)} %"
             for va in d.get("varietal_associations", [])
         ],
         "pairing": [
-            get_multilang(fa.get("food", {}), "name", lang, languages)
+            get_multilang(fa.get("food", {}), "name", languages)
             for fa in d.get("food_associations", [])
         ],
 
