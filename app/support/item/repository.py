@@ -39,59 +39,6 @@ class ItemRepository(Repository):
         return query
 
     @classmethod
-    def get_query0(cls, model: ModelType):
-        query = select(Item).options(
-            selectinload(Item.drink).options(
-                selectinload(Drink.subregion).options(
-                    selectinload(Subregion.region).options(
-                        selectinload(Region.country)
-                    )
-                ), selectinload(Drink.subcategory).selectinload(Subcategory.category),
-                selectinload(Drink.sweetness), selectinload(Drink.food_associations).joinedload(DrinkFood.food),
-                selectinload(Drink.varietal_associations).joinedload(DrinkVarietal.varietal),
-                selectinload(Drink.foods),
-                selectinload(Drink.varietals)
-            )
-        )
-        return query
-
-    @classmethod
-    def get_query2(csl, model: ModelType):
-        """
-            delete after tests
-        """
-        return select(Item).options(selectinload(Item.drink).
-                                    selectinload(Drink.subregion).
-                                    selectinload(Subregion.region).
-                                    selectinload(Region.country),
-                                    selectinload(Item.drink).
-                                    selectinload(Drink.subcategory).
-                                    selectinload(Subcategory.category),
-                                    selectinload(Drink.sweetness),
-                                    selectinload(Item.drink).
-                                    selectinload(Drink.foods),
-                                    selectinload(Drink.food_associations).joinedload(DrinkFood.food),
-                                    selectinload(Drink.varietals),
-                                    selectinload(Drink.varietal_associations).joinedload(DrinkVarietal.varietal))
-
-    @classmethod
-    def get_query1(cls, model: ModelType):
-        """ delete after tests"""
-        return select(model).options(
-            selectinload(Item.drink).options(
-                selectinload(Drink.subregion).options(
-                    selectinload(Subregion.region).options(
-                        selectinload(Region.country)
-                    )
-                ),
-                selectinload(Drink.subcategory).selectinload(Subcategory.category),
-                selectinload(Drink.sweetness), selectinload(Drink.foods),
-                selectinload(Drink.food_associations).joinedload(DrinkFood.food), selectinload(Drink.varietals),
-                selectinload(Drink.varietal_associations).joinedload(DrinkVarietal.varietal)
-            ),
-        )
-
-    @classmethod
     def get_query_for_list_view(cls, model: ModelType):
         """
             get_query для запроса list_view - без varietals & foods
