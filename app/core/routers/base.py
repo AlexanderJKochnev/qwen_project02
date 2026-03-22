@@ -150,7 +150,7 @@ class BaseRouter:
         # get one buy id
         self.router.add_api_route("/{id}",
                                   self.get_one, methods=["GET"],
-                                  response_model=self.read_schema,
+                                  # response_model=self.read_schema,
                                   openapi_extra={'x-request-schema': None})
 
         self.router.add_api_route("",
