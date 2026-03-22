@@ -912,7 +912,7 @@ def transform(source: dict, lang: str, languages: tuple) -> dict:
         "vol": source.get("vol"),
         "count": source.get("count"),
         "image_id": source.get("image_id"),
-        "alc": d.get("alc"),
+        "alc": f"{d.get('alc')}%",
 
         # Текстовые поля с coalesce
         "title": get_multilang(d, "title", languages),
