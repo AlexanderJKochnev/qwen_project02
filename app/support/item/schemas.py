@@ -150,7 +150,7 @@ class ItemDetailLocalized(BaseModel):
     @model_serializer
     def serialize_model(self) -> dict[str, Any]:
         # Фильтруем пустые строки на выходе
-        return {k: v for k, v in self.__dict__.items() if v not in ("", None)}
+        return {k: v for k, v in self.__dict__.items() if v not in ("", None, [])}
 
 
 class ItemDetailManyToManyLocalized(BaseModel):
