@@ -158,24 +158,27 @@ class ItemDetailManyToManyLocalized(BaseModel):
     varietal: Optional[List[str]] = None  # From Drink.varietal_associations
 
 
+class NewItemDetailView:
+    lwin: Optional[str] = None
+    display_name: Optional[str] = None
+    anno: Optional[str] = None
+    producer: Optional[str] = None
+    source: Optional[str] = None
+    classification: Optional[str] = None
+    vintageconfig: Optional[str] = None
+    designation: Optional[str] = None
+    site: Optional[str] = None
+    first_vintage: Optional[int] = None
+    last_vintage: Optional[int] = None
+
+
 class ItemDetailView(ItemDetailManyToManyLocalized, ItemDetailForeignLocalized,
                      ItemDetailNonLocalized,
                      ItemDetailLocalized,
+                     NewItemDetailView
                      ):
 
     model_config = {'populate_by_name': True, 'str_strip_whitespace': True}
-
-    """
-    def model_dump(self, exclude_none=True, **kwargs):
-        # Override model_dump to exclude None and empty values
-        data = super().model_dump(exclude_none=True, **kwargs)
-        # Remove empty strings and empty lists
-        cleaned_data = {}
-        for key, value in data.items():
-            if value is not None and value != '' and value != []:
-                cleaned_data[key] = value
-        return cleaned_data
-    """
 
 
 class ItemDrinkPreactSchema(LangMixin, ImageUrlMixin, BaseModel):
