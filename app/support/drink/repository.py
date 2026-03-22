@@ -30,7 +30,6 @@ class DrinkRepository(Repository):
             selectinload(Drink.site).selectinload(Site.subregion).selectinload(Subregion.region).selectinload(Region.country),
             selectinload(Drink.subcategory).selectinload(Subcategory.category),
             selectinload(Drink.sweetness),
-            # selectinload(Drink.foods).selectinload(Food.superfood),
             selectinload(Drink.food_associations).selectinload(DrinkFood.food).selectinload(Food.superfood),
             selectinload(Drink.varietal_associations),
             selectinload(Drink.source),
