@@ -24,16 +24,16 @@ class DrinkRepository(Repository):
     def get_selectin(cls):
         return (selectinload(Drink.site).selectinload(Site.subregion).selectinload(Subregion.region).selectinload(
                 Region.country),
-               selectinload(Drink.subcategory).selectinload(Subcategory.category),
-               selectinload(Drink.sweetness),
-               selectinload(Drink.food_associations).selectinload(DrinkFood.food).selectinload(Food.superfood),
-               selectinload(Drink.varietal_associations),
-               selectinload(Drink.source),
-               selectinload(Drink.producer).selectinload(Producer.producertitle),
-               selectinload(Drink.parcel),
-               selectinload(Drink.designation),
-               selectinload(Drink.classification),
-               selectinload(Drink.vintageconfig))
+                selectinload(Drink.subcategory).selectinload(Subcategory.category),
+                selectinload(Drink.sweetness),
+                selectinload(Drink.food_associations).selectinload(DrinkFood.food).selectinload(Food.superfood),
+                selectinload(Drink.varietal_associations),
+                selectinload(Drink.source),
+                selectinload(Drink.producer).selectinload(Producer.producertitle),
+                selectinload(Drink.parcel),
+                selectinload(Drink.designation),
+                selectinload(Drink.classification),
+                selectinload(Drink.vintageconfig))
 
     @classmethod
     def get_query(cls, model: ModelType):
@@ -41,7 +41,7 @@ class DrinkRepository(Repository):
             Обратить внимание! для последовательной загрузки использовать точку.
             параллельно запятая
         """
-        return select(Drink).options(cls.get_selectin())
+        return select(Drink).options(*cls.get_selectin())
 
     @classmethod
     def get_query1(cls, model: ModelType):
@@ -50,7 +50,8 @@ class DrinkRepository(Repository):
             параллельно запятая
         """
         return select(Drink).options(
-            selectinload(Drink.site).selectinload(Site.subregion).selectinload(Subregion.region).selectinload(Region.country),
+            selectinload(Drink.site).selectinload(Site.subregion).selectinload(
+                Subregion.region).selectinload(Region.country),
             selectinload(Drink.subcategory).selectinload(Subcategory.category),
             selectinload(Drink.sweetness),
             selectinload(Drink.food_associations).selectinload(DrinkFood.food).selectinload(Food.superfood),
