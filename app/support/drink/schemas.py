@@ -241,10 +241,10 @@ class CustomReadSchema(LangMixin, NewReadSchema):
     alc: Optional[float] = None
     sugar: Optional[float] = None
     age: Optional[str] = None
-    foods: List[Optional[dict]]
+    foods: List[FoodRead]
     # varietals: List[VarietalRead]
     # varietal_associations: Optional[List[DrinkVarietalRelationFlat]]
-    # food_associations: List[DrinkFoodRelation] = []
+    food_associations: List[DrinkFoodRelation] = []
     updated_at: Optional[datetime] = None
 
     @field_serializer('alc', when_used='unless-none')
