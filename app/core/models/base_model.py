@@ -1,10 +1,10 @@
 # app/core/models/base_model.py
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date
 from decimal import Decimal
 from typing import Annotated, Optional, Type
 # from sqlalchemy.dialects.postgresql import MONEY
-from sqlalchemy import DateTime, DECIMAL, func, Integer, text, Text, Computed
+from sqlalchemy import DateTime, DECIMAL, func, Integer, text, Text, Computed, inspect
 from sqlalchemy.dialects.postgresql import TSVECTOR
 
 from sqlalchemy.ext.asyncio import AsyncAttrs
@@ -64,6 +64,9 @@ class Base(AsyncAttrs, DeclarativeBase):
         common methods and properties, table name
     """
     __abstract__ = True
+    # Кэш атрибутов для каждого класса (чтобы не вызывать inspect постоянно)
+    _cached_cols = None
+    _cached_rels = None
 
     id: Mapped[int_pk]
 
@@ -104,12 +107,45 @@ class Base(AsyncAttrs, DeclarativeBase):
         if self is None:
             return None
 
-        obj_id = f"{self.__class__.__name__}_{id(self)}"
+        # Уникальный ключ объекта для защиты от циклов
+        obj_id = (self.__class__, inspect(self).identity)
         if obj_id in seen:
-            return None  # защита от циклов
+            return None
         seen.add(obj_id)
 
+        cls = self.__class__
+        # Инициализируем кэш имен атрибутов один раз для класса
+        if cls._cached_cols is None:
+            mapper = inspect(cls)
+            cls._cached_cols = [c.key for c in mapper.column_attrs]
+            cls._cached_rels = [r.key for r in mapper.relationships]
+
         result = {}
+        # 1. Быстрая итерация по колонкам (через сохраненные имена)
+        for key in cls._cached_cols:
+            value = getattr(self, key)
+            if isinstance(value, (datetime, date)):
+                result[key] = value.isoformat()
+            elif isinstance(value, Decimal):
+                result[key] = float(value)
+            else:
+                result[key] = value
+
+        # 2. Итерация по связям (только если они загружены)
+        unloaded = inspect(self).unloaded
+        for key in cls._cached_rels:
+            if key not in unloaded:
+                value = getattr(self, key)
+                if value is None:
+                    result[key] = None
+                elif isinstance(value, list):
+                    result[key] = [item.to_dict(seen) if hasattr(item, 'to_dict') else item for item in value]
+                elif hasattr(value, "to_dict"):
+                    result[key] = value.to_dict(seen)
+
+        return result
+
+        """
         for key in self.__dict__.keys():
             if key.startswith("_"):
                 continue
@@ -126,6 +162,7 @@ class Base(AsyncAttrs, DeclarativeBase):
             else:
                 result[key] = value
         return result
+        """
 
 
 class BaseAt:
