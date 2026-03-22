@@ -936,10 +936,12 @@ def transform(source: dict, lang: str, languages: tuple) -> dict:
 
         # СПИСКИ С ФОРМАТИРОВАНИЕМ
         "varietal": [
-            f"{get_multilang(va.get('varietal') or {}, 'name', lang, languages)} {va.get('percentage', 0)} %".strip()
+            f"{get_multilang(va.get('varietal', {}), 'name', lang, languages)} {va.get('percentage', 0)} %"
             for va in d.get("varietal_associations", [])
         ],
-
+        "varietal2": [
+            get_multilang(va.get('varietal', {}), 'name', lang, languages)
+            for va in d.get("varietal_associations", [])],
         "pairing": [
             get_multilang(fa.get("food", {}), "name", lang, languages)
             for fa in d.get("food_associations", [])
