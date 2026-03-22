@@ -10,9 +10,9 @@ PaginatedResponse - см ниже на базе ReadSchema
 ListResponse - тоже что и Pagianted только без Pagianted
 """
 from datetime import datetime
-from typing import Generic, List, NewType, Optional, TypeVar
+from typing import Generic, List, NewType, Optional, TypeVar, Any
 from app.service_registry import register_pyschema
-from pydantic import BaseModel as BaseOrigin, ConfigDict
+from pydantic import BaseModel as BaseOrigin, ConfigDict, model_serializer
 
 # from abc import ABC
 
@@ -150,6 +150,10 @@ class UpdateNoNameSchema(DescriptionSchema):
 class ReadSchema(PkSchema, LangSchema):
     pass
 
+    @model_serializer
+    def serialize_model(self) -> dict[str, Any]:
+        # Фильтруем пустые строки на выходе
+        return {k: v for k, v in self.__dict__.items() if v != ""}
 
 class ReadApiSchema(NameSchema):
     pass
@@ -157,6 +161,11 @@ class ReadApiSchema(NameSchema):
 
 class ReadNoNameSchema(PkSchema, DescriptionSchema):
     pass
+
+    @model_serializer
+    def serialize_model(self) -> dict[str, Any]:
+        # Фильтруем пустые строки на выходе
+        return {k: v for k, v in self.__dict__.items() if v != ""}
 
 
 class FullSchema(ReadSchema, DateSchema):
