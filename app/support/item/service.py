@@ -31,6 +31,8 @@ from app.support.item.schemas import (ItemCreate, ItemCreateRelation, ItemRead, 
                                       # ItemApiLangNonLocalized, ItemApiLangLocalized, ItemApiLang, ItemApi
                                       )
 
+itemdetailmanytomanylocalized = get_field_name(ItemDetailManyToManyLocalized)
+
 
 class ItemService(Service):
     default = ['vol', 'drink_id']
@@ -105,7 +107,7 @@ class ItemService(Service):
         """
         try:
             dict_lang: dict = {}
-            for field in get_field_name(ItemDetailManyToManyLocalized):
+            for field in itemdetailmanytomanylocalized:
                 match field:
                     case 'pairing':
                         pairing: list = []
@@ -257,33 +259,6 @@ class ItemService(Service):
                     result.update(lf)
         # добавление manytomany fields
         many_to_many = cls.add_manytomany_fields(item, lang_prefixes)
-        """
-        for field in get_field_name(ItemDetailManyToManyLocalized):
-            match field:
-                case 'pairing':
-                    if tmp := item.get('food_associations'):
-                        pairing = []
-                        for food_dict in tmp:
-                            if sf := food_dict.get('food'):
-                                if tf := localized_field_with_replacement(sf, 'name', lang_prefixes, 'food'):
-                                    pairing.append(tf.get('food'))
-                        if pairing:
-                            result.update({'pairing': pairing})
-                case 'varietal':
-                    if tmp := item.get('varietal_associations'):
-                        varietal = []
-                        for varietal_dict in tmp:
-                            if sf := varietal_dict.get('varietal'):
-                                if tf := localized_field_with_replacement(sf, 'name', lang_prefixes, 'varietal'):
-                                    xf = tf.get('varietal')
-                                    if percent := varietal_dict.get('percentage'):
-                                        xf = f'{xf} {percent:.0f} %'
-                                    varietal.append(xf)
-                        if varietal:
-                            result.update({'varietal': varietal})
-                case _:
-                    pass
-                    # do nothing"""
         result.update(many_to_many)
         return result
 

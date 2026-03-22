@@ -35,18 +35,6 @@ class ItemRepository(Repository):
     def get_query(cls, model: ModelType):
         subquery = DrinkRepository.get_selectin()
         query = select(Item).options(selectinload(Item.drink).options(*subquery))
-
-        query1 = select(Item).options(
-            selectinload(Item.drink).options(
-                selectinload(Drink.site).selectinload(Site.subregion).selectinload(Subregion.region).selectinload(
-                    Region.country
-                ), selectinload(Drink.subcategory).selectinload(Subcategory.category),
-                selectinload(Drink.sweetness), selectinload(Drink.food_associations),
-                selectinload(Drink.varietal_associations), selectinload(Drink.source),
-                selectinload(Drink.producer).selectinload(Producer.producertitle), selectinload(Drink.parcel),
-                selectinload(Drink.designation), selectinload(Drink.classification),
-                selectinload(Drink.vintageconfig)
-            ))
         return query
 
     @classmethod
