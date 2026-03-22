@@ -7,8 +7,8 @@ from app.support.superfood.schemas import SuperfoodCreateRelation, SuperfoodRead
 
 
 class CustomReadSchema:
-    superfood: Optional[SuperfoodRead] = None
-
+    # superfood: Optional[SuperfoodRead] = None
+    pass
 
 class CustomCreateSchema:
     superfood_id: Optional[int] = None
