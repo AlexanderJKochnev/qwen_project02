@@ -900,16 +900,27 @@ def transform(source: dict, lang: str, languages: tuple) -> dict:
     d = source.get("drink", {})
     subcat = d.get("subcategory", {})
     cat = subcat.get("category", {})
+    prod = d.get('producer', {})
+    ptitle = prod.get("producertitle", {})
 
     # Навигация по географии (с защитой от None)
     site = d.get("site") or {}
     subreg = site.get("subregion") or {}
     reg = subreg.get("region") or {}
     country = reg.get("country") or {}
+    # составные
     if alcv := d.get('alc'):
         alc = f"{alcv}%"
     else:
         alc = None
+    if prod:
+        producer = get_multilang(prod, "name", languages)
+        if producer:
+            ptitle = get_multilang(prod.get('producertitle'), "name", languages)
+            if ptitle:
+                producer = f'{ptitle} {producer}'
+    else:
+        producer = None
     return {
         "id": source.get("id"),
         "vol": source.get("vol"),
@@ -944,4 +955,17 @@ def transform(source: dict, lang: str, languages: tuple) -> dict:
         "first_vintage": d.get("first_vintage"),
         "last_vintage": d.get("last_vintage"),
         "display_name": d.get("display_name"),
+        "producer": producer
     }
+
+"""
+anno: Optional[str] = None
+    producer: Optional[str] = None
+    source: Optional[str] = None
+    classification: Optional[str] = None
+    vintageconfig: Optional[str] = None
+    designation: Optional[str] = None
+    site: Optional[str] = None
+    first_vintage: Optional[int] = None
+    last_vintage: Optional[int] = None
+"""
