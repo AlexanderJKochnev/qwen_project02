@@ -251,6 +251,9 @@ class Repository(metaclass=RepositoryMeta):
         stmt = cls.get_query(model).where(model.id == id)
         result = await session.execute(stmt)
         obj = result.scalar_one_or_none()
+        from app.core.utils.common_utils import jprint
+        jprint(obj.to_dict())
+        print('--------------------------')
         return obj
 
     @classmethod

@@ -207,8 +207,8 @@ class ItemRepository(Repository):
         """Получение детального представления элемента для DetailView"""
         query = cls.get_query(Item).where(Item.id == id)
         result = await session.execute(query)
-        from app.core.utils.common_utils import jprint
         item = result.scalar_one_or_none()
+        from app.core.utils.common_utils import jprint
         jprint(item.to_dict())
         print('--------------------------')
         if not item:
