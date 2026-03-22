@@ -883,23 +883,16 @@ def level_up(source: dict, key: str, rename: Set[str] = ['id']) -> dict:
     return source
 
 
-def get_multilang(obj: dict, base_key: str, lang: str, languages: tuple) -> str:
+def get_multilang(obj: dict, base_key: str, languages: tuple) -> str:
     """ Умный выбор перевода: сначала текущий lang, потом остальные из кортежа, потом база. """
     if not obj:
         return ""
 
-    # Сначала проверяем запрошенный язык: name_ru
-    val = obj.get(f"{base_key}_{lang}")
-    if val:
-        return val
-
     # Пробегаем по списку альтернатив
     for lng in languages:
-        val = obj.get(f"{base_key}_{lng}")
+        val = obj.get(f"{base_key}{lng}")
         if val:
             return val
-
-    # Если переводов нет, берем базовое поле name или пустую строку
     return obj.get(base_key, "")
 
 

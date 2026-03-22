@@ -199,34 +199,11 @@ class ItemService(Service):
             return None
         # задаем порядок замещения пустых полей
         language = lang_sorted(lang)
-        jprint(f'{language=} | {lang}')
         item = transform(item, lang, tuple(language))
-        # item = cls._level_up_(lang_prefixes, item)
-        # level_up(item, 'drink')
         jprint(item)
         logger.warning('=======TEST===========')
-        jprint(list(ItemDetailView.model_fields.keys()))
         # список всех локализованных полей приложения
-        result: dict = {}
-        # добавление non-localized fields
-        for key in get_field_name(ItemDetailNonLocalized):
-            if val := item.get(key):
-                if isinstance(val, (float, Decimal)):
-                    val = f"{val:.03g}"
-                result[key] = val
-        # добавление localized fields
-        for field in get_field_name(ItemDetailLocalized):
-            if lf := localized_field_with_replacement(item, field, lang_prefixes):
-                result.update(lf)
-        # добавление foreign localized fields
-        for field in get_field_name(ItemDetailForeignLocalized):
-            if root := item.get(field):
-                if lf := localized_field_with_replacement(root, 'name', lang_prefixes, field):
-                    result.update(lf)
-        # добавление manytomany fields
-        many_to_many = cls.add_manytomany_fields(item, lang_prefixes)
-        result.update(many_to_many)
-        return result
+        return item
 
     @classmethod
     async def create_relation(cls, data: ItemCreateRelation, repository: ItemRepository,
