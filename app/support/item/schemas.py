@@ -239,6 +239,7 @@ class ItemDetailView(ItemDetailManyToManyLocalized, ItemDetailForeignLocalized,
 
     model_config = {'populate_by_name': True, 'str_strip_whitespace': True}
 
+    """
     def model_dump(self, exclude_none=True, **kwargs):
         # Override model_dump to exclude None and empty values
         data = super().model_dump(exclude_none=True, **kwargs)
@@ -248,6 +249,7 @@ class ItemDetailView(ItemDetailManyToManyLocalized, ItemDetailForeignLocalized,
             if value is not None and value != '' and value != []:
                 cleaned_data[key] = value
         return cleaned_data
+    """
 
 
 class ItemDrinkPreactSchema(LangMixin, ImageUrlMixin, BaseModel):
