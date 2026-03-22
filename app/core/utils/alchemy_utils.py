@@ -901,7 +901,7 @@ def transform(source: dict, lang: str, languages: tuple) -> dict:
     subcat = d.get("subcategory", {})
     cat = subcat.get("category", {})
     prod = d.get('producer', {})
-    ptitle = prod.get("producertitle", {})
+    # ptitle = prod.get("producertitle", {})
     classification = d.get("classification", {})
     vintageconfig = d.get("vintageconfig", {})
     designation = d.get("designation", {})
