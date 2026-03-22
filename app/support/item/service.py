@@ -437,13 +437,12 @@ class ItemService(Service):
             #                                   page, page_size, repository, model, session)
             response = await cls.search_fts(search, page, page_size, repository, model, session)
             items = response.pop('items')
-            logger.warning(f'{type(items[0])}')
             total = response.get('total')
             if total == 0:
                 result = []
             else:
                 language = lang_sorted(lang)
-                result = ItemListViewAdapter.validate_python([transform_list_view(item, lang, tuple(language))
+                result = ItemListViewAdapter.validate_python([transform_list_view(item.to_dict(), lang, tuple(language))
                                                               for item in items])
             response = make_paginated_response(result, total, page, page_size)
             return response
