@@ -902,6 +902,9 @@ def transform(source: dict, lang: str, languages: tuple) -> dict:
     cat = subcat.get("category", {})
     prod = d.get('producer', {})
     ptitle = prod.get("producertitle", {})
+    classification = d.get("classification", {})
+    vintageconfig = d.get("vintageconfig", {})
+    designation = d.get("designation", {})
 
     # Навигация по географии (с защитой от None)
     site = d.get("site") or {}
@@ -957,7 +960,7 @@ def transform(source: dict, lang: str, languages: tuple) -> dict:
         "display_name": d.get("display_name"),
         "producer": producer,
         "anno": d.get("anno"),
-        "classification": d.get("classification"),
-        "vintageconfig": d.get("vintageconfig"),
-        "designation": d.get("designation")
+        "classification": get_multilang(classification, "name", languages),
+        "vintageconfig": get_multilang(vintageconfig, "name", languages),
+        "designation": get_multilang(designation, "name", languages),
     }
