@@ -913,7 +913,6 @@ def transform(source: dict, lang: str, languages: tuple) -> dict:
         "count": source.get("count"),
         "image_id": source.get("image_id"),
         "alc": f"{d.get('alc')}%",
-        "display_name": source.get("display_name"),
 
         # Текстовые поля с coalesce
         "title": get_multilang(d, "title", languages),
@@ -941,5 +940,6 @@ def transform(source: dict, lang: str, languages: tuple) -> dict:
         # Дополнительные поля (примеры)
         "source": d.get("source", {}).get("name"),
         "first_vintage": d.get("first_vintage"),
-        "last_vintage": d.get("last_vintage")
+        "last_vintage": d.get("last_vintage"),
+        "display_name": d.get("display_name"),
     }
