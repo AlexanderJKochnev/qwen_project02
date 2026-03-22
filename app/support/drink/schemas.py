@@ -243,7 +243,7 @@ class CustomReadSchema(LangMixin, NewReadSchema):
     age: Optional[str] = None
     foods: List[FoodRead]
     varietals: List[VarietalRead]
-    # varietal_associations: Optional[List[DrinkVarietalRelationFlat]]
+    varietal_associations: Optional[List[DrinkVarietalRelationFlat]]
     food_associations: List[DrinkFoodRelation] = []
     updated_at: Optional[datetime] = None
 
