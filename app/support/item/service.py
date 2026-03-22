@@ -12,7 +12,7 @@ from fastapi import HTTPException, BackgroundTasks
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.services.service import Service
 from app.core.config.project_config import settings
-from app.core.utils.alchemy_utils import level_up
+from app.core.utils.alchemy_utils import level_up, transform
 from app.core.utils.common_utils import localized_field_with_replacement
 from app.core.types import ModelType
 from app.core.utils.pydantic_utils import get_field_name
@@ -29,7 +29,7 @@ from app.support.item.repository import ItemRepository
 from app.support.item.schemas import (ItemCreate, ItemCreateRelation, ItemDetailView, ItemRead, ItemReadRelation,
                                       ItemCreatePreact, ItemUpdatePreact, ItemUpdate, ItemDetailNonLocalized,
                                       ItemDetailLocalized, ItemDetailForeignLocalized, ItemDetailManyToManyLocalized,
-                                      ItemListView, # ItemApiLangNonLocalized, ItemApiLangLocalized, ItemApiLang, ItemApi
+                                      ItemListView,  # ItemApiLangNonLocalized, ItemApiLangLocalized, ItemApiLang,
                                       )
 
 itemdetailmanytomanylocalized = get_field_name(ItemDetailManyToManyLocalized)
@@ -200,8 +200,9 @@ class ItemService(Service):
         # задаем порядок замещения пустых полей
         language: list = list_move(settings.LANGUAGES, lang)
         lang_prefixes: list = lang_suffix_list(language)
+        item = transform(item, lang, tuple(language))
         # item = cls._level_up_(lang_prefixes, item)
-        level_up(item, 'drink')
+        # level_up(item, 'drink')
         jprint(item)
         logger.warning('=======TEST===========')
         jprint(list(ItemDetailView.model_fields.keys()))

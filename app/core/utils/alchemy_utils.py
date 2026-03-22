@@ -881,3 +881,72 @@ def level_up(source: dict, key: str, rename: Set[str] = ['id']) -> dict:
         # 3. Слияние (в CPython реализовано на C, очень быстро)
     source.update(target)
     return source
+
+
+def get_multilang(obj: dict, base_key: str, lang: str, languages: tuple) -> str:
+    """ Умный выбор перевода: сначала текущий lang, потом остальные из кортежа, потом база. """
+    if not obj:
+        return ""
+
+    # Сначала проверяем запрошенный язык: name_ru
+    val = obj.get(f"{base_key}_{lang}")
+    if val:
+        return val
+
+    # Пробегаем по списку альтернатив
+    for lng in languages:
+        val = obj.get(f"{base_key}_{lng}")
+        if val:
+            return val
+
+    # Если переводов нет, берем базовое поле name или пустую строку
+    return obj.get(base_key, "")
+
+
+def transform(source: dict, lang: str, languages: tuple) -> dict:
+    d = source.get("drink", {})
+    subcat = d.get("subcategory", {})
+    cat = subcat.get("category", {})
+
+    # Навигация по географии (с защитой от None)
+    site = d.get("site") or {}
+    subreg = site.get("subregion") or {}
+    reg = subreg.get("region") or {}
+    country = reg.get("country") or {}
+
+    return {
+        "id": source.get("id"),
+        "vol": source.get("vol"),
+        "count": source.get("count"),
+        "image_id": source.get("image_id"),
+        "alc": d.get("alc"),
+
+        # Текстовые поля с coalesce
+        "title": get_multilang(d, "title", lang, languages),
+        "subtitle": get_multilang(d, "subtitle", lang, languages),
+        "description": get_multilang(d, "description", lang, languages),
+
+        # География и категории
+        "country": get_multilang(country, "name", lang, languages),
+        "region": get_multilang(reg, "name", lang, languages),
+        "subregion": get_multilang(subreg, "name", lang, languages),
+        "site": get_multilang(site, "name", lang, languages),
+        "category": get_multilang(cat, "name", lang, languages),
+        "subcategory": get_multilang(subcat, "name", lang, languages),
+
+        # СПИСКИ С ФОРМАТИРОВАНИЕМ
+        "varietal": [
+            f"{get_multilang(va.get('varietal', {}), 'name', lang, languages)} {va.get('percentage', 0)} %"
+            for va in d.get("varietal_associations", [])
+        ],
+
+        "pairing": [
+            get_multilang(fa.get("food", {}), "name", lang, languages)
+            for fa in d.get("food_associations", [])
+        ],
+
+        # Дополнительные поля (примеры)
+        "source": d.get("source", {}).get("name"),
+        "first_vintage": d.get("first_vintage"),
+        "last_vintage": d.get("last_vintage")
+    }
