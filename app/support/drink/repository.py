@@ -7,7 +7,8 @@ from sqlalchemy.orm import selectinload
 from app.support.producer.model import Producer
 from app.core.repositories.sqlalchemy_repository import ModelType, Repository
 from app.support import Drink, Region, Subregion, Subcategory, Site
-# from app.support.item.model import Item
+from app.support.food.model import Food
+from app.support.drink.model import DrinkFood
 
 
 class DrinkRepository(Repository):
@@ -29,7 +30,7 @@ class DrinkRepository(Repository):
             selectinload(Drink.site).selectinload(Site.subregion).selectinload(Subregion.region).selectinload(Region.country),
             selectinload(Drink.subcategory).selectinload(Subcategory.category),
             selectinload(Drink.sweetness),
-            selectinload(Drink.food_associations),
+            selectinload(Drink.food_associations).selectinload(DrinkFood.food).selectinload(Food.superfood),
             selectinload(Drink.varietal_associations),
             selectinload(Drink.source),
             selectinload(Drink.producer).selectinload(Producer.producertitle),
