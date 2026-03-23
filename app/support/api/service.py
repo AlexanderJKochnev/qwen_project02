@@ -238,8 +238,10 @@ class ApiService(ItemService):
                 items = await repository.get_full(model, session)
             else:
                 if formatted_search := formatted_query(search):
+                    logger.warning('search_geans_all.formatted_query')
                     items = await repository.search_fts_all(formatted_search, model, session)
                 else:
+                    logger.warning('search_geans_all.non-formatted_query==========')
                     items = await repository.search_by_drink_title_subtitle_only(search, session)
             result = cls.convert_list_api_view(items)
             logger.warning('search_geans_all_end')
