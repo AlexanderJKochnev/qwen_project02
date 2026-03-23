@@ -1009,7 +1009,7 @@ def transform_api_list_view(source: dict, def_lang: str, languages: tuple) -> di
         alc = f"{alcv}%"
     else:
         alc = None
-    vol = d.get('vol')
+    vol = d.get('vol', "")
 
     main = {
         "id": source.get("id"),
