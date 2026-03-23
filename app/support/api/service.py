@@ -21,7 +21,7 @@ from app.core.config.project_config import settings
 from app.core.schemas.base import PaginatedResponse
 from app.support.item.schemas import (ItemApiLangNonLocalized, ItemApi,
                                       ItemApiLangLocalizedInterim)
-
+from app.core.utils.common_utils import jprint
 
 ItemApiAdapter: TypeAdapter = TypeAdapter(List[ItemApi])
 language: list = settings.LANGUAGES
@@ -175,6 +175,7 @@ class ApiService(ItemService):
         skip = (page - 1) * page_size
         items, total = await repository.get_all(ater_date, skip, page_size, model, session)
         logger.warning(f'{type(items[0])=}')
+        jprint(items[0].to_dict())
         result = cls.convert_list_api_view(items)
         logger.warning('get_list_api_view_page_end')
         # result = []
@@ -245,6 +246,7 @@ class ApiService(ItemService):
                     logger.warning('search_geans_all.non-formatted_query==========')
                     items = await repository.search_by_drink_title_subtitle_only(search, session)
             logger.warning(f'{type(items[0])}')
+            jprint(items[0].to_dict())
             result = cls.convert_list_api_view(items)
             logger.warning('search_geans_all_end')
             return result
