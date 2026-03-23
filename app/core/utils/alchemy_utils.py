@@ -1019,7 +1019,9 @@ def transform_api_list_view(source: dict, def_lang: str, languages: tuple) -> di
         "category": camel_to_enum(cat.get('name')),
         "country": camel_to_enum(country.get("name"))}
     for lang in languages:
-        des = get_multilang(designation, "name", languages) or ''
+        des = get_multilang(designation, "name", languages)
+        if not des:
+            des = ''
         tmp = ({
             "alc": alc,
             "vol": vol,
