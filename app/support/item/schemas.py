@@ -228,7 +228,7 @@ class ItemApiLang(ItemDetailManyToManyLocalized, ItemApiLangLocalized, ItemApiLa
     pass
 
 
-class ItemApiRoot(BaseModel, ModelSerializer):
+class ItemApiRoot(BaseModel):
     """
       fields for root levele of api_items
       SHALL be equal .env API_ROOT_FIELDS
@@ -239,6 +239,12 @@ class ItemApiRoot(BaseModel, ModelSerializer):
     image_id: Optional[str] = None
     image_path: Optional[str] = None
     changed_at: datetime = Field(exclude=True)
+
+
+    @model_serializer
+    def serialize_model(self) -> dict[str, Any]:
+        # Фильтруем пустые строки на выходе
+        return {k: v for k, v in self.__dict__.items() if v not in ("", None, [])}
 
 
 class ItemApi(ItemApiRoot):
