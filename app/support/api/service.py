@@ -44,6 +44,7 @@ class ApiService(ItemService):
         """
         try:
             from app.core.utils.common_utils import jprint
+            logger.warning('--------------------__api_view"')
             jprint(item)
             # задаем порядок замещения пустых полей
             # перенос вложенных словарей на верхний уровень (drink -> root)
@@ -148,10 +149,6 @@ class ApiService(ItemService):
         model = Item
         item_instance = await repository.get_detail_view(id, model, session)
         item: dict = item_instance.to_dict()
-        from app.core.utils.common_utils import jprint
-        logger.warning('===========')
-        jprint(item)
-        logger.warning('+++++++++++++')
         if not item:
             return None
         result: dict = cls.__api_view__(item)
