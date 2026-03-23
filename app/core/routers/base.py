@@ -444,7 +444,7 @@ class BaseRouter:
                                                    "В случае пустого запроса будут "
                                                    "выведены все данные "),
                                similarity_threshold: float = Query(None, ge=0, le=1.0),
-                               session: AsyncSession = Depends(get_db)) -> List[TReadSchema]:
+                               session: AsyncSession = Depends(get_db)):
         """
             Поиск по всем текстовым полям основной таблицы БЕЗ пагинации
             input_valudation_chema <>CreateRelation
