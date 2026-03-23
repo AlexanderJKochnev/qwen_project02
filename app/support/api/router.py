@@ -18,7 +18,7 @@ from app.core.utils.converters import raw_image_response
 # from app.mongodb.models import FileListResponse
 from app.mongodb.service import ThumbnailImageService
 from app.support.item.router import ItemRouter
-from app.support.item.schemas import ItemApi
+# from app.support.item.schemas import ItemApi
 from app.support.api.service import ApiService
 from app.support.item.repository import ItemRepository
 
@@ -40,7 +40,7 @@ class ApiRouter(ItemRouter):
     def setup_routes(self):
         self.router.add_api_route("", self.get, methods=["GET"],
                                   # get -> service.get_list_api_view_page -> repository.get_all
-                                  response_model=PaginatedResponse[dict],
+                                  # response_model=PaginatedResponse[dict],
                                   openapi_extra={'x-request-schema': None})
         self.router.add_api_route("/all", self.get_all, methods=["GET"],
                                   response_model=List[dict],
@@ -48,7 +48,7 @@ class ApiRouter(ItemRouter):
                                   openapi_extra={'x-request-schema': None})
         # поиск api.service.search_geans -> core.repository.search_fts_all
         self.router.add_api_route("/search", self.search_geans, methods=["GET"],
-                                  response_model=PaginatedResponse[dict],
+                                  # response_model=PaginatedResponse[dict],
                                   openapi_extra={'x-request-schema': None}
                                   )
         # поиск api.search_geans_all -> core.repository.search_fts
@@ -59,7 +59,7 @@ class ApiRouter(ItemRouter):
                                   )
         self.router.add_api_route("/get_by_ids", self.search_by_ids,
                                   methods=["GET"],
-                                  response_model=List[dict],
+                                  # response_model=List[dict],
                                   openapi_extra={'x-request-schema': None}
                                   )
         """self.router.add_api_route("/mongo", self.get_images_after_date, methods=["GET"],
@@ -69,7 +69,7 @@ class ApiRouter(ItemRouter):
                                   response_model=dict,
                                   openapi_extra={'x-request-schema': None})"""
         self.router.add_api_route("/{id}", self.get_api, methods=["GET"],
-                                  response_model=dict,
+                                  # response_model=dict,
                                   openapi_extra={'x-request-schema': None})
         self.router.add_api_route("/image/{id}", self.get_image_by_id, methods=["GET"],
                                   openapi_extra={'x-request-schema': None},
@@ -227,4 +227,3 @@ class ApiRouter(ItemRouter):
             return result
         except Exception as e:
             raise HTTPException(status_code=500, detail=e)
-
