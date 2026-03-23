@@ -897,7 +897,6 @@ def get_multilang(obj: dict, base_key: str, languages: tuple) -> str:
 
 
 def transform(source: dict, lang: str, languages: tuple) -> dict:
-    print('+++++++++=transfporm======}')
     d = source.get("drink", {})
     subcat = d.get("subcategory", {})
     cat = subcat.get("category", {})
@@ -962,7 +961,6 @@ def transform(source: dict, lang: str, languages: tuple) -> dict:
 
 
 def transform_list_view(source: dict, lang: str, languages: tuple) -> dict:
-    print("------------transform_list_view+++++++++==")
     d = source.get("drink", {})
     subcat = d.get("subcategory", {})
     cat = subcat.get("category", {})
@@ -990,7 +988,6 @@ def transform_api_list_view(source: dict, def_lang: str, languages: tuple) -> di
     трансформация для api
     languages = {'', '_ru', ...}
     """
-    print('===========transform_api_list_view')
     d = source.get("drink", {})
     subcat = d.get("subcategory", {})
     cat = subcat.get("category", {})
@@ -1043,4 +1040,5 @@ def transform_api_list_view(source: dict, def_lang: str, languages: tuple) -> di
         })
         lng = def_lang if lang == '' else lang[1:]
         main[lng] = tmp
+        print(f'===={main.keys()=}========')
     return main
