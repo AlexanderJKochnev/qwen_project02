@@ -54,7 +54,7 @@ class ApiRouter(ItemRouter):
         # поиск api.search_geans_all -> core.repository.search_fts
         self.router.add_api_route("/search_all", self.search_geans_all,
                                   methods=["GET"],
-                                  response_model=List[dict],
+                                  # response_model=List[dict],
                                   openapi_extra={'x-request-schema': None}
                                   )
         self.router.add_api_route("/get_by_ids", self.search_by_ids,
@@ -227,3 +227,4 @@ class ApiRouter(ItemRouter):
             return result
         except Exception as e:
             raise HTTPException(status_code=500, detail=e)
+

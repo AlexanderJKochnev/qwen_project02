@@ -225,7 +225,7 @@ class ApiService(ItemService):
     async def search_geans_all(cls, search: str, similarity_threshold: float,
                                repository: ItemRepository,
                                model: ModelType, session: AsyncSession) -> List[dict]:
-        """ перделан под полнотекстовый поиск """
+        """ переделан под полнотекстовый поиск """
         try:
             if not search:
                 items = await repository.get_full(model, session)
