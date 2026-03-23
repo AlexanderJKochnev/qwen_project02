@@ -12,7 +12,7 @@ from sqlalchemy.orm import DeclarativeBase, MapperProperty
 from sqlalchemy.orm.attributes import QueryableAttribute
 from app.core.types import ModelType
 from app.core.models.base_model import Base
-from app.core.utils.common_utils import clean_string, enum_to_camel
+from app.core.utils.common_utils import camel_to_enum, clean_string, enum_to_camel
 from app.core.config.project_config import get_path_to_root
 
 function = {1: or_, 2: and_}
@@ -958,7 +958,8 @@ def transform(source: dict, lang: str, languages: tuple) -> dict:
         "first_vintage": d.get("first_vintage"),
         "last_vintage": d.get("last_vintage"),
         "display_name": d.get("display_name"),
-        "producer": producer,
+        "producer": f'{get_multilang(prod.get('producertitle'), "name", languages)} '
+                    f'{get_multilang(prod, "name", languages)}'.strip(),
         "anno": d.get("anno"),
         "classification": get_multilang(classification, "name", languages),
         "vintageconfig": get_multilang(vintageconfig, "name", languages),
@@ -989,10 +990,9 @@ def transform_list_view(source: dict, lang: str, languages: tuple) -> dict:
     }
 
 
-def transform_api_list_view(source: dict, lang: str, languages: tuple) -> dict:
+def transform_api_list_view(source: dict, def_lang: str, languages: tuple) -> dict:
     """
     трансформация для api
-
     """
     d = source.get("drink", {})
     subcat = d.get("subcategory", {})
@@ -1004,13 +1004,29 @@ def transform_api_list_view(source: dict, lang: str, languages: tuple) -> dict:
     reg = subreg.get("region") or {}
     country = reg.get("country") or {}
 
-    return {
+    if alcv := d.get('alc'):
+        alc = f"{alcv}%"
+    else:
+        alc = None
+    vol = d.get('vol')
+
+    main = {
         "id": source.get("id"),
         "vol": source.get("vol"),
         "image_id": source.get("image_id"),
-        # Текстовые поля с coalesce
-        "title": get_multilang(d, "title", languages),
-        # География и категории
-        "category": get_multilang(cat, "name", languages),
-        "country": get_multilang(country, "name", languages),
-    }
+        "changed_at": source.get("updated_at"),
+        "category": camel_to_enum(cat.get('name')),
+        "country": camel_to_enum(country.get("name"))}
+    for lang in languages:
+        tmp = ({
+            "alc": alc,
+            "vol": vol,
+            "title": get_multilang(d, "title", languages),
+            "subtitle": get_multilang(d, "subtitle", languages),
+            "description": get_multilang(d, "description", languages),
+            "region": f'{get_multilang(reg, "name", languages)}. '
+                      f'{get_multilang(subreg, "name", languages)}. '
+                      f'{get_multilang(site, "name", languages)}',
+            "recommendation": get_multilang(d, "recommendation", languages),
+            "madeof": get_multilang(d, "madeof", languages),
+        }
