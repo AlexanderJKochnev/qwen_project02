@@ -1029,4 +1029,4 @@ def transform_api_list_view(source: dict, def_lang: str, languages: tuple) -> di
                       f'{get_multilang(site, "name", languages)}',
             "recommendation": get_multilang(d, "recommendation", languages),
             "madeof": get_multilang(d, "madeof", languages),
-        }
+        })
