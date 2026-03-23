@@ -112,7 +112,7 @@ class ApiService(ItemService):
     def convert_list_api_view(cls, items: List[ModelType]) -> List[Dict[str, Any]]:
         # api_view = cls.__api_view__
         api_view = transform_api_list_view
-        cleaned_list = ItemApiAdapter.validate_python([api_view(item.to_dict(), def_lang, lang_prefixes) for item in items])
+        cleaned_list = [api_view(item.to_dict(), def_lang, lang_prefixes) for item in items]
         # result = ItemApiAdapter.validate_python([api_view(item.to_dict()) for item in items])
         # cleaned_list = [item.model_dump(exclude_none=True, exclude_defaults=True) for item in result]
         return cleaned_list
@@ -221,11 +221,7 @@ class ApiService(ItemService):
                     items, total = await repository.search_fts(formatted_search, skip, page_size, model, session)
                 else:
                     items, totla = await repository.search_by_drink_title_subtitle(search, session, skip, page_size)
-            result = []
-            for item in items:
-                if item_dict := item.to_dict():
-                    result.append(cls.__api_view__(item_dict))
-            logger.warning('search_geans_end')
+            result = cls.convert_list_api_view(items)
             return make_paginated_response(result, total, page, page_size)
         except Exception as e:
             logger.error(f'search_geans. {e}')
@@ -245,7 +241,6 @@ class ApiService(ItemService):
                     items = await repository.search_fts_all(formatted_search, model, session)
                 else:
                     items = await repository.search_by_drink_title_subtitle_only(search, session)
-            logger.error('api.search_geans_all================================')
             result = cls.convert_list_api_view(items)
             logger.warning('search_geans_all_end')
             return result
