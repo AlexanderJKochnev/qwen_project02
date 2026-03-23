@@ -227,6 +227,11 @@ class ItemApiLangLocalizedInterim(ItemDetailLocalized):
 class ItemApiLang(ItemDetailManyToManyLocalized, ItemApiLangLocalized, ItemApiLangNonLocalized):
     pass
 
+    @model_serializer
+    def serialize_model(self) -> dict[str, Any]:
+        # Фильтруем пустые строки на выходе
+        return {k: v for k, v in self.__dict__.items() if v not in ("", None, [])}
+
 
 class ItemApiRoot(BaseModel):
     """
@@ -239,7 +244,6 @@ class ItemApiRoot(BaseModel):
     image_id: Optional[str] = None
     image_path: Optional[str] = None
     changed_at: datetime = Field(exclude=True)
-
 
     @model_serializer
     def serialize_model(self) -> dict[str, Any]:
