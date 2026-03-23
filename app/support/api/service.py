@@ -174,6 +174,7 @@ class ApiService(ItemService):
         logger.warning('get_list_api_view_page_start')
         skip = (page - 1) * page_size
         items, total = await repository.get_all(ater_date, skip, page_size, model, session)
+        logger.warning(f'{type(items[0])=}')
         result = cls.convert_list_api_view(items)
         logger.warning('get_list_api_view_page_end')
         # result = []
@@ -243,6 +244,7 @@ class ApiService(ItemService):
                 else:
                     logger.warning('search_geans_all.non-formatted_query==========')
                     items = await repository.search_by_drink_title_subtitle_only(search, session)
+            logger.warning(f'{type(items[0])}')
             result = cls.convert_list_api_view(items)
             logger.warning('search_geans_all_end')
             return result
