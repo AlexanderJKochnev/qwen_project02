@@ -110,7 +110,7 @@ class ApiService(ItemService):
 
     @classmethod
     def convert_list_api_view(cls, items: List[ModelType]) -> List[Dict[str, Any]]:
-        api_view = cls.__api_view__
+        # api_view = cls.__api_view__
         api_view = transform_api_list_view
         cleaned_list = ItemApiAdapter.validate_python([api_view(item.to_dict(), def_lang, lang_prefixes) for item in items])
         # result = ItemApiAdapter.validate_python([api_view(item.to_dict()) for item in items])
@@ -231,6 +231,7 @@ class ApiService(ItemService):
                     items = await repository.search_fts_all(formatted_search, model, session)
                 else:
                     items = await repository.search_by_drink_title_subtitle_only(search, session)
+            logger.error('api.search_geans_all================================')
             result = cls.convert_list_api_view(items)
             return result
         except Exception as e:
