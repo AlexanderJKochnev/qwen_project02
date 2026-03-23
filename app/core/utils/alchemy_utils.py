@@ -916,14 +916,7 @@ def transform(source: dict, lang: str, languages: tuple) -> dict:
         alc = f"{alcv}%"
     else:
         alc = None
-    if prod:
-        producer = get_multilang(prod, "name", languages)
-        if producer:
-            ptitle = get_multilang(prod.get('producertitle'), "name", languages)
-            if ptitle:
-                producer = f'{ptitle} {producer}'
-    else:
-        producer = None
+
     return {
         "id": source.get("id"),
         "vol": source.get("vol"),
@@ -959,7 +952,7 @@ def transform(source: dict, lang: str, languages: tuple) -> dict:
         "last_vintage": d.get("last_vintage"),
         "display_name": d.get("display_name"),
         "producer": f'{get_multilang(prod.get('producertitle'), "name", languages)} '
-                    f'{get_multilang(prod, "name", languages)}'.strip(),
+                    f'{get_multilang(prod, "name", languages)}'.strip() if prod else None,
         "anno": d.get("anno"),
         "classification": get_multilang(classification, "name", languages),
         "vintageconfig": get_multilang(vintageconfig, "name", languages),
@@ -998,6 +991,13 @@ def transform_api_list_view(source: dict, def_lang: str, languages: tuple) -> di
     subcat = d.get("subcategory", {})
     cat = subcat.get("category", {})
 
+    prod = d.get('producer', {})
+    # ptitle = prod.get("producertitle", {})
+    classification = d.get("classification", {})
+    vintageconfig = d.get("vintageconfig", {})
+    designation = d.get("designation", {})
+    anno = d.get("anno")
+
     # Навигация по географии (с защитой от None)
     site = d.get("site") or {}
     subreg = site.get("subregion") or {}
@@ -1029,4 +1029,6 @@ def transform_api_list_view(source: dict, def_lang: str, languages: tuple) -> di
                       f'{get_multilang(site, "name", languages)}',
             "recommendation": get_multilang(d, "recommendation", languages),
             "madeof": get_multilang(d, "madeof", languages),
+            "producer": f'{get_multilang(prod.get('producertitle'), "name", languages)} '
+                        f'{get_multilang(prod, "name", languages)}'.strip(),
         })
