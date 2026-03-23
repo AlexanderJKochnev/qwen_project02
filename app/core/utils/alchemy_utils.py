@@ -986,6 +986,7 @@ def transform_list_view(source: dict, lang: str, languages: tuple) -> dict:
 def transform_api_list_view(source: dict, def_lang: str, languages: tuple) -> dict:
     """
     трансформация для api
+    languages = {'', '_ru', ...}
     """
     d = source.get("drink", {})
     subcat = d.get("subcategory", {})
@@ -993,10 +994,10 @@ def transform_api_list_view(source: dict, def_lang: str, languages: tuple) -> di
 
     prod = d.get('producer', {})
     # ptitle = prod.get("producertitle", {})
-    classification = d.get("classification", {})
-    vintageconfig = d.get("vintageconfig", {})
+    # classification = d.get("classification", {})
+    # vintageconfig = d.get("vintageconfig", {})
     designation = d.get("designation", {})
-    anno = d.get("anno")
+    anno = d.get("anno", '')
 
     # Навигация по географии (с защитой от None)
     site = d.get("site") or {}
@@ -1018,10 +1019,11 @@ def transform_api_list_view(source: dict, def_lang: str, languages: tuple) -> di
         "category": camel_to_enum(cat.get('name')),
         "country": camel_to_enum(country.get("name"))}
     for lang in languages:
+        des = get_multilang(designation, "name", languages) or ''
         tmp = ({
             "alc": alc,
             "vol": vol,
-            "title": get_multilang(d, "title", languages),
+            "title": f'{get_multilang(d, "title", languages).replace(des).replace(anno)} {anno} {des}'.strip(),
             "subtitle": get_multilang(d, "subtitle", languages),
             "description": get_multilang(d, "description", languages),
             "region": f'{get_multilang(reg, "name", languages)}. '
@@ -1030,5 +1032,8 @@ def transform_api_list_view(source: dict, def_lang: str, languages: tuple) -> di
             "recommendation": get_multilang(d, "recommendation", languages),
             "madeof": get_multilang(d, "madeof", languages),
             "producer": f'{get_multilang(prod.get('producertitle'), "name", languages)} '
-                        f'{get_multilang(prod, "name", languages)}'.strip(),
+                        f'{get_multilang(prod, "name", languages)}'.strip() if prod else None,
         })
+        lng = def_lang if lang == '' else lang[1:]
+        main[lng] = tmp
+    return main

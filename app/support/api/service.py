@@ -16,7 +16,7 @@ from app.support.item.repository import ItemRepository
 from app.support.item.model import Item
 from app.core.utils.common_utils import localized_field_with_replacement
 from app.core.utils.converters import lang_suffix_list, lang_suffix_dict
-from app.core.utils.alchemy_utils import formatted_query
+from app.core.utils.alchemy_utils import formatted_query, transform_api_list_view
 from app.core.config.project_config import settings
 from app.core.schemas.base import PaginatedResponse
 from app.support.item.schemas import (ItemApiLangNonLocalized, ItemApi,
@@ -27,6 +27,7 @@ ItemApiAdapter: TypeAdapter = TypeAdapter(List[ItemApi])
 language: list = settings.LANGUAGES
 # список языковых суффиксов
 lang_prefixes: list = lang_suffix_list(language)
+def_lang = settings.DEFAULT_LANG
 # словарь {'en': ['', '_ru': '_fr'],...}
 # списки языков отсортированы в порядке очередности замены для каждого языка
 lang_dict = lang_suffix_dict(language)
@@ -109,8 +110,10 @@ class ApiService(ItemService):
     @classmethod
     def convert_list_api_view(cls, items: List[ModelType]) -> List[Dict[str, Any]]:
         api_view = cls.__api_view__
-        result = ItemApiAdapter.validate_python([api_view(item.to_dict()) for item in items])
-        cleaned_list = [item.model_dump(exclude_none=True, exclude_defaults=True) for item in result]
+        api_view = transform_api_list_view
+        cleaned_list = ItemApiAdapter.validate_python([api_view(item.to_dict(), def_lang, lang_prefixes) for item in items])
+        # result = ItemApiAdapter.validate_python([api_view(item.to_dict()) for item in items])
+        # cleaned_list = [item.model_dump(exclude_none=True, exclude_defaults=True) for item in result]
         return cleaned_list
 
     @classmethod
