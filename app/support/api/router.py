@@ -153,7 +153,7 @@ class ApiRouter(ItemRouter):
                                          ge=paging.get('min', 1),
                                          le=paging.get('max', 1000)),
                   session: AsyncSession = Depends(get_db)
-                  ) -> PaginatedResponse:
+                  ):
         """
             Получение постранично всех записей после заданной даты.
         """
@@ -162,7 +162,9 @@ class ApiRouter(ItemRouter):
         service = ApiService
         response = await service.get_list_api_view_page(after_date, page, page_size, self.repo, self.model, session)
         result = self.paginated_response(**response)
-        return result
+        content = orjson.dumps(result.model_dump())
+        return Response(content=content, media_type="application/json")
+        # return result
 
     async def get_image_by_id(self, id: int, session: AsyncSession = Depends(get_db),
                               image_service: ThumbnailImageService = Depends()):
