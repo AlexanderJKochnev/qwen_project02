@@ -65,9 +65,9 @@ class PreactRouter:
     def _setup_routes_(self):
         for prefix, response_model, request_model in self.__source_generator__(self.source):
             self.router.add_api_route(prefix, endpoint=self.endpoint, methods=[self.method],
-                                      response_model=response_model,
+                                      # response_model=response_model,
                                       openapi_extra={'x-request-schema': request_model.__name__
-                                      if request_model else None})
+                                                     if request_model else None})
 
     def __source_generator__(self, source: dict):
         """
