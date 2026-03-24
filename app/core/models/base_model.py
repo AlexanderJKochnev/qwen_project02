@@ -6,57 +6,50 @@ from typing import Annotated, Optional, Type
 # from sqlalchemy.dialects.postgresql import MONEY
 from sqlalchemy import DateTime, DECIMAL, func, Integer, text, Text, Computed, inspect
 from sqlalchemy.dialects.postgresql import TSVECTOR
-
+from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, declared_attr, Mapped, mapped_column
 # from app.core.config.project_config import settings
 
 langs = ['en', 'ru', 'fr']
 
-# primary key
-int_pk = Annotated[int, mapped_column(Integer, primary_key=True, autoincrement=True)]
+# 1. Primary Key (Autoincrement для int по умолчанию True)
+int_pk = Annotated[int, mapped_column(primary_key=True)]
 
-# datetime field with default value now()
-created_at = Annotated[datetime, mapped_column(DateTime(timezone=True), server_default=func.now())]
+# 2. Datetime: server_default — это БД-шный NOW, а onupdate лучше тоже через func.now()
+created_at = Annotated[datetime, mapped_column(server_default=func.now())]
 
-# datetime field with default and update value now()
-updated_at = Annotated[datetime, mapped_column(DateTime(timezone=True),
-                                               server_default=func.now(),
-                                               onupdate=datetime.now(timezone.utc),
-                                               index=True)]
-
-# unique non-null string field
-str_uniq = Annotated[str, mapped_column(unique=True,
-                                        nullable=False, index=True)]
-
-# non-unique nullable string field
-str_null_true = Annotated[str, mapped_column(nullable=True)]
-str_null_index = Annotated[str, mapped_column(nullable=True, index=True)]
-str_null_false = Annotated[str, mapped_column(nullable=False)]
-
-# int field with default value 0
-nmbr = Annotated[int, mapped_column(server_default=text('0'))]
-
-# text field wouthout default value
-descr = Annotated[str, mapped_column(Text, nullable=True)]
-
-# money
-money = Annotated[Decimal, mapped_column(DECIMAL(10, 2), nullable=True)]
-
-# volume,
-volume = Annotated[Decimal, mapped_column(DECIMAL(5, 2), nullable=True)]
-
-# alc sugar percentage
-percent = Annotated[Decimal, mapped_column(
-    DECIMAL(3, 2),
-    nullable=True
+updated_at = Annotated[datetime, mapped_column(
+    server_default=func.now(),
+    onupdate=func.now(),  # Используем БД-функцию для консистентности
+    index=True
 )]
 
-# int or none
-ion = Annotated[int, mapped_column(nullable=True)]
+# 3. Strings: В 2.0+ Mapped[str] по умолчанию nullable=False.
+# Для уникальности и индексов:
+str_uniq = Annotated[str, mapped_column(unique=True, index=True)]
 
-# boolean triple
-boolnone = Annotated[bool | None, mapped_column(nullable=True)]
+# 4. Nullable Strings: Используй Optional[] или | None для корректной типизации
+str_null_true = Annotated[Optional[str], mapped_column(nullable=True)]
+str_null_index = Annotated[Optional[str], mapped_column(nullable=True, index=True)]
+str_null_false = Annotated[str, mapped_column(nullable=False)]
+
+# 5. Числа с дефолтом
+nmbr = Annotated[int, mapped_column(server_default=text('0'))]
+
+# 6. Text (Mapped[Optional[str]] укажет SQLAlchemy на тип TEXT/VARCHAR автоматически)
+descr = Annotated[Optional[str], mapped_column(Text)]
+
+# 7. Money & Decimals
+money = Annotated[Optional[Decimal], mapped_column(DECIMAL(10, 2))]
+volume = Annotated[Optional[Decimal], mapped_column(DECIMAL(5, 2))]
+percent = Annotated[Optional[Decimal], mapped_column(DECIMAL(3, 2))]
+
+# 8. Int or None
+ion = Annotated[Optional[int], mapped_column()]
+
+# 9. Boolean Triple (True, False, None)
+boolnone = Annotated[Optional[bool], mapped_column()]
 
 
 class Base(AsyncAttrs, DeclarativeBase):
