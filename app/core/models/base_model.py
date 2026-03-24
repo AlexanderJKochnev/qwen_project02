@@ -97,6 +97,7 @@ class Base(AsyncAttrs, DeclarativeBase, SerializerMixin):
         return str(self)
 
     def to_dict(self, seen=None) -> dict:
+        return super().to_dict()
         if seen is None:
             seen = set()
 
