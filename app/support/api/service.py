@@ -21,7 +21,7 @@ from app.core.config.project_config import settings
 from app.core.schemas.base import PaginatedResponse
 from app.support.item.schemas import (ItemApiLangNonLocalized, ItemApi,
                                       ItemApiLangLocalizedInterim)
-from app.core.utils.common_utils import jprint
+# from app.core.utils.common_utils import jprint
 
 ItemApiAdapter: TypeAdapter = TypeAdapter(List[ItemApi])
 language: list = settings.LANGUAGES
@@ -43,9 +43,6 @@ class ApiService(ItemService):
             логика метода get_api_view
         """
         try:
-            from app.core.utils.common_utils import jprint
-            logger.warning('--------------------__api_view"')
-            jprint(item)
             # задаем порядок замещения пустых полей
             # перенос вложенных словарей на верхний уровень (drink -> root)
             item = cls._level_up_(lang_prefixes, item)
@@ -145,7 +142,6 @@ class ApiService(ItemService):
               },
             }
         """
-        logger.warning('get_item_api_view_start')
         repository = ItemRepository
         model = Item
         item_instance = await repository.get_detail_view(id, model, session)
@@ -154,30 +150,23 @@ class ApiService(ItemService):
             return None
         # result: dict = cls.__api_view__(item)
         result: dict = transform_api_list_view(item, def_lang, lang_prefixes)
-        logger.warning('get_item_api_view_end')
         return result
 
     @classmethod
     async def get_list_api_view(cls, after_date: datetime, repository, model,
                                 session: AsyncSession,):
         """ Получение списка элементов для api view """
-        logger.warning('get_list_api_view_start')
         items = await repository.get(after_date, model, session)
         result = cls.convert_list_api_view(items)
-        logger.warning('get_list_api_view_end')
         return result
 
     @classmethod
     async def get_list_api_view_page(cls, ater_date: datetime, page: int, page_size: int,
                                      repository: ItemRepository, model: Item, session: AsyncSession):
         """Получение списка элементов для ListView с пагинацией и локализацией"""
-        logger.warning('get_list_api_view_page_start')
         skip = (page - 1) * page_size
         items, total = await repository.get_all(ater_date, skip, page_size, model, session)
-        logger.warning(f'{type(items[0])=}')
-        jprint(items[0].to_dict())
         result = cls.convert_list_api_view(items)
-        logger.warning('get_list_api_view_page_end')
         # result = []
         # for item in items:
         #     if item_dict := item.to_dict():
@@ -190,11 +179,9 @@ class ApiService(ItemService):
                      session: AsyncSession
                      ) -> PaginatedResponse[ItemApi]:
         """Поиск с пагинацией и локализацией"""
-        logger.warning('search_start')
         skip = (page - 1) * page_size
         items, total = await repository.search(search, skip, page_size, model, session)
         result = cls.convert_list_api_view(items)
-        logger.warning('search_end')
         return make_paginated_response(result, total, page, page_size)
 
     @classmethod
@@ -202,10 +189,8 @@ class ApiService(ItemService):
                          repository: ItemRepository, model: Item,
                          session: AsyncSession) -> PaginatedResponse[ItemApi]:
         """Поиск с пагинацией и локализацией"""
-        logger.warning('search_all_start')
         items = await repository.search_all(search, model, session)
         result = cls.convert_list_api_view(items)
-        logger.warning('search_all_end')
         return result
 
     @classmethod
@@ -213,7 +198,6 @@ class ApiService(ItemService):
                            page: int, page_size: int,
                            repository: ItemRepository, model: Item, session: AsyncSession) -> Dict[str, Any]:
         try:
-            logger.warning('search_geans_start')
             skip = (page - 1) * page_size
             if not search:
                 items, total = await repository.get_full_with_pagination(skip, page_size, model, session)
@@ -235,20 +219,14 @@ class ApiService(ItemService):
                                model: ModelType, session: AsyncSession) -> List[dict]:
         """ переделан под полнотекстовый поиск """
         try:
-            logger.warning('search_geans_all_start')
             if not search:
                 items = await repository.get_full(model, session)
             else:
                 if formatted_search := formatted_query(search):
-                    logger.warning('search_geans_all.formatted_query')
                     items = await repository.search_fts_all(formatted_search, model, session)
                 else:
-                    logger.warning('search_geans_all.non-formatted_query==========')
                     items = await repository.search_by_drink_title_subtitle_only(search, session)
-            logger.warning(f'{type(items[0])}')
-            jprint(items[0].to_dict())
             result = cls.convert_list_api_view(items)
-            logger.warning('search_geans_all_end')
             return result
         except Exception as e:
             logger.error(f'search_gens_all. {e}')
@@ -261,9 +239,7 @@ class ApiService(ItemService):
         if not ids:
             return []
         comma_separator = ','
-        logger.warning('get_list_api_view_ids_start')
         ids_set = tuple(int(b) for a in set(ids.split(comma_separator)) if (b := a.strip()).isdigit())
         items = await repository.get_by_ids(ids_set, model, session)
         result = cls.convert_list_api_view(items)
-        logger.warning('get_list_api_view_ids_end')
         return result
