@@ -17,14 +17,20 @@ langs = ['en', 'ru', 'fr']
 int_pk = Annotated[int, mapped_column(primary_key=True)]
 
 # 2. Datetime: server_default — это БД-шный NOW, а onupdate лучше тоже через func.now()
-created_at = Annotated[datetime, mapped_column(server_default=func.now())]
+# created_at = Annotated[datetime, mapped_column(server_default=func.now())]
+created_at = Annotated[datetime, mapped_column(DateTime(timezone=True), server_default=func.now())]
 
-updated_at = Annotated[datetime, mapped_column(
-    server_default=func.now(),
-    onupdate=func.now(),  # Используем БД-функцию для консистентности
-    index=True
-)]
-
+updated_at = Annotated[datetime, mapped_column(DateTime(timezone=True),
+                                               server_default=func.now(),
+                                               onupdate=func.now(),  # Используем БД-функцию для консистентности
+                                               index=True
+                                               )]
+"""
+updated_at = Annotated[datetime, mapped_column(DateTime(timezone=True),
+                                               server_default=func.now(),
+                                               onupdate=datetime.now(timezone.utc),
+                                               index=True)]
+"""
 # 3. Strings: В 2.0+ Mapped[str] по умолчанию nullable=False.
 # Для уникальности и индексов:
 str_uniq = Annotated[str, mapped_column(unique=True, index=True)]
@@ -52,7 +58,7 @@ ion = Annotated[Optional[int], mapped_column()]
 boolnone = Annotated[Optional[bool], mapped_column()]
 
 
-class Base(AsyncAttrs, DeclarativeBase):
+class Base(AsyncAttrs, DeclarativeBase, SerializerMixin):
     """ clear model with id only,
         common methods and properties, table name
     """
@@ -90,7 +96,7 @@ class Base(AsyncAttrs, DeclarativeBase):
         # return f"<Category(name={self.name})>"
         return str(self)
 
-    def to_dict(self, seen=None) -> dict:
+    def to_dict1(self, seen=None) -> dict:
         if seen is None:
             seen = set()
 
@@ -165,6 +171,7 @@ class Base(AsyncAttrs, DeclarativeBase):
 class BaseAt:
     """ время создания/изменения записи """
     __abstract__ = True
+    type_annotation_map = {datetime: DateTime(timezone=True), }
     created_at: Mapped[created_at]
     updated_at: Mapped[updated_at]
 
