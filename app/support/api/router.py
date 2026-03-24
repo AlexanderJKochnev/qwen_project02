@@ -162,8 +162,6 @@ class ApiRouter(ItemRouter):
         service = ApiService
         response = await service.get_list_api_view_page(after_date, page, page_size, self.repo, self.model, session)
         result = self.paginated_response(**response)
-        content = orjson.dumps(result)
-        return Response(content=content, media_type="application/json")
         return result
 
     async def get_image_by_id(self, id: int, session: AsyncSession = Depends(get_db),

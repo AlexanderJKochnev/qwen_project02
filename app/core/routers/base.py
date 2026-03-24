@@ -1,9 +1,9 @@
 # app/core/routers/base.py
-
+import orjson
 from typing import Any, List, Type, TypeVar, Callable
 # from dateutil.relativedelta import relativedelta
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, Query, status, Request, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Request, BackgroundTasks, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
 from app.auth.dependencies import get_active_user_or_internal
@@ -451,8 +451,10 @@ class BaseRouter:
             response_model <>ReadRelatio
         """
         try:
-            return await self.service.search_geans_all(search, similarity_threshold,
-                                                       self.repo, self.model, session)
+            result = await self.service.search_geans_all(search, similarity_threshold,
+                                                         self.repo, self.model, session)
+            content = orjson.dumps(result)
+            return Response(content=content, media_type="application/json")
         except Exception as e:
             raise HTTPException(status_code=501, detail=f'search_geans_all, {self.model.__name__}, {e}')
 
