@@ -1040,5 +1040,4 @@ def transform_api_list_view(source: dict, def_lang: str, languages: tuple) -> di
         })
         lng = def_lang if lang == '' else lang[1:]
         main[lng] = tmp
-        print(f'===={main.keys()=}========')
     return main
