@@ -96,7 +96,7 @@ class Base(AsyncAttrs, DeclarativeBase, SerializerMixin):
         # return f"<Category(name={self.name})>"
         return str(self)
 
-    def to_dict1(self, seen=None) -> dict:
+    def to_dict(self, seen=None) -> dict:
         if seen is None:
             seen = set()
 
