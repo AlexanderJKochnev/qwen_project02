@@ -19,7 +19,8 @@ passlib[bcrypt]
 python-multipart
 bcrypt==4.0.1
 sqlalchemy-utils
-sqlalchemy_serializer
+# sqlalchemy_serializer
+orjson
 motor==3.3.2
 zstandard
 pymongo==4.6.0

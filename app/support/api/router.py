@@ -1,7 +1,7 @@
 # app/support/api/router.py
 import io
-
-from fastapi import HTTPException, status
+import orjson
+from fastapi import HTTPException, status, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.responses import StreamingResponse
 from datetime import datetime, timezone
@@ -162,6 +162,8 @@ class ApiRouter(ItemRouter):
         service = ApiService
         response = await service.get_list_api_view_page(after_date, page, page_size, self.repo, self.model, session)
         result = self.paginated_response(**response)
+        content = orjson.dumps(result)
+        return Response(content=content, media_type="application/json")
         return result
 
     async def get_image_by_id(self, id: int, session: AsyncSession = Depends(get_db),

@@ -4,9 +4,9 @@ from datetime import datetime, timezone, date
 from decimal import Decimal
 from typing import Annotated, Optional, Type
 # from sqlalchemy.dialects.postgresql import MONEY
-from sqlalchemy import DateTime, DECIMAL, func, Integer, text, Text, Computed, inspect
+from sqlalchemy import DateTime, DECIMAL, func, text, Text, Computed, inspect
 from sqlalchemy.dialects.postgresql import TSVECTOR
-from sqlalchemy_serializer import SerializerMixin
+# from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, declared_attr, Mapped, mapped_column
 # from app.core.config.project_config import settings
@@ -58,7 +58,7 @@ ion = Annotated[Optional[int], mapped_column()]
 boolnone = Annotated[Optional[bool], mapped_column()]
 
 
-class Base(AsyncAttrs, DeclarativeBase, SerializerMixin):
+class Base(AsyncAttrs, DeclarativeBase):
     """ clear model with id only,
         common methods and properties, table name
     """
@@ -97,7 +97,6 @@ class Base(AsyncAttrs, DeclarativeBase, SerializerMixin):
         return str(self)
 
     def to_dict(self, seen=None) -> dict:
-        return super().to_dict()
         if seen is None:
             seen = set()
 
