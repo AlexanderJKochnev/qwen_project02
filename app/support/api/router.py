@@ -161,8 +161,8 @@ class ApiRouter(ItemRouter):
         after_date = back_to_the_future(after_date)
         service = ApiService
         response = await service.get_list_api_view_page(after_date, page, page_size, self.repo, self.model, session)
-        result = self.paginated_response(**response)
-        content = orjson.dumps(result.model_dump())
+        # result = self.paginated_response(**response)
+        content = orjson.dumps(response)
         return Response(content=content, media_type="application/json")
         # return result
 
