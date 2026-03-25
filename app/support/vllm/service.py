@@ -1,6 +1,7 @@
 # app.support.vllm.service.py
 from openai import AsyncOpenAI
 from typing import List
+from loguru import logger
 import os
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.repositories.sqlalchemy_repository import Repository
@@ -26,15 +27,19 @@ class VLLMService:
         self.model_name = "Qwen/Qwen2.5-7B-Instruct-AWQ"
 
     async def get_datas(self, prompt: int, preset: int, proption: str, language: str, session: AsyncSession):
+        from app.core.utils.common_utils import jprint
         langs = [lang.strip() for lang in language.split(',')]
         lang_response: List[ISOLanguage] = await ISOLanguageRepository.search_by_list_value_exact(langs, 'iso_639_1', ISOLanguage,
-                                                                                session)
+                                                                                                  session)
+        logger.warning(f'{lang_response=}')
         if lang_response:
             language_set = {lang.iso_639_1 for lang in lang_response}
         dataset = {'prompt': (Prompt, PromptRepository, 'role', 'system_prompt', prompt),
                    'writer': (WriterRule, WriterRuleRepository, 'name', 'prompt', preset),
                    'proption': (Proption, ProptionRepository, 'preset', None, proption)}
         response: dict = {}
+        jprint(dataset)
+        print('======================================================')
         for key, val in dataset.items():
             model, repo, field_name, field_out, search = val
             tmp = await repo.get_by_field(field_name, search, model, session)
