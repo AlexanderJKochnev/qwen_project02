@@ -51,6 +51,7 @@ from app.support.producer.router import ProducerRouter, ProducerTitleRouter
 from app.support.vintage.router import VintageConfigRouter, DesignationRouter, ClassificationRouter
 from app.support.parcel.router import ParcelRouter, SiteRouter
 from app.support.source.router import SourceRouter
+from app.support.vllm.router import VllmRouter
 # from app.arq_worker_routes import router as ArqWorkerRouter
 # from app.support.warehouse.router import WarehouseRouter
 
@@ -159,6 +160,7 @@ app.include_router(PromptRouter().router)
 app.include_router(ProptionRouter().router)
 app.include_router(WriterRuleRouter().router)
 app.include_router(OllamaRouter().router)
+app.include_router(VllmRouter().router)
 app.include_router(MongoRouter)
 app.include_router(HandbookRouter().router)
 app.include_router(CreateRouter().router)

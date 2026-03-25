@@ -685,3 +685,12 @@ class Repository(metaclass=RepositoryMeta):
                 raise Exception(f'repo.get_by_fields: {filter=}, {model.__name__=}, {e}')
             else:
                 raise Exception(f'repo.get_by_fields: {filter=}, {model=}, {e}')
+
+    @classmethod
+    async def search_by_list_value_exact(cls, filter: List[Any], field: str, model: ModelType, session: AsyncSession,
+                                         **kwargs):
+        """
+             фильтр по нескольким значениям поля (полное совпадение)
+        """
+        column = getattr(model, field)
+        return cls.get_query(model).where(column.in_(filter))

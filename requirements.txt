@@ -21,6 +21,7 @@ bcrypt==4.0.1
 sqlalchemy-utils
 # sqlalchemy_serializer
 orjson
+openai
 motor==3.3.2
 zstandard
 pymongo==4.6.0
