@@ -694,7 +694,7 @@ class Repository(metaclass=RepositoryMeta):
         """
         logger.warning('search_by_list_value_exact---------------')
         column = getattr(model, field)
-        logger.warning('search_by_list_value_exact-------coliumn--------')
+        logger.warning(f'search_by_list_value_exact-------coliumn---{filter=}-----')
         result = await cls.get_query(model).where(column.in_(filter))
         logger.warning('search_by_list_value_exact-----result----------')
         return result.scalars().all()
