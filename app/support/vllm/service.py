@@ -47,7 +47,7 @@ class VLLMService:
                 payload[key] = tmp.to_dict()
         result: dict = {}
         for lang in language_set:
-            result[lang] = self.performing(lang, phrase, payload)
+            result[lang] = await self.performing(lang, phrase, payload)
         return result
 
     async def performing(self, lang: str, phrase: str, payload: dict):
