@@ -47,6 +47,7 @@ class VLLMService:
                 payload[key] = tmp.to_dict()
         result: dict = {}
         for lang in language_set:
+            logger.warning(f'--------{lang}----------------')
             result[lang] = await self.performing(lang, phrase, payload)
         return result
 
