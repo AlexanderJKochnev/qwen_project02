@@ -56,20 +56,24 @@ class VLLMService:
         """
             перевод/генерация
         """
-        options = payload.get("proption", {})
-        logger.warning('+++++++++++++++++++')
-        response = await self.client.chat.completions.create(
-            model=self.model_name,
-            messages=[{"role": "system", "content": payload.get("prompt", "")},
-                      # Маппинг ваших параметров в формат OpenAI/v)LM
-                      {"role": "user", "content": payload.get("writer", "").format(lang=lang, phrase=phrase)}],
-            temperature=options.get("temperature", 0.1), top_p=options.get("top_p", 0.1),
-            max_tokens=options.get("num_predict", 1024), presence_penalty=options.get("presence_penalty", 0),
-            frequency_penalty=options.get("frequency_penalty", 0), seed=options.get("seed", 42),
-            stop=options.get("stop", None)
-        )
-        logger.warning('===========')
-        return response.choices[0].message.content
+        try:
+            options = payload.get("proption", {})
+            logger.warning('+++++++++++++++++++')
+            response = await self.client.chat.completions.create(
+                model=self.model_name,
+                messages=[{"role": "system", "content": payload.get("prompt", "")},
+                          # Маппинг ваших параметров в формат OpenAI/v)LM
+                          {"role": "user", "content": payload.get("writer", "").format(lang=lang, phrase=phrase)}],
+                temperature=options.get("temperature", 0.1), top_p=options.get("top_p", 0.1),
+                max_tokens=options.get("num_predict", 1024), presence_penalty=options.get("presence_penalty", 0),
+                frequency_penalty=options.get("frequency_penalty", 0), seed=options.get("seed", 42),
+                stop=options.get("stop", None)
+            )
+            logger.warning('===========')
+            return response.choices[0].message.content
+        except Exception as x:
+            logger.error(f'error: {x}')
+            return {'result': False}
 
     async def get_translate(self, phrase, prompt: str, proption: str, writer: str, langs: str,
                             session: AsyncSession,
