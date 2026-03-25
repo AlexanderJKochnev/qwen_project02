@@ -232,6 +232,7 @@ class Settings(BaseSettings):
     PROMPT_I: str = 'wine_translator'
     PRESET_I: str = 'translation'
     WRITER_I: str = 'translate'
+    VLLM_URL: str = "http://localhost:8000/v1"
 
     model_config = SettingsConfigDict(env_file=get_path_to_root(),
                                       env_file_encoding='utf-8',

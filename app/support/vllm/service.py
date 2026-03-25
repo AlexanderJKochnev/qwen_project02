@@ -5,6 +5,7 @@ from loguru import logger
 import os
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.repositories.sqlalchemy_repository import Repository
+from app.core.config.project_config import settings
 from app.core.types import ModelType
 from app.support.ollama.model import Prompt, WriterRule, ISOLanguage, Proption
 from app.support.ollama.repository import PromptRepository, WriterRuleRepository, ISOLanguageRepository, ProptionRepository
@@ -22,7 +23,7 @@ class VLLMService:
     def __init__(self):
         # vLLM по умолчанию работает на http://localhost:8000/v1
         self.client = AsyncOpenAI(
-            base_url=os.getenv("VLLM_URL", "http://localhost:8000/v1"),
+            base_url=settings.VLLM_URL,  # "http://localhost:8000/v1"),
             api_key="token-not-needed"
         )
         self.model_name = "Qwen/Qwen2.5-7B-Instruct-AWQ"
