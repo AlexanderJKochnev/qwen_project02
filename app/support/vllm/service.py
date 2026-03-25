@@ -43,9 +43,8 @@ class VLLMService:
         print('======================================================')
         for key, val in dataset.items():
             model, repo, field_name, field_out, search = val
-            tmp = await repo.get_by_field(field_name, search, model, session)
-            logger.warning(f'{search=}, {field_out=}')
-            response[key] = getattr(tmp, field_out)
+            tmp: ModelType = await repo.get_by_field(field_name, search, model, session)
+            response[key] = getattr(tmp, field_out) if field_out else tmp.to_dict()
         response['langs'] = language_set
         return response
 
