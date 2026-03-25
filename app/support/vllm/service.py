@@ -18,6 +18,7 @@ class VLLMService:
     4. запрос/ответ
     5. encoding
     """
+
     def __init__(self):
         # vLLM по умолчанию работает на http://localhost:8000/v1
         self.client = AsyncOpenAI(
@@ -26,40 +27,54 @@ class VLLMService:
         )
         self.model_name = "Qwen/Qwen2.5-7B-Instruct-AWQ"
 
-    async def get_datas(self, prompt: int, proption: str, writer: str, language: str, session: AsyncSession):
-        from app.core.utils.common_utils import jprint
+    async def get_datas(self, phrase: str, prompt: str, proption: str, writer: str, language: str,
+                        session: AsyncSession):
         langs = [lang.strip() for lang in language.split(',')]
         lang_response: List[ISOLanguage] = await ISOLanguageRepository.search_by_list_value_exact(langs, 'iso_639_1', ISOLanguage,
                                                                                                   session)
-        logger.warning('-----------4----------------')
-
         if lang_response:
             language_set = {lang.iso_639_1 for lang in lang_response}
-            logger.warning(f'{language_set=} {proption=}')
         dataset = {'prompt': (Prompt, PromptRepository, 'role', 'system_prompt', prompt),
                    'writer': (WriterRule, WriterRuleRepository, 'name', 'prompt', writer),
                    'proption': (Proption, ProptionRepository, 'preset', None, proption)}
-        response: dict = {}
-        print('======================================================')
+        payload: dict = {}
         for key, val in dataset.items():
             model, repo, field_name, field_out, search = val
             tmp: ModelType = await repo.get_by_field(field_name, search, model, session)
             if field_out:
-                response[key] = getattr(tmp, field_out)
+                payload[key] = getattr(tmp, field_out)
             else:
-                logger.warning(f'{search=} {type(tmp)}, {field_name=}, {field_out=}')
-                response[key] = tmp.to_dict()
-                logger.warning(f'{search=} 2')
-        response['langs'] = language_set
-        return response
+                payload[key] = tmp.to_dict()
+        result: dict = {}
+        for lang in language_set:
+            result[lang] = self.performing(lang, phrase, payload)
+        return result
+
+    async def performing(self, lang: str, phrase: str, payload: dict):
+        """
+            перевод/генерация
+        """
+        options = payload.get("proption", {})
+        response = await self.client.chat.completions.create(
+            model=self.model_name,
+            messages=[{"role": "system", "content": payload.get("prompt", "")},
+                      # Маппинг ваших параметров в формат OpenAI/v)LM
+                      {"role": "user", "content": payload.get("writer", "").format(lang=lang, phrase=phrase)}],
+            temperature=options.get("temperature", 0.1), top_p=options.get("top_p", 0.1),
+            max_tokens=options.get("num_predict", 1024), presence_penalty=options.get("presence_penalty", 0),
+            frequency_penalty=options.get("frequency_penalty", 0), seed=options.get("seed", 42),
+            stop=options.get("stop", None)
+        )
+        return response.choices[0].message.content
 
     async def get_translate(self, phrase, prompt: str, proption: str, writer: str, langs: str,
                             session: AsyncSession,
                             **kwargs):
         # phrase, prompt, preset, writer, langs, session
-        logger.warning('-----------1----------------')
-        result = await self.get_datas(prompt, proption, writer, langs, session)
-        return result
+        result = await self.get_datas(phrase, prompt, proption, writer, langs, session)
+
+        return {'response': True if result else False,
+                'answer': result}
         response = await self.client.chat.completions.create(
             model=self.model_name,
             messages=[

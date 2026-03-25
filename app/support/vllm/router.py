@@ -48,7 +48,6 @@ class VllmRouter(LightRouter):
            возвращает:
         """
         try:
-            print(f'======={preset=}====')
             result = await self.VLLMservice.get_translate(phrase, prompt, preset, writer, langs, session)
             return result
         except Exception as e:
