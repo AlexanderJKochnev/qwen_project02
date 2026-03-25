@@ -59,7 +59,14 @@ class VLLMService:
         """
         try:
             options = payload.get("proption", {})
-            logger.warning('+++++++++++++++++++')
+            import httpx
+            async with httpx.AsyncClient() as client:
+                try:
+                    # Пробуем получить список моделей "руками" через httpx
+                    test_res = await client.get("http://vllm-node:8000/v1/models", timeout=2.0)
+                    print(f"HTTPX TEST STATUS: {test_res.status_code}")
+                except Exception as e:
+                    print(f"HTTPX TEST FAILED: {e}")
             response = await self.client.chat.completions.create(
                 model=self.model_name,
                 messages=[{"role": "system", "content": payload.get("prompt", "")},
@@ -70,7 +77,6 @@ class VLLMService:
                 frequency_penalty=options.get("frequency_penalty", 0), seed=options.get("seed", 42),
                 stop=options.get("stop", None)
             )
-            logger.warning('===========')
             return response.choices[0].message.content
         except Exception as x:
             logger.error(f'error: {x}')
