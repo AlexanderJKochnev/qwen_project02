@@ -80,7 +80,7 @@ class VLLMService:
             )
             return response.choices[0].message.content
         except Exception as x:
-            logger.error(f'error: {x}')
+            logger.error(f'base_url "http://172.60.0.10/v1", error: {x}')
             return {'result': False}
 
     async def get_translate(self, phrase, prompt: str, proption: str, writer: str, langs: str,
