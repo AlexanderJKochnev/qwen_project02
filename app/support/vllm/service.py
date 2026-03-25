@@ -55,8 +55,7 @@ class VLLMService:
                             **kwargs):
         # phrase, prompt, preset, writer, langs, session
         logger.warning('-----------1----------------')
-        result = {'res': True}
-        # result = await self.get_datas(prompt, proption, writer, langs)
+        result = await self.get_datas(prompt, proption, writer, langs)
         return result
         response = await self.client.chat.completions.create(
             model=self.model_name,

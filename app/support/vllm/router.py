@@ -48,7 +48,7 @@ class VllmRouter(LightRouter):
            возвращает:
         """
         try:
-            result = await self.VLLMservice.get_translate(phrase, prompt, preset, writer, langs, session)
+            result = await self.VLLMservice.get_translate(phrase, prompt, proption, writer, langs, session)
             return result
         except Exception as e:
             raise HTTPException(status_code=501, detail=e)
