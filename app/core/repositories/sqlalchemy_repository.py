@@ -692,10 +692,7 @@ class Repository(metaclass=RepositoryMeta):
         """
              фильтр по нескольким значениям поля (полное совпадение)
         """
-        logger.warning('search_by_list_value_exact---------------')
         column = getattr(model, field)
-        logger.warning(f'search_by_list_value_exact-------coliumn---{filter=}-----')
         stmt = cls.get_query(model).where(column.in_(filter))
         result = await session.execute(stmt)
-        logger.warning('search_by_list_value_exact-----result----------')
         return result.scalars().all()

@@ -28,15 +28,14 @@ class VLLMService:
 
     async def get_datas(self, prompt: int, proption: str, writer: str, language: str, session: AsyncSession):
         from app.core.utils.common_utils import jprint
-        logger.warning('-----------2----------------')
         langs = [lang.strip() for lang in language.split(',')]
-        logger.warning('-----------3----------------')
         lang_response: List[ISOLanguage] = await ISOLanguageRepository.search_by_list_value_exact(langs, 'iso_639_1', ISOLanguage,
                                                                                                   session)
         logger.warning('-----------4----------------')
-        logger.warning(f'{lang_response=}')
+
         if lang_response:
             language_set = {lang.iso_639_1 for lang in lang_response}
+            logger.warning(f'{language_set=}')
         dataset = {'prompt': (Prompt, PromptRepository, 'role', 'system_prompt', prompt),
                    'writer': (WriterRule, WriterRuleRepository, 'name', 'prompt', writer),
                    'proption': (Proption, ProptionRepository, 'preset', None, proption)}
