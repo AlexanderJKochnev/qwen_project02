@@ -260,3 +260,21 @@ find $SNAPSHOT_DIR -name "snap_*" -type d -mtime +7 -exec btrfs subvolume delete
 2. sudo crontab -e
    # Добавить строку для снапшота каждые 15 минут:
    */15 * * * * /usr/local/bin/make_snapshot.sh
+3. проверка сколько мета занимают снапшоты
+   sudo btrfs filesystem du -s /mnt/hdd_data/.snapshots/* | sort -h
+## useful tips
+# 1. Общее использование диска
+sudo btrfs filesystem usage /mnt/hdd_data
+
+# 2. Использование по подтомам (включая снапшоты)
+sudo btrfs subvolume list /mnt/hdd_data
+
+# 3. Детальная информация о каждом снапшоте
+for snap in /mnt/hdd_data/.snapshots/*; do
+    echo "=== $snap ==="
+    sudo btrfs filesystem du -s "$snap"
+done
+
+# 4. Разница между снапшотами
+sudo btrfs send --no-data -p /mnt/hdd_data/.snapshots/snap_old /mnt/hdd_data/.snapshots/snap_new | wc -c
+# Покажет размер изменений в байтах

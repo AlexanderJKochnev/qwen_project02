@@ -112,6 +112,7 @@ services:
       - mongodb_network
       - preact_network
       - nginx_gateway_shared_network
+      - vllm_network
 
   mongo:
     logging:
@@ -284,3 +285,7 @@ networks:
     driver: bridge
     external: true
     name: ollama_searxng_network
+  vllm_network:
+    driver: bridge
+    external: true
+    name: vllm_network
