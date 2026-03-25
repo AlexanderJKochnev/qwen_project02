@@ -60,6 +60,7 @@ class VLLMService:
         try:
             options = payload.get("proption", {})
             import httpx
+            logger.warning('httpx.asyncclient will be start')
             async with httpx.AsyncClient() as client:
                 try:
                     # Пробуем получить список моделей "руками" через httpx
