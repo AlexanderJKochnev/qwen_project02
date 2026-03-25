@@ -40,11 +40,11 @@ class VLLMService:
                    'writer': (WriterRule, WriterRuleRepository, 'name', 'prompt', writer),
                    'proption': (Proption, ProptionRepository, 'preset', None, proption)}
         response: dict = {}
-        jprint(dataset)
         print('======================================================')
         for key, val in dataset.items():
             model, repo, field_name, field_out, search = val
             tmp = await repo.get_by_field(field_name, search, model, session)
+            logger.warning(f'{search=}, {field_out=}')
             response[key] = getattr(tmp, field_out)
         response['langs'] = language_set
         return response
