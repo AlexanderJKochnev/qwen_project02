@@ -24,7 +24,7 @@ class VLLMService:
         # vLLM по умолчанию работает на http://localhost:8000/v1
         self.client = AsyncOpenAI(
             # base_url=settings.VLLM_URL,  # "http://localhost:8000/v1"),
-            base_url='http://172.60.0.10/v1',
+            base_url='http://vllm-node:8000/v1/',
             api_key="token-not-needed"
         )
         self.model_name = "Qwen/Qwen2.5-7B-Instruct-AWQ"
