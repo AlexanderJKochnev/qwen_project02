@@ -693,4 +693,5 @@ class Repository(metaclass=RepositoryMeta):
              фильтр по нескольким значениям поля (полное совпадение)
         """
         column = getattr(model, field)
-        return cls.get_query(model).where(column.in_(filter))
+        result = await cls.get_query(model).where(column.in_(filter))
+        return result.scalars().all()
