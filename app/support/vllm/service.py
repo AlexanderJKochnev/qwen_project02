@@ -35,7 +35,7 @@ class VLLMService:
 
         if lang_response:
             language_set = {lang.iso_639_1 for lang in lang_response}
-            logger.warning(f'{language_set=}')
+            logger.warning(f'{language_set=} {proption=}')
         dataset = {'prompt': (Prompt, PromptRepository, 'role', 'system_prompt', prompt),
                    'writer': (WriterRule, WriterRuleRepository, 'name', 'prompt', writer),
                    'proption': (Proption, ProptionRepository, 'preset', None, proption)}
@@ -47,7 +47,7 @@ class VLLMService:
             if field_out:
                 response[key] = getattr(tmp, field_out)
             else:
-                logger.warning(f'{search=}')
+                logger.warning(f'{search=} {type(tmp)}, {field_name=}, {field_out=}')
                 response[key] = tmp.to_dict()
                 logger.warning(f'{search=} 2')
         response['langs'] = language_set
