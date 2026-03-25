@@ -66,6 +66,7 @@ class VLLMService:
             frequency_penalty=options.get("frequency_penalty", 0), seed=options.get("seed", 42),
             stop=options.get("stop", None)
         )
+        logger.warning('===========')
         return response.choices[0].message.content
 
     async def get_translate(self, phrase, prompt: str, proption: str, writer: str, langs: str,
