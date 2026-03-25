@@ -56,6 +56,7 @@ class VLLMService:
             перевод/генерация
         """
         options = payload.get("proption", {})
+        logger.warning('+++++++++++++++++++')
         response = await self.client.chat.completions.create(
             model=self.model_name,
             messages=[{"role": "system", "content": payload.get("prompt", "")},
