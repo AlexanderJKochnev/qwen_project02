@@ -26,7 +26,7 @@ class VLLMService:
         )
         self.model_name = "Qwen/Qwen2.5-7B-Instruct-AWQ"
 
-    async def get_datas(self, prompt: int, preset: int, proption: str, language: str, session: AsyncSession):
+    async def get_datas(self, prompt: int, proption: str, writer: str, language: str, session: AsyncSession):
         from app.core.utils.common_utils import jprint
         logger.warning('-----------2----------------')
         langs = [lang.strip() for lang in language.split(',')]
@@ -38,7 +38,7 @@ class VLLMService:
         if lang_response:
             language_set = {lang.iso_639_1 for lang in lang_response}
         dataset = {'prompt': (Prompt, PromptRepository, 'role', 'system_prompt', prompt),
-                   'writer': (WriterRule, WriterRuleRepository, 'name', 'prompt', preset),
+                   'writer': (WriterRule, WriterRuleRepository, 'name', 'prompt', writer),
                    'proption': (Proption, ProptionRepository, 'preset', None, proption)}
         response: dict = {}
         jprint(dataset)
@@ -55,7 +55,7 @@ class VLLMService:
                             **kwargs):
         # phrase, prompt, preset, writer, langs, session
         logger.warning('-----------1----------------')
-        result = await self.get_datas(prompt, proption, writer, langs)
+        result = await self.get_datas(prompt, proption, writer, langs, session)
         return result
         response = await self.client.chat.completions.create(
             model=self.model_name,
