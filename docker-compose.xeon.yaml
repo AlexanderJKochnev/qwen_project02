@@ -25,6 +25,9 @@ services:
       -c max_worker_processes=14
       -c max_parallel_workers_per_gather=2
       -c max_connections=200
+      -c wal_level=logical
+      -c max_replication_slots=5
+      -c max_wal_senders=5
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -54,6 +57,8 @@ services:
     networks:
       postgres_network:
         ipv4_address: ${IP_POSTGRES}
+      clickhousepg_network:
+      
   
   app:
     logging:
@@ -80,8 +85,10 @@ services:
       WEB_HOST: pgbouncer
       BASE_URL: ${BASE_URL}
       SEARXNG_URL: "http://searxng:8080"
-      OLLAMA_HOST: "http://ollama:11434"
-      REDIS_HOST: redis
+      # OLLAMA_HOST: "http://ollama:11434"
+      # REDIS_HOST: redis
+      CH_HOST: clickhouse
+      CH_PORT: 8123
     volumes:
       - ./templates:/app/templates
       - ./migration_volume:/app/app/migration/versions
@@ -113,6 +120,7 @@ services:
       - preact_network
       - nginx_gateway_shared_network
       - vllm_network
+      - clickhouse_network
 
   mongo:
     logging:
@@ -289,3 +297,11 @@ networks:
     driver: bridge
     external: true
     name: vllm_network
+  clickhouse_network:
+    driver: bridge
+    external: true
+    name: clickhouse_network
+  clickhousepg_network:
+    driver: bridge
+    external: true
+    name: clickhousepg_network
