@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.types import ModelType
 from app.core.utils.benchmarks import get_metrics
-from app.core.utils.common_utils import jprint
+# from app.core.utils.common_utils import jprint
 from app.support.ollama.model import ISOLanguage, Prompt, Proption, WriterRule
 from app.support.ollama.repository import ISOLanguageRepository, PromptRepository, ProptionRepository, \
     WriterRuleRepository
@@ -52,10 +52,7 @@ class VLLMService:
                 payload[key] = tmp.to_dict()
         result: dict = {}
         for lang in language_set:
-            logger.warning(f'--------{lang}----------------')
             response = await self.performing(lang, phrase, payload)
-            logger.warning(f'--------{type(response)=}----------------')
-            jprint(response)
             result[lang] = response  # .choices[0].message.content
         return result
 
