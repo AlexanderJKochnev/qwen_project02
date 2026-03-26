@@ -244,9 +244,9 @@ class Search:
     def search_content(cls) -> Mapped[Optional[str]]:
         return mapped_column(Text, deferred=True, nullable=True)
 
-    @declared_attr
-    def search_vector(cls):
-        return mapped_column(TSVECTOR, Computed("to_tsvector('simple', coalesce(search_content, ''))", persisted=True))
+    # @declared_attr
+    # def search_vector(cls):
+    #     return mapped_column(TSVECTOR, Computed("to_tsvector('simple', coalesce(search_content, ''))", persisted=True))
 
     """
     __table_args__ = (Index(
