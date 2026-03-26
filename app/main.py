@@ -14,9 +14,9 @@ from time import perf_counter
 from app.auth.routers import auth_router, user_router
 # from app.core.config.project_config import settings
 from app.core.config.database.db_async import DatabaseManager, init_db_extensions
-from app.core.config.database.ollama_async import get_ollama_manager
+# from app.core.config.database.ollama_async import get_ollama_manager
 from app.core.config.database.db_mongo import MongoDBManager, get_mongodb
-from app.core.config.database.redis_async import redis_manager
+# from app.core.config.database.redis_async import redis_manager
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.mongodb.router import router as MongoRouter
 from app.preact.create.router import CreateRouter
@@ -78,8 +78,8 @@ async def lifespan(app: FastAPI):
     logger.success("Lifespan: соединение с MongoDB установлены")
     await init_db_extensions()  # подключение расщирений Postgresql
     logger.success("Lifespan: расширения для PostgreSQL установлены")
-    await redis_manager.connect(host="redis", port=6379)  # запускаем redis
-    logger.success("Lifespan: Redis запущен, соединение установлено")
+    # await redis_manager.connect(host="redis", port=6379)  # запускаем redis
+    # logger.success("Lifespan: Redis запущен, соединение установлено")
     # ollama_manager = get_ollama_manager()
     # app.state.ollama_manager = ollama_manager
     # await ollama_manager.get_client()
@@ -95,7 +95,7 @@ async def lifespan(app: FastAPI):
     #     pass
     await DatabaseManager.engine.dispose()
     await MongoDBManager.disconnect()
-    await redis_manager.disconnect()
+    # await redis_manager.disconnect()
 
 
 app = FastAPI(title="Hybrid PostgreSQL-MongoDB API",
