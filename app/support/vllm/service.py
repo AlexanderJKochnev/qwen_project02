@@ -1,14 +1,15 @@
 # app.support.vllm.service.py
+import time
 from openai import AsyncOpenAI
 from typing import List
 from loguru import logger
-import os
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.config.project_config import settings
 from app.core.types import ModelType
 from app.support.ollama.model import Prompt, WriterRule, ISOLanguage, Proption
 from app.support.ollama.repository import PromptRepository, WriterRuleRepository, ISOLanguageRepository, ProptionRepository
+from app.core.utils.benchmarks import add_performance_metrics, with_vllm_metrics
 
 
 class VLLMService:
@@ -53,6 +54,7 @@ class VLLMService:
             result[lang] = await self.performing(lang, phrase, payload)
         return result
 
+    @with_vllm_metrics
     async def performing(self, lang: str, phrase: str, payload: dict):
         """
             перевод/генерация
@@ -78,7 +80,8 @@ class VLLMService:
                 frequency_penalty=options.get("frequency_penalty", 0), seed=options.get("seed", 42),
                 stop=options.get("stop", None)
             )
-            return response.choices[0].message.content
+            # return response.choices[0].message.content
+            return response
         except Exception as x:
             logger.error(f'base_url "http://172.60.0.10/v1", error: {x}')
             return {'result': False}
