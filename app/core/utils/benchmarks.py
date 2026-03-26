@@ -91,41 +91,54 @@ def add_performance_metrics(
     return enriched_response
 
 
-def with_vllm_metrics(enrich_content: bool = True):
+def with_vllm_metrics(include_in_content: bool = True):
     """
     Декоратор для обогащения ответа vLLM метриками производительности.
 
     Args:
-        enrich_content: Добавлять ли метрики в content сообщения
+        include_in_content: Добавлять ли метрики в текст content
+
+    Returns:
+        Словарь вида:
+        {
+            "content": "текст ответа модели",
+            "performance": {...}
+        }
     """
 
     def decorator(func: Callable[..., Awaitable[Dict[str, Any]]]) -> Callable[..., Awaitable[Dict[str, Any]]]:
         @functools.wraps(func)
         async def wrapper(*args, **kwargs) -> Dict[str, Any]:
-            # Засекаем время начала всего запроса
+            # Засекаем время начала
             total_start_ms = time.time() * 1000
-
-            # Засекаем время перед вызовом vLLM (исключаем обвязку)
             gpu_start_ms = time.time() * 1000
 
             try:
-                # Вызываем оригинальный метод (он должен вернуть ответ от vLLM)
+                # Вызываем оригинальный метод (должен вернуть ответ от vLLM)
                 vllm_response = await func(*args, **kwargs)
 
-                # Засекаем время получения ответа от vLLM
+                # Засекаем время получения ответа
                 gpu_end_ms = time.time() * 1000
                 total_end_ms = gpu_end_ms
 
-                # Рассчитываем время выполнения
-                gpu_elapsed_ms = gpu_end_ms - gpu_start_ms
-                total_elapsed_ms = total_end_ms - total_start_ms
-                overhead_ms = total_elapsed_ms - gpu_elapsed_ms
+                # Извлекаем content из ответа
+                content = None
+                if vllm_response and isinstance(vllm_response, dict):
+                    choices = vllm_response.get('choices', [])
+                    if choices and isinstance(choices, list) and len(choices) > 0:
+                        message = choices[0].get('message', {})
+                        content = message.get('content', '')
 
-                # Получаем количество токенов из usage
-                usage = vllm_response.get('usage', {})
+                # Получаем количество токенов
+                usage = vllm_response.get('usage', {}) if isinstance(vllm_response, dict) else {}
                 prompt_tokens = usage.get('prompt_tokens', 0)
                 completion_tokens = usage.get('completion_tokens', 0)
                 total_tokens = usage.get('total_tokens', 0)
+
+                # Рассчитываем время
+                gpu_elapsed_ms = gpu_end_ms - gpu_start_ms
+                total_elapsed_ms = total_end_ms - total_start_ms
+                overhead_ms = total_elapsed_ms - gpu_elapsed_ms
 
                 # Рассчитываем скорости (токенов в секунду)
                 speeds = {}
@@ -141,47 +154,45 @@ def with_vllm_metrics(enrich_content: bool = True):
                     if completion_tokens > 0:
                         speeds['gpu_generation_tokens_per_sec'] = round(completion_tokens / gpu_elapsed_sec, 2)
 
-                # Создаем объект с метриками
+                # Формируем метрики
                 metrics = {'timestamp': datetime.now().isoformat(),
                            'timing': {'total_elapsed_ms': round(total_elapsed_ms, 2),
                                       'gpu_elapsed_ms': round(gpu_elapsed_ms, 2), 'overhead_ms': round(overhead_ms, 2)},
                            'tokens': {'prompt': prompt_tokens, 'completion': completion_tokens, 'total': total_tokens},
                            'speed': speeds}
 
-                # Обогащаем ответ метриками
-                enriched_response = vllm_response.copy()
-                enriched_response['performance'] = metrics
+                # Формируем итоговый ответ
+                result = {'content': content, 'performance': metrics}
 
-                # Если нужно, добавляем метрики в content
-                if enrich_content and enriched_response.get('choices'):
-                    # Форматируем метрики для отображения
+                # Если нужно, добавляем метрики в текст content
+                if include_in_content and content:
                     metrics_text = (f"\n\n---\n"
-                                    f"**⚡ Performance Metrics:**\n"
-                                    f"• Total time: {round(total_elapsed_ms, 1)} ms\n"
-                                    f"• GPU time: {round(gpu_elapsed_ms, 1)} ms\n"
+                                    f"⚡ Performance:\n"
+                                    f"• Total: {round(total_elapsed_ms, 1)} ms\n"
+                                    f"• GPU: {round(gpu_elapsed_ms, 1)} ms\n"
                                     f"• Overhead: {round(overhead_ms, 1)} ms\n"
-                                    f"• Tokens: {completion_tokens} generated, {total_tokens} total\n"
-                                    f"• Speed: {speeds.get('generation_tokens_per_sec', 0)} tok/s (total)")
-
+                                    f"• Tokens: {completion_tokens} gen / {total_tokens} total\n"
+                                    f"• Speed: {speeds.get('generation_tokens_per_sec', 0)} tok/s")
                     if speeds.get('gpu_generation_tokens_per_sec'):
-                        metrics_text += f", {speeds.get('gpu_generation_tokens_per_sec')} tok/s (GPU)"
+                        metrics_text += f" (GPU: {speeds.get('gpu_generation_tokens_per_sec')} tok/s)"
 
-                    original_content = enriched_response['choices'][0]['message']['content']
-                    enriched_response['choices'][0]['message']['content'] = original_content + metrics_text
+                    result['content'] = content + metrics_text
+                    result['content_with_metrics'] = content + metrics_text
 
-                return enriched_response
+                # Добавляем полный оригинальный ответ (опционально)
+                result['raw_response'] = vllm_response
+
+                return result
 
             except Exception as e:
-                # В случае ошибки, возвращаем метрики с информацией об ошибке
+                # В случае ошибки
                 total_end_ms = time.time() * 1000
                 error_metrics = {'timestamp': datetime.now().isoformat(), 'error': str(e),
+                                 'error_type': type(e).__name__,
                                  'timing': {'total_elapsed_ms': round(total_end_ms - total_start_ms, 2), 'gpu_elapsed_ms': None,
                                             'overhead_ms': None}}
 
-                if hasattr(e, 'response'):
-                    return {'error': str(e), 'performance': error_metrics,
-                            'original_response': getattr(e, 'response', None)}
-                raise
+                return {'content': None, 'error': str(e), 'performance': error_metrics}
 
         return wrapper
 

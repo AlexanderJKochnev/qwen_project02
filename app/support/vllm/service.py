@@ -55,7 +55,7 @@ class VLLMService:
             response = await self.performing(lang, phrase, payload)
             logger.warning(f'--------{type(response)=}----------------')
             jprint(response)
-            result[lang] = response.choices[0].message.content
+            result[lang] = response
         return result
 
     @with_vllm_metrics
