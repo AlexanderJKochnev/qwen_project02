@@ -1,16 +1,17 @@
 # app.support.vllm.service.py
 import time
-from openai import AsyncOpenAI
 from typing import List
+
 from loguru import logger
+from openai import AsyncOpenAI
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.repositories.sqlalchemy_repository import Repository
-from app.core.config.project_config import settings
+
 from app.core.types import ModelType
-from app.support.ollama.model import Prompt, WriterRule, ISOLanguage, Proption
-from app.support.ollama.repository import PromptRepository, WriterRuleRepository, ISOLanguageRepository, ProptionRepository
 from app.core.utils.benchmarks import with_vllm_metrics
 from app.core.utils.common_utils import jprint
+from app.support.ollama.model import ISOLanguage, Prompt, Proption, WriterRule
+from app.support.ollama.repository import ISOLanguageRepository, PromptRepository, ProptionRepository, \
+    WriterRuleRepository
 
 
 class VLLMService:
@@ -55,14 +56,15 @@ class VLLMService:
             response = await self.performing(lang, phrase, payload)
             logger.warning(f'--------{type(response)=}----------------')
             jprint(response)
-            result[lang] = response
+            result[lang] = response.choices[0].message.content
         return result
 
-    @with_vllm_metrics
     async def performing(self, lang: str, phrase: str, payload: dict):
         """
             перевод/генерация
         """
+        total_start_ms = time.time() * 1000
+        gpu_start_ms = time.time() * 1000
         try:
             options = payload.get("proption", {})
             response = await self.client.chat.completions.create(
@@ -75,6 +77,9 @@ class VLLMService:
                 frequency_penalty=options.get("frequency_penalty", 0), seed=options.get("seed", 42),
                 stop=options.get("stop", None)
             )
+            gpu_end_ms = time.time() * 1000
+            total_end_ms = gpu_end_ms
+
             return response
             # return response.choices[0].message.content
         except Exception as x:
