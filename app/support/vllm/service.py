@@ -56,15 +56,14 @@ class VLLMService:
             response = await self.performing(lang, phrase, payload)
             logger.warning(f'--------{type(response)=}----------------')
             jprint(response)
-            result[lang] = response.choices[0].message.content
+            result[lang] = response  # .choices[0].message.content
         return result
 
+    @with_vllm_metrics
     async def performing(self, lang: str, phrase: str, payload: dict):
         """
             перевод/генерация
         """
-        total_start_ms = time.time() * 1000
-        gpu_start_ms = time.time() * 1000
         try:
             options = payload.get("proption", {})
             response = await self.client.chat.completions.create(
@@ -77,8 +76,6 @@ class VLLMService:
                 frequency_penalty=options.get("frequency_penalty", 0), seed=options.get("seed", 42),
                 stop=options.get("stop", None)
             )
-            gpu_end_ms = time.time() * 1000
-            total_end_ms = gpu_end_ms
 
             return response
             # return response.choices[0].message.content
