@@ -52,11 +52,12 @@ class VLLMService:
         result: dict = {}
         for lang in language_set:
             logger.warning(f'--------{lang}----------------')
-            res = await self.performing(lang, phrase, payload)
-            result[lang] = res
+            response = await self.performing(lang, phrase, payload)
+            jprint(response)
+            result[lang] = response.choices[0].message.content
         return result
 
-    # @with_vllm_metrics
+    @with_vllm_metrics
     async def performing(self, lang: str, phrase: str, payload: dict):
         """
             перевод/генерация
@@ -82,8 +83,8 @@ class VLLMService:
                 frequency_penalty=options.get("frequency_penalty", 0), seed=options.get("seed", 42),
                 stop=options.get("stop", None)
             )
-            jprint(response)
-            return response.choices[0].message.content
+            return response
+            # return response.choices[0].message.content
         except Exception as x:
             logger.error(f'base_url "http://172.60.0.10/v1", error: {x}')
             return {'result': False}
