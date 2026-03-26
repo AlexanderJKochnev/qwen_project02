@@ -19,6 +19,6 @@ def get_metrics(content: str, completion_tokens: int, start_ms: float, gpu_start
 
     return {'content': content,
             'performance': {'total_sec': round(total_ms / 1000, 3),
-                            'gpu_s': round(gpu_ms, 1),
+                            'gpu_s': round(gpu_ms / 1000, 3),
                             'tokens': completion_tokens,
                             'speed_tok_per_sec': speed}}
