@@ -1,10 +1,5 @@
 # Benchmark проверки IP
 import time
-import functools
-from loguru import logger
-# import json
-from typing import Dict, Any, Callable, Awaitable, Optional
-from datetime import datetime
 
 
 def check_ip_speed(host):
@@ -22,6 +17,8 @@ def get_metrics(content: str, completion_tokens: int, start_ms: float, gpu_start
     gpu_ms = now_ms - gpu_start_ms
     speed = round(completion_tokens / (gpu_ms / 1000), 1) if gpu_ms > 0 else 0
 
-    return {'content': f"{content}\n\n---\n{round(total_ms, 1)}ms | {completion_tokens} tok | {speed} tok/s",
-            'performance': {'total_ms': round(total_ms, 1), 'gpu_ms': round(gpu_ms, 1), 'tokens': completion_tokens,
+    return {'content': content,
+            'performance': {'total_sec': round(total_ms / 1000, 3),
+                            'gpu_s': round(gpu_ms, 1),
+                            'tokens': completion_tokens,
                             'speed_tok_per_sec': speed}}
