@@ -53,6 +53,7 @@ class VLLMService:
         for lang in language_set:
             logger.warning(f'--------{lang}----------------')
             response = await self.performing(lang, phrase, payload)
+            logger.warning(f'--------{type(response)=}----------------')
             jprint(response)
             result[lang] = response.choices[0].message.content
         return result
@@ -64,15 +65,6 @@ class VLLMService:
         """
         try:
             options = payload.get("proption", {})
-            import httpx
-            logger.warning('httpx.asyncclient will be start')
-            async with httpx.AsyncClient() as client:
-                try:
-                    # Пробуем получить список моделей "руками" через httpx
-                    test_res = await client.get("http://vllm-node:8000/v1/models", timeout=2.0)
-                    print(f"HTTPX TEST STATUS: {test_res.status_code}")
-                except Exception as e:
-                    print(f"HTTPX TEST FAILED: {e}")
             response = await self.client.chat.completions.create(
                 model=self.model_name,
                 messages=[{"role": "system", "content": payload.get("prompt", "")},
