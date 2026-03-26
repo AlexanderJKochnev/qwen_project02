@@ -1,6 +1,7 @@
 # Benchmark проверки IP
 import time
 import functools
+from loguru import logger
 # import json
 from typing import Dict, Any, Callable, Awaitable, Optional
 from datetime import datetime
@@ -101,9 +102,10 @@ def with_vllm_metrics(include_in_content: bool = True):
         async def wrapper(*args, **kwargs) -> Dict[str, Any]:
             total_start_ms = time.time() * 1000
             gpu_start_ms = time.time() * 1000
-
+            logger.warning('==i"am in wrapper')
             # Вызываем оригинальную функцию, получаем Pydantic объект
             vllm_response = await func(*args, **kwargs)
+            logger.warning("after vlimm")
 
             gpu_end_ms = time.time() * 1000
             total_end_ms = time.time() * 1000
