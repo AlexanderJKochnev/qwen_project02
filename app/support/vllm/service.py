@@ -9,7 +9,8 @@ from app.core.config.project_config import settings
 from app.core.types import ModelType
 from app.support.ollama.model import Prompt, WriterRule, ISOLanguage, Proption
 from app.support.ollama.repository import PromptRepository, WriterRuleRepository, ISOLanguageRepository, ProptionRepository
-from app.core.utils.benchmarks import add_performance_metrics, with_vllm_metrics
+from app.core.utils.benchmarks import with_vllm_metrics
+from app.core.utils.common_utils import jprint
 
 
 class VLLMService:
@@ -51,7 +52,9 @@ class VLLMService:
         result: dict = {}
         for lang in language_set:
             logger.warning(f'--------{lang}----------------')
-            result[lang] = await self.performing(lang, phrase, payload)
+            res = await self.performing(lang, phrase, payload)
+            jprint()
+            result[lang] = res
         return result
 
     @with_vllm_metrics
