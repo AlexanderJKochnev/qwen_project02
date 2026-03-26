@@ -53,7 +53,6 @@ class VLLMService:
         for lang in language_set:
             logger.warning(f'--------{lang}----------------')
             res = await self.performing(lang, phrase, payload)
-            jprint()
             result[lang] = res
         return result
 
@@ -83,8 +82,8 @@ class VLLMService:
                 frequency_penalty=options.get("frequency_penalty", 0), seed=options.get("seed", 42),
                 stop=options.get("stop", None)
             )
-            # return response.choices[0].message.content
-            return response
+            jprint(response)
+            return response.choices[0].message.content
         except Exception as x:
             logger.error(f'base_url "http://172.60.0.10/v1", error: {x}')
             return {'result': False}
