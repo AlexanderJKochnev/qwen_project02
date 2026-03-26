@@ -57,7 +57,7 @@ class VLLMService:
             result[lang] = res
         return result
 
-    @with_vllm_metrics
+    # @with_vllm_metrics
     async def performing(self, lang: str, phrase: str, payload: dict):
         """
             перевод/генерация
