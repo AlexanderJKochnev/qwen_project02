@@ -27,7 +27,7 @@ class VLLMService:
             base_url='http://vllm-node:8000/v1/',
             api_key="token-not-needed"
         )
-        self.model_name = "Qwen/Qwen2.5-7B-Instruct-GPTQ"
+        self.model_name = "/model"  # "Qwen/Qwen2.5-7B-Instruct-GPTQ"
 
     async def get_datas(self, phrase: str, prompt: str, proption: str, writer: str, language: str,
                         session: AsyncSession):
