@@ -887,15 +887,12 @@ def get_multilang(obj: dict, base_key: str, languages: tuple) -> str:
     """ Умный выбор перевода: сначала текущий lang, потом остальные из кортежа, потом база. """
     if not obj:
         return ""
-
     # Пробегаем по списку альтернатив
     for lng in languages:
-        val = obj.get(f"{base_key}{lng}")
-        cleaned = " ".join(str(val).split())
-        if val:
-            return cleaned
+        val = obj.get(f"{base_key}{lng}", "")
+        return val
     base_val = obj.get(base_key, "")
-    return " ".join(str(base_val).split()) if base_val else ""
+    return base_val
 
 
 def transform(source: dict, lang: str, languages: tuple) -> dict:
