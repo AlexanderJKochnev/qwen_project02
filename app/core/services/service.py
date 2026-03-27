@@ -526,6 +526,7 @@ class Service(metaclass=ServiceMeta):
         async with _REINDEX_LOCK:
             # Небольшая пауза (дебаунс), чтобы подождать,
             # если идет серия мелких правок в справочниках
+            logger.info('run_reindex_worker starts')
             model = get_model_by_name(model_name)
             if cls.is_dependencies(model):
                 await asyncio.sleep(2)
