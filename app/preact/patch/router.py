@@ -11,6 +11,13 @@ class PatchRouter(PreactRouter):
     def __init__(self):
         super().__init__(prefix='patch', method='PATCH', tier=3)
 
+    def _setup_routes_(self):
+        for prefix, response_model, request_model in self.__source_generator__(self.source):
+            self.router.add_api_route(prefix, endpoint=self.endpoint, methods=[self.method],
+                                      response_model=response_model,
+                                      openapi_extra={'x-request-schema': request_model.__name__
+                                                     if request_model else None})
+
     def __set_schema__(self, model):
         """  находит  Update схему для response_model """
         schema = get_pyschema(model, 'Update')  # or sqlalchemy_to_pydantic_post(model)
