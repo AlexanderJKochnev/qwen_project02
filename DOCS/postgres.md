@@ -22,3 +22,34 @@ CREATE TABLE lwins2 AS SELECT * FROM lwins;"
 
 docker exec -t prod-wine_host-1 pg_dump -U wine -t lwins2 wine_db | \
 docker exec -i test-wine_host-1 psql -U wine wine_db
+
+# список тааблиц с размерами
+docker exec -i prod-wine_host-1 psql -U wine -d wine_db -c "
+SELECT 
+    schemaname,
+    tablename,
+    pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) as total_size
+FROM pg_tables 
+WHERE schemaname NOT IN ('information_schema', 'pg_catalog')
+ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;
+"
+# детльный отчет по таблице
+docker exec -i prod-wine_host-1 psql -U wine -d wine_db -c "
+SELECT 
+    'Columns:' as info_type,
+    column_name,
+    data_type,
+    null::text as index_info
+FROM information_schema.columns 
+WHERE table_name = 'producers'
+
+UNION ALL
+
+SELECT 
+    'Indexes:',
+    indexname,
+    null,
+    indexdef
+FROM pg_indexes 
+WHERE tablename = 'producers';
+"

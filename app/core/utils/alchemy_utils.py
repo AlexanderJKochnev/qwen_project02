@@ -993,6 +993,8 @@ def transform_api_list_view(source: dict, def_lang: str, languages: tuple) -> di
     subcat = d.get("subcategory", {})
     cat = subcat.get("category", {})
 
+    category = api_mapping(cat, subcat)
+
     prod = d.get('producer', {})
     # ptitle = prod.get("producertitle", {})
     # classification = d.get("classification", {})
@@ -1017,7 +1019,7 @@ def transform_api_list_view(source: dict, def_lang: str, languages: tuple) -> di
         "vol": source.get("vol"),
         "image_id": source.get("image_id"),
         "changed_at": source.get("updated_at"),
-        "category": camel_to_enum(cat.get('name')),
+        "category": category,  # camel_to_enum(cat.get('name')),
         "country": camel_to_enum(country.get("name"))}
     for lang in languages:
         des = get_multilang(designation, "name", languages)
@@ -1038,7 +1040,25 @@ def transform_api_list_view(source: dict, def_lang: str, languages: tuple) -> di
             "madeof": get_multilang(d, "madeof", languages),
             "producer": f'{get_multilang(prod.get('producertitle'), "name", languages)} '
                         f'{get_multilang(prod, "name", languages)}'.strip() if prod else None,
+            "type": f'{get_multilang(subcat.get('name'), "name", languages)}' if subcat else None,
         })
         lng = def_lang if lang == '' else lang[1:]
         main[lng] = tmp
     return main
+
+
+def api_mapping(cat_dict: dict, subcat_dict: dict) -> tuple:
+    """
+    RETURN MAPPED CATEGORY & TYPE
+    """
+    x = cat_dict.get('name')
+    y = subcat_dict.get('name')
+    if x == 'Wine':
+        x, subcat_dict = y, {}
+    elif x == 'Brandy' and y == 'Cognac':
+        x, subcat_dict = y, None
+    elif x == 'Brandy' and y != 'Cognac':
+        x = 'other'
+    elif x == 'Fortified Wine':
+        x = 'port'
+    return camel_to_enum(x)
