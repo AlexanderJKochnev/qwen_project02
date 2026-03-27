@@ -74,7 +74,7 @@ class Service(metaclass=ServiceMeta):
         obj = model(**data_dict)
         result = await repository.create(obj, model, session)
         if model.__name__ == 'Item':
-            await cls.run_reindex_worker(model.__name__, DatabaseManager.session_maker)
+            await cls.fill_index(cls, repository, model, session)
         await session.commit()
         return result
 
@@ -409,6 +409,7 @@ class Service(metaclass=ServiceMeta):
             number_of_indexed_records: Optional[int] = 0
         """
         try:
+            logger.info(f'fill index. model={model.__name__}')
             result = IndexFillResponse(model=model.__name__)
             if not hasattr(model, 'search_content'):
                 result.index = False
@@ -428,6 +429,7 @@ class Service(metaclass=ServiceMeta):
             await repository.my_bulk_updates(data, model, session)
             result.index = True
             result.message = 'индекс успешно создан'
+            logger.info(result.message)
             return result
         except Exception as e:
             raise HTTPException(status_code=500, detail=f'fill_index.error: {e}')
@@ -536,6 +538,7 @@ class Service(metaclass=ServiceMeta):
                     repository = get_repo(model)
                     logger.info("Авто-подметатель: обнаружены пустые индексы, начинаю сборку...")
                     await cls.fill_index(repository, model, new_session)
+                    logger.info('run_reindex_worker finished')
 
     @classmethod
     async def run_backgound_task(cls, id: int, background_tasks: BackgroundTasks,
