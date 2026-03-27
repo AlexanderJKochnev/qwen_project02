@@ -104,6 +104,11 @@ class Service(metaclass=ServiceMeta):
             # запись не найдена
             obj = model(**data_dict)
             instance = await repository.create(obj, model, session)
+            logger.warning(f'{model.__name__=} 1')
+            if model.__name__ == 'Item':
+                logger.warning(f'{model.__name__=}2')
+                await cls.fill_index(repository, model, session)
+                logger.warning(f'{model.__name__=}3')
             await session.commit()
             return instance, True
         except IntegrityError as e:
