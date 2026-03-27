@@ -1035,7 +1035,7 @@ def transform_api_list_view(source: dict, def_lang: str, languages: tuple) -> di
             "description": get_multilang(d, "description", languages),
             "region": f'{get_multilang(reg, "name", languages)}. '
                       f'{get_multilang(subreg, "name", languages)}. '
-                      f'{get_multilang(site, "name", languages)}',
+                      f'{get_multilang(site, "name", languages)}'.strip(),
             "recommendation": get_multilang(d, "recommendation", languages),
             "madeof": get_multilang(d, "madeof", languages),
             "producer": f'{get_multilang(prod.get('producertitle'), "name", languages)} '
