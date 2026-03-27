@@ -8,7 +8,8 @@ DB_USER="wine"
 # BACKUP_NAME="pg_backup_$(date +%Y%m%d_%H%M%S).sql"
 BACKUP_NAME="pg_backup.sql.gz"
 
-echo "--- Начинаю восстановление базы данных из контейнера $SERVICE_NAME ---"
+echo "--- Начинаю восстановление базы данных из контейнера $SERVICE_NAME  ---"
+echo " если будут ошибки - наверное забыл остановить app pgbouncer clickhouse. останови "
 
 # cat backup/$BACKUP_NAME | docker exec -i $SERVICE_NAME psql -U $DB_USER -d postgres
 gunzip -c backup/$BACKUP_NAME | docker exec -i $SERVICE_NAME psql -U $DB_USER -d postgres
