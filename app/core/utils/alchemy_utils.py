@@ -993,7 +993,7 @@ def transform_api_list_view(source: dict, def_lang: str, languages: tuple) -> di
     subcat = d.get("subcategory", {})
     cat = subcat.get("category", {})
 
-    category = api_mapping(cat, subcat)
+    category, subcat = api_mapping(cat, subcat)
 
     prod = d.get('producer', {})
     # ptitle = prod.get("producertitle", {})
@@ -1061,4 +1061,4 @@ def api_mapping(cat_dict: dict, subcat_dict: dict) -> tuple:
         x = 'other'
     elif x == 'Fortified Wine':
         x = 'port'
-    return camel_to_enum(x)
+    return camel_to_enum(x), subcat_dict
