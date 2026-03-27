@@ -1056,7 +1056,7 @@ def api_mapping(cat_dict: dict, subcat_dict: dict) -> tuple:
     if x == 'Wine':
         x, subcat_dict = y, {}
     elif x == 'Brandy' and y == 'Cognac':
-        x, subcat_dict = y, None
+        x, subcat_dict = y, {}
     elif x == 'Brandy' and y != 'Cognac':
         x = 'other'
     elif x == 'Fortified Wine':
