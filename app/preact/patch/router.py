@@ -42,6 +42,8 @@ class PatchRouter(PreactRouter):
         model = self.source.get(tmp)
         route = request.scope["route"]
         schema = route.response_model
+        print(f'{schema=}')
+        print(f'{data=}')
         repo = self.get_repo(model)
         service = self.get_service(model)
         model_data = schema(**data)
