@@ -891,9 +891,11 @@ def get_multilang(obj: dict, base_key: str, languages: tuple) -> str:
     # Пробегаем по списку альтернатив
     for lng in languages:
         val = obj.get(f"{base_key}{lng}")
+        cleaned = " ".join(str(val).split())
         if val:
-            return val
-    return obj.get(base_key, "")
+            return cleaned
+    base_val = obj.get(base_key, "")
+    return " ".join(str(base_val).split()) if base_val else ""
 
 
 def transform(source: dict, lang: str, languages: tuple) -> dict:
