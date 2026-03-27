@@ -890,10 +890,10 @@ def get_multilang(obj: dict, base_key: str, languages: tuple) -> str:
     # Пробегаем по списку альтернатив
     for lng in languages:
         val = obj.get(f"{base_key}{lng}", "")
-        print(f'======{val}========')
+        print(f'======{val=}========')
         return val
     base_val = obj.get(base_key, "")
-    print(f'======{base_val}========')
+    print(f'======{base_val=}========')
     return base_val
 
 
