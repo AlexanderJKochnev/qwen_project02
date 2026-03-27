@@ -1040,7 +1040,7 @@ def transform_api_list_view(source: dict, def_lang: str, languages: tuple) -> di
             "madeof": get_multilang(d, "madeof", languages),
             "producer": f'{get_multilang(prod.get('producertitle'), "name", languages)} '
                         f'{get_multilang(prod, "name", languages)}'.strip() if prod else None,
-            "type": f'{get_multilang(subcat.get('name'), "name", languages)}' if subcat else None,
+            "type": f'{get_multilang(subcat, "name", languages)}' if subcat else None,
         })
         lng = def_lang if lang == '' else lang[1:]
         main[lng] = tmp
