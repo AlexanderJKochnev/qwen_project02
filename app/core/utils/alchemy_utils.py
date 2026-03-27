@@ -1029,8 +1029,8 @@ def transform_api_list_view(source: dict, def_lang: str, languages: tuple) -> di
             "alc": alc,
             "vol": vol,
             "title": f'{get_multilang(d, "title", languages).replace(des or "", "").replace(anno or "", "")} '
-                     f'{anno}'
-                     f' {des}'.strip(),
+                     f'{anno or ""}'
+                     f' {des or ""}'.strip(),
             "subtitle": get_multilang(d, "subtitle", languages),
             "description": get_multilang(d, "description", languages),
             "region": f'{get_multilang(reg, "name", languages)}. '
