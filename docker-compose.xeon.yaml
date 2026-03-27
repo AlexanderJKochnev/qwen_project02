@@ -28,8 +28,8 @@ services:
       -c wal_level=logical
       -c max_replication_slots=5
       -c max_wal_senders=5
-      -c statement_timeout=300s
-      -c idle_in_transaction_session_timeout=60s
+      -c statement_timeout='300s'
+      -c idle_in_transaction_session_timeout='60s'
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
