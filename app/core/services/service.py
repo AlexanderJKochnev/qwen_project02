@@ -73,8 +73,11 @@ class Service(metaclass=ServiceMeta):
         data_dict = data.model_dump(exclude_unset=True)
         obj = model(**data_dict)
         result = await repository.create(obj, model, session)
+        logger.warning(f'{model.__name__=} 1')
         if model.__name__ == 'Item':
-            await cls.fill_index(cls, repository, model, session)
+            logger.warning(f'{model.__name__=}2')
+            await cls.fill_index(repository, model, session)
+            logger.warning(f'{model.__name__=}3')
         await session.commit()
         return result
 
@@ -530,15 +533,15 @@ class Service(metaclass=ServiceMeta):
         async with _REINDEX_LOCK:
             # Небольшая пауза (дебаунс), чтобы подождать,
             # если идет серия мелких правок в справочниках
-            logger.info('run_reindex_worker starts')
             model = get_model_by_name(model_name)
             if cls.is_dependencies(model):
+                logger.info('run_reindex_worker starts')
                 await asyncio.sleep(2)
                 async with session_factory() as new_session:
                     repository = get_repo(model)
                     logger.info("Авто-подметатель: обнаружены пустые индексы, начинаю сборку...")
                     await cls.fill_index(repository, model, new_session)
-                    logger.info('run_reindex_worker finished')
+                logger.info('run_reindex_worker finished')
 
     @classmethod
     async def run_backgound_task(cls, id: int, background_tasks: BackgroundTasks,
