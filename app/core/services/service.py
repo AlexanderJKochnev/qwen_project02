@@ -73,6 +73,8 @@ class Service(metaclass=ServiceMeta):
         data_dict = data.model_dump(exclude_unset=True)
         obj = model(**data_dict)
         result = await repository.create(obj, model, session)
+        if model.__name__ == 'Item':
+            await cls.run_reindex_worker(model.__name__, DatabaseManager.session_maker)
         await session.commit()
         return result
 

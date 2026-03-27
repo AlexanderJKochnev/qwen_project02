@@ -167,7 +167,8 @@ class BaseRouter:
                                   response_model=self.delete_response,
                                   openapi_extra={'x-request-schema': None})
 
-    async def create(self, data: TCreateSchema, session: AsyncSession = Depends(get_db)) -> TReadSchema:
+    async def create(self, data: TCreateSchema,
+                     session: AsyncSession = Depends(get_db)) -> TReadSchema:
         """
         Создание одной записи без зависимостей
         input_valudation_chema <>CreateRelation
