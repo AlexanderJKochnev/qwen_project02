@@ -38,12 +38,6 @@ ItemListViewAdapter: TypeAdapter = TypeAdapter(List[ItemListView])
 
 class ItemService(Service):
     default = ['vol', 'drink_id', 'image_id']
-    skip_keys = {'id', 'created_at', 'udated_at', 'alc', 'sugar',
-                 'age', 'sparkling', 'subcategory_id', 'sweetness_id',
-                 'source_id', 'producer_id', 'vintageconfig_id', 'classification_id',
-                 'designation_id', 'site_id', 'parcel_id', 'category_id', 'drink_id', 'food_id',
-                 'superfood_id', 'varietal_id', 'percentage'
-                 }
 
     @classmethod
     def _level_up_(cls, lang_prefixes: list, item: dict) -> dict:
@@ -475,49 +469,3 @@ class ItemService(Service):
         except Exception as e:
             logger.error(f'search_gens_all. {e}')
             raise HTTPException(status_code=503, detail=f'search_gens_all. {e}')
-
-    @classmethod
-    async def get_or_create(
-            cls, data: Union[BaseModel, dict], repository: Repository, model: Type[ModelType], session: AsyncSession,
-            default: List[str] = None, **kwargs
-    ) -> Tuple[ModelType, bool]:
-        """
-            находит или создaет запись
-            возвращает instance и True (запись создана) или False (запись существует)
-        """
-        try:
-            if default is None:
-                default = cls.default
-            if not isinstance(data, dict):
-                # если исходные данные не словарь
-                data_dict = data.model_dump(exclude_unset=True)
-            default_dict = {key: val for key, val in data_dict.items() if key in default}
-            instance = await repository.get_by_fields(default_dict, model, session)
-            if instance:
-                return instance, False
-            # запись не найдена
-            obj = model(**data_dict)
-            obj = await cls.reindex_items(obj, session)
-            instance = await repository.create(obj, model, session)
-            await session.commit()
-            return instance, True
-        except IntegrityError as e:
-            await session.rollback()
-            raise Exception(f'Integrity error: {e}')
-        except Exception as e:
-            await session.rollback()
-            raise Exception(f"UNKNOWN_ERROR: {str(e)}") from e
-
-    @classmethod
-    async def reindex_items(cls, instance: Item, session: AsyncSession) -> ModelType:
-        """
-            заполняет поле search_content текстовыми данными
-        """
-        drink_id: int = instance.drink_id
-        # 0. получение drink
-        drink: Drink = await DrinkRepository.get_by_id(drink_id, Drink, session)
-        drink_dict = drink.to_dict()
-        result = extract_text_ultra_fast(drink_dict, cls.skip_keys)
-        logger.warning(result)
-        instance.search_content = result.lower()
-        return instance

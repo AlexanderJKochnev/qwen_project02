@@ -17,6 +17,7 @@ from app.core.types import ModelType
 from app.core.utils.alchemy_utils import has_column, formatted_query
 from app.core.utils.common_utils import flatten_dict_with_localized_fields
 from app.core.utils.pydantic_utils import make_paginated_response, prepare_search_string, get_data_for_search, get_repo
+from app.core.utils.reindexation import reindex_items
 from app.service_registry import register_service, get_search_dependencies
 from app.core.schemas.base import IndexFillResponse, BaseModel
 from app.mongodb.service import ThumbnailImageService
@@ -52,6 +53,9 @@ class Service(metaclass=ServiceMeta):
     #  список уникальных полей по которым будет осуществляться поиск в методах
     #  список уникальных полей для get_or_create, update_or_create
     default: list = ['name']
+    skip_keys = {'id', 'created_at', 'udated_at', 'alc', 'sugar', 'age', 'sparkling', 'subcategory_id', 'sweetness_id',
+                 'source_id', 'producer_id', 'vintageconfig_id', 'classification_id', 'designation_id', 'site_id',
+                 'parcel_id', 'category_id', 'drink_id', 'food_id', 'superfood_id', 'varietal_id', 'percentage'}
 
     @classmethod
     async def get_instance(cls, data_dict: dict, repository: Type[Repository], model: ModelType,
@@ -73,6 +77,8 @@ class Service(metaclass=ServiceMeta):
         # удаляет пустые поля
         data_dict = data.model_dump(exclude_unset=True)
         obj = model(**data_dict)
+        if model.__name__ == 'Item':
+            obj = reindex_items(obj, cls.skip_keys, session)
         result = await repository.create(obj, model, session)
         if model.__name__ == 'Item':
             await cls.fill_index(repository, model, session)
@@ -99,9 +105,9 @@ class Service(metaclass=ServiceMeta):
                 return instance, False
             # запись не найдена
             obj = model(**data_dict)
-            instance = await repository.create(obj, model, session)
             if model.__name__ == 'Item':
-                await cls.fill_index(repository, model, session)
+                obj = reindex_items(obj, cls.skip_keys, session)
+            instance = await repository.create(obj, model, session)
             await session.commit()
             return instance, True
         except IntegrityError as e:
@@ -701,12 +707,3 @@ class Service(metaclass=ServiceMeta):
         except Exception as e:
             logger.error(f'search_geans_all.error: {e}')
             raise HTTPException(status_code=501, detail=f'{e}')
-
-    @classmethod
-    async def null_slave_add(cls, ):
-        """
-            если модель имеет зависимую модель унаследованную от BaseFullFree
-            добавляются в зависимую модель записи с Name = Null (для вновь созданных зависимых моделей
-        """
-        # 1. получение
-        pass
