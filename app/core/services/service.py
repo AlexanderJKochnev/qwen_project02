@@ -109,7 +109,7 @@ class Service(metaclass=ServiceMeta):
             # запись не найдена
             obj = model(**data_dict)
             if model.__name__ == 'Item':
-                obj = await reindex_items(obj, cls.drink_model, cls.drink_repo, cls.skip_keys, session)
+                obj = await reindex_items(obj, drink_model, drink_repo, cls.skip_keys, session)
             instance = await repository.create(obj, model, session)
             await session.commit()
             return instance, True
