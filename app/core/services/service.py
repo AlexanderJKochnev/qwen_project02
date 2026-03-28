@@ -20,7 +20,7 @@ from app.core.utils.pydantic_utils import make_paginated_response, prepare_searc
 from app.service_registry import register_service, get_search_dependencies
 from app.core.schemas.base import IndexFillResponse, BaseModel
 from app.mongodb.service import ThumbnailImageService
-from app.core.utils.common_utils import jprint
+# from app.core.utils.common_utils import jprint
 
 joint = '. '
 _REINDEX_LOCK = asyncio.Lock()
@@ -99,9 +99,6 @@ class Service(metaclass=ServiceMeta):
                 return instance, False
             # запись не найдена
             obj = model(**data_dict)
-            logger.warning(f'======{model.__name__=}======')
-            jprint(data_dict)
-
             instance = await repository.create(obj, model, session)
             if model.__name__ == 'Item':
                 await cls.fill_index(repository, model, session)

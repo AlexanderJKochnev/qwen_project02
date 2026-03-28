@@ -490,10 +490,7 @@ class ItemService(Service):
                 return instance, False
             # запись не найдена
             obj = model(**data_dict)
-            cls.reindex_items(obj, session)
-            logger.warning(f'======{model.__name__=}======')
-            jprint(data_dict)
-
+            await cls.reindex_items(obj, session)
             instance = await repository.create(obj, model, session)
             if model.__name__ == 'Item':
                 await cls.fill_index(repository, model, session)
