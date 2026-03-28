@@ -15,7 +15,6 @@ from app.core.schemas.base import (DeleteResponse, PaginatedResponse, ReadSchema
                                    CreateResponse, UpdateSchema, CreateSchema)
 from app.core.exceptions import exception_to_http
 from app.core.utils.pydantic_utils import get_repo, get_service, get_pyschema
-from app.core.schemas.base import IndexFillResponse
 
 
 paging = get_paging
@@ -142,10 +141,6 @@ class BaseRouter:
         self.router.add_api_route("/full_page",
                                   self.get_full_with_pagination,
                                   methods=["GET"],
-                                  openapi_extra={'x-request-schema': None})
-        self.router.add_api_route("/fill_index",
-                                  self.fill_index, methods=["GET"],
-                                  response_model=IndexFillResponse,
                                   openapi_extra={'x-request-schema': None})
         # get one buy id
         self.router.add_api_route("/{id}",
