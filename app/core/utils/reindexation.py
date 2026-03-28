@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 async def reindex_items(instance: Item,
                         model: Type[Drink],
                         repository: DrinkRepository,
-                        skip_keys: set, session: AsyncSession) -> Item:
+                        skip_keys: set, session: AsyncSession):
     """
         заполняет поле search_content текстовыми данными
     """
