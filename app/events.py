@@ -12,6 +12,7 @@ from app.core.services.service import Service
 
 @event.listens_for(Base, "after_update", propagate=True)
 def trigger_reindex(mapper, connection, target):
+    """  DELETE ! """
     logger.debug(f"SQLAlchemy поймал UPDATE модели: {target.__class__.__name__}")
     model_cls = target.__class__
 
@@ -42,6 +43,7 @@ def trigger_reindex(mapper, connection, target):
 
 async def pg_listen_worker():
     """
+    удалить
     Фоновый воркер на psycopg 3 для прослушивания канала search_reindex.
     """
     # Формируем строку подключения (psycopg3 использует стандартный формат)

@@ -82,8 +82,6 @@ class Service(metaclass=ServiceMeta):
             drink_repo = get_repo('Drink')
             obj = await reindex_items(obj, drink_model, drink_repo, cls.skip_keys, session)
         result = await repository.create(obj, model, session)
-        if model.__name__ == 'Item':
-            await cls.fill_index(repository, model, session)
         await session.commit()
         return result
 
@@ -400,6 +398,7 @@ class Service(metaclass=ServiceMeta):
     async def fill_index(cls, repository: Type[Repository], model: ModelType,
                          session: AsyncSession, **kwargs) -> Type[IndexFillResponse]:
         """
+            УДАЛИТЬ
             заполнение/обновление поля search_content для индекса
             для заполнения индекса установить kwargs['search_content'] = None
             для обновления индекса этого ключа быть не должно
@@ -442,7 +441,7 @@ class Service(metaclass=ServiceMeta):
     @classmethod
     async def reindex_all_searchable_models(cls, batch_size: int = 1000):
         """ заполнение Item.search_content
-            УДАЛИТЬ ?
+            УДАЛИТЬ ?  В МАЕ 2027
         """
         if _reindex_task_lock.locked():
             logger.debug("Переиндексация уже идет, запрос поставлен в очередь (проигнорирован)")
@@ -511,6 +510,7 @@ class Service(metaclass=ServiceMeta):
     async def invalidate_search_index(cls, id: int, repository: Type[Repository],
                                       model: ModelType, session: AsyncSession, **kwargs):
         """
+        СТАРАЯ ВЕРСИЯ УДАЛИТЬ В МАЕ 2027
         сбрасывает значение поля search_content основной таблиы в случае изменений в зависимых таблицах
         это часть стратегии поиска
         """
@@ -543,7 +543,7 @@ class Service(metaclass=ServiceMeta):
                 async with session_factory() as new_session:
                     repository = get_repo(model)
                     logger.info("Авто-подметатель: обнаружены пустые индексы, начинаю сборку...")
-                    await cls.fill_index(repository, model, new_session)
+                    # await cls.fill_index(repository, model, new_session)
                 logger.info('run_reindex_worker finished')
 
     @classmethod
@@ -557,7 +557,7 @@ class Service(metaclass=ServiceMeta):
             await session.flush()
         await cls.invalidate_search_index(id, repository, model, session)
         await session.commit()
-        # background_tasks.add_task(cls.run_reindex_worker, model.__name__, DatabaseManager.session_maker)
+        background_tasks.add_task(cls.run_reindex_worker, model.__name__, DatabaseManager.session_maker)
 
     @classmethod
     async def get_relevance(cls, search: str, model: ModelType,
