@@ -428,6 +428,7 @@ class Service(metaclass=ServiceMeta):
                 return result
             # получаем записи
             items = await repository.get_index(model, session, search_content=None)
+            logger.error(f'{len(items)=} ============================================')
             # schema = get_pyschema(model, 'ReadRelation')
             data: list = []
             for item in items:
