@@ -490,7 +490,7 @@ class ItemService(Service):
                 return instance, False
             # запись не найдена
             obj = model(**data_dict)
-            cls.reindex_items(obj)
+            cls.reindex_items(obj, session)
             logger.warning(f'======{model.__name__=}======')
             jprint(data_dict)
 
@@ -507,12 +507,12 @@ class ItemService(Service):
             raise Exception(f"UNKNOWN_ERROR: {str(e)}") from e
 
     @classmethod
-    def reindex_items(cls, instance: Item) -> ModelType:
+    def reindex_items(cls, instance: Item, session: AsyncSession) -> ModelType:
         """
             заполняет поле search_content текстовыми данными
         """
         drink_id: int = instance.drink_id
         # 0. получение drink
-        drink: Drink = DrinkRepository.get_by_id(drink_id)
+        drink: Drink = DrinkRepository.get_by_id(drink_id, Drink, session)
         drink_dict = drink.to_dict()
         jprint(drink_dict)
