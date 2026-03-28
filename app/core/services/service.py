@@ -89,7 +89,6 @@ class Service(metaclass=ServiceMeta):
             возвращает instance и True (запись создана) или False (запись существует)
         """
         try:
-            logger.warning(f'def get or create ============ {model.__name__=}')
             if default is None:
                 default = cls.default
             if not isinstance(data, dict):
@@ -101,7 +100,8 @@ class Service(metaclass=ServiceMeta):
                 return instance, False
             # запись не найдена
             obj = model(**data_dict)
-            
+            logger.warning(f'======{model.__name__=}======')
+            jprint(data_dict)
             instance = await repository.create(obj, model, session)
             logger.error(f'{model.__name__=} 1')
             if model.__name__ == 'Item':

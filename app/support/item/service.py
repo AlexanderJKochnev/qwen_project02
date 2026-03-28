@@ -35,7 +35,7 @@ ItemListViewAdapter: TypeAdapter = TypeAdapter(List[ItemListView])
 
 
 class ItemService(Service):
-    default = ['vol', 'drink_id']
+    default = ['vol', 'drink_id', 'image_id']
 
     @classmethod
     def _level_up_(cls, lang_prefixes: list, item: dict) -> dict:
