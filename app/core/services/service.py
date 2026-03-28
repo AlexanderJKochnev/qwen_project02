@@ -28,9 +28,6 @@ _REINDEX_LOCK = asyncio.Lock()
 
 _reindex_task_lock = asyncio.Lock()
 
-drink_model = get_model_by_name('Drink')
-drink_repo = get_repo('Drink')
-
 
 class ServiceMeta(ABCMeta):
 
@@ -81,6 +78,8 @@ class Service(metaclass=ServiceMeta):
         data_dict = data.model_dump(exclude_unset=True)
         obj = model(**data_dict)
         if model.__name__ == 'Item':
+            drink_model = get_model_by_name('Drink')
+            drink_repo = get_repo('Drink')
             obj = await reindex_items(obj, drink_model, drink_repo, cls.skip_keys, session)
         result = await repository.create(obj, model, session)
         if model.__name__ == 'Item':
@@ -109,6 +108,8 @@ class Service(metaclass=ServiceMeta):
             # запись не найдена
             obj = model(**data_dict)
             if model.__name__ == 'Item':
+                drink_model = get_model_by_name('Drink')
+                drink_repo = get_repo('Drink')
                 obj = await reindex_items(obj, drink_model, drink_repo, cls.skip_keys, session)
             instance = await repository.create(obj, model, session)
             await session.commit()
