@@ -489,7 +489,7 @@ class ItemService(Service):
 
             # Определяем критерии устаревания (2 года)
             two_years_ago = datetime.now(timezone.utc) - timedelta(days=730)
-            Item = get_model_by_name('Item')
+            # Item = get_model_by_name('Item')
 
             async with session_factory() as session:
                 # 1. Строим фильтр
@@ -497,7 +497,9 @@ class ItemService(Service):
                 if not force_all:
                     filters.append(
                         or_(
-                            Item.search_content.is_(None), Item.updated_at < two_years_ago
+                            Item.search_content.is_(None),
+                            Item.search_content.is_(""),
+                            Item.updated_at < two_years_ago
                         )
                     )
 
