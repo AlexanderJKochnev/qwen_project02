@@ -71,7 +71,6 @@ class Service(metaclass=ServiceMeta):
                      session: AsyncSession, **kwargs) -> ModelType:
         """ create & return record """
         # удаляет пустые поля
-        logger.warning(f'def create ============ {model.__name__=}')
         data_dict = data.model_dump(exclude_unset=True)
         obj = model(**data_dict)
         result = await repository.create(obj, model, session)
@@ -102,12 +101,10 @@ class Service(metaclass=ServiceMeta):
             obj = model(**data_dict)
             logger.warning(f'======{model.__name__=}======')
             jprint(data_dict)
+
             instance = await repository.create(obj, model, session)
-            logger.error(f'{model.__name__=} 1')
             if model.__name__ == 'Item':
-                logger.error(f'{model.__name__=}2')
                 await cls.fill_index(repository, model, session)
-                logger.warning(f'{model.__name__=}3')
             await session.commit()
             return instance, True
         except IntegrityError as e:

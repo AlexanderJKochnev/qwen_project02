@@ -1,8 +1,8 @@
 # app.support.item.service.py
 from pydantic import TypeAdapter
 from functools import reduce
-from typing import Any, Dict, List, Optional, Type
-
+from typing import Any, Dict, List, Optional, Tuple, Type, Union
+from sqlalchemy.exc import IntegrityError
 from deepdiff import DeepDiff
 # from sqlalchemy.sql.elements import Label
 from fastapi import BackgroundTasks, HTTPException
@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config.project_config import settings
 from app.core.repositories.sqlalchemy_repository import Repository
+from app.core.schemas.base import BaseModel
 from app.core.services.service import Service
 from app.core.types import ModelType
 from app.core.utils.alchemy_utils import transform, transform_list_view
@@ -467,3 +468,51 @@ class ItemService(Service):
         except Exception as e:
             logger.error(f'search_gens_all. {e}')
             raise HTTPException(status_code=503, detail=f'search_gens_all. {e}')
+
+    @classmethod
+    async def get_or_create(
+            cls, data: Union[BaseModel, dict], repository: Repository, model: Type[ModelType], session: AsyncSession,
+            default: List[str] = None, **kwargs
+    ) -> Tuple[ModelType, bool]:
+        """
+            находит или создaет запись
+            возвращает instance и True (запись создана) или False (запись существует)
+        """
+        try:
+            if default is None:
+                default = cls.default
+            if not isinstance(data, dict):
+                # если исходные данные не словарь
+                data_dict = data.model_dump(exclude_unset=True)
+            default_dict = {key: val for key, val in data_dict.items() if key in default}
+            instance = await repository.get_by_fields(default_dict, model, session)
+            if instance:
+                return instance, False
+            # запись не найдена
+            obj = model(**data_dict)
+            cls.reindex_items(obj)
+            logger.warning(f'======{model.__name__=}======')
+            jprint(data_dict)
+
+            instance = await repository.create(obj, model, session)
+            if model.__name__ == 'Item':
+                await cls.fill_index(repository, model, session)
+            await session.commit()
+            return instance, True
+        except IntegrityError as e:
+            await session.rollback()
+            raise Exception(f'Integrity error: {e}')
+        except Exception as e:
+            await session.rollback()
+            raise Exception(f"UNKNOWN_ERROR: {str(e)}") from e
+
+    @classmethod
+    def reindex_items(cls, instance: Item) -> ModelType:
+        """
+            заполняет поле search_content текстовыми данными
+        """
+        drink_id: int = instance.drink_id
+        # 0. получение drink
+        drink: Drink = DrinkRepository.get_by_id(drink_id)
+        drink_dict = drink.to_dict()
+        jprint(drink_dict)
