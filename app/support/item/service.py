@@ -1,25 +1,22 @@
 # app.support.item.service.py
-from pydantic import TypeAdapter
 from functools import reduce
-from typing import Any, Dict, List, Optional, Tuple, Type, Union
-from sqlalchemy.exc import IntegrityError
+from typing import Any, Dict, List, Optional, Type
+
 from deepdiff import DeepDiff
 # from sqlalchemy.sql.elements import Label
 from fastapi import BackgroundTasks, HTTPException
 from loguru import logger
-from pydantic import ValidationError
+from pydantic import TypeAdapter, ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config.project_config import settings
 from app.core.repositories.sqlalchemy_repository import Repository
-from app.core.schemas.base import BaseModel
 from app.core.services.service import Service
 from app.core.types import ModelType
 from app.core.utils.alchemy_utils import transform, transform_list_view
 from app.core.utils.common_utils import flatten_dict_with_localized_fields, jprint, \
     localized_field_with_replacement  # , delta_data
-from app.core.utils.converters import extract_text_ultra_fast, lang_sorted, lang_suffix_list, list_move, \
-    read_convert_json
+from app.core.utils.converters import lang_sorted, lang_suffix_list, list_move, read_convert_json
 from app.core.utils.pydantic_utils import get_field_name, make_paginated_response
 # from app.core.schemas.base import PaginatedResponse
 from app.mongodb.service import ThumbnailImageService
