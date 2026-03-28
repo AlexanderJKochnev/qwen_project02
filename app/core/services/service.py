@@ -57,7 +57,7 @@ class Service(metaclass=ServiceMeta):
                  'source_id', 'producer_id', 'vintageconfig_id', 'classification_id', 'designation_id', 'site_id',
                  'parcel_id', 'category_id', 'drink_id', 'food_id', 'superfood_id', 'varietal_id', 'percentage'}
     drink_model = get_model_by_name('Drink')
-    drink_repo = get_repo(drink_model)
+    drink_repo = get_repo('Drink')
 
     @classmethod
     async def get_instance(cls, data_dict: dict, repository: Type[Repository], model: ModelType,
