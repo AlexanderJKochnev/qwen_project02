@@ -519,5 +519,5 @@ class ItemService(Service):
         drink_dict = drink.to_dict()
         result = extract_text_ultra_fast(drink_dict, cls.skip_keys)
         logger.warning(result)
-        instance.search_content = result
+        instance.search_content = result.lower()
         return instance
