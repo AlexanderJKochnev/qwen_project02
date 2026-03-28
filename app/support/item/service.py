@@ -488,7 +488,7 @@ class ItemService(Service):
             logger.info("Запуск массовой переиндексации...")
 
             # Определяем критерии устаревания (2 года)
-            two_years_ago = datetime.now(timezone.utc) - timedelta(days=730)
+            # two_years_ago = datetime.now(timezone.utc) - timedelta(days=730)
             # Item = get_model_by_name('Item')
 
             async with session_factory() as session:
@@ -498,8 +498,8 @@ class ItemService(Service):
                     filters.append(
                         or_(
                             Item.search_content.is_(None),
-                            Item.search_content.is_(""),
-                            Item.updated_at < two_years_ago
+                            Item.search_content == "",
+                            # Item.updated_at < two_years_ago
                         )
                     )
 
