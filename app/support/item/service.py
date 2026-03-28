@@ -18,7 +18,8 @@ from app.core.types import ModelType
 from app.core.utils.alchemy_utils import transform, transform_list_view
 from app.core.utils.common_utils import flatten_dict_with_localized_fields, jprint, \
     localized_field_with_replacement  # , delta_data
-from app.core.utils.converters import lang_sorted, lang_suffix_list, list_move, read_convert_json
+from app.core.utils.converters import extract_text_ultra_fast, lang_sorted, lang_suffix_list, list_move, \
+    read_convert_json
 from app.core.utils.pydantic_utils import get_field_name, make_paginated_response
 # from app.core.schemas.base import PaginatedResponse
 from app.mongodb.service import ThumbnailImageService
@@ -37,6 +38,12 @@ ItemListViewAdapter: TypeAdapter = TypeAdapter(List[ItemListView])
 
 class ItemService(Service):
     default = ['vol', 'drink_id', 'image_id']
+    skip_keys = {'id', 'created_at', 'udated_at', 'alc', 'sugar',
+                 'age', 'sparkling', 'subcategory_id', 'sweetness_id',
+                 'source_id', 'producer_id', 'vintageconfig_id', 'classification_id',
+                 'designation_id', 'site_id', 'parcel_id', 'category_id', 'drink_id', 'food_id',
+                 'superfood_id', 'varietal_id', 'percentage'
+                 }
 
     @classmethod
     def _level_up_(cls, lang_prefixes: list, item: dict) -> dict:
@@ -490,10 +497,8 @@ class ItemService(Service):
                 return instance, False
             # запись не найдена
             obj = model(**data_dict)
-            await cls.reindex_items(obj, session)
+            obj = await cls.reindex_items(obj, session)
             instance = await repository.create(obj, model, session)
-            if model.__name__ == 'Item':
-                await cls.fill_index(repository, model, session)
             await session.commit()
             return instance, True
         except IntegrityError as e:
@@ -512,4 +517,7 @@ class ItemService(Service):
         # 0. получение drink
         drink: Drink = await DrinkRepository.get_by_id(drink_id, Drink, session)
         drink_dict = drink.to_dict()
-        jprint(drink_dict)
+        result = extract_text_ultra_fast(drink_dict, cls.skip_keys)
+        logger.warning(result)
+        instance.search_content = result
+        return instance
