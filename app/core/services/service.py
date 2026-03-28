@@ -422,6 +422,7 @@ class Service(metaclass=ServiceMeta):
         try:
             logger.info(f'fill index. model={model.__name__}')
             result = IndexFillResponse(model=model.__name__)
+            get_search_dependencies
             if not hasattr(model, 'search_content'):
                 result.index = False
                 result.message = f'Model "{model.__name__}" has no fts index'
@@ -512,6 +513,7 @@ class Service(metaclass=ServiceMeta):
               и если входит - возвращает индексируемую (главную) модель
         """
         path: str = get_search_dependencies(model)
+        logger.warning(f'======================={path=}============================')
         if not path:
             return False
         res = path.split('.')[-1].capitalize()
