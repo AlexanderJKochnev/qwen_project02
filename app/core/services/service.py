@@ -421,7 +421,7 @@ class Service(metaclass=ServiceMeta):
             result = IndexFillResponse(model=model.__name__)
             if not hasattr(model, 'search_content'):
                 result.index = False
-                result.message = f'Model "{model.__name__}" has no trigramm index'
+                result.message = f'Model "{model.__name__}" has no fts index'
                 return result
             # получаем записи
             items = await repository.get_index(model, session, search_content=None)
@@ -477,7 +477,7 @@ class Service(metaclass=ServiceMeta):
 
                     # 3. Обработка батча
                     for obj_id in ids_to_update:
-                        # Вызываем твою логику загрузки "матрешки" (нужно сделать её тоже универсальной)
+                        # Вызываем логику загрузки "матрешки" (нужно сделать её тоже универсальной)
                         # Если у моделей разные схемы, можно добавить метод в Mixin
                         repo: Type[Repository] = get_repo(model)
                         item = await repo.get_by_id(obj_id, model, session)
