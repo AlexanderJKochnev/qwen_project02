@@ -56,6 +56,8 @@ class Service(metaclass=ServiceMeta):
     skip_keys = {'id', 'created_at', 'udated_at', 'alc', 'sugar', 'age', 'sparkling', 'subcategory_id', 'sweetness_id',
                  'source_id', 'producer_id', 'vintageconfig_id', 'classification_id', 'designation_id', 'site_id',
                  'parcel_id', 'category_id', 'drink_id', 'food_id', 'superfood_id', 'varietal_id', 'percentage'}
+    drink_model = get_model_by_name('Drink')
+    drink_repo = get_repo(drink_model)
 
     @classmethod
     async def get_instance(cls, data_dict: dict, repository: Type[Repository], model: ModelType,
@@ -78,7 +80,7 @@ class Service(metaclass=ServiceMeta):
         data_dict = data.model_dump(exclude_unset=True)
         obj = model(**data_dict)
         if model.__name__ == 'Item':
-            obj = reindex_items(obj, cls.skip_keys, session)
+            obj = reindex_items(obj, cls.drink_model, cls.drink_repo, cls.skip_keys, session)
         result = await repository.create(obj, model, session)
         if model.__name__ == 'Item':
             await cls.fill_index(repository, model, session)
@@ -106,7 +108,7 @@ class Service(metaclass=ServiceMeta):
             # запись не найдена
             obj = model(**data_dict)
             if model.__name__ == 'Item':
-                obj = reindex_items(obj, cls.skip_keys, session)
+                obj = reindex_items(obj, cls.drink_model, cls.drink_repo, cls.skip_keys, session)
             instance = await repository.create(obj, model, session)
             await session.commit()
             return instance, True
