@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
 from sqlalchemy import and_, func, Row, RowMapping, select, Select, update, desc, cast, Text, text, literal, \
     literal_column, or_
 from sqlalchemy import inspect
-from sqlalchemy.orm import load_only
+from sqlalchemy.orm import load_only, aliased
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql.elements import Label
@@ -784,60 +784,74 @@ class Repository(metaclass=RepositoryMeta):
     from sqlalchemy import select, inspect
     from sqlalchemy.ext.asyncio import AsyncSession
 
-    async def sync_items_by_path(
-            session: AsyncSession, current_model, start_id: int, path_str: str, skip_keys: set
-    ):
+    @classmethod
+    async def sync_items_by_path(cls,
+                                 session: AsyncSession, current_model,  # Например, модель Category
+                                 start_id: int, path_str: str, skip_keys: set
+                                 ) -> int:
         """
-        Универсальный метод: идет от start_id любой модели (Category/Subcategory)
-        вверх/вниз до Item и Drink по указанному пути.
+        Синхронизирует search_content у всех Item, связанных с измененной записью.
+        Решает проблему DuplicateAliasError через алиасы.
         """
-        # 1. Определяем целевые модели
+        # 1. Получаем классы моделей
         ItemModel = get_model_by_name('Item')
         DrinkModel = get_model_by_name('Drink')
 
-        # 2. Строим базовый запрос: выбираем ОБЪЕКТЫ Item и Drink
-        # Мы фильтруем по ID стартовой модели (например, Category.id == 10)
-        stmt = select(ItemModel, DrinkModel).where(current_model.id == start_id)
+        # Используем алиасы, чтобы SQLAlchemy не путалась при джоинах
+        target_drink = aliased(DrinkModel)
+        target_item = aliased(ItemModel)
 
-        # 3. Динамически наслаиваем JOIN-ы по цепочке из path_str
-        # Например: Category -> Subcategory -> Drink -> Item
-        active_model = current_model
+        # 2. Строим запрос от текущей модели (Category) к целям (Item, Drink)
+        stmt = select(target_item, target_drink).select_from(current_model)
+
+        # 3. Динамическая цепочка JOIN по метаданным
+        active_model_class = current_model
         path_parts = path_str.split('.')
 
         for part in path_parts:
-            mapper = inspect(active_model)
-            # Ищем связь, которая ведет к модели с именем из path_str
-            target_rel = next(
-                (rel for rel in mapper.relationships if rel.mapper.class_.__name__.lower() == part.lower()), None
+            mapper = inspect(active_model_class)
+            # Находим имя relationship
+            rel_key = next(
+                (r.key for r in mapper.relationships if r.mapper.class_.__name__.lower() == part.lower()), None
             )
 
-            if not target_rel:
-                raise AttributeError(f"Связь '{part}' не найдена в {active_model.__name__}")
+            if not rel_key:
+                raise AttributeError(f"Связь '{part}' не найдена в модели {active_model_class.__name__}")
 
-            # Добавляем JOIN к следующей таблице в цепочке
-            stmt = stmt.join(target_rel.entity.class_)
-            # Переходим к следующей модели для следующего шага цикла
-            active_model = target_rel.entity.class_
+            # Определяем, к какому классу прыгаем
+            next_model_class = getattr(active_model_class, rel_key).property.mapper.class_
 
-        # 4. Выполняем ОДИН запрос к БД
-        # На выходе получаем все пары (Item, Drink), связанные с нашей Category
+            # Подменяем на алиас, если дошли до Drink или Item
+            if next_model_class == DrinkModel:
+                step_target = target_drink
+            elif next_model_class == ItemModel:
+                step_target = target_item
+            else:
+                step_target = next_model_class
+
+            # Выполняем JOIN через атрибут отношения
+            stmt = stmt.join(step_target, getattr(active_model_class, rel_key))
+            active_model_class = next_model_class
+
+        # 4. Фильтруем по ID и выполняем
+        stmt = stmt.where(current_model.id == start_id)
         result = await session.execute(stmt)
-        rows = result.all()  # Список кортежей [(Item_obj, Drink_obj), ...]
+        rows = result.all()
 
         if not rows:
             return 0
 
-        # 5. Обрабатываем данные (как в reindex_items, но быстрее)
+        # 5. Обработка и обновление
         processed_drinks = {}
+        for item_obj, drink_obj in rows:
+            if drink_obj.id not in processed_drinks:
+                # Логика как в reindex_items
+                drink_dict = drink_obj.to_dict()
+                processed_drinks[drink_obj.id] = extract_text_ultra_fast(drink_dict, skip_keys).lower()
 
-        for item, drink in rows:
-            if drink.id not in processed_drinks:
-                # Выполняем тяжелый парсинг только один раз для каждого Drink
-                drink_data = drink.to_dict()
-                processed_drinks[drink.id] = extract_text_ultra_fast(drink_data, skip_keys).lower()
+            item_obj.search_content = processed_drinks[drink_obj.id]
 
-            # Обновляем Item прямо в сессии
-            item.search_content = processed_drinks[drink.id]
+        # 6. Принудительная синхронизация с БД
+        await session.flush()
 
-        # SQLAlchemy сама сделает UPDATE всех измененных Item при session.commit()
         return len(rows)
