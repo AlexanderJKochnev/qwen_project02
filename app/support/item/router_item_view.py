@@ -5,9 +5,8 @@
     по языкам
 """
 from typing import List, Annotated, Callable
-from fastapi import Depends, Path, Query, HTTPException
+from fastapi import Depends, Path, Query, HTTPException, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
-from loguru import logger
 from app.auth.dependencies import get_active_user_or_internal
 from app.core.config.database.db_async import get_db
 from app.core.schemas.base import PaginatedResponse
@@ -104,6 +103,12 @@ class ItemViewRouter:
             summary="Получить детальную информацию по элементу со всеми локализациями",
             openapi_extra={'x-request-schema': None}
         )
+        self.router.add_api_route(
+            "/fill_index",
+            self.fill_index, methods=["GET"],
+            tags=self.tags, summary="заполнить полнотекстовый индекс",
+            openapi_extra={'x-request-schema': None}
+        )
 
     async def get_one(self,
                       id: int,
@@ -189,3 +194,10 @@ class ItemViewRouter:
                                                        page, page_size, ItemRepository,
                                                        Item, session)
         return result
+
+    async def fill_index(self, background_tasks: BackgroundTasks, session: AsyncSession = Depends(get_db)):
+        """
+             старт заполнения индекса! результат см в логах
+        """
+        await self.service.run_background_task(background_tasks, session)
+        return {'result': True}

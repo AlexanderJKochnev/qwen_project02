@@ -1,4 +1,5 @@
 # app.support.item.service.py
+import asyncio
 from functools import reduce
 from typing import Any, Dict, List, Optional, Type
 
@@ -6,10 +7,15 @@ from deepdiff import DeepDiff
 # from sqlalchemy.sql.elements import Label
 from fastapi import BackgroundTasks, HTTPException
 from loguru import logger
+from datetime import datetime, timedelta, timezone
 from pydantic import TypeAdapter, ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+from sqlalchemy import func, select, or_
 
+from app.core.config.database.db_async import DatabaseManager
 from app.core.config.project_config import settings
+from app.core.models.base_model import get_model_by_name
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.services.service import Service
 from app.core.types import ModelType
@@ -18,6 +24,7 @@ from app.core.utils.common_utils import flatten_dict_with_localized_fields, jpri
     localized_field_with_replacement  # , delta_data
 from app.core.utils.converters import lang_sorted, lang_suffix_list, list_move, read_convert_json
 from app.core.utils.pydantic_utils import get_field_name, make_paginated_response
+from app.core.utils.reindexation import extract_text_ultra_fast
 # from app.core.schemas.base import PaginatedResponse
 from app.mongodb.service import ThumbnailImageService
 from app.support import Drink, Item
@@ -29,12 +36,16 @@ from app.support.item.schemas import (ItemCreate, ItemCreatePreact, ItemCreateRe
                                       ItemListView, ItemRead, ItemReadRelation, ItemUpdate,
                                       ItemUpdatePreact)  # ItemApiLangNonLocalized, ItemApiLangLocalized, ItemApiLang,
 
+_REINDEX_LOCK = asyncio.Lock()
+
+
 itemdetailmanytomanylocalized = get_field_name(ItemDetailManyToManyLocalized)
 ItemListViewAdapter: TypeAdapter = TypeAdapter(List[ItemListView])
 
 
 class ItemService(Service):
     default = ['vol', 'drink_id', 'image_id']
+    BATCH_SIZE = 500  # Оптимально для баланса память/скорость
 
     @classmethod
     def _level_up_(cls, lang_prefixes: list, item: dict) -> dict:
@@ -466,3 +477,83 @@ class ItemService(Service):
         except Exception as e:
             logger.error(f'search_gens_all. {e}')
             raise HTTPException(status_code=503, detail=f'search_gens_all. {e}')
+
+    @classmethod
+    async def run_reindex_worker(cls, session_factory, force_all: bool = False):
+        if _REINDEX_LOCK.locked():
+            logger.info("Воркер уже запущен, пропускаю...")
+            return
+
+        async with _REINDEX_LOCK:
+            logger.info("Запуск массовой переиндексации...")
+
+            # Определяем критерии устаревания (2 года)
+            two_years_ago = datetime.now(timezone.utc) - timedelta(days=730)
+            Item = get_model_by_name('Item')
+
+            async with session_factory() as session:
+                # 1. Строим фильтр
+                filters = []
+                if not force_all:
+                    filters.append(
+                        or_(
+                            Item.search_content.is_(None), Item.updated_at < two_years_ago
+                        )
+                    )
+
+                # 2. Считаем общий объем работы
+                count_stmt = select(func.count()).select_from(Item)
+                if filters:
+                    count_stmt = count_stmt.where(*filters)
+                total_to_process = await session.scalar(count_stmt)
+
+                logger.info(f"Найдено {total_to_process} записей для обработки")
+
+                # 3. Пакетная обработка
+                processed = 0
+                while processed < total_to_process:
+                    # Загружаем пачку Item вместе с Drink (важно для скорости!)
+                    stmt = (select(Item).options(selectinload(Item.drink)).limit(cls.BATCH_SIZE).order_by(Item.id)
+                            # Стабильная сортировка для смещения
+                            )
+                    if filters:
+                        stmt = stmt.where(*filters)
+
+                    result = await session.execute(stmt)
+                    items = result.scalars().all()
+
+                    if not items:
+                        break
+
+                    # Обрабатываем пачку
+                    for item in items:
+                        if item.drink:
+                            # Используем вашу логику парсинга
+                            drink_dict = item.drink.to_dict()
+                            content = extract_text_ultra_fast(drink_dict, cls.skip_keys)
+                            item.search_content = content.lower()
+
+                    # Фиксируем пачку в БД
+                    await session.commit()
+                    processed += len(items)
+                    logger.info(f"Прогресс: {processed}/{total_to_process}")
+
+                    # Короткая пауза, чтобы дать event loop подышать
+                    await asyncio.sleep(0.1)
+
+            logger.info("Массовая переиндексация завершена успешно")
+
+    @classmethod
+    async def run_background_task(
+            cls, background_tasks: BackgroundTasks, session: AsyncSession, force_all: bool = False
+    ):
+        """
+        Запускает фоновое обслуживание индексов.
+        """
+        # Если мы вызвали это после изменений в БД, сначала пушим их
+        await session.commit()
+
+        # Добавляем воркер в фон
+        background_tasks.add_task(
+            cls.run_reindex_worker, DatabaseManager.session_maker, force_all=force_all
+        )

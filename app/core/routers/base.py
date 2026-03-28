@@ -400,19 +400,6 @@ class BaseRouter:
         # type_checking(result, 'search_all')
         return result
 
-    async def fill_index(self, session: AsyncSession = Depends(get_db)):
-        """
-            "ручное" заполнение поля 'search_content'
-        """
-        try:
-            # delta = delta_data(100)
-            # result = await self.service.get(delta, self.repo, self.model)
-            result = await self.service.fill_index(self.repo, self.model, session)  # , search_content=None)
-            return result
-        except Exception as e:
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                                detail=f"Internal server error. {e}")
-
     async def search_geans(self, search: str = Query(None,
                                                      min_length=3, max_length=50,
                                                      description="Полнотекстовый поиск по слову или "

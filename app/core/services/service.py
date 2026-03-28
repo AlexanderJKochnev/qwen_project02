@@ -2,25 +2,28 @@
 import asyncio
 from abc import ABCMeta
 from datetime import datetime
-from fastapi import HTTPException, BackgroundTasks
-from typing import List, Optional, Tuple, Type, Dict, Any, Union
+from typing import Any, Dict, List, Optional, Tuple, Type, Union
+
+from fastapi import BackgroundTasks, HTTPException
 from loguru import logger
-from sqlalchemy import select, update, text, func, inspect
+from sqlalchemy import func, select, text, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.elements import Label
-from app.core.config.project_config import settings
+
 from app.core.config.database.db_async import DatabaseManager
+from app.core.config.project_config import settings
 from app.core.models.base_model import Base, get_model_by_name
 from app.core.repositories.sqlalchemy_repository import Repository
+from app.core.schemas.base import BaseModel, IndexFillResponse
 from app.core.types import ModelType
-from app.core.utils.alchemy_utils import has_column, formatted_query
+from app.core.utils.alchemy_utils import formatted_query, has_column
 from app.core.utils.common_utils import flatten_dict_with_localized_fields
-from app.core.utils.pydantic_utils import make_paginated_response, prepare_search_string, get_data_for_search, get_repo
+from app.core.utils.pydantic_utils import get_data_for_search, get_repo, make_paginated_response, prepare_search_string
 from app.core.utils.reindexation import reindex_items
-from app.service_registry import register_service, get_search_dependencies
-from app.core.schemas.base import IndexFillResponse, BaseModel
 from app.mongodb.service import ThumbnailImageService
+from app.service_registry import get_search_dependencies, register_service
+
 # from app.core.utils.common_utils import jprint
 
 joint = '. '
@@ -526,38 +529,6 @@ class Service(metaclass=ServiceMeta):
             logger.warning(f'updated {result} записей в Items')
         except Exception as e:
             logger.error(f'{model.__name__} invalidate_search_index error: {e}')
-
-    # @logger.catch(message = "Ошибка в фоновом воркере переиндексации")
-    @classmethod
-    async def run_reindex_worker(cls, model_name: str, session_factory):
-        if _REINDEX_LOCK.locked():
-            return  # Уже работает, новый запуск не нужен
-
-        async with _REINDEX_LOCK:
-            # Небольшая пауза (дебаунс), чтобы подождать,
-            # если идет серия мелких правок в справочниках
-            model = get_model_by_name(model_name)
-            if cls.is_dependencies(model):
-                logger.info('run_reindex_worker starts')
-                await asyncio.sleep(2)
-                async with session_factory() as new_session:
-                    repository = get_repo(model)
-                    logger.info("Авто-подметатель: обнаружены пустые индексы, начинаю сборку...")
-                    # await cls.fill_index(repository, model, new_session)
-                logger.info('run_reindex_worker finished')
-
-    @classmethod
-    async def run_backgound_task(cls, id: int, background_tasks: BackgroundTasks,
-                                 flush: bool,
-                                 repository: Type[Repository], model: ModelType, session: AsyncSession):
-        """
-            запускает background_tasks для переиндексации
-        """
-        if flush:
-            await session.flush()
-        await cls.invalidate_search_index(id, repository, model, session)
-        await session.commit()
-        background_tasks.add_task(cls.run_reindex_worker, model.__name__, DatabaseManager.session_maker)
 
     @classmethod
     async def get_relevance(cls, search: str, model: ModelType,
