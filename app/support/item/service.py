@@ -507,12 +507,12 @@ class ItemService(Service):
             raise Exception(f"UNKNOWN_ERROR: {str(e)}") from e
 
     @classmethod
-    def reindex_items(cls, instance: Item, session: AsyncSession) -> ModelType:
+    async def reindex_items(cls, instance: Item, session: AsyncSession) -> ModelType:
         """
             заполняет поле search_content текстовыми данными
         """
         drink_id: int = instance.drink_id
         # 0. получение drink
-        drink: Drink = DrinkRepository.get_by_id(drink_id, Drink, session)
+        drink: Drink = await DrinkRepository.get_by_id(drink_id, Drink, session)
         drink_dict = drink.to_dict()
         jprint(drink_dict)
