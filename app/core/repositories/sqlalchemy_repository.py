@@ -11,14 +11,17 @@ from loguru import logger
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
 from sqlalchemy import and_, func, Row, RowMapping, select, Select, update, desc, cast, Text, text, literal, \
     literal_column, or_
+from sqlalchemy import inspect
 from sqlalchemy.orm import load_only
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql.elements import Label
+from app.core.models.base_model import get_model_by_name
 # from sqlalchemy.dialects import postgresql
 # from sqlalchemy.sql.elements import ColumnElement
 from app.core.utils.alchemy_utils import (create_enum_conditions, get_sqlalchemy_fields,
                                           create_search_conditions2, get_field_list)
+from app.core.utils.reindexation import extract_text_ultra_fast
 from app.service_registry import register_repo
 from app.core.types import ModelType
 from app.core.config.project_config import settings
@@ -142,6 +145,87 @@ class Repository(metaclass=RepositoryMeta):
             await session.execute(stmp)
         except Exception as e:
             raise Exception(f'fault of invalidate_search_index. {e}')
+
+    @classmethod
+    async def invalidate_parent_search_content(cls, start_id, current_model, path_str, session):
+        """
+        НЕ ИСПОЛЬЗУЕТСЯ !!! УДАЛИТЬ !!!
+        Обновляет search_content у корневой модели (Item),
+        основываясь на изменениях в дочерней модели (например, Category).
+        """
+        logger.warning(f'invalidate_parent_search_content {path_str}')
+        # 1. Строим подзапрос для поиска нужных ID корневой модели
+        # Начинаем от текущей измененной записи (например, Category)
+        subq_stmt = select(current_model.id).where(current_model.id == start_id)
+
+        path_parts = path_str.split('.')
+        last_model = current_model
+
+        for target_part in path_parts:
+            mapper = inspect(last_model)
+            target_rel_key = None
+
+            for rel in mapper.relationships:
+                if rel.mapper.class_.__name__.lower() == target_part.lower():
+                    target_rel_key = rel.key
+                    last_model = rel.mapper.class_
+                    break
+
+            if not target_rel_key:
+                raise AttributeError(f"Связь '{target_part}' не найдена в {last_model.__name__}")
+
+            # Джоиним следующую модель в цепочке
+            subq_stmt = subq_stmt.join(getattr(mapper.class_, target_rel_key))
+
+        # Теперь last_model — это Item. Выбираем только его ID.
+        # .scalar_subquery() превращает это в подзапрос для WHERE IN (...)
+        target_ids_subq = subq_stmt.with_only_columns(last_model.id).distinct().scalar_subquery()
+
+        # 2. Формируем финальный UPDATE запрос
+        stmt = (update(last_model).where(last_model.id.in_(target_ids_subq)).values({'search_content': None}))
+
+        # 3. Выполняем
+        result = await session.execute(stmt)
+        updated_count = result.rowcount
+        logger.warning(f'очищено {updated_count}')
+
+    @classmethod
+    async def get_root_ids_by_path(cls, current_model, start_id: int, path_str: str, session: AsyncSession):
+        """
+        current_model: Модель, где произошло изменение (например, Category)
+        start_id: ID измененной записи (например, Category.id)
+        path_str: Строка связи до корня (например, "subcategory.drink.item")
+        """
+        # Начинаем с модели, в которой находимся (Category)
+        stmt = select(current_model).where(current_model.id == start_id)
+
+        # Итерируемся по пути
+        path_parts = path_str.split('.')
+        last_model = current_model
+
+        for target_part in path_parts:
+            mapper = inspect(last_model)
+            target_rel_key = None
+
+            # Ищем связь (relationship) в текущей модели, которая ведет к следующей модели в пути
+            for rel in mapper.relationships:
+                # Сравниваем имя класса целевой модели с частью пути (регистронезависимо)
+                if rel.mapper.class_.__name__.lower() == target_part.lower():
+                    target_rel_key = rel.key
+                    last_model = rel.mapper.class_  # Теперь это наша "текущая" модель для следующего шага
+                    break
+
+            if not target_rel_key:
+                raise AttributeError(f"Связь к '{target_part}' не найдена в модели '{last_model.__name__}'")
+
+            # Присоединяем следующую таблицу в цепочке
+            stmt = stmt.join(getattr(mapper.class_, target_rel_key))
+
+        # ВАЖНО: В конце мы выбираем ID самой последней модели в цепочке (нашего "корня")
+        # last_model теперь ссылается на Item
+        final_stmt = stmt.with_only_columns(last_model.id).distinct()
+
+        return await session.scalars(final_stmt).all()
 
     @classmethod
     async def create(cls, obj: ModelType, model: ModelType, session: AsyncSession) -> ModelType:
@@ -696,3 +780,64 @@ class Repository(metaclass=RepositoryMeta):
         stmt = cls.get_query(model).where(column.in_(filter))
         result = await session.execute(stmt)
         return result.scalars().all()
+
+    from sqlalchemy import select, inspect
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    async def sync_items_by_path(
+            session: AsyncSession, current_model, start_id: int, path_str: str, skip_keys: set
+    ):
+        """
+        Универсальный метод: идет от start_id любой модели (Category/Subcategory)
+        вверх/вниз до Item и Drink по указанному пути.
+        """
+        # 1. Определяем целевые модели
+        ItemModel = get_model_by_name('Item')
+        DrinkModel = get_model_by_name('Drink')
+
+        # 2. Строим базовый запрос: выбираем ОБЪЕКТЫ Item и Drink
+        # Мы фильтруем по ID стартовой модели (например, Category.id == 10)
+        stmt = select(ItemModel, DrinkModel).where(current_model.id == start_id)
+
+        # 3. Динамически наслаиваем JOIN-ы по цепочке из path_str
+        # Например: Category -> Subcategory -> Drink -> Item
+        active_model = current_model
+        path_parts = path_str.split('.')
+
+        for part in path_parts:
+            mapper = inspect(active_model)
+            # Ищем связь, которая ведет к модели с именем из path_str
+            target_rel = next(
+                (rel for rel in mapper.relationships if rel.mapper.class_.__name__.lower() == part.lower()), None
+            )
+
+            if not target_rel:
+                raise AttributeError(f"Связь '{part}' не найдена в {active_model.__name__}")
+
+            # Добавляем JOIN к следующей таблице в цепочке
+            stmt = stmt.join(target_rel.entity.class_)
+            # Переходим к следующей модели для следующего шага цикла
+            active_model = target_rel.entity.class_
+
+        # 4. Выполняем ОДИН запрос к БД
+        # На выходе получаем все пары (Item, Drink), связанные с нашей Category
+        result = await session.execute(stmt)
+        rows = result.all()  # Список кортежей [(Item_obj, Drink_obj), ...]
+
+        if not rows:
+            return 0
+
+        # 5. Обрабатываем данные (как в reindex_items, но быстрее)
+        processed_drinks = {}
+
+        for item, drink in rows:
+            if drink.id not in processed_drinks:
+                # Выполняем тяжелый парсинг только один раз для каждого Drink
+                drink_data = drink.to_dict()
+                processed_drinks[drink.id] = extract_text_ultra_fast(drink_data, skip_keys).lower()
+
+            # Обновляем Item прямо в сессии
+            item.search_content = processed_drinks[drink.id]
+
+        # SQLAlchemy сама сделает UPDATE всех измененных Item при session.commit()
+        return len(rows)

@@ -5,7 +5,7 @@ from datetime import datetime
 from fastapi import HTTPException, BackgroundTasks
 from typing import List, Optional, Tuple, Type, Dict, Any, Union
 from loguru import logger
-from sqlalchemy import select, update, text, func
+from sqlalchemy import select, update, text, func, inspect
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.elements import Label
@@ -288,18 +288,12 @@ class Service(metaclass=ServiceMeta):
         result = await repository.patch(existing_item, data_dict, session)
         if result.get('success'):
             await cls.run_backgound_task(id, background_tasks, False, repository, model, session)
-            # await cls.invalidate_search_index(id, repository, model, session)
-            # await session.commit()
-            # background_tasks.add_task(cls.run_reindex_worker, model.__name__, DatabaseManager.session_maker)
         else:
             await session.rollback()
         # Обрабатываем результат
         if isinstance(result, dict):
             if result.get('success'):
                 await cls.run_backgound_task(id, background_tasks, False, repository, model, session)
-                # await cls.invalidate_search_index(id, repository, model, session)
-                # await session.commit()
-                # background_tasks.add_task(cls.run_reindex_worker, model.__name__, DatabaseManager.session_maker)
                 return {'success': True, 'data': result.get('data'), 'message': f'Запись {id} успешно обновлена'}
             else:
                 error_type = result.get('error_type')
@@ -339,10 +333,6 @@ class Service(metaclass=ServiceMeta):
             resp = await repository.delete(instance, session)
             if resp:
                 await cls.run_backgound_task(id, background_tasks, True, repository, model, session)
-            # await session.flush()
-            # await cls.invalidate_search_index(id, repository, model, session)
-            # await session.commit()
-            # background_tasks.add_task(cls.run_reindex_worker, model.__name__, DatabaseManager.session_maker)
         except IntegrityError:
             await session.rollback()  # Откат при конфликте связей
             raise PermissionError(f"Cannot delete record {id} of {model.__name__}: related data exists")
@@ -422,7 +412,6 @@ class Service(metaclass=ServiceMeta):
         try:
             logger.info(f'fill index. model={model.__name__}')
             result = IndexFillResponse(model=model.__name__)
-            get_search_dependencies
             if not hasattr(model, 'search_content'):
                 result.index = False
                 result.message = f'Model "{model.__name__}" has no fts index'
@@ -513,7 +502,6 @@ class Service(metaclass=ServiceMeta):
               и если входит - возвращает индексируемую (главную) модель
         """
         path: str = get_search_dependencies(model)
-        logger.warning(f'======================={path=}============================')
         if not path:
             return False
         res = path.split('.')[-1].capitalize()
@@ -526,12 +514,16 @@ class Service(metaclass=ServiceMeta):
         сбрасывает значение поля search_content основной таблиы в случае изменений в зависимых таблицах
         это часть стратегии поиска
         """
-        if not cls.is_dependencies(model):
-            logger.info(f'{model.__name__} has no relationships with Items')
+        path: str = get_search_dependencies(model)
+        if not path:
+            return
+        if path.split('.')[-1].capitalize() != 'Item':
             return
         try:
-            item = get_model_by_name('Item')
-            await repository.invalidate_search_index(id, item, model, session)
+            # item = get_model_by_name('Item')
+            # await repository.invalidate_search_index(id, item, model, path, session)
+            result = await repository.sync_items_by_path(session, model, id, path, cls.skip_keys)
+            logger.warning(f'updated {result} записей в Items')
         except Exception as e:
             logger.error(f'{model.__name__} invalidate_search_index error: {e}')
 
@@ -565,7 +557,7 @@ class Service(metaclass=ServiceMeta):
             await session.flush()
         await cls.invalidate_search_index(id, repository, model, session)
         await session.commit()
-        background_tasks.add_task(cls.run_reindex_worker, model.__name__, DatabaseManager.session_maker)
+        # background_tasks.add_task(cls.run_reindex_worker, model.__name__, DatabaseManager.session_maker)
 
     @classmethod
     async def get_relevance(cls, search: str, model: ModelType,

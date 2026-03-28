@@ -10,10 +10,10 @@ from app.service_registry import registers_search_update
 if TYPE_CHECKING:
     from app.support.drink.model import DrinkFood
     from app.support.superfood.model import Superfood
-    from app.support.drink.model import Drink
+    # from app.support.drink.model import Drink
 
 
-@registers_search_update("drink.item")
+@registers_search_update("drink_food.drink.item")
 class Food(BaseFull):
     lazy = settings.LAZY
     cascade = settings.CASCADE
