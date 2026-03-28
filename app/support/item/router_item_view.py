@@ -195,9 +195,11 @@ class ItemViewRouter:
                                                        Item, session)
         return result
 
-    async def fill_index(self, background_tasks: BackgroundTasks, session: AsyncSession = Depends(get_db)):
+    async def fill_index(self, background_tasks: BackgroundTasks,
+                         session: AsyncSession = Depends(get_db),
+                         force_all: bool = False):
         """
              старт заполнения индекса! результат см в логах
         """
-        await self.service.run_background_task(background_tasks, session)
+        await self.service.run_background_task(background_tasks, session, force_all)
         return {'result': True}

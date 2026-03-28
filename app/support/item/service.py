@@ -498,7 +498,7 @@ class ItemService(Service):
                     filters.append(
                         or_(
                             Item.search_content.is_(None),
-                            Item.search_content == "",
+                            # Item.search_content == "",
                             # Item.updated_at < two_years_ago
                         )
                     )
