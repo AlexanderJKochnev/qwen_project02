@@ -519,9 +519,6 @@ class Repository(metaclass=RepositoryMeta):
         """
         # 1. собираем фильтр из kwargs
         valid_fields = {key: value for key, value in kwargs.items() if hasattr(model, key)}
-        from app.core.utils.common_utils import jprint
-        logger.error('=========================')
-        jprint(valid_fields)
         stmt = cls.get_query(model).filter_by(**valid_fields)
         result = await session.execute(stmt)
         items = result.scalars().all()

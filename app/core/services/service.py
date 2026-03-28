@@ -20,6 +20,7 @@ from app.core.utils.pydantic_utils import make_paginated_response, prepare_searc
 from app.service_registry import register_service, get_search_dependencies
 from app.core.schemas.base import IndexFillResponse, BaseModel
 from app.mongodb.service import ThumbnailImageService
+from app.core.utils.common_utils import jprint
 
 joint = '. '
 _REINDEX_LOCK = asyncio.Lock()
@@ -70,14 +71,12 @@ class Service(metaclass=ServiceMeta):
                      session: AsyncSession, **kwargs) -> ModelType:
         """ create & return record """
         # удаляет пустые поля
+        logger.warning(f'def create ============ {model.__name__=}')
         data_dict = data.model_dump(exclude_unset=True)
         obj = model(**data_dict)
         result = await repository.create(obj, model, session)
-        logger.error(f'{model.__name__=} 1')
         if model.__name__ == 'Item':
-            logger.error(f'{model.__name__=}2')
             await cls.fill_index(repository, model, session)
-            logger.error(f'{model.__name__=}3')
         await session.commit()
         return result
 
@@ -90,19 +89,19 @@ class Service(metaclass=ServiceMeta):
             возвращает instance и True (запись создана) или False (запись существует)
         """
         try:
+            logger.warning(f'def get or create ============ {model.__name__=}')
             if default is None:
                 default = cls.default
             if not isinstance(data, dict):
                 # если исходные данные не словарь
                 data_dict = data.model_dump(exclude_unset=True)
             default_dict = {key: val for key, val in data_dict.items() if key in default}
-            # ошибка НУЖЕН ПОИСК ПО УНИКАЛЬНЫМ И СВЯЗАННЫМ ПОЛЯМ
-            # поиск существующей записи по совпадению объектов по уникальным полям
             instance = await repository.get_by_fields(default_dict, model, session)
             if instance:
                 return instance, False
             # запись не найдена
             obj = model(**data_dict)
+            
             instance = await repository.create(obj, model, session)
             logger.error(f'{model.__name__=} 1')
             if model.__name__ == 'Item':
