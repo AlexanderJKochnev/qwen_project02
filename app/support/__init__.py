@@ -50,6 +50,7 @@ from app.support.parser.schemas import (StatusCreate, StatusCreateResponseSchema
 
 
 from app.support.category.service import CategoryService
+from app.support.clickhouse.service import FullTextSearch
 from app.support.country.service import CountryService
 from app.support.item.service import ItemService
 from app.support.customer.service import CustomerService
