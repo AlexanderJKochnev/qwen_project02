@@ -911,7 +911,6 @@ def clean_dict(data: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def make_paging_dict(source: list | tuple, page: int, page_size: int, total: int) -> dict:
-    total = len(source)
     items = []
     return {"items": source[(page - 1) * page_size: page * page_size],
             "total": total,
