@@ -297,8 +297,8 @@ class ItemRouter(BaseRouter):
         session=Depends(get_db)
     ):
         table_name = 'items_search'
-        result = await self.service.clicksearch(q, mode, page, page_size,
-                                                ItemRepository, Item, session, ch_client, table_name)
+        result = await self.service.clicksearch(
+            q, mode, page, page_size, ItemRepository, Item, session, ch_client, table_name)
         return result
         """
         click_tier = await ch_client.query(
