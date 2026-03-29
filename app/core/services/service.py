@@ -251,16 +251,17 @@ class Service(metaclass=ServiceMeta):
         return result
 
     @classmethod
-    async def get_by_ids(cls, ids: str, repository: Type[Repository],
+    async def get_by_ids(cls, ids: str | List[int], repository: Type[Repository],
                          model: ModelType, session: AsyncSession) -> Optional[List[ModelType]]:
         """
         получение набора записей по набору ids
         """
         result = []
         if ids:
-            comma_separator = ','
-            ids_set = tuple(int(b) for a in set(ids.split(comma_separator)) if (b := a.strip()).isdigit())
-            result = await repository.get_by_ids(ids_set, model, session)
+            if isinstance(ids, str):
+                comma_separator = ','
+                ids = tuple(int(b) for a in set(ids.split(comma_separator)) if (b := a.strip()).isdigit())
+            result = await repository.get_by_ids(ids, model, session)
         return result
 
     @classmethod

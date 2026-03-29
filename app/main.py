@@ -16,6 +16,7 @@ from app.auth.routers import auth_router, user_router
 from app.core.config.database.db_async import DatabaseManager, init_db_extensions
 # from app.core.config.database.ollama_async import get_ollama_manager
 from app.core.config.database.db_mongo import MongoDBManager, get_mongodb
+from app.core.config.database.click_async import ClickHouseManager, get_ch_client
 # from app.core.config.database.redis_async import redis_manager
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.mongodb.router import router as MongoRouter
@@ -56,6 +57,9 @@ from app.support.vllm.router import VllmRouter
 # from app.support.warehouse.router import WarehouseRouter
 
 
+ch_manager = ClickHouseManager()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # limits = httpx.Limits(max_keepalive_connections=20, max_connections=100)
@@ -78,6 +82,8 @@ async def lifespan(app: FastAPI):
     logger.success("Lifespan: соединение с MongoDB установлены")
     await init_db_extensions()  # подключение расщирений Postgresql
     logger.success("Lifespan: расширения для PostgreSQL установлены")
+    # CLICKHOUSE
+    app.state.ch_client = await ch_manager.connect()
     # await redis_manager.connect(host="redis", port=6379)  # запускаем redis
     # logger.success("Lifespan: Redis запущен, соединение установлено")
     # ollama_manager = get_ollama_manager()
@@ -95,6 +101,7 @@ async def lifespan(app: FastAPI):
     #     pass
     await DatabaseManager.engine.dispose()
     await MongoDBManager.disconnect()
+    await ch_manager.close()
     # await redis_manager.disconnect()
 
 

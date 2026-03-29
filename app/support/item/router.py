@@ -6,6 +6,7 @@ from pydantic import ValidationError
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.dependencies import get_active_user_or_internal
+from app.core.config.database.click_async import get_ch_client
 from app.core.config.database.db_async import get_db
 from app.core.config.project_config import get_paging
 from app.core.routers.base import BaseRouter
@@ -58,6 +59,10 @@ class ItemRouter(BaseRouter):
         self.router.add_api_route(
             "/direct/{id}", self.direct_import_single_data, status_code=status.HTTP_200_OK, methods=["GET"],
             response_model=dict,
+            openapi_extra={'x-request-schema': None}
+        )
+        self.router.add_api_route(
+            "/clicksearch", self.clicksearch, status_code=status.HTTP_200_OK, methods=["GET"],
             openapi_extra={'x-request-schema': None}
         )
 
@@ -282,3 +287,15 @@ class ItemRouter(BaseRouter):
             return result
         except Exception as e:
             raise HTTPException(status_code=422, detail=e)
+
+    async def clicksearch(self, q: str = Query(..., min_length=3),
+                          ch_client=Depends(get_ch_client),
+                          session=Depends(get_db)
+                          ):
+        click_tier = await ch_client.query(
+            "SELECT id FROM items_search FINAL WHERE search_content LIKE {query:String} LIMIT 50",
+            parameters={'query': f'%{q.lower()}%'}
+        )
+        ids = tuple(row[0] for row in click_tier.result_rows)
+        result = await self.service.get_by_ids(ids, ItemRepository, Item, session)
+        return result

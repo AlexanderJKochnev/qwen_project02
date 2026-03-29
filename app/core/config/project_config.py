@@ -234,6 +234,12 @@ class Settings(BaseSettings):
     WRITER_I: str = 'translate'
     VLLM_URL: str = "http://localhost:8000/v1"
 
+    # === CLICKHOUSE ===
+    CH_HOST: str = 'localhost'
+    CH_PORT: int = 8123
+    CH_USER: str = 'secret_user'
+    CH_PASSWORD: str = 'top_secret'
+
     model_config = SettingsConfigDict(env_file=get_path_to_root(),
                                       env_file_encoding='utf-8',
                                       extra='ignore')
