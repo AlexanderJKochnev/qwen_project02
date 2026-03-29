@@ -23,7 +23,7 @@ from app.core.utils.pydantic_utils import get_data_for_search, get_repo, make_pa
 from app.core.utils.reindexation import reindex_items
 from app.mongodb.service import ThumbnailImageService
 from app.service_registry import get_search_dependencies, register_service
-from app.support.clickhouse.service import FullTextSearch
+from app.core.services.click_service import FullTextSearch
 
 # from app.core.utils.common_utils import jprint
 
