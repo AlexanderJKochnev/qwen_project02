@@ -42,7 +42,7 @@ class FullTextSearch:
             SELECT id, search_content
             FROM {table} FINAL
             WHERE hasToken(search_content, {{token:String}})
-            LIMIT {{cls.limit:UInt32}}
+            LIMIT {cls.limit}
         """
         return await ch_client.query(sql, parameters={'token': query})
 
@@ -53,7 +53,7 @@ class FullTextSearch:
             SELECT id, search_content
             FROM {table} FINAL
             WHERE hasAllTokens(search_content, {{words:Array(String)}})
-            LIMIT {{cls.limit:UInt32}}
+            LIMIT {cls.limit}
         """
         return await ch_client.query(sql, parameters={'words': words})
 
@@ -64,7 +64,7 @@ class FullTextSearch:
             SELECT id, search_content
             FROM {table} FINAL
             WHERE hasAnyTokens(search_content, {{words:Array(String)}})
-            LIMIT {{cls.limit:UInt32}}
+            LIMIT {cls.limit}
         """
         return await ch_client.query(sql, parameters={'words': words})
 
@@ -85,7 +85,7 @@ class FullTextSearch:
             FROM {table} FINAL
             WHERE hasAnyTokens(search_content, {{words:Array(String)}})
             ORDER BY score DESC, id
-            LIMIT {{cls.limit:UInt32}}
+            LIMIT {cls.limit}
         """
         return await ch_client.query(sql, parameters={'words': words})
 
@@ -95,7 +95,7 @@ class FullTextSearch:
             SELECT id, search_content
             FROM {table} FINAL
             WHERE positionCaseInsensitive(search_content, {{phrase:String}}) > 0
-            LIMIT {{cls.limit:UInt32}}
+            LIMIT {cls.limit}
         """
         return await ch_client.query(sql, parameters={'phrase': phrase})
 
@@ -110,7 +110,7 @@ class FullTextSearch:
             FROM {table} FINAL
             WHERE multiFuzzyMatchAny(search_content, {{distance:UInt8}}, {{words:Array(String)}})
             ORDER BY score DESC, id
-            LIMIT {{cls.limit:UInt32}}
+            LIMIT {cls.limit}
         """
         return await ch_client.query(sql, parameters={
             'words': words,
