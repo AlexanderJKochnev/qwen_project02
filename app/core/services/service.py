@@ -683,14 +683,13 @@ class Service(metaclass=ServiceMeta):
     @classmethod
     async def clicksearch(cls, search: str, mode: str,
                           page: int, page_size: int,
-                          table_name: str,  # имя таблицы click search item_search
                           repository: Type[Repository], model: ModelType,
                           session: AsyncSession,
-                          ch_client):
+                          ch_client, table: str = 'items_search'):
         """ поиск searh thru click """
         # 0. запрос в clickhouse
         click_service = FullTextSearch
-        click: tuple = click_service.search(search, ch_client, mode)
+        click: tuple = click_service.search(search, table, ch_client, mode)
         if click:
             result = make_paging_dict(click)
             ids = result.get('items')
