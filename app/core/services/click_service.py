@@ -1,6 +1,6 @@
 # app.support.clickhouse.service.py
 from app.core.config.project_config import settings
-
+from loguru import logger
 
 class FullTextSearch:
     limit = settings.CH_LIMIT
@@ -11,6 +11,7 @@ class FullTextSearch:
         Универсальный метод поиска
         mode: 'auto', 'word', 'and', 'or', 'phrase', 'fuzzy'
         """
+        logger.warning(f'{ch_client=}, {table=}, {mode=}')
         query_lower = query.lower()
         match mode:
             case 'auto':

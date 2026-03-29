@@ -693,6 +693,7 @@ class Service(metaclass=ServiceMeta):
         if click:
             result = make_paging_dict(click)
             ids = result.get('items')
-            return cls.get_by_ids(ids, repository, model, session)
+            respone = cls.get_by_ids(ids, repository, model, session)
+            result['items'] = respone
         else:
             return []
