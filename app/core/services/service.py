@@ -691,7 +691,7 @@ class Service(metaclass=ServiceMeta):
         click_service = FullTextSearch
         click: tuple = click_service.search(search, table, ch_client, mode)
         if click:
-            result = make_paging_dict(click)
+            result = make_paging_dict(click, page, page_size)
             ids = result.get('items')
             respone = cls.get_by_ids(ids, repository, model, session)
             result['items'] = respone
