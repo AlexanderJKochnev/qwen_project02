@@ -32,7 +32,8 @@ class Item(Base, BaseAt, ImageMixin, Search):
 
     def __str__(self):
         # переоопределять в особенных формах
-        return f'{self.drink.__str__()}, {self.vol / 100:.2%} %'
+        # return f'{self.drink.__str__()}, {self.vol / 100:.2%} %'
+        return f"{self.drink}, {f'{self.vol / 100:.2%}' if self.vol is not None else ''}"
         # f"{number/100:.2%} " (54.34% = 0.5434)
 
     def __repr__(self):
