@@ -1,9 +1,9 @@
 # app.support.clickhouse.service.py
-from app.core.config.project_config import settings
+# from app.core.config.project_config import settings
 
 
 class FullTextSearch:
-    limit = settings.CH_LIMIT
+    limit = 1000  # settings.CH_LIMIT
 
     @classmethod
     def search(cls, query: str, ch_client, mode: str = 'auto'):
