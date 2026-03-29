@@ -41,6 +41,7 @@ class FullTextSearch:
 
     @classmethod
     async def _search_like(cls, query: str, table: str, ch_client):
+        logger.warning(f'{query=} {type(query)=}')
         sql = "SELECT id FROM items_search FINAL WHERE search_content LIKE {query:String} LIMIT 50",
         return await ch_client.query(sql, parameters={'query': f'%{query.lower()}%'})
 
