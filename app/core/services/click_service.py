@@ -34,6 +34,7 @@ class FullTextSearch:
                 result = await cls._search_fuzzy(query_lower, table, ch_client)
             case 'ranked':
                 result = await cls._search_ranked(query_lower, table, ch_client)
+        logger.warning(result)
         return tuple(row[0] for row in result.result_rows)
 
     @classmethod
