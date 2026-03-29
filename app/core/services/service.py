@@ -691,11 +691,11 @@ class Service(metaclass=ServiceMeta):
         click: tuple = await click_service.search(search, table, ch_client, mode)
         logger.warning(f'{click=}')
         if click:
-            result = make_paging_dict(click, page, page_size)
-            ids = result.get('items')
+            ids = click[(page - 1) * page_size:page * page_size]
             logger.warning(f'{ids=}')
             response = await repository.get_by_ids(ids, model, session)
             logger.warning(f'{response=}')
-            result['items'] = response
+            result = make_paging_dict(response, page, page_size)
+            return result
         else:
             return []
