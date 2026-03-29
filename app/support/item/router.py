@@ -288,6 +288,7 @@ class ItemRouter(BaseRouter):
         except Exception as e:
             raise HTTPException(status_code=422, detail=e)
 
+    @logger.catch(reraise=True)
     async def clicksearch(self, q: str = Query(..., min_length=3),
                           ch_client=Depends(get_ch_client),
                           session=Depends(get_db)
