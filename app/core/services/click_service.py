@@ -35,7 +35,7 @@ class FullTextSearch:
                 result = await cls._search_ranked(query_lower, table, ch_client)
             case 'like':
                 result = await cls._search_like(query_lower, table, ch_client)
-        logger.warning(result)
+        logger.warning(f'{result=}')
         return tuple(row[0] for row in result.result_rows)
 
     @classmethod

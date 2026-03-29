@@ -690,6 +690,7 @@ class Service(metaclass=ServiceMeta):
         # 0. запрос в clickhouse
         click_service = FullTextSearch
         click: tuple = await click_service.search(search, table, ch_client, mode)
+        logger.warning(f'{click=}')
         if click:
             result = make_paging_dict(click, page, page_size)
             ids = result.get('items')
