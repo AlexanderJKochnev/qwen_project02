@@ -2,6 +2,7 @@
 from app.core.config.project_config import settings
 from loguru import logger
 
+
 class FullTextSearch:
     limit = settings.CH_LIMIT
 
@@ -65,6 +66,9 @@ class FullTextSearch:
         return ch_client.query(sql, parameters={'words': words})
 
     def _search_ranked(cls, query: str, table: str, ch_client):
+        logger.warning(f'{query=}')
+        logger.warning(f'{table=}')
+        logger.warning(f'{ch_client=}')
         words = query.split()
         sql = f"""
             SELECT
