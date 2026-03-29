@@ -239,6 +239,7 @@ class Settings(BaseSettings):
     CH_PORT: int = 8123
     CH_USER: str = 'secret_user'
     CH_PASSWORD: str = 'top_secret'
+    CH_LIMIT: int = 1000  # ограничение кол-ва записей - защита от перегрузки
 
     model_config = SettingsConfigDict(env_file=get_path_to_root(),
                                       env_file_encoding='utf-8',

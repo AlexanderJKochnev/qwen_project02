@@ -15,6 +15,7 @@ from app.support.item.model import Item
 from app.support.item.repository import ItemRepository
 from app.support.item.schemas import (FileUpload, ItemCreate, ItemCreatePreact, ItemCreateRelation,
                                       ItemCreateResponseSchema, ItemRead, ItemUpdate, ItemUpdatePreact)
+from app.core.enum import CliSearchMode
 
 paging = get_paging
 
@@ -288,19 +289,22 @@ class ItemRouter(BaseRouter):
         except Exception as e:
             raise HTTPException(status_code=422, detail=e)
 
-    @logger.catch(reraise=True)
     async def clicksearch(self, q: str = Query(..., min_length=3),
-                          ch_client=Depends(get_ch_client),
-                          session=Depends(get_db)
-                          ):
-        logger.warning('===========1=============')
+                          mode: CliSearchMode = Query(None, description="Типовые правила перевода"),
+                          page: int = Query(1, ge=1), page_size: int = Query(
+        paging.get('def', 20), ge=paging.get('min', 1), le=paging.get('max', 1000)),
+        ch_client=Depends(get_ch_client),
+        session=Depends(get_db)
+    ):
+        table_name = 'items_search'
+        result = await self.service.clicksearch(q, mode, page, page_size,
+                                                table_name, ItemRepository, Item, session, ch_client)
+        return result
+
         click_tier = await ch_client.query(
             "SELECT id FROM items_search FINAL WHERE search_content LIKE {query:String} LIMIT 50",
             parameters={'query': f'%{q.lower()}%'}
         )
-        logger.warning('===========2=============')
         ids = tuple(row[0] for row in click_tier.result_rows)
-        logger.warning('===========3=============')
         result = await self.service.get_by_ids(ids, ItemRepository, Item, session)
-        logger.warning('===========4=============')
         return result

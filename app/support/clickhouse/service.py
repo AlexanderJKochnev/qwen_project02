@@ -1,53 +1,122 @@
-import os
-from asynch import connect
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from app.models import Item  # Импортируйте вашу модель SQLAlchemy
+# app.support.clickhouse.service.py
+from app.core.config.project_config import settings
 
 
-class SearchService:
-    def __init__(self):
-        self.ch_host = os.getenv("CH_HOST", "clickhouse")
-        self.ch_user = os.getenv("CH_USER", "default")
-        self.ch_pass = os.getenv("CH_PASSWORD", "password")
-    
-    async def get_ch_connection(self):
-        return await connect(
-                host = self.ch_host, port = 9000, user = self.ch_user, password = self.ch_pass, database = "default"
-                )
-    
-    async def global_search(self, query: str, pg_db: AsyncSession, limit: int = 20):
-        # 1. Поиск ID в ClickHouse
-        # Разбиваем запрос на слова для multiSearchAny или ILIKE
-        words = query.lower().split()
-        if not words:
-            return []
-        
-        # Формируем условия для каждого слова (чтобы работало AND)
-        conditions = " AND ".join([f"search_content ILIKE '%{word}%'" for word in words])
-        
-        ch_conn = await self.get_ch_connection()
-        async with ch_conn.cursor() as cursor:
-            # Ищем только ID, это максимально быстро
-            sql = f"SELECT id FROM items_search WHERE {conditions} LIMIT {limit}"
-            await cursor.execute(sql)
-            ch_result = await cursor.fetchall()
-        
-        await ch_conn.close()
-        
-        ids = [row[0] for row in ch_result]
-        if not ids:
-            return []
-        
-        # 2. Получение полных данных из PostgreSQL
-        # Используем оператор IN для массовой выборки по ID
-        stmt = select(Item).where(Item.id.in_(ids))
-        result = await pg_db.execute(stmt)
-        
-        # Важно: Сортируем результат Postgres в том же порядке, что пришли ID из CH
-        items = result.scalars().all()
-        items_dict = {item.id: item for item in items}
-        return [items_dict[i] for i in ids if i in items_dict]
+class FullTextSearch:
+    limit = settings.CH_LIMIT
+
+    @classmethod
+    def search(cls, query: str, ch_client, mode: str = 'auto'):
+        """
+        Универсальный метод поиска
+        mode: 'auto', 'word', 'and', 'or', 'phrase', 'fuzzy'
+        """
+        query_lower = query.lower()
+        match mode:
+            case 'auto':
+                if '"' in query:
+                    result = cls._search_phrase(query, ch_client)
+                elif len(query_lower.split()) > 1:
+                    result = cls._search_ranked(query_lower, ch_client)
+                else:
+                    result = cls._search_word(query_lower, ch_client)
+            case 'word':
+                result = cls._search_word(query_lower, ch_client)
+            case 'and':
+                result = cls._search_and(query_lower, ch_client)
+            case 'or':
+                result = cls._search_or(query_lower, ch_client)
+            case 'phrase':
+                result = cls._search_phrase(query, ch_client)
+            case 'fuzzy':
+                result = cls._search_fuzzy(query_lower, ch_client)
+            case 'ranked':
+                result = cls._search_ranked(query_lower, ch_client)
+        return tuple(row[0] for row in result.result_rows)
+
+    def _search_word(cls, query: str, ch_client):
+        sql = f"""
+            SELECT id, search_content
+            FROM {cls.table} FINAL
+            WHERE hasToken(search_content, {{token:String}})
+            LIMIT {{cls.limit:UInt32}}
+        """
+        return ch_client.query(sql, parameters={'token': query})
+
+    def _search_and(cls, query: str, ch_client):
+        words = query.split()
+        sql = f"""
+            SELECT id, search_content
+            FROM {cls.table} FINAL
+            WHERE hasAllTokens(search_content, {{words:Array(String)}})
+            LIMIT {{cls.limit:UInt32}}
+        """
+        return ch_client.query(sql, parameters={'words': words})
+
+    def _search_or(cls, query: str, ch_client):
+        words = query.split()
+        sql = f"""
+            SELECT id, search_content
+            FROM {cls.table} FINAL
+            WHERE hasAnyTokens(search_content, {{words:Array(String)}})
+            LIMIT {{cls.limit:UInt32}}
+        """
+        return ch_client.query(sql, parameters={'words': words})
+
+    def _search_ranked(cls, query: str, ch_client):
+        words = query.split()
+        sql = f"""
+            SELECT
+                id,
+                search_content,
+                length(arrayIntersect(
+                    splitByNonAlpha(lower(search_content)),
+                    {{words:Array(String)}}
+                )) AS score
+            FROM {cls.table} FINAL
+            WHERE hasAnyTokens(search_content, {{words:Array(String)}})
+            ORDER BY score DESC, id
+            LIMIT {{cls.limit:UInt32}}
+        """
+        return ch_client.query(sql, parameters={'words': words})
+
+    def _search_phrase(cls, phrase: str, ch_client):
+        sql = f"""
+            SELECT id, search_content
+            FROM {cls.table} FINAL
+            WHERE positionCaseInsensitive(search_content, {{phrase:String}}) > 0
+            LIMIT {{cls.limit:UInt32}}
+        """
+        return ch_client.query(sql, parameters={'phrase': phrase})
+
+    def _search_fuzzy(cls, query: str, ch_client, distance: int = 1):
+        words = query.split()
+        sql = f"""
+            SELECT
+                id,
+                search_content,
+                multiFuzzyMatchAnyIndex(search_content, {{distance:UInt8}}, {{words:Array(String)}}) AS score
+            FROM {cls.table} FINAL
+            WHERE multiFuzzyMatchAny(search_content, {{distance:UInt8}}, {{words:Array(String)}})
+            ORDER BY score DESC, id
+            LIMIT {{cls.limit:UInt32}}
+        """
+        return ch_client.query(sql, parameters={
+            'words': words,
+            'distance': distance,
+            'limit': cls.limit
+        })
 
 
-search_service = SearchService()
+"""
+# Использование
+fts = FullTextSearch(client)
+
+# Разные режимы поиска
+results = fts.search("clickhouse", mode='word')           # одно слово
+results = fts.search("database performance", mode='and')  # все слова
+results = fts.search("error timeout", mode='ranked')      # с ранжированием
+results = fts.search('"exact phrase"', mode='phrase')     # точная фраза
+results = fts.search("ClickHose", mode='fuzzy')           # с опечатками
+results = fts.search("database", mode='auto')             # автоматический выбор
+"""

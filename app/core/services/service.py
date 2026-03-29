@@ -23,6 +23,7 @@ from app.core.utils.pydantic_utils import get_data_for_search, get_repo, make_pa
 from app.core.utils.reindexation import reindex_items
 from app.mongodb.service import ThumbnailImageService
 from app.service_registry import get_search_dependencies, register_service
+from app.support.clickhouse.service import FullTextSearch
 
 # from app.core.utils.common_utils import jprint
 
@@ -678,3 +679,19 @@ class Service(metaclass=ServiceMeta):
         except Exception as e:
             logger.error(f'search_geans_all.error: {e}')
             raise HTTPException(status_code=501, detail=f'{e}')
+
+    @classmethod
+    async def clicksearch(cls, search: str, mode: str,
+                          page: int, page_size: int,
+                          table_name: str,  # имя таблицы click search item_search
+                          repository: Type[Repository], model: ModelType,
+                          session: AsyncSession,
+                          ch_client):
+        """ поиск searh thru click """
+        # 0. запрос в clickhouse
+        click_service = FullTextSearch
+        click: tuple = click_service.search(search, ch_client, mode)
+        if click:
+            return cls.get_by_ids(click, repository, model, session)
+        else:
+            return []
