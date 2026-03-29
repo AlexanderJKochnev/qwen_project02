@@ -292,10 +292,14 @@ class ItemRouter(BaseRouter):
                           ch_client=Depends(get_ch_client),
                           session=Depends(get_db)
                           ):
+        logger.warning('===========1=============')
         click_tier = await ch_client.query(
             "SELECT id FROM items_search FINAL WHERE search_content LIKE {query:String} LIMIT 50",
             parameters={'query': f'%{q.lower()}%'}
         )
+        logger.warning('===========2=============')
         ids = tuple(row[0] for row in click_tier.result_rows)
+        logger.warning('===========3=============')
         result = await self.service.get_by_ids(ids, ItemRepository, Item, session)
+        logger.warning('===========4=============')
         return result
