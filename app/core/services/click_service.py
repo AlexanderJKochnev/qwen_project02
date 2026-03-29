@@ -36,6 +36,7 @@ class FullTextSearch:
                 result = cls._search_ranked(query_lower, table, ch_client)
         return tuple(row[0] for row in result.result_rows)
 
+    @classmethod
     def _search_word(cls, query: str, table: str, ch_client):
         sql = f"""
             SELECT id, search_content
@@ -45,6 +46,7 @@ class FullTextSearch:
         """
         return ch_client.query(sql, parameters={'token': query})
 
+    @classmethod
     def _search_and(cls, query: str, table: str, ch_client):
         words = query.split()
         sql = f"""
@@ -55,6 +57,7 @@ class FullTextSearch:
         """
         return ch_client.query(sql, parameters={'words': words})
 
+    @classmethod
     def _search_or(cls, query: str, table: str, ch_client):
         words = query.split()
         sql = f"""
@@ -65,6 +68,7 @@ class FullTextSearch:
         """
         return ch_client.query(sql, parameters={'words': words})
 
+    @classmethod
     def _search_ranked(cls, query: str, table: str, ch_client):
         logger.warning(f'{query=}')
         logger.warning(f'{table=}')
@@ -85,6 +89,7 @@ class FullTextSearch:
         """
         return ch_client.query(sql, parameters={'words': words})
 
+    @classmethod
     def _search_phrase(cls, phrase: str, table: str, ch_client):
         sql = f"""
             SELECT id, search_content
@@ -94,6 +99,7 @@ class FullTextSearch:
         """
         return ch_client.query(sql, parameters={'phrase': phrase})
 
+    @classmethod
     def _search_fuzzy(cls, query: str, table: str, ch_client, distance: int = 1):
         words = query.split()
         sql = f"""
