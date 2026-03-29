@@ -689,13 +689,11 @@ class Service(metaclass=ServiceMeta):
         # 0. запрос в clickhouse
         click_service = FullTextSearch
         click: tuple = await click_service.search(search, table, ch_client, mode)
-        logger.warning(f'{click=}')
         if click:
+            total = len(click)
             ids = click[(page - 1) * page_size:page * page_size]
-            logger.warning(f'{ids=}')
             response = await repository.get_by_ids(ids, model, session)
-            logger.warning(f'{response=}')
-            result = make_paging_dict(response, page, page_size)
+            result = make_paging_dict(response, page, page_size, total)
             return result
         else:
             return []

@@ -1,6 +1,6 @@
 # app.support.clickhouse.service.py
 from app.core.config.project_config import settings
-from loguru import logger
+# from loguru import logger
 
 
 class FullTextSearch:
@@ -35,12 +35,10 @@ class FullTextSearch:
                 result = await cls._search_ranked(query_lower, table, ch_client)
             case 'like':
                 result = await cls._search_like(query_lower, table, ch_client)
-        logger.warning(f'{result=}')
         return tuple(row[0] for row in result.result_rows)
 
     @classmethod
     async def _search_like(cls, query: str, table: str, ch_client):
-        logger.warning(f'{query=} {type(query)=}')
         sql = "SELECT id FROM items_search FINAL WHERE search_content LIKE {query:String} LIMIT 50"
         return await ch_client.query(sql, parameters={'query': f'%{query.lower()}%'})
 
@@ -50,7 +48,6 @@ class FullTextSearch:
             SELECT id, search_content
             FROM {table} FINAL
             WHERE hasToken(search_content, {{token:String}})
-            LIMIT {cls.limit}
         """
         return await ch_client.query(sql, parameters={'token': query})
 
@@ -61,7 +58,6 @@ class FullTextSearch:
             SELECT id, search_content
             FROM {table} FINAL
             WHERE hasAllTokens(search_content, {{words:Array(String)}})
-            LIMIT {cls.limit}
         """
         return await ch_client.query(sql, parameters={'words': words})
 
@@ -72,15 +68,11 @@ class FullTextSearch:
             SELECT id, search_content
             FROM {table} FINAL
             WHERE hasAnyTokens(search_content, {{words:Array(String)}})
-            LIMIT {cls.limit}
         """
         return await ch_client.query(sql, parameters={'words': words})
 
     @classmethod
     async def _search_ranked(cls, query: str, table: str, ch_client):
-        logger.warning(f'{query=}')
-        logger.warning(f'{table=}')
-        logger.warning(f'{ch_client=}')
         words = query.split()
         sql = f"""
             SELECT
@@ -93,7 +85,6 @@ class FullTextSearch:
             FROM {table} FINAL
             WHERE hasAnyTokens(search_content, {{words:Array(String)}})
             ORDER BY score DESC, id
-            LIMIT {cls.limit}
         """
         return await ch_client.query(sql, parameters={'words': words})
 
@@ -103,7 +94,6 @@ class FullTextSearch:
             SELECT id, search_content
             FROM {table} FINAL
             WHERE positionCaseInsensitive(search_content, {{phrase:String}}) > 0
-            LIMIT {cls.limit}
         """
         return await ch_client.query(sql, parameters={'phrase': phrase})
 
@@ -118,7 +108,6 @@ class FullTextSearch:
             FROM {table} FINAL
             WHERE multiFuzzyMatchAny(search_content, {{distance:UInt8}}, {{words:Array(String)}})
             ORDER BY score DESC, id
-            LIMIT {cls.limit}
         """
         return await ch_client.query(sql, parameters={
             'words': words,

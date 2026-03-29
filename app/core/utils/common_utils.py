@@ -910,11 +910,11 @@ def clean_dict(data: Dict[str, Any]) -> Dict[str, Any]:
     return {k: v for k, v in data.items() if v not in (None, [], "")}
 
 
-def make_paging_dict(source: list | tuple, page: int, page_size: int) -> dict:
+def make_paging_dict(source: list | tuple, page: int, page_size: int, total: int) -> dict:
     total = len(source)
     items = []
     return {"items": source[(page - 1) * page_size: page * page_size],
-            "total": len(source),
+            "total": total,
             "page": page,
             "page_size": page_size,
             "has_next": (page - 1) * page_size + len(items) < total if total > 0 else False,
