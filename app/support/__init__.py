@@ -48,7 +48,6 @@ from app.support.parser.schemas import (StatusCreate, StatusCreateResponseSchema
                                         ImageCreate, ImageCreateResponseSchema, ImageRead, ImageUpdate,
                                         RawdataCreate, RawdataCreateResponseSchema, RawdataRead, RawdataUpdate)
 
-"""
 from app.support.category.service import CategoryService
 from app.support.clickhouse.service import FullTextSearch
 from app.support.country.service import CountryService
@@ -67,7 +66,7 @@ from app.support.producer.service import ProducerService, ProducerTitleService
 from app.support.vintage.service import VintageConfigService, DesignationService, ClassificationService
 from app.support.parcel.service import ParcelService, SiteService
 from app.support.source.service import SourceService
-"""
+
 # from app.support.warehouse.service import WarehouseService
 from app.support.warehouse.repository import WarehouseRepository
 from app.support.parser.repository import (StatusRepository, CodeRepository, NameRepository, ImageRepository,
