@@ -259,9 +259,8 @@ class Service(metaclass=ServiceMeta):
         """
         result = []
         if ids:
-            if isinstance(ids, str):
-                comma_separator = ','
-                ids = tuple(int(b) for a in set(ids.split(comma_separator)) if (b := a.strip()).isdigit())
+            comma_separator = ','
+            ids = tuple(int(b) for a in set(ids.split(comma_separator)) if (b := a.strip()).isdigit())
             result = await repository.get_by_ids(ids, model, session)
         return result
 
@@ -695,7 +694,7 @@ class Service(metaclass=ServiceMeta):
             result = make_paging_dict(click, page, page_size)
             ids = result.get('items')
             logger.warning(f'{ids=}')
-            respone = await cls.get_by_ids(ids, repository, model, session)
+            respone = await repository.get_by_ids(ids, model, session)
             result['items'] = respone
         else:
             return []
