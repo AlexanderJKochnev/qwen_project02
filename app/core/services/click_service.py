@@ -37,7 +37,7 @@ class FullTextSearch:
         return tuple(row[0] for row in result.result_rows)
 
     @classmethod
-    async async def _search_word(cls, query: str, table: str, ch_client):
+    async def _search_word(cls, query: str, table: str, ch_client):
         sql = f"""
             SELECT id, search_content
             FROM {table} FINAL
