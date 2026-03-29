@@ -34,8 +34,15 @@ class FullTextSearch:
                 result = await cls._search_fuzzy(query_lower, table, ch_client)
             case 'ranked':
                 result = await cls._search_ranked(query_lower, table, ch_client)
+            case 'like':
+                result = await cls._search_like(query_lower, table, ch_client)
         logger.warning(result)
         return tuple(row[0] for row in result.result_rows)
+
+    @classmethod
+    async def _search_like(cls, query: str, table: str, ch_client):
+        sql = "SELECT id FROM items_search FINAL WHERE search_content LIKE {query:String} LIMIT 50",
+        return await ch_client.query(sql, parameters={'query': f'%{query.lower()}%'})
 
     @classmethod
     async def _search_word(cls, query: str, table: str, ch_client):
