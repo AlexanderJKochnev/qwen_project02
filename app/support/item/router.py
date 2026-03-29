@@ -33,6 +33,10 @@ class ItemRouter(BaseRouter):
         self.image_service: ThumbnailImageService = Depends()
 
     def setup_routes(self):
+        self.router.add_api_route(
+            "/clicksearch", self.clicksearch, status_code=status.HTTP_200_OK, methods=["GET"],
+            openapi_extra={'x-request-schema': None}
+        )
         super().setup_routes()
         # Добавляем маршруты для ListView и DetailView
 
@@ -56,10 +60,6 @@ class ItemRouter(BaseRouter):
             "/direct", self.direct_import_data, status_code=status.HTTP_200_OK, methods=["POST"],
             response_model=dict,
             openapi_extra={'x-request-schema': None})
-        self.router.add_api_route(
-            "/clicksearch", self.clicksearch, status_code=status.HTTP_200_OK, methods=["GET"],
-            openapi_extra={'x-request-schema': None}
-        )
         self.router.add_api_route(
             "/direct/{id}", self.direct_import_single_data, status_code=status.HTTP_200_OK, methods=["GET"],
             response_model=dict,
