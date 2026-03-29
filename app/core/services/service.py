@@ -694,7 +694,8 @@ class Service(metaclass=ServiceMeta):
             result = make_paging_dict(click, page, page_size)
             ids = result.get('items')
             logger.warning(f'{ids=}')
-            respone = await repository.get_by_ids(ids, model, session)
-            result['items'] = respone
+            response = await repository.get_by_ids(ids, model, session)
+            logger.warning(f'{response=}')
+            result['items'] = response
         else:
             return []
