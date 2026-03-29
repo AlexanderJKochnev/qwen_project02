@@ -908,3 +908,15 @@ def clean_dict(data: Dict[str, Any]) -> Dict[str, Any]:
         очистка плоских словарей от пустых значений
     """
     return {k: v for k, v in data.items() if v not in (None, [], "")}
+
+
+def make_paging_dict(source: list | tuple, page: int, page_size: int) -> dict:
+    total = len(source)
+    items = []
+    return {"items": source[(page - 1) * page_size: page_size],
+            "total": len(source),
+            "page": page,
+            "page_size": page_size,
+            "has_next": (page - 1) * page_size + len(items) < total if total > 0 else False,
+            "has_prev": page > 1
+            }

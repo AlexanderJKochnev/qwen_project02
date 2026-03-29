@@ -300,7 +300,7 @@ class ItemRouter(BaseRouter):
         result = await self.service.clicksearch(q, mode, page, page_size,
                                                 table_name, ItemRepository, Item, session, ch_client)
         return result
-
+        """
         click_tier = await ch_client.query(
             "SELECT id FROM items_search FINAL WHERE search_content LIKE {query:String} LIMIT 50",
             parameters={'query': f'%{q.lower()}%'}
@@ -308,3 +308,4 @@ class ItemRouter(BaseRouter):
         ids = tuple(row[0] for row in click_tier.result_rows)
         result = await self.service.get_by_ids(ids, ItemRepository, Item, session)
         return result
+"""

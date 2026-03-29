@@ -18,7 +18,7 @@ from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.schemas.base import BaseModel, IndexFillResponse
 from app.core.types import ModelType
 from app.core.utils.alchemy_utils import formatted_query, has_column
-from app.core.utils.common_utils import flatten_dict_with_localized_fields
+from app.core.utils.common_utils import flatten_dict_with_localized_fields, make_paging_dict
 from app.core.utils.pydantic_utils import get_data_for_search, get_repo, make_paginated_response, prepare_search_string
 from app.core.utils.reindexation import reindex_items
 from app.mongodb.service import ThumbnailImageService
@@ -692,6 +692,8 @@ class Service(metaclass=ServiceMeta):
         click_service = FullTextSearch
         click: tuple = click_service.search(search, ch_client, mode)
         if click:
-            return cls.get_by_ids(click, repository, model, session)
+            result = make_paging_dict(click)
+            ids = result.get('items')
+            return cls.get_by_ids(ids, repository, model, session)
         else:
             return []
