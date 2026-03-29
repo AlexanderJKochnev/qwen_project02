@@ -7,7 +7,7 @@ class FullTextSearch:
     limit = settings.CH_LIMIT
 
     @classmethod
-    def search(cls, query: str, table: str, ch_client, mode: str = 'auto'):
+    async def search(cls, query: str, table: str, ch_client, mode: str = 'auto'):
         """
         Универсальный метод поиска
         mode: 'auto', 'word', 'and', 'or', 'phrase', 'fuzzy'
@@ -17,11 +17,11 @@ class FullTextSearch:
         match mode:
             case 'auto':
                 if '"' in query:
-                    result = cls._search_phrase(query,  table, ch_client)
+                    result = async cls._search_phrase(query, table, ch_client)
                 elif len(query_lower.split()) > 1:
                     result = cls._search_ranked(query_lower, table, ch_client)
                 else:
-                    result = cls._search_word(query_lower, table, ch_client)
+                    result = async cls._search_word(query_lower, table, ch_client)
             case 'word':
                 result = cls._search_word(query_lower, table, ch_client)
             case 'and':
@@ -37,14 +37,14 @@ class FullTextSearch:
         return tuple(row[0] for row in result.result_rows)
 
     @classmethod
-    def _search_word(cls, query: str, table: str, ch_client):
+    async def _search_word(cls, query: str, table: str, ch_client):
         sql = f"""
             SELECT id, search_content
             FROM {table} FINAL
             WHERE hasToken(search_content, {{token:String}})
             LIMIT {{cls.limit:UInt32}}
         """
-        return ch_client.query(sql, parameters={'token': query})
+        return await ch_client.query(sql, parameters={'token': query})
 
     @classmethod
     def _search_and(cls, query: str, table: str, ch_client):
