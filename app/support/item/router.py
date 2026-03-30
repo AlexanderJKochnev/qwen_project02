@@ -290,7 +290,7 @@ class ItemRouter(BaseRouter):
             raise HTTPException(status_code=422, detail=e)
 
     async def clicksearch(self, q: str = Query(..., min_length=3),
-                          mode: CliSearchMode = Query(None, description="Типовые правила перевода"),
+                          mode: CliSearchMode = Query(None, description="Типовые правила поиска"),
                           page: int = Query(1, ge=1), page_size: int = Query(
         paging.get('def', 20), ge=paging.get('min', 1), le=paging.get('max', 1000)),
         ch_client=Depends(get_ch_client),
