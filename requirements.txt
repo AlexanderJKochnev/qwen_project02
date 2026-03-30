@@ -1,4 +1,4 @@
-clickhouse_connect
+clickhouse-connect[async]==0.12.0rc1
 fastapi[all]~=0.116.1
 httpx~=0.28.1
 uvloop
