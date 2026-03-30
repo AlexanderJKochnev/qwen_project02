@@ -41,4 +41,4 @@ Prompts = Enum("Prompts", {v: v for v in data['prompts']}, type=str)
 Languages = Enum("Languages", {v: v for v in data['language']}, type=str)
 Writers = Enum("writer", {v: v for v in data['writer']}, type=str)
 CliSearchMode = Enum("mode", {v: v for v in ['auto', 'ranked', 'word',
-                     'and', 'or', 'phrase', 'fuzzy', 'like']}, type=str)
+                     'and', 'or', 'phrase', 'fuzzy', 'fuzzy2', 'like']}, type=str)

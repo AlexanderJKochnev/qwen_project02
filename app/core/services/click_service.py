@@ -32,6 +32,8 @@ class FullTextSearch:
                 result = await cls._search_phrase(query, table, ch_client)
             case 'fuzzy':
                 result = await cls._search_fuzzy(query_lower, table, ch_client)
+            case 'fuzzy2':
+                result = await cls._search_fuzzy2(query_lower, table, ch_client)
             case 'ranked':
                 result = await cls._search_ranked(query_lower, table, ch_client)
             case 'like':
@@ -102,6 +104,29 @@ class FullTextSearch:
     async def _search_fuzzy(cls, query: str, table: str, ch_client, distance: int = 1):
         words = query.split()
         sql = f"""
+            SELECT
+                id,
+                search_content,
+                multiFuzzyMatchAnyIndex(search_content, {{distance:UInt8}}, {{words:Array(String)}}) AS score
+            FROM {table} FINAL
+            WHERE multiFuzzyMatchAny(search_content, {{distance:UInt8}}, {{words:Array(String)}})
+            ORDER BY score DESC, id
+        """
+        return await ch_client.query(sql, parameters={
+            'words': words,
+            'distance': distance,
+            'limit': cls.limit
+        })
+
+    @classmethod
+    async def _search_fuzzy2(cls, query: str, table: str, ch_client, distance: int = 1):
+        words = query.split()
+        sql = f"""
+            WITH filtered AS (
+                SELECT id, search_content
+                FROM {table}
+                WHERE hasAnyTokens(search_content, {{words:Array(String)}})
+            )
             SELECT
                 id,
                 search_content,
