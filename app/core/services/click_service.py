@@ -13,6 +13,7 @@ class FullTextSearch:
         mode: 'auto', 'word', 'and', 'or', 'phrase', 'fuzzy'
         """
         query_lower = query.lower()
+        await ch_client.command("SET send_logs_level = 'debug'")
         match mode:
             case 'auto':
                 if '"' in query:
