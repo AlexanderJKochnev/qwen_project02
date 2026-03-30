@@ -84,6 +84,7 @@ class Service(metaclass=ServiceMeta):
         if model.__name__ == 'Item':
             drink_model = get_model_by_name('Drink')
             drink_repo = get_repo('Drink')
+            # создагние индекса налету
             obj = await reindex_items(obj, drink_model, drink_repo, cls.skip_keys, session)
         result = await repository.create(obj, model, session)
         await session.commit()
@@ -112,6 +113,7 @@ class Service(metaclass=ServiceMeta):
             if model.__name__ == 'Item':
                 drink_model = get_model_by_name('Drink')
                 drink_repo = get_repo('Drink')
+                # создание индексируемого поля на лету
                 obj = await reindex_items(obj, drink_model, drink_repo, cls.skip_keys, session)
             instance = await repository.create(obj, model, session)
             await session.commit()
