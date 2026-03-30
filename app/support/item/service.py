@@ -270,8 +270,8 @@ class ItemService(Service):
         if not item_instance:
             raise HTTPException(f'Item records with {item_id=} not found')
         result = await repository.patch(item_instance, item_dict, session)
-        logger.error(f'run background tasks for update_item_drink {id}')
-        await cls.run_backgound_task(id, background_tasks, True, repository, model, session)
+        # logger.error(f'run background tasks for update_item_drink {id}')
+        # await cls.run_backgound_task(id, background_tasks, True, repository, model, session)
         """ will be return:
                     {"success": True, "data": obj}
                     or
