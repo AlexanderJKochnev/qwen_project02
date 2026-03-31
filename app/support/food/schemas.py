@@ -10,6 +10,7 @@ class CustomReadSchema:
     superfood: Optional[SuperfoodRead] = None
     # pass
 
+
 class CustomCreateSchema:
     superfood_id: Optional[int] = None
 
@@ -34,7 +35,7 @@ class FoodRead(ReadSchema, CustomReadSchema):
     pass
 
 
-class FoodReadRelation(FoodRead, CustomCreateRelation):
+class FoodReadRelation(ReadSchema):
     pass
 
 

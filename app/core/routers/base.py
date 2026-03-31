@@ -298,7 +298,6 @@ class BaseRouter:
         for key in response:
             print(f'{key=}, {type(key)=}')
         # result = self.paginated_response(**response)
-        # print("====================",result)
         logger.info('результат получен в эндпойнт и сейчес будет возвращен')
         return response
 
