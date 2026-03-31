@@ -21,11 +21,11 @@ class VintageConfigRouter(BaseRouter):
         )
 
     async def create(self, data: VintageConfigCreate,
-                     session: AsyncSession = Depends(get_db)) -> VintageConfigRead:
+                     session: AsyncSession = Depends(get_db)):
         return await super().create(data, session)
 
     async def patch(self, id: int, data: VintageConfigUpdate, background_tasks: BackgroundTasks,
-                    session: AsyncSession = Depends(get_db)) -> VintageConfigRead:
+                    session: AsyncSession = Depends(get_db)):
         return await super().patch(id, data, background_tasks, session)
 
 
@@ -37,11 +37,11 @@ class DesignationRouter(BaseRouter):
         )
 
     async def create(self, data: DesignationCreate,
-                     session: AsyncSession = Depends(get_db)) -> DesignationRead:
+                     session: AsyncSession = Depends(get_db)):
         return await super().create(data, session)
 
     async def patch(self, id: int, data: DesignationUpdate, background_tasks: BackgroundTasks,
-                    session: AsyncSession = Depends(get_db)) -> DesignationRead:
+                    session: AsyncSession = Depends(get_db)):
         return await super().patch(id, data, background_tasks, session)
 
 
@@ -53,9 +53,9 @@ class ClassificationRouter(BaseRouter):
         )
 
     async def create(self, data: ClassificationCreate,
-                     session: AsyncSession = Depends(get_db)) -> ClassificationRead:
+                     session: AsyncSession = Depends(get_db)):
         return await super().create(data, session)
 
     async def patch(self, id: int, data: ClassificationUpdate, background_tasks: BackgroundTasks,
-                    session: AsyncSession = Depends(get_db)) -> ClassificationRead:
+                    session: AsyncSession = Depends(get_db)):
         return await super().patch(id, data, background_tasks, session)

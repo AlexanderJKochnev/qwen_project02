@@ -17,10 +17,10 @@ class SourceRouter(BaseRouter):
         )
 
     async def create(self, data: SourceCreate,
-                     session: AsyncSession = Depends(get_db)) -> SourceRead:
+                     session: AsyncSession = Depends(get_db)):
         return await super().create(data, session)
 
     async def patch(self, id: int,
                     data: SourceUpdate, background_tasks: BackgroundTasks,
-                    session: AsyncSession = Depends(get_db)) -> SourceRead:
+                    session: AsyncSession = Depends(get_db)):
         return await super().patch(id, data, background_tasks, session)

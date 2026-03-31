@@ -20,10 +20,10 @@ class LwinRouter(BaseRouter):
 
     async def patch(self, id: int, data: LwinUpdate,
                     background_tasks: BackgroundTasks,
-                    session: AsyncSession = Depends(get_db)) -> LwinRead:
+                    session: AsyncSession = Depends(get_db)):
         return await super().patch(id, data, background_tasks, session)
 
     async def update_or_create(self, data: LwinCreate,
                                background_tasks: BackgroundTasks,
-                               session: AsyncSession = Depends(get_db)) -> LwinRead:
+                               session: AsyncSession = Depends(get_db)):
         return await super().update_or_create(data, background_tasks, session)

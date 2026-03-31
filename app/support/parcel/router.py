@@ -20,11 +20,11 @@ class ParcelRouter(BaseRouter):
         )
 
     async def create(self, data: ParcelCreate,
-                     session: AsyncSession = Depends(get_db)) -> ParcelRead:
+                     session: AsyncSession = Depends(get_db)):
         return await super().create(data, session)
 
     async def patch(self, id: int, data: ParcelUpdate, background_tasks: BackgroundTasks,
-                    session: AsyncSession = Depends(get_db)) -> ParcelRead:
+                    session: AsyncSession = Depends(get_db)):
         return await super().patch(id, data, background_tasks, session)
 
 
@@ -36,14 +36,14 @@ class SiteRouter(BaseRouter):
         )
 
     async def create(self, data: SiteCreate,
-                     session: AsyncSession = Depends(get_db)) -> SiteRead:
+                     session: AsyncSession = Depends(get_db)):
         return await super().create(data, session)
 
     async def patch(self, id: int, data: SiteUpdate, background_tasks: BackgroundTasks,
-                    session: AsyncSession = Depends(get_db)) -> SiteRead:
+                    session: AsyncSession = Depends(get_db)):
         return await super().patch(id, data, background_tasks, session)
 
     async def create_relation(self, data: SiteCreateRelation,
-                              session: AsyncSession = Depends(get_db)) -> SiteRead:
+                              session: AsyncSession = Depends(get_db)):
         result = await super().create_relation(data, session)
         return result

@@ -95,22 +95,22 @@ class ItemRouter(BaseRouter):
         return item
 
     async def create(self, data: ItemCreate,
-                     session: AsyncSession = Depends(get_db)) -> ItemCreateResponseSchema:
+                     session: AsyncSession = Depends(get_db)):
         return await super().create(data, session)
 
     async def patch(self, id: int, data: ItemUpdate, background_tasks: BackgroundTasks,
-                    session: AsyncSession = Depends(get_db)) -> ItemCreateResponseSchema:
+                    session: AsyncSession = Depends(get_db)):
         return await super().patch(id, data, background_tasks,
                                    session)
 
     async def create_relation(self, data: ItemCreateRelation,
-                              session: AsyncSession = Depends(get_db)) -> ItemCreateResponseSchema:
+                              session: AsyncSession = Depends(get_db)):
         result = await super().create_relation(data, session)
         return result
 
     async def direct_import_data(self, data: FileUpload,
                                  session: AsyncSession = Depends(get_db),
-                                 image_service: ThumbnailImageService = Depends()) -> dict:   # DirectUploadSchema:
+                                 image_service: ThumbnailImageService = Depends()):   # DirectUploadSchema:
         """
         Импорт записей с зависимостями. Для того что бы выполнить импорт нужно
         на сервере поместить файл data.json в директорию UPLOAD_DIR,
@@ -131,7 +131,7 @@ class ItemRouter(BaseRouter):
                                     file: UploadFile = File(...),
                                     session: AsyncSession = Depends(get_db),
                                     image_service: ThumbnailImageService = Depends()
-                                    ) -> ItemCreateResponseSchema:
+                                    ):
         """
         Создание одной записи с зависимостями - если в таблице есть зависимости
         они будут рекурсивно найдены в связанных таблицах (или добавлены при отсутсвии),
@@ -174,7 +174,7 @@ class ItemRouter(BaseRouter):
                                 file: UploadFile = File(None),
                                 session: AsyncSession = Depends(get_db),
                                 image_service: ThumbnailImageService = Depends()
-                                ) -> ItemCreateResponseSchema:
+                                ):
         """
         Создание записи Item & Drink и всеми связями - endpoint for preact
         Принимает JSON строку и файл изображения
@@ -215,7 +215,7 @@ class ItemRouter(BaseRouter):
                                 file: UploadFile = File(None),
                                 session: AsyncSession = Depends(get_db),
                                 image_service: ThumbnailImageService = Depends()
-                                ) -> ItemRead:  # ItemCreateResponseSchema:
+                                ):  # ItemCreateResponseSchema:
         """
         Обновление записи Item & Drink и всеми связями
         Принимает JSON строку и файл изображения
@@ -270,7 +270,7 @@ class ItemRouter(BaseRouter):
 
     async def direct_import_single_data(self, id: str = Path(..., description="ID элемента"),
                                         session: AsyncSession = Depends(get_db),
-                                        image_service: ThumbnailImageService = Depends()) -> dict:
+                                        image_service: ThumbnailImageService = Depends()):
         """
         Импорт записей с зависимостями. Для того что бы выполнить импорт нужно
         на сервере поместить файл data.json в директорию UPLOAD_DIR, в ту же директорию разместить файлы с

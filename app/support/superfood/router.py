@@ -17,14 +17,14 @@ class SuperfoodRouter(BaseRouter):  # [SuperfoodCreate, SuperfoodUpdate, Superfo
         )
 
     async def create(self, data: SuperfoodCreate,
-                     session: AsyncSession = Depends(get_db)) -> SuperfoodCreateResponseSchema:
+                     session: AsyncSession = Depends(get_db)):
         return await super().create(data, session)
 
     async def patch(self, id: int, data: SuperfoodUpdate, background_tasks: BackgroundTasks,
-                    session: AsyncSession = Depends(get_db)) -> SuperfoodCreateResponseSchema:
+                    session: AsyncSession = Depends(get_db)):
         return await super().patch(id, data, background_tasks, session)
 
     async def create_relation(self, data: SuperfoodCreate,
-                              session: AsyncSession = Depends(get_db)) -> SuperfoodRead:
+                              session: AsyncSession = Depends(get_db)):
         result = await super().create_relation(data, session)
         return result

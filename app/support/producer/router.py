@@ -19,15 +19,15 @@ class ProducerRouter(BaseRouter):
         )
 
     async def create(self, data: ProducerCreate,
-                     session: AsyncSession = Depends(get_db)) -> ProducerRead:
+                     session: AsyncSession = Depends(get_db)):
         return await super().create(data, session)
 
     async def patch(self, id: int, data: ProducerUpdate, background_tasks: BackgroundTasks,
-                    session: AsyncSession = Depends(get_db)) -> ProducerRead:
+                    session: AsyncSession = Depends(get_db)):
         return await super().patch(id, data, background_tasks, session)
 
     async def create_relation(self, data: ProducerCreateRelation,
-                              session: AsyncSession = Depends(get_db)) -> ProducerRead:
+                              session: AsyncSession = Depends(get_db)):
         result = await super().create_relation(data, session)
         return result
 
@@ -40,9 +40,9 @@ class ProducerTitleRouter(BaseRouter):
         )
 
     async def create(self, data: ProducerTitleCreate,
-                     session: AsyncSession = Depends(get_db)) -> ProducerTitleRead:
+                     session: AsyncSession = Depends(get_db)):
         return await super().create(data, session)
 
     async def patch(self, id: int, data: ProducerTitleUpdate, background_tasks: BackgroundTasks,
-                    session: AsyncSession = Depends(get_db)) -> ProducerTitleRead:
+                    session: AsyncSession = Depends(get_db)):
         return await super().patch(id, data, background_tasks, session)

@@ -285,9 +285,7 @@ class Service(metaclass=ServiceMeta):
             id = existing_item.id
         data_dict = data.model_dump(exclude_unset=True)
         # Выполняем обновление
-        logger.warning('patch patch!')
         result = await repository.patch(existing_item, data_dict, session)
-        logger.warning('pre_run_backgound_task!')
         await cls.pre_run_background_task(id, background_tasks, repository, model)
         return result
 
@@ -479,15 +477,12 @@ class Service(metaclass=ServiceMeta):
             1. проверяет является ли модель привязанной к items, но items
             2. если да - отправляет задачу на обновление поля items.search_content
         """
-        logger.warning('background_tasks.add_task 0')
         if model.__name__ == 'Item':
             return
-        logger.warning('background_tasks.add_task 1')
         path: str = get_search_dependencies(model)
         logger.warning(f'background_tasks.add_task {path=}')
         if not path or path.split('.')[-1].capitalize() != 'Item':
             return
-        logger.warning('background_tasks.add_task 2')
         background_tasks.add_task(
             repository.run_sync_background, start_model=model, start_id=id,
             path_str=path, session_factory=DatabaseManager.session_maker,

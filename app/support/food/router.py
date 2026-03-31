@@ -17,14 +17,14 @@ class FoodRouter(BaseRouter):
         )
 
     async def create(self, data: FoodCreate,
-                     session: AsyncSession = Depends(get_db)) -> FoodCreateResponseSchema:
+                     session: AsyncSession = Depends(get_db)):
         return await super().create(data, session)
 
     async def patch(self, id: int, data: FoodUpdate, background_tasks: BackgroundTasks,
-                    session: AsyncSession = Depends(get_db)) -> FoodCreateResponseSchema:
+                    session: AsyncSession = Depends(get_db)):
         return await super().patch(id, data, background_tasks, session)
 
     async def create_relation(self, data: FoodCreateRelation,
-                              session: AsyncSession = Depends(get_db)) -> FoodRead:
+                              session: AsyncSession = Depends(get_db)):
         result = await super().create_relation(data, session)
         return result

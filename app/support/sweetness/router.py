@@ -17,7 +17,7 @@ class SweetnessRouter(BaseRouter):
         )
 
     async def create(self, data: SweetnessCreate,
-                     session: AsyncSession = Depends(get_db)) -> SweetnessCreateResponseSchema:
+                     session: AsyncSession = Depends(get_db)):
         return await super().create(data, session)
 
     async def patch(self, id: int, data: SweetnessUpdate, background_tasks: BackgroundTasks,
@@ -25,6 +25,6 @@ class SweetnessRouter(BaseRouter):
         return await super().patch(id, data, background_tasks, session)
 
     async def create_relation(self, data: SweetnessCreateRelation,
-                              session: AsyncSession = Depends(get_db)) -> SweetnessRead:
+                              session: AsyncSession = Depends(get_db)):
         result = await super().create_relation(data, session)
         return result

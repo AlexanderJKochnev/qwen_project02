@@ -42,7 +42,7 @@ class DrinkRouter(BaseRouter):
         #                           openapi_extra={'x-request-schema': None})  # переделать или тоже удалить item api
         # instead
 
-    def get_drink_food_service(session: AsyncSession) -> DrinkFoodService:
+    def get_drink_food_service(session: AsyncSession):
         repo = DrinkFoodRepository(session)
         return DrinkFoodService(repo)
 
@@ -55,7 +55,7 @@ class DrinkRouter(BaseRouter):
         await service.set_drink_foods(id, data.food_ids)
         return {"status": "success"}
 
-    async def create(self, data: DrinkCreate, session: AsyncSession = Depends(get_db)) -> DrinkReadRelation:
+    async def create(self, data: DrinkCreate, session: AsyncSession = Depends(get_db)):
         """
         Создание одной записи
         """
@@ -83,12 +83,12 @@ class DrinkRouter(BaseRouter):
     # DrinkCreateResponseSchema
 
     async def create_relation(self, data: DrinkCreateRelation,
-                              session: AsyncSession = Depends(get_db)) -> DrinkReadRelation:
+                              session: AsyncSession = Depends(get_db)):
         result = await super().create_relation(data, session)
         return result
 
     async def patch(self, id: int, data: DrinkUpdate, background_tasks: BackgroundTasks,
-                    session: AsyncSession = Depends(get_db)) -> DrinkRead:
+                    session: AsyncSession = Depends(get_db)):
         return await super().patch(id, data, background_tasks, session)
 
     async def create_relation_image(self,
@@ -96,7 +96,7 @@ class DrinkRouter(BaseRouter):
                                     file: UploadFile = File(...),
                                     session: AsyncSession = Depends(get_db),
                                     image_service: ThumbnailImageService = Depends()
-                                    ) -> DrinkCreateResponseSchema:
+                                    ):
         """
         Создание одной записи с зависимостями - если в таблице есть зависимости
         они будут рекурсивно найдены в связанных таблицах (или добавлены при отсутсвии),
