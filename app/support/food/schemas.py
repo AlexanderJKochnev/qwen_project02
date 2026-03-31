@@ -29,11 +29,12 @@ class FoodId(PkSchema):
     """
     pass
 
+
 class FoodRead(ReadSchema, CustomReadSchema):
     pass
 
 
-class FoodReadRelation(FoodRead):
+class FoodReadRelation(FoodRead, CustomCreateRelation):
     pass
 
 
