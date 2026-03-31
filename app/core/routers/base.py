@@ -295,6 +295,8 @@ class BaseRouter:
         after_date = back_to_the_future(after_date)
         response = await self.service.get_all(after_date, page, page_size, self.repo, self.model, session)
         # type_checking(response, 'get')
+        for key in response:
+            print(f'{key=}, {type(key)=}')
         result = self.paginated_response(**response)
         logger.info('результат получен в эндпойнт и сечес будет возвращен')
         return result
