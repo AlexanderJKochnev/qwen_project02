@@ -105,7 +105,7 @@ class BaseRouter:
         """
         # get all без паггинации
         self.router.add_api_route("", self.get, methods=["GET"],
-                                  response_model=self.paginated_response,
+                                  # response_model=self.paginated_response,
                                   openapi_extra={'x-request-schema': None})
         # search с пагинацией
         self.router.add_api_route("/search", self.search, methods=["GET"],
