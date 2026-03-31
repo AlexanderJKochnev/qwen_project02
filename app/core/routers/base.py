@@ -154,7 +154,7 @@ class BaseRouter:
                                   openapi_extra={'x-request-schema': self.update_schema.__name__})
         self.router.add_api_route("/{id}",
                                   self.patch, methods=["PATCH"],
-                                  response_model=self.read_schema,
+                                  # response_model=self.read_schema,
                                   openapi_extra={'x-request-schema': self.update_schema.__name__})
 
         self.router.add_api_route("/{id}",
