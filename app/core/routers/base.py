@@ -105,7 +105,7 @@ class BaseRouter:
         """
         # get all без паггинации
         self.router.add_api_route("", self.get, methods=["GET"],
-                                  # response_model=self.paginated_response,
+                                  response_model=self.paginated_response,
                                   openapi_extra={'x-request-schema': None})
         # search с пагинацией
         self.router.add_api_route("/search", self.search, methods=["GET"],
@@ -415,7 +415,7 @@ class BaseRouter:
         """
             Поиск по всем текстовым полям основной таблицы БЕЗ пагинации
             input_valudation_chema <>CreateRelation
-            response_model <>ReadRelatio
+            response_model <>ReadRelation
         """
         try:
             result = await self.service.search_geans_all(search, similarity_threshold,
