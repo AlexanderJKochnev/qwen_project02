@@ -4,6 +4,7 @@
 
 # from app.events import event, pg_listen_worker  # noqa: F401
 from contextlib import asynccontextmanager
+from fastapi.responses import JSONResponse
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.gzip import GZipMiddleware
@@ -13,6 +14,7 @@ import sys
 from time import perf_counter
 from app.auth.routers import auth_router, user_router
 # from app.core.config.project_config import settings
+from app.core.exceptions import AppBaseException
 from app.core.config.database.db_async import DatabaseManager  # init_db_extensions
 # from app.core.config.database.ollama_async import get_ollama_manager
 from app.core.config.database.db_mongo import MongoDBManager, get_mongodb
@@ -146,6 +148,13 @@ async def log_requests(request: Request, call_next):
 
     return response
 
+
+@app.exception_handler(AppBaseException)
+async def app_exception_handler(request: Request, exc: AppBaseException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.message},
+    )
 
 app.add_middleware(
     CORSMiddleware,

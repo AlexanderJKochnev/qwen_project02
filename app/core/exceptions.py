@@ -9,6 +9,15 @@ class AppBaseException(Exception):
         self.message = message
         self.status_code = status_code
 
+"""
+    # repository.py
+    def get_user(id: int):
+        user = db.find(id)
+        if not user:
+            raise AppBaseException(message="User not found", status_code=404)
+        return user
+"""
+
 
 def exception_to_http(e: Exception) -> HTTPException:
     """ удалить"""

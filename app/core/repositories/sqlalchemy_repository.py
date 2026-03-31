@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql.elements import Label
 from app.core.models.base_model import get_model_by_name
+from app.core.exceptions import AppBaseException
 # from sqlalchemy.dialects import postgresql
 # from sqlalchemy.sql.elements import ColumnElement
 from app.core.utils.alchemy_utils import (create_enum_conditions, get_sqlalchemy_fields,
@@ -136,7 +137,10 @@ class Repository(metaclass=RepositoryMeta):
 
     @classmethod
     async def invalidate_search_index(cls, id: int, item: ModelType, model: ModelType, session: AsyncSession):
-        """ обнуление item.search_content в записях у которых child records updated"""
+        """
+            УДАЛИТЬ 23 АПРЕЛЯ
+            обнуление item.search_content в записях у которых child records updated
+        """
         try:
             stmp = update(item).where(cls.item_exists(id)).values({'search_content': None})
             # Компилируем специально для PostgreSQL
@@ -252,38 +256,9 @@ class Repository(metaclass=RepositoryMeta):
             # await session.refresh(data) - не надо - дает ошибки
             return {"success": True, "data": obj.to_dict()}
         except IntegrityError as e:
-            error_str = str(e.orig).lower()
-            original_error_str = str(e.orig)
-
-            if 'unique constraint' in error_str or 'duplicate key' in error_str:
-                # Extract field name and value from the error message
-                field_info = cls._extract_field_info_from_error(original_error_str)
-                return {
-                    "success": False,
-                    "error_type": "unique_constraint_violation",
-                    "message": f"Нарушение уникальности: {original_error_str}",
-                    "field_info": field_info
-                }
-            elif 'foreign key constraint' in error_str or 'fk_' in error_str:
-                # Extract field name and value from the error message
-                field_info = cls._extract_field_info_from_error(original_error_str)
-                return {
-                    "success": False,
-                    "error_type": "foreign_key_violation",
-                    "message": f"Нарушение внешнего ключа: {original_error_str}",
-                    "field_info": field_info
-                }
-            return {
-                "success": False,
-                "error_type": "integrity_error",
-                "message": f"Ошибка целостности данных: {original_error_str}"
-            }
+            raise AppBaseException(message=str(e.orig), status_code=404)
         except Exception as e:
-            return {
-                "success": False,
-                "error_type": "database_error",
-                "message": f"Ошибка базы данных при обновлении: {str(e)}"
-            }
+            raise AppBaseException(message=str(e), status_code=405)
 
     @classmethod
     def _extract_field_info_from_error(cls, error_message: str) -> dict:
@@ -335,6 +310,8 @@ class Repository(metaclass=RepositoryMeta):
         stmt = cls.get_query(model).where(model.id == id)
         result = await session.execute(stmt)
         obj = result.scalar_one_or_none()
+        if not obj:
+            raise AppBaseException(message="editing records is not found", status_code=404)
         return obj
 
     @classmethod

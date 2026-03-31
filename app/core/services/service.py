@@ -267,7 +267,7 @@ class Service(metaclass=ServiceMeta):
         return result
 
     @classmethod
-    async def c(cls, id: Union[int, Any], data: ModelType,
+    async def patch(cls, id: Union[int, Any], data: ModelType,
                     repository: Type[Repository],
                     model: ModelType,
                     background_tasks: BackgroundTasks,
@@ -279,17 +279,15 @@ class Service(metaclass=ServiceMeta):
         if isinstance(id, int):
             # Получаем существующую запись
             existing_item = await repository.get_by_id(id, model, session)
-            if not existing_item:
-                return {'success': False, 'message': f'Редактируемая запись {id} не найдена на сервере',
-                        'error_type': 'not_found'}
         else:
             # вместо id передан instance
             existing_item = id
         data_dict = data.model_dump(exclude_unset=True)
-        if not data_dict:
-            return {'success': False, 'message': 'Нет данных для обновления', 'error_type': 'no_data'}
+        # if not data_dict:
+        #     return {'success': False, 'message': 'Нет данных для обновления', 'error_type': 'no_data'}
         # Выполняем обновление
         result = await repository.patch(existing_item, data_dict, session)
+        return result
         if result.get('success'):
             # запись успешно обновлена
             await cls.run_backgound_task(id, background_tasks, False, repository, model, session)
