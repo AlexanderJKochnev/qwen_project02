@@ -284,7 +284,7 @@ class BaseRouter:
                                          ge=paging.get('min', 1),
                                          le=paging.get('max', 1000)),
                   session: AsyncSession = Depends(get_db)
-                  ) -> PaginatedResponse:
+                  ):
         """
             Получение постранично всех записей после заданной даты.
             По умолчанию задана дата - 2 года от сейчас
@@ -298,7 +298,8 @@ class BaseRouter:
         for key in response:
             print(f'{key=}, {type(key)=}')
         result = self.paginated_response(**response)
-        logger.info('результат получен в эндпойнт и сечес будет возвращен')
+        print("====================",result)
+        logger.info('результат получен в эндпойнт и сейчес будет возвращен')
         return result
 
     async def get_all(
