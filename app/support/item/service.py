@@ -550,7 +550,7 @@ class ItemService(Service):
             cls, background_tasks: BackgroundTasks, session: AsyncSession, force_all: bool = False
     ):
         """
-        Запускает фоновое обслуживание индексов.
+        Запускает фоновое обслуживание индексов. через endpoint
         """
         # Если мы вызвали это после изменений в БД, сначала пушим их
         await session.commit()

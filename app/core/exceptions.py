@@ -4,7 +4,14 @@ from fastapi import HTTPException, status
 import logging
 
 
+class AppBaseException(Exception):
+    def __init__(self, message: str, status_code: int = 400):
+        self.message = message
+        self.status_code = status_code
+
+
 def exception_to_http(e: Exception) -> HTTPException:
+    """ удалить"""
     error_message = str(e)
     ERROR_MAPPING = {"UNKNOWN_ERROR:": (status.HTTP_500_INTERNAL_SERVER_ERROR, True),
                      "DATABASE_ERROR:": (status.HTTP_500_INTERNAL_SERVER_ERROR, True),

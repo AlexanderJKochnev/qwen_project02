@@ -250,7 +250,7 @@ class Repository(metaclass=RepositoryMeta):
                     setattr(obj, k, v)
             await session.flush()
             # await session.refresh(data) - не надо - дает ошибки
-            return {"success": True, "data": obj}
+            return {"success": True, "data": obj.to_dict()}
         except IntegrityError as e:
             error_str = str(e.orig).lower()
             original_error_str = str(e.orig)
@@ -790,8 +790,8 @@ class Repository(metaclass=RepositoryMeta):
                                  start_id: int, path_str: str, skip_keys: set
                                  ) -> int:
         """
-        Синхронизирует search_content у всех Item, связанных с измененной записью.
-        Решает проблему DuplicateAliasError через алиасы.
+            Синхронизирует search_content у всех Item, связанных с измененной записью.
+            Решает проблему DuplicateAliasError через алиасы.
         """
         # 1. Получаем классы моделей
         ItemModel = get_model_by_name('Item')
