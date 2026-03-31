@@ -482,12 +482,13 @@ class Service(metaclass=ServiceMeta):
         path: str = get_search_dependencies(model)
         if not path or path.split('.')[-1].capitalize() != 'Item':
             return
+        logger.warning(f'background_tasks.add_task')
         background_tasks.add_task(
             repository.run_sync_background, start_model=model, start_id=id,
             path_str=path, session_factory=DatabaseManager.session_maker,
             skip_keys=cls.skip_keys
         )
-        return {"status": "ok"}
+        logger.warning("background_tasks.add_task: status: ok")
 
     @classmethod
     async def get_relevance(cls, search: str, model: ModelType,

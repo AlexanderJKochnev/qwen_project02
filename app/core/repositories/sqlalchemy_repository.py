@@ -840,17 +840,18 @@ class Repository(metaclass=RepositoryMeta):
         """
         Фоновая обертка: создает новую сессию и запускает синхронизацию.
         """
+        logger.warning(f'run_sync_background {start_id=}, {path_str=}')
         async with session_factory() as session:
             try:
                 # Получаем саму модель по имени
                 current_model = start_model  # get_model_by_name(start_model_name)
-
+                logger.warning(f'run_sync_backgrounng 1')
                 # Запускаем наш отлаженный метод
                 updated_count = await cls.sync_items_by_path(
                     session=session, current_model=current_model, start_id=start_id, path_str=path_str,
                     skip_keys=skip_keys
                 )
-
+                logger.warning(f'run_sync_background 2')
                 # Фиксируем изменения
                 await session.commit()
                 logger.info(
