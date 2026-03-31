@@ -401,7 +401,7 @@ class Repository(metaclass=RepositoryMeta):
             result = await session.execute(stmt)
             return result.scalar_one_or_none()
         except Exception as e:
-            raise Exception(f'repo.get_by_field: {field_name=} {field_value=}, {model.__name__=}, {e}')
+            raise AppBaseException(message=str(e), status_code=404)
 
     @classmethod
     async def get_by_fields(cls, filter: dict, model: ModelType, session: AsyncSession):
@@ -423,10 +423,7 @@ class Repository(metaclass=RepositoryMeta):
             # возвращает  instance
             return result.scalar_one_or_none()
         except Exception as e:
-            if hasattr(model, '__name__'):
-                raise Exception(f'repo.get_by_fields: {filter=}, {model.__name__=}, {e}')
-            else:
-                raise Exception(f'repo.get_by_fields: {filter=}, {model=}, {e}')
+            raise AppBaseException(message=str(e), status_code=404)
 
     @classmethod
     async def get_count(cls, after_date: datetime, model: ModelType, session: AsyncSession) -> int:
@@ -512,7 +509,7 @@ class Repository(metaclass=RepositoryMeta):
             records = result.scalars().all()
             return (records if records else [], total)
         except Exception as e:
-            logger.error(f'ошибка search: {e}')
+            raise AppBaseException(message=str(e), status_code=404)
 
     @classmethod
     async def search_all(
@@ -543,7 +540,7 @@ class Repository(metaclass=RepositoryMeta):
             records = result.scalars().all()
             return records
         except Exception as e:
-            print(f'{e}')
+            raise AppBaseException(message=str(e), status_code=404)
 
     @classmethod
     async def get_list_paging(cls, skip: int, limit: int,
@@ -594,7 +591,7 @@ class Repository(metaclass=RepositoryMeta):
         try:
             await session.execute(update(model), data)
         except Exception as e:
-            logger.error(f'bulf_update.error: {model.__name__}. {e}')
+            raise AppBaseException(message=str(e), status_code=404)
 
     @classmethod
     async def search_geans(cls, search: str, relevance: Label,
@@ -627,8 +624,7 @@ class Repository(metaclass=RepositoryMeta):
             items = await cls.get_greenlet(model, matching, session)
             return items, total_count
         except Exception as e:
-            logger.error(f'search_geans.error: {e}')
-            raise Exception(f'search_geans.error: {e}')
+            raise AppBaseException(message=f'search_geans.error; {str(e)}', status_code=404)
 
     @classmethod
     async def search_geans_all(
@@ -660,9 +656,12 @@ class Repository(metaclass=RepositoryMeta):
             Запрос полного списка с загрузкой связей и пагинацией
             return Tuple[List[instances], int]
         """
-        stmt = (cls.get_query(model).order_by(model.id.asc()))
-        result = await cls.pagination(stmt, skip, limit, session)
-        return result
+        try:
+            stmt = (cls.get_query(model).order_by(model.id.asc()))
+            result = await cls.pagination(stmt, skip, limit, session)
+            return result
+        except Exception as e:
+            raise AppBaseException(message=f'get_full_with_pagination.error; {str(e)}', status_code=404)
 
     @classmethod
     async def get_full(cls, model: ModelType, session: AsyncSession, ) -> list:
@@ -670,9 +669,12 @@ class Repository(metaclass=RepositoryMeta):
             Запрос полного списка с загрузкой связей NO PAGINATION - ОСТОРОЖНО МОЖЕТ БЫТЬ ОЧЕНЬ БОЛЬШИМ
             return List[instance]
         """
-        stmt = cls.get_query(model).order_by(model.id.asc())
-        result = await cls.nonpagination(stmt, session)
-        return result
+        try:
+            stmt = cls.get_query(model).order_by(model.id.asc())
+            result = await cls.nonpagination(stmt, session)
+            return result
+        except Exception as e:
+            raise AppBaseException(message=f'get_full.error; {str(e)}', status_code=404)
 
     @classmethod
     async def search_fts(cls, search: str, skip: int, limit: int,
@@ -699,8 +701,7 @@ class Repository(metaclass=RepositoryMeta):
             items = result.scalars().all()
             return items, total_count
         except Exception as e:
-            logger.error(f'search_fts.error: {e}')
-            raise Exception(f'search_fts.error: {e}')
+            raise AppBaseException(message=f'search_fts.error; {str(e)}', status_code=404)
 
     @classmethod
     async def search_fts_all(cls, search: str, model: ModelType, session: AsyncSession) -> Tuple[Any, int]:
@@ -717,8 +718,7 @@ class Repository(metaclass=RepositoryMeta):
             items = result.scalars().all()
             return items
         except Exception as e:
-            logger.error(f'search_fts.error: {e}')
-            raise Exception(f'search_fts.error: {e}')
+            raise AppBaseException(message=f'search_fts_all.error; {str(e)}', status_code=404)
 
     @classmethod
     async def search_by_conditions(cls, filter: dict, model: ModelType, session: AsyncSession, **kwargs):
@@ -742,10 +742,7 @@ class Repository(metaclass=RepositoryMeta):
             result = await session.execute(stmt)
             return result.scalars().all()
         except Exception as e:
-            if hasattr(model, '__name__'):
-                raise Exception(f'repo.get_by_fields: {filter=}, {model.__name__=}, {e}')
-            else:
-                raise Exception(f'repo.get_by_fields: {filter=}, {model=}, {e}')
+            raise AppBaseException(message=f'search_by_conditions.error; {str(e)}', status_code=404)
 
     @classmethod
     async def search_by_list_value_exact(cls, filter: List[Any], field: str, model: ModelType, session: AsyncSession,
@@ -753,13 +750,13 @@ class Repository(metaclass=RepositoryMeta):
         """
              фильтр по нескольким значениям поля (полное совпадение)
         """
-        column = getattr(model, field)
-        stmt = cls.get_query(model).where(column.in_(filter))
-        result = await session.execute(stmt)
-        return result.scalars().all()
-
-    from sqlalchemy import select, inspect
-    from sqlalchemy.ext.asyncio import AsyncSession
+        try:
+            column = getattr(model, field)
+            stmt = cls.get_query(model).where(column.in_(filter))
+            result = await session.execute(stmt)
+            return result.scalars().all()
+        except Exception as e:
+            raise AppBaseException(message=f'search_by_list_value_exact.error; {str(e)}', status_code=404)
 
     @classmethod
     async def sync_items_by_path(cls,
@@ -770,65 +767,68 @@ class Repository(metaclass=RepositoryMeta):
             Синхронизирует search_content у всех Item, связанных с измененной записью.
             Решает проблему DuplicateAliasError через алиасы.
         """
-        # 1. Получаем классы моделей
-        ItemModel = get_model_by_name('Item')
-        DrinkModel = get_model_by_name('Drink')
+        try:
+            # 1. Получаем классы моделей
+            ItemModel = get_model_by_name('Item')
+            DrinkModel = get_model_by_name('Drink')
 
-        # Используем алиасы, чтобы SQLAlchemy не путалась при джоинах
-        target_drink = aliased(DrinkModel)
-        target_item = aliased(ItemModel)
+            # Используем алиасы, чтобы SQLAlchemy не путалась при джоинах
+            target_drink = aliased(DrinkModel)
+            target_item = aliased(ItemModel)
 
-        # 2. Строим запрос от текущей модели (Category) к целям (Item, Drink)
-        stmt = select(target_item, target_drink).select_from(current_model)
+            # 2. Строим запрос от текущей модели (Category) к целям (Item, Drink)
+            stmt = select(target_item, target_drink).select_from(current_model)
 
-        # 3. Динамическая цепочка JOIN по метаданным
-        active_model_class = current_model
-        path_parts = path_str.split('.')
+            # 3. Динамическая цепочка JOIN по метаданным
+            active_model_class = current_model
+            path_parts = path_str.split('.')
 
-        for part in path_parts:
-            mapper = inspect(active_model_class)
-            # Находим имя relationship
-            rel_key = next(
-                (r.key for r in mapper.relationships if r.mapper.class_.__name__.lower() == part.lower()), None
-            )
+            for part in path_parts:
+                mapper = inspect(active_model_class)
+                # Находим имя relationship
+                rel_key = next(
+                    (r.key for r in mapper.relationships if r.mapper.class_.__name__.lower() == part.lower()), None
+                )
 
-            if not rel_key:
-                raise AttributeError(f"Связь '{part}' не найдена в модели {active_model_class.__name__}")
+                if not rel_key:
+                    raise AttributeError(f"Связь '{part}' не найдена в модели {active_model_class.__name__}")
 
-            # Определяем, к какому классу прыгаем
-            next_model_class = getattr(active_model_class, rel_key).property.mapper.class_
+                # Определяем, к какому классу прыгаем
+                next_model_class = getattr(active_model_class, rel_key).property.mapper.class_
 
-            # Подменяем на алиас, если дошли до Drink или Item
-            if next_model_class == DrinkModel:
-                step_target = target_drink
-            elif next_model_class == ItemModel:
-                step_target = target_item
-            else:
-                step_target = next_model_class
+                # Подменяем на алиас, если дошли до Drink или Item
+                if next_model_class == DrinkModel:
+                    step_target = target_drink
+                elif next_model_class == ItemModel:
+                    step_target = target_item
+                else:
+                    step_target = next_model_class
 
-            # Выполняем JOIN через атрибут отношения
-            stmt = stmt.join(step_target, getattr(active_model_class, rel_key))
-            active_model_class = next_model_class
+                # Выполняем JOIN через атрибут отношения
+                stmt = stmt.join(step_target, getattr(active_model_class, rel_key))
+                active_model_class = next_model_class
 
-        # 4. Фильтруем по ID и выполняем
-        stmt = stmt.where(current_model.id == start_id)
-        result = await session.execute(stmt)
-        rows = result.all()
+            # 4. Фильтруем по ID и выполняем
+            stmt = stmt.where(current_model.id == start_id)
+            result = await session.execute(stmt)
+            rows = result.all()
 
-        if not rows:
-            return 0
+            if not rows:
+                return 0
 
-        # 5. Обработка и обновление
-        processed_drinks = {}
-        for item_obj, drink_obj in rows:
-            if drink_obj.id not in processed_drinks:
-                # Логика как в reindex_items
-                drink_dict = drink_obj.to_dict()
-                processed_drinks[drink_obj.id] = extract_text_ultra_fast(drink_dict, skip_keys).lower()
+            # 5. Обработка и обновление
+            processed_drinks = {}
+            for item_obj, drink_obj in rows:
+                if drink_obj.id not in processed_drinks:
+                    # Логика как в reindex_items
+                    drink_dict = drink_obj.to_dict()
+                    processed_drinks[drink_obj.id] = extract_text_ultra_fast(drink_dict, skip_keys).lower()
 
-            item_obj.search_content = processed_drinks[drink_obj.id]
+                item_obj.search_content = processed_drinks[drink_obj.id]
 
-        # 6. Принудительная синхронизация с БД
-        await session.flush()
+            # 6. Принудительная синхронизация с БД
+            await session.flush()
 
-        return len(rows)
+            return len(rows)
+        except Exception as e:
+            raise AppBaseException(message=f'sync_items_by_path.error; {str(e)}', status_code=404)
