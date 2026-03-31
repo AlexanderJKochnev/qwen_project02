@@ -480,7 +480,7 @@ class Service(metaclass=ServiceMeta):
             2. если да - отправляет задачу на обновление поля items.search_content
         """
         logger.warning('background_tasks.add_task 0')
-        if model.__name__ != 'Item':
+        if model.__name__ == 'Item':
             return
         logger.warning('background_tasks.add_task 1')
         path: str = get_search_dependencies(model)
