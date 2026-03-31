@@ -286,7 +286,7 @@ class Service(metaclass=ServiceMeta):
         data_dict = data.model_dump(exclude_unset=True)
         # Выполняем обновление
         result = await repository.patch(existing_item, data_dict, session)
-        cls.pre_run_background_task(id, background_tasks, repository, model)
+        await cls.pre_run_background_task(id, background_tasks, repository, model)
         return result
 
     @classmethod
