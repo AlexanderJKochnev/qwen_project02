@@ -832,3 +832,33 @@ class Repository(metaclass=RepositoryMeta):
             return len(rows)
         except Exception as e:
             raise AppBaseException(message=f'sync_items_by_path.error; {str(e)}', status_code=404)
+
+    @classmethod
+    async def run_sync_background(
+            cls, start_model: ModelType, start_id: int, path_str: str, session_factory, skip_keys: set
+    ):
+        """
+        Фоновая обертка: создает новую сессию и запускает синхронизацию.
+        """
+        async with session_factory() as session:
+            try:
+                # Получаем саму модель по имени
+                current_model = start_model  # get_model_by_name(start_model_name)
+
+                # Запускаем наш отлаженный метод
+                updated_count = await cls.sync_items_by_path(
+                    session=session, current_model=current_model, start_id=start_id, path_str=path_str,
+                    skip_keys=skip_keys
+                )
+
+                # Фиксируем изменения
+                await session.commit()
+                logger.info(
+                    f"Background Sync: Обновлено {updated_count} записей Item для {start_model.__name__}:{start_id}"
+                )
+
+            except Exception as e:
+                await session.rollback()
+                error_msg = f"Background Sync Error for {start_model.__name__}:{start_id}: {e}"
+                logger.error(error_msg)
+                # просто информируем - не прерываем работу?

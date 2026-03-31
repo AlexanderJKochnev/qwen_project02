@@ -278,70 +278,28 @@ class Service(metaclass=ServiceMeta):
         """
         if isinstance(id, int):
             # Получаем существующую запись
-            existing_item = await repository.get_by_id(id, model, session)
+            existing_item: ModelType = await repository.get_by_id(id, model, session)
         else:
             # вместо id передан instance
-            existing_item = id
+            existing_item: ModelType = id
+            id = existing_item.id
         data_dict = data.model_dump(exclude_unset=True)
-        # if not data_dict:
-        #     return {'success': False, 'message': 'Нет данных для обновления', 'error_type': 'no_data'}
         # Выполняем обновление
         result = await repository.patch(existing_item, data_dict, session)
+        cls.pre_run_background_task(id, background_tasks, repository, model)
         return result
-        if result.get('success'):
-            # запись успешно обновлена
-            await cls.run_backgound_task(id, background_tasks, False, repository, model, session)
-        else:
-            await session.rollback()
-        # Обрабатываем результат
-        if isinstance(result, dict):
-            if result.get('success'):
-                await cls.run_backgound_task(id, background_tasks, False, repository, model, session)
-                return {'success': True, 'data': result.get('data'), 'message': f'Запись {id} успешно обновлена'}
-            else:
-                error_type = result.get('error_type')
-                message = result.get('message', 'Неизвестная ошибка')
-                field_info = result.get('field_info')
-
-                if error_type == 'unique_constraint_violation':
-                    return {'success': False, 'message': message,
-                            'error_type': 'unique_constraint_violation', 'field_info': field_info}
-                elif error_type == 'foreign_key_violation':
-                    return {'success': False, 'message': message,
-                            'error_type': 'foreign_key_violation', 'field_info': field_info}
-                elif error_type == 'update_failed':
-                    return {'success': False, 'message': message,
-                            'error_type': 'update_failed'}
-                elif error_type == 'integrity_error':
-                    return {'success': False, 'message': message,
-                            'error_type': 'integrity_error', 'field_info': field_info}
-                elif error_type == 'database_error':
-                    return {'success': False, 'message': message,
-                            'error_type': 'database_error'}
-                else:
-                    return {'success': False, 'message': message,
-                            'error_type': error_type}
-        else:
-            return {'success': False, 'message': f'Неизвестная ошибка при обновлении записи {id}',
-                    'error_type': 'unknown_error'}
 
     @classmethod
     async def delete(cls, id: int, model: ModelType, repository: Type[Repository],
                      background_tasks: BackgroundTasks,
                      session: AsyncSession) -> bool:
         instance = await repository.get_by_id(id, model, session)
-        if instance is None:
-            raise ValueError(f'instanse with {id=} not found')
-        try:
-            resp = await repository.delete(instance, session)
-            if resp:
-                await cls.run_backgound_task(id, background_tasks, True, repository, model, session)
-        except IntegrityError:
-            await session.rollback()  # Откат при конфликте связей
-            raise PermissionError(f"Cannot delete record {id} of {model.__name__}: related data exists")
-        except Exception as e:
-            await session.rollback()
-            raise Exception(f'{model.__name__}, {id}, {e}')
+        resp = await repository.delete(instance, session)
+        # здесь НЕ запускаем pre_run_background_task потому что
+        # если есть зависимые записи - удалить не даст, а если нет - то search_source обновлять не где
+        # patch достаточно
+        # cls.pre_run_background_task(id, background_tasks, repository, model)
+        return resp
 
     @classmethod
     async def search(cls, search: str, page: int, page_size: int,
@@ -512,40 +470,24 @@ class Service(metaclass=ServiceMeta):
         return res == 'Item'
 
     @classmethod
-    async def invalidate_search_index(cls, id: int, repository: Type[Repository],
-                                      model: ModelType, session: AsyncSession, **kwargs):
+    async def pre_run_background_task(cls, id: int, background_tasks: BackgroundTasks,
+                                      repository: Type[Repository],
+                                      model: ModelType):
         """
-        СТАРАЯ ВЕРСИЯ УДАЛИТЬ В МАЕ 2027
-        сбрасывает значение поля search_content основной таблиы в случае изменений в зависимых таблицах
-        это часть стратегии поиска
+            1. проверяет является ли модель привязанной к items, но items
+            2. если да - отправляет задачу на обновление поля items.search_content
         """
+        if model.__name__ != 'Item':
+            return
         path: str = get_search_dependencies(model)
-        if not path:
+        if not path or path.split('.')[-1].capitalize() != 'Item':
             return
-        if path.split('.')[-1].capitalize() != 'Item':
-            return
-        try:
-            # item = get_model_by_name('Item')
-            # await repository.invalidate_search_index(id, item, model, path, session)
-            result = await repository.sync_items_by_path(session, model, id, path, cls.skip_keys)
-            logger.warning(f'updated {result} записей в Items')
-        except Exception as e:
-            logger.error(f'{model.__name__} invalidate_search_index error: {e}')
-
-    @classmethod
-    async def run_backgound_task(
-            cls, id: int, background_tasks: BackgroundTasks, flush: bool, repository: Type[Repository],
-            model: ModelType, session: AsyncSession
-    ):
-
-        #    запускает background_tasks для переиндексации
-
-        if flush:
-            await session.flush()
-        await cls.invalidate_search_index(id, repository, model, session)
-        await session.commit()
-        background_tasks.add_task(cls.run_reindex_worker, model.__name__, DatabaseManager.session_maker)
-
+        background_tasks.add_task(
+            repository.run_sync_background, start_model=model, start_id=id,
+            path_str=path, session_factory=DatabaseManager.session_maker,
+            skip_keys=cls.skip_keys
+        )
+        return {"status": "ok"}
 
     @classmethod
     async def get_relevance(cls, search: str, model: ModelType,
