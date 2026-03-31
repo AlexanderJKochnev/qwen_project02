@@ -297,10 +297,10 @@ class BaseRouter:
         # type_checking(response, 'get')
         for key in response:
             print(f'{key=}, {type(key)=}')
-        result = self.paginated_response(**response)
-        print("====================",result)
+        # result = self.paginated_response(**response)
+        # print("====================",result)
         logger.info('результат получен в эндпойнт и сейчес будет возвращен')
-        return result
+        return response
 
     async def get_all(
             self,
