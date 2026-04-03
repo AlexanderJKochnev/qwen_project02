@@ -286,27 +286,33 @@ networks:
   nginx_gateway_shared_network:
     driver: bridge
     external: true
-  ollama_network:
-    driver: bridge
-    external: true
-    name: ollama_ollama_network
-  redis_network:
-    driver: bridge
-    external: true
-    name: ollama_redis_network
-  searxng_network:
-    driver: bridge
-    external: true
-    name: ollama_searxng_network
+  # ollama_network:
+  #   driver: bridge
+  #   external: true
+  #   name: ollama_ollama_network
+  # redis_network:
+  #   driver: bridge
+  #   external: true
+  #  name: ollama_redis_network
+  # searxng_network:
+  #   driver: bridge
+  #   external: true
+  #   name: ollama_searxng_network
   vllm_network:
-    driver: bridge
-    external: true
     name: vllm_network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${SUBNET_VLLM}
   clickhouse_network:
-    driver: bridge
-    external: true
     name: clickhouse_network
-  clickhousepg_network:
     driver: bridge
-    external: true
+    ipam:
+      config:
+        - subnet: ${SUBNET_CLICK}
+  clickhousepg_network:
     name: clickhousepg_network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${SUBNET_CLICKPG}

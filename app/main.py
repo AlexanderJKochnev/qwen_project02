@@ -85,7 +85,7 @@ async def lifespan(app: FastAPI):
     # await init_db_extensions()  # подключение расщирений Postgresql
     logger.success("Lifespan: расширения для PostgreSQL установлены")
     # CLICKHOUSE
-    app.state.ch_client = await ch_manager.connect()
+    # app.state.ch_client = await ch_manager.connect()
     # await redis_manager.connect(host="redis", port=6379)  # запускаем redis
     # logger.success("Lifespan: Redis запущен, соединение установлено")
     # ollama_manager = get_ollama_manager()
@@ -103,7 +103,7 @@ async def lifespan(app: FastAPI):
     #     pass
     await DatabaseManager.engine.dispose()
     await MongoDBManager.disconnect()
-    await ch_manager.close()
+    # await ch_manager.close()
     # await redis_manager.disconnect()
 
 
