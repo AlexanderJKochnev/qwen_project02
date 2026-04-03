@@ -103,9 +103,9 @@ services:
         soft: 65535
         hard: 65535
     extra_hosts:
-      - "redis:${IP_REDIS}"
-      - "searxng:${IP_SEARXNG}"
-      - "ollama:${IP_OLLAMA}"
+      # - "redis:${IP_REDIS}"
+      # - "searxng:${IP_SEARXNG}"
+      # - "ollama:${IP_OLLAMA}"
       - "postgres:${IP_POSTGRES}"
     deploy:
       resources:
@@ -118,9 +118,9 @@ services:
     networks:
       # - postgres_network  # расскомментировать для теста
       - pgbouncer_network # Для связи с pgbouncer
-      - redis_network    # Для связи с Nginx
-      - ollama_network
-      - searxng_network
+      # - redis_network    # Для связи с redis
+      # - ollama_network
+      # - searxng_network
       - mongodb_network
       - preact_network
       - nginx_gateway_shared_network

@@ -84,7 +84,18 @@ uid=100(nginx) gid=101(nginx) groups=101(nginx),82(www-data),101(nginx)
 в docker compose в секцию сервиса добавить 
     user: "100:101"
 
+ls -ld /home/alex/dockers/test/pg_data /home/alex/dockers/test/mongodb_data
+drwxr-xr-x  3 999 root 4096 Apr  2 16:16 /home/alex/dockers/test/mongodb_data
+drwx------ 19  70 root 4096 Apr  2 16:42 /home/alex/dockers/test/pg_data
+alex@debby13:/mnt/hdd_data$ ls -ld /home/alex/dockers/test/pg_data /home/alex/dockers/test/mongodb_data
+drwxr-xr-x  3 999 root 4096 Apr  2 16:16 /home/alex/dockers/test/mongodb_data
+drwx------ 19  70 root 4096 Apr  2 16:42 /home/alex/dockers/test/pg_data
 
+docker run --rm ghcr.io/alexanderjkochnev/postgres:17-alpine id postgres
+uid=70(postgres) gid=70(postgres) groups=70(postgres),70(postgres)
+
+docker run --rm ghcr.io/alexanderjkochnev/mongo:4.4.20 id mongodb 2>/dev/null || docker run --rm ghcr.io/alexanderjkochnev/mongo:4.4.20 id root
+uid=999(mongodb) gid=999(mongodb) groups=999(mongodb)
 
 
 
