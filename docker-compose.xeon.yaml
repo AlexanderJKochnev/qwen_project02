@@ -169,7 +169,7 @@ services:
           memory: 2G
     networks:
       mongodb_network:
-        ipv4_address: ${IP_MONGO}
+        # ipv4_address: ${IP_MONGO}
 
   preact_front:
     logging:
