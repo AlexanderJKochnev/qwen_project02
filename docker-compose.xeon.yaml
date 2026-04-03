@@ -302,7 +302,6 @@ networks:
     name: vllm_network
     driver: bridge
     external: true
-    name: vllm_network
   clickhouse_network:
     name: clickhouse_network
     driver: bridge
