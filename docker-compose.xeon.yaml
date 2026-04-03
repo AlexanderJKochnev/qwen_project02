@@ -301,18 +301,13 @@ networks:
   vllm_network:
     name: vllm_network
     driver: bridge
-    ipam:
-      config:
-        - subnet: ${SUBNET_VLLM}
+    external: true
+    name: vllm_network
   clickhouse_network:
     name: clickhouse_network
     driver: bridge
-    ipam:
-      config:
-        - subnet: ${SUBNET_CLICK}
+    external: true
   clickhousepg_network:
     name: clickhousepg_network
     driver: bridge
-    ipam:
-      config:
-        - subnet: ${SUBNET_CLICKPG}
+    external: true
