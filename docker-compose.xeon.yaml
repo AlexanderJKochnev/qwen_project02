@@ -40,8 +40,9 @@ services:
     expose:
       - "${POSTGRES_PORT}"
     volumes:
-      - ./pg_data:/var/lib/postgresql/data
-      - ./pg_dump:/tmp
+      - ${BIND_VOLUMES}/${COMPOSE_PROJECT_NAME}_pg_data:/var/lib/postgresql/data
+      # - ./pg_data:/var/lib/postgresql/data
+      #- ./pg_dump:/tmp
     healthcheck:
       test: |
         sh -c 'pg_isready -h localhost -p ${POSTGRES_PORT} -U ${POSTGRES_USER} -d ${POSTGRES_DB}'

@@ -97,15 +97,68 @@ uid=70(postgres) gid=70(postgres) groups=70(postgres),70(postgres)
 docker run --rm ghcr.io/alexanderjkochnev/mongo:4.4.20 id mongodb 2>/dev/null || docker run --rm ghcr.io/alexanderjkochnev/mongo:4.4.20 id root
 uid=999(mongodb) gid=999(mongodb) groups=999(mongodb)
 
+## ПЕРЕНОС С exfat на btrfs COURSE OF ACTIONS
+1. где сейчас данные volumes (см docker compose)
+2. Содержимое fstab: cat /etc/fstab | grep btrfs
+3. Текущее состояние монтирования:
+   1. mount | grep btrfs 
+   2. df -h /var/lib/docker   # если docker на btrfs
+4. Путь к данным ClickHouse на хосте: 
+5. ОБЩИЙ ШАБЛОН КОМАНД:
+# 1. Остановка контейнера
+docker-compose stop clickhouse
 
+# 2. Создание временной директории для бэкапа
+sudo mkdir -p /mnt/hdd_data/tmp_clickhouse_migration
 
+# 3. Копирование существующих данных во временное место (с сохранением атрибутов)
+sudo cp -a --reflink=always /mnt/hdd_data/volumes/clickhouse/ch_data/* /mnt/hdd_data/tmp_clickhouse_migration/
+# Сравнение для того что бы проверить полноту и корректность копирования
+du -sh /mnt/hdd_data/volumes/clickhouse/ch_data/
+du -sh /mnt/hdd_data/tmp_clickhouse_migration/
+ls -la /mnt/hdd_data/volumes/clickhouse/ch_data/
+ls -la /mnt/hdd_data/tmp_clickhouse_migration/
 
+# 4. Удаление старой директории (после проверки копирования!)
+sudo rm -rf /mnt/hdd_data/volumes/clickhouse/ch_data
 
+# 5. Создание subvolume на btrfs
+    # Создаем subvolume в том же месте
+sudo btrfs subvolume create /mnt/hdd_data/volumes/clickhouse/ch_data
 
+    # Проверяем создание
+sudo btrfs subvolume list /mnt/hdd_data | grep clickhouse
 
-11. sudo mkdir -p /var/lib/docker/volumes
-12. sudo chmod 701 /var/lib/docker/volumes
-13. sudo mount --bind /mnt/hdd_data/volumes /var/lib/docker/volumes
+## проверка что объект является subvolume
+    sudo btrfs subvolume show /mnt/hdd_data/volumes/clickhouse/ch_data
 
+# 6. Монтирование subvolume в старую директорию (ОБЯЗАТЕЛЬНО!) 
+sudo mount -t btrfs -o subvol=volumes/clickhouse/ch_data /dev/nvme1n1p1 /mnt/hdd_data/volumes/clickhouse/ch_data
 
+# 7. Копирование данных из временной папки в subvolume (с reflink!)
+sudo cp -a --reflink=always /mnt/hdd_data/tmp_clickhouse_migration/* /mnt/hdd_data/volumes/clickhouse/ch_data/
 
+# 8. Проверка и исправление прав (UID=101 для ClickHouse) НЕ ДЕЛАТЬ - НЕ МЕШАТЬ DOCKER
+    # ClickHouse внутри контейнера работает от UID 101:GID 101 
+sudo chown -R 101:101 /mnt/hdd_data/volumes/clickhouse/ch_data
+
+    # Проверяем права (НЕТ СМЫСЛА
+ls -la /mnt/hdd_data/volumes/clickhouse/ch_data
+
+# 9. Добавление в fstab для автоматического монтирования
+sudo nano /etc/fstab
+UUID=42ca1166-9334-4fc4-8405-c89ebcd3030f /mnt/hdd_data/volumes/clickhouse/ch_data btrfs subvol=volumes/clickhouse/ch_data,defaults,noatime 0 0
+
+# 9.1. Применение изменений
+# Применяем изменения из fstab
+sudo systemctl daemon-reload
+sudo mount -a
+
+# Проверяем, что subvolume примонтирован правильно
+mount | grep "clickhouse/ch_data"
+
+# 10. Запуск контейнера
+docker-compose up -d
+
+# 11. Если всё работает, удалите временную папку
+sudo rm -rf /mnt/hdd_data/tmp_clickhouse_migration
