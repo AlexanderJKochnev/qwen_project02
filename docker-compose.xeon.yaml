@@ -42,7 +42,7 @@ services:
     volumes:
       - ${BIND_VOLUMES}/${COMPOSE_PROJECT_NAME}_pg_data:/var/lib/postgresql/data
       # - ./pg_data:/var/lib/postgresql/data
-      #- ./pg_dump:/tmp
+      # - ./pg_dump:/tmp
     healthcheck:
       test: |
         sh -c 'pg_isready -h localhost -p ${POSTGRES_PORT} -U ${POSTGRES_USER} -d ${POSTGRES_DB}'
@@ -96,9 +96,9 @@ services:
       CH_HOST: clickhouse
       CH_PORT: 8123
     volumes:
-      - ./templates:/app/templates
-      - ./migration_volume:/app/app/migration/versions
-      - ./upload_volume:/app/upload_volume
+      - ${BIND_VOLUMES}/${COMPOSE_PROJECT_NAME}_templates:/app/templates
+      - ${BIND_VOLUMES}/${COMPOSE_PROJECT_NAME}_migration_volume:/app/app/migration/versions
+      - ${BIND_VOLUMES}/${COMPOSE_PROJECT_NAME}_upload_volume:/app/upload_volume
     ulimits:
       nofile:
         soft: 65535
@@ -144,8 +144,8 @@ services:
     expose:
       - "${MONGO_INN_PORT}"
     volumes:
-      - ./mongodb_data:/data/db
-      - ./mongo/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ${BIND_VOLUMES}/${COMPOSE_PROJECT_NAME}_mongodb_data:/data/db
+      - ${BIND_VOLUMES}/${COMPOSE_PROJECT_NAME}_mongo/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     command: >
       mongod
       --bind_ip_all
