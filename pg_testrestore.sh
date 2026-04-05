@@ -2,7 +2,7 @@
 # Имя сервиса из docker-compose
 SERVICE_NAME="test-wine_host-1"
 # Имя пользователя БД (замените, если отличается)
-DB_USER="wine_test"
+DB_USER="wine"
 # Имя файла бэкапа
 # BACKUP_NAME="pg_backup_$(date +%Y%m%d_%H%M%S).sql"
 BACKUP_NAME="pg_backup.sql.gz"
