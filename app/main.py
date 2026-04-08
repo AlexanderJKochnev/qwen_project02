@@ -96,17 +96,17 @@ async def lifespan(app: FastAPI):
     app.state.ch_client = await ch_manager.connect()
     #  app.state.ch_client = global_ch_manager.client
     logger.success("✅ ClickHouse connected")
-    # global _embedding_service
-    # _embedding_service = EmbeddingService()
-    # status = _embedding_service.get_status()
-    # print(f"Embedding service status: {status}")
+    global _embedding_service
+    _embedding_service = EmbeddingService()
+    status = _embedding_service.get_status()
+    print(f"Embedding service status: {status}")
 
     # Создание таблицы
-    # repo = BeverageRepository(app.state.ch_client)
-    # await repo.ensure_table()
+    repo = BeverageRepository(app.state.ch_client)
+    await repo.ensure_table()
     # Загружаем только лёгкую Static модель для запросов
     # GPU модель загрузится только при импорте
-    # await hybrid_embeddings.warmup()
+    await hybrid_embeddings.warmup()
     logger.success("✅ Query model loaded (Static, CPU, 50MB)")
 
     logger.info(f"📊 Status: {hybrid_embeddings.get_status()}")
