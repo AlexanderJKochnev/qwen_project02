@@ -31,7 +31,7 @@ class EmbeddingService:
         if not self.distilled_path.exists():
             logger.error(f"Distilled model not found at {self.distilled_path}. "
                          "Please run setup_models.py first and mount the models volume.")
-            raise RuntimeError("Distilled model missing")
+            # raise RuntimeError("Distilled model missing")
 
     def _get_device(self) -> str:
         if torch.cuda.is_available():
