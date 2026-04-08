@@ -42,9 +42,9 @@ services:
     volumes:
       - ${BIND_VOLUMES}/${COMPOSE_PROJECT_NAME}_pg_data:/var/lib/postgresql/data
       # CSV файлы
-      - ${BIND_VOLUMES}/rag_csv:/app/data
-      - ${BIND_VOLUMES}/distill/models:/app/models
-      - ${BIND_VOLUMES}/distill/cache:/app/cache
+      - ${BIND_VOLUMES}/rag_csv:/data
+      - ${BIND_VOLUMES}/distill/models:/models
+      - ${BIND_VOLUMES}/distill/cache:/cache
       # - ./pg_data:/var/lib/postgresql/data
       # - ./pg_dump:/tmp
     healthcheck:
