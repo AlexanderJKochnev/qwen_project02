@@ -1,4 +1,6 @@
 # app.core.config.database.click_async.py
+from typing import Optional
+
 import clickhouse_connect
 from app.core.config.project_config import settings
 from fastapi import Request
@@ -12,12 +14,12 @@ class ClickHouseManager:
         self.port = settings.CH_PORT
         self.user = settings.CH_USER
         self.password = settings.CH_PASSWORD
-        self.client = None
+        self._client: Optional[clickhouse_connect.driver.asyncclient.AsyncClient] = None
 
     async def connect(self):
         # Создаем асинхронный клиент
         # Настройка 'max_connections' важна для FastAPI под нагрузкой
-        self.client = await clickhouse_connect.get_async_client(
+        self._client = await clickhouse_connect.get_async_client(
             host=self.host,
             port=self.port,
             username=self.user,
@@ -27,11 +29,11 @@ class ClickHouseManager:
             # connect_timeout=30,
             # send_receive_timeout=30
         )
-        return self.client
+        return self._client
 
     async def close(self):
-        if self.client:
-            await self.client.close()
+        if self._client:
+            await self._client.close()
 
     @property
     def client(self):
