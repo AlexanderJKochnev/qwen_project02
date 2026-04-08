@@ -1,21 +1,23 @@
 # app.support.clickhouse.dependencies.py
 # app/api/dependencies.py
-from fastapi import Depends
+from fastapi import Request, Depends
 
-from app.core.config.database.click_async import get_ch_client
 from app.support.clickhouse.import_service import ImportService
 from app.support.clickhouse.repository import BeverageRepository
 from app.support.clickhouse.service import EmbeddingService
 
+# Глобальный синглтон для эмбеддингов (создаётся при старте)
+_embedding_service = None
 
-async def get_repository(client=Depends(get_ch_client)) -> BeverageRepository:
+
+async def get_repository(request: Request) -> BeverageRepository:
     """Dependency для репозитория"""
+    client = request.app.state.ch_client
     return BeverageRepository(client)
 
 
 async def get_embedding_service() -> EmbeddingService:
     """Dependency для сервиса эмбеддингов (синглтон)"""
-    from app.support.clickhouse.service import EmbeddingService
     global _embedding_service
     if _embedding_service is None:
         _embedding_service = EmbeddingService()
@@ -23,6 +25,7 @@ async def get_embedding_service() -> EmbeddingService:
 
 
 async def get_import_service(
+    request: Request,
     repo: BeverageRepository = Depends(get_repository),
     embedding: EmbeddingService = Depends(get_embedding_service)
 ) -> ImportService:

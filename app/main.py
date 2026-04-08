@@ -29,6 +29,8 @@ from app.preact.delete.router import DeleteRouter
 from app.preact.handbook.router import HandbookRouter
 from app.preact.patch.router import PatchRouter
 from app.support.api.router import ApiRouter
+from app.support.clickhouse.repository import BeverageRepository
+from app.support.clickhouse.service import EmbeddingService
 # -------ИМПОРТ РОУТЕРОВ----------
 from app.support.gemma.router import GemmaRouter
 from app.support.category.router import CategoryRouter
@@ -94,6 +96,14 @@ async def lifespan(app: FastAPI):
     app.state.ch_client = await ch_manager.connect()
     #  app.state.ch_client = global_ch_manager.client
     logger.success("✅ ClickHouse connected")
+    global _embedding_service
+    _embedding_service = EmbeddingService()
+    status = _embedding_service.get_status()
+    print(f"Embedding service status: {status}")
+
+    # Создание таблицы
+    repo = BeverageRepository(app.state.ch_client)
+    await repo.ensure_table()
     # Загружаем только лёгкую Static модель для запросов
     # GPU модель загрузится только при импорте
     await hybrid_embeddings.warmup()
