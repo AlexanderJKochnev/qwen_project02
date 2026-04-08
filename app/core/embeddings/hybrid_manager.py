@@ -1,7 +1,7 @@
 # app/core/embeddings/hybrid_manager.py
 import asyncio
 import torch
-from typing import List, Optional
+from typing import List
 from sentence_transformers import SentenceTransformer
 from model2vec import StaticModel
 import logging
@@ -54,7 +54,8 @@ class HybridEmbeddingManager:
         if not self.query_model_loaded:
             logger.info("Loading Static query model (CPU, 50MB)...")
             self.query_model = StaticModel.from_pretrained(
-                "multilingual-e5-small-distill256"
+                # "multilingual-e5-small-distill256"
+                "qhoxie/embeddinggemma-model2vec-256d"
             )
             self.query_model_loaded = True
             logger.info("✅ Static query model loaded")

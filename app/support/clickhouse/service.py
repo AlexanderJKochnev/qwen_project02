@@ -62,7 +62,9 @@ class EmbeddingService:
             self._ensure_import_model()
 
             def _encode():
-                return self._import_model.encode(texts, normalize_embeddings=True, batch_size=256).tolist()
+                embeddings = self._import_model.encode(texts, normalize_embeddings=True, batch_size=256).tolist()
+                return [emb[:256].tolist() for emb in embeddings]
+                # return self._import_model.encode(texts, normalize_embeddings=True, batch_size=256).tolist()
         else:
             self._ensure_query_model()
 
