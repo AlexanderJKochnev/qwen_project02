@@ -1,4 +1,10 @@
 # for the memory: rare command in docker
+### полная остановка docker
+sudo systemctl stop docker.socket docker.service
+### проверка статуса
+sudo systemctl status docker.socket
+
+
 
 1. use customized env file:
    1. docker compose --env-file .env.prod up --build -d

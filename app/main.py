@@ -55,11 +55,17 @@ from app.support.vintage.router import VintageConfigRouter, DesignationRouter, C
 from app.support.parcel.router import ParcelRouter, SiteRouter
 from app.support.source.router import SourceRouter
 from app.support.vllm.router import VllmRouter
+# from app.core.config.database.click_async import ClickHouseManager, get_ch_client
+from app.core.embeddings.hybrid_manager import hybrid_embeddings
+from app.support.clickhouse.parsers import PARSERS
+from app.support.clickhouse.parsers.async_importer_with_gpu import AsyncCSVImporter
+from app.support.clickhouse.model import ensure_table_exists
 # from app.arq_worker_routes import router as ArqWorkerRouter
 # from app.support.warehouse.router import WarehouseRouter
 
 
 ch_manager = ClickHouseManager()
+importer = AsyncCSVImporter()
 
 
 @asynccontextmanager
@@ -85,7 +91,18 @@ async def lifespan(app: FastAPI):
     # await init_db_extensions()  # подключение расщирений Postgresql
     logger.success("Lifespan: расширения для PostgreSQL установлены")
     # CLICKHOUSE
-    # app.state.ch_client = await ch_manager.connect()
+    app.state.ch_client = await ch_manager.connect()
+    logger.success("✅ ClickHouse connected")
+    # Загружаем только лёгкую Static модель для запросов
+    # GPU модель загрузится только при импорте
+    await hybrid_embeddings.warmup()
+    logger.success("✅ Query model loaded (Static, CPU, 50MB)")
+
+    logger.info(f"📊 Status: {hybrid_embeddings.get_status()}")
+
+    # Создаём таблицу
+    await ensure_table_exists()
+
     # await redis_manager.connect(host="redis", port=6379)  # запускаем redis
     # logger.success("Lifespan: Redis запущен, соединение установлено")
     # ollama_manager = get_ollama_manager()
@@ -103,7 +120,8 @@ async def lifespan(app: FastAPI):
     #     pass
     await DatabaseManager.engine.dispose()
     await MongoDBManager.disconnect()
-    # await ch_manager.close()
+    hybrid_embeddings.unload_import_model()
+    await ch_manager.close()
     # await redis_manager.disconnect()
 
 

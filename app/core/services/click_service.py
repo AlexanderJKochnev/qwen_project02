@@ -1,6 +1,12 @@
-# app.support.clickhouse.service.py
+# app.core.service.click_service.py
+from typing import List
+from app.core.services.service import ServiceMeta
 from app.core.config.project_config import settings
-# from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import BackgroundTasks
+from loguru import logger
+
+from app.support.clickhouse.parsers import PARSERS
 
 
 class FullTextSearch:
@@ -154,3 +160,32 @@ results = fts.search('"exact phrase"', mode='phrase')     # точная фра�
 results = fts.search("ClickHose", mode='fuzzy')           # с опечатками
 results = fts.search("database", mode='auto')             # автоматический выбор
 """
+
+
+class ClickService(ServiceMeta):
+    pass
+
+    @classmethod
+    async def import_csv(cls, background_tasks: BackgroundTasks, ch_client):
+        csv_files = [('data/beer_data.csv', PARSERS['beer_data.csv']),
+                     ('data/scotch_review.csv', PARSERS['scotch_review.csv']),
+                     ('data/spirits_data.csv', PARSERS['spirits_data.csv']), ('data/wine.csv', PARSERS['wine.csv']),
+                     ('data/wine_data.csv', PARSERS['wine_data.csv']),
+                     ('data/winemag-data-130k-v2.csv', PARSERS['winemag-data-130k-v2.csv']),
+                     ('data/winemag-data_first150k.csv', PARSERS['winemag-data_first150k.csv']), ]
+        background_tasks.add_task(cls.import_all_files, csv_files)
+        return {"message": "Import started in background", "files": [f[0] for f in csv_files],
+                "note": "GPU model will be loaded temporarily"}
+    
+    @classmethod
+    async def import_all_files(cls, files: List[tuple]):
+        """Фоновая задача импорта всех файлов"""
+        try:
+            for file_path, parser in files:
+                file_name = file_path.split('/')[-1]
+                await importer.import_file(file_path, parser, file_name)
+            
+            logger.info("All files imported successfully")
+        finally:
+            # Важно: выгружаем GPU модель после импорта
+            hybrid_embeddings.unload_import_model()):

@@ -2,6 +2,8 @@
 import clickhouse_connect
 from app.core.config.project_config import settings
 from fastapi import Request
+from loguru import logger
+from contextlib import asynccontextmanager
 
 
 class ClickHouseManager:
@@ -21,7 +23,9 @@ class ClickHouseManager:
             username=self.user,
             password=self.password,
             # Опционально: сжатие данных для ускорения сети
-            compress=True
+            compress=True,
+            # connect_timeout=30,
+            # send_receive_timeout=30
         )
         return self.client
 
@@ -29,8 +33,26 @@ class ClickHouseManager:
         if self.client:
             await self.client.close()
 
+    @property
+    def client(self):
+        if not self._client:
+            raise RuntimeError("ClickHouse not connected")
+        return self._client
+
+
 # Зависимость (Dependency Injection) для получения клиента в эндпоинтах
 
 
 async def get_ch_client(request: Request):
     return request.app.state.ch_client
+
+
+@asynccontextmanager
+async def get_ch_session():
+    """Контекстный менеджер для сессии (для фоновых задач)"""
+    client = await get_ch_client()
+    try:
+        yield client
+    except Exception as e:
+        logger.error(f"Session error: {e}")
+        raise

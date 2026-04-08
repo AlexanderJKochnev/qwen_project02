@@ -1,10 +1,9 @@
 #!/bin/bash
 # Имя сервиса из docker-compose
 SERVICE_NAME="prod-wine_host-1"
-# Имя пользователя БД (замените, если отличается)
+# Имя пользователя БД
 DB_USER="wine"
 # Имя файла бэкапа
-# BACKUP_NAME="pg_backup_$(date +%Y%m%d_%H%M%S).sql"
 BACKUP_NAME="pg_backup.sql.gz"
 
 echo "--- Начинаю бэкап базы данных из контейнера $SERVICE_NAME ---"

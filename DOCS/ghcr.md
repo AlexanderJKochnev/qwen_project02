@@ -20,7 +20,7 @@
    1. cat /Users/kochnev/git/filesxxx.txt | docker login ghcr.io -u AlexanderJKochnev --password-stdin
    2. linux
       1. cd dockers/ghcr
-      2. cat filesxxx.txt | docker login ghcr.io -u alexanderjkochnev --password-stdin
+      2. цcat filesxxx.txt | docker login ghcr.io -u alexanderjkochnev --password-stdin
 6. Тестирование и push образов
    1. docker pull postgres:alpine
    2. docker tag postgres:alpine ghcr.io/alexanderjkochnev/postgres:17-alpine
