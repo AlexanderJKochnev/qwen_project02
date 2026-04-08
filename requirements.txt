@@ -65,6 +65,6 @@ async-lru==2.0.4
 model2vec==0.1.0
 torch>=2.0.0
 # python-multipart==0.0.6
-sentence-transformers==2.2.2
-huggingface-hub==0.19.4
-model2vec==0.1.0
+sentence-transformers>=2.2.2
+# huggingface-hub==0.24.7
+model2vec>=0.1.0
