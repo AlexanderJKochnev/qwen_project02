@@ -57,7 +57,6 @@ from app.support.source.router import SourceRouter
 from app.support.vllm.router import VllmRouter
 from app.core.config.database.click_async import ClickHouseManager, get_ch_client
 from app.core.embeddings.hybrid_manager import hybrid_embeddings
-from app.support.clickhouse.parsers.async_importer_with_gpu import AsyncCSVImporter
 from app.support.clickhouse.model import ensure_table_exists
 from app.support.clickhouse.router import router as click_router
 from app.support.clickhouse.search_router import router as click_search_router
