@@ -58,11 +58,9 @@ from app.support.parcel.router import ParcelRouter, SiteRouter
 from app.support.source.router import SourceRouter
 from app.support.vllm.router import VllmRouter
 from app.core.config.database.click_async import ClickHouseManager, get_ch_client
-from app.core.embeddings.hybrid_manager import hybrid_embeddings
 from app.support.clickhouse.model import ensure_table_exists
 from app.support.clickhouse.router import router as click_router
 from app.support.clickhouse.search_router import router as click_search_router
-from app.support.clickhouse.import_router import router as click_import_router
 # from app.arq_worker_routes import router as ArqWorkerRouter
 # from app.support.warehouse.router import WarehouseRouter
 
@@ -106,10 +104,7 @@ async def lifespan(app: FastAPI):
     await repo.ensure_table()
     # Загружаем только лёгкую Static модель для запросов
     # GPU модель загрузится только при импорте
-    await hybrid_embeddings.warmup()
     logger.success("✅ Query model loaded (Static, CPU, 50MB)")
-
-    logger.info(f"📊 Status: {hybrid_embeddings.get_status()}")
 
     # Создаём таблицу
     # await ensure_table_exists()
@@ -131,10 +126,8 @@ async def lifespan(app: FastAPI):
     #     pass
     await DatabaseManager.engine.dispose()
     await MongoDBManager.disconnect()
-    hybrid_embeddings.unload_import_model()
     await ch_manager.close()
     # await redis_manager.disconnect()
-
 
 app = FastAPI(title="Hybrid PostgreSQL-MongoDB API",
               lifespan=lifespan,
@@ -202,7 +195,6 @@ app.include_router(GemmaRouter().router)
 app.include_router(web_router)
 app.include_router(click_router)
 app.include_router(click_search_router)
-app.include_router(click_import_router)
 app.include_router(LwinRouter().router)
 app.include_router(PromptRouter().router)
 app.include_router(ProptionRouter().router)

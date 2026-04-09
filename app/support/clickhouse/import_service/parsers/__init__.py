@@ -1,12 +1,13 @@
 # parsers/__init__.py
 import pandas as pd
-from .beer_parser import parse_beer
-from .scotch_parser import parse_scotch
-from .spirits_parser import parse_spirits
-from .wine_parser import parse_wine
-from .wine_data_parser import parse_wine_data
-from .winemag_130k_parser import parse_winemag_130k
-from .winemag_first150k_parser import parse_winemag_first150k
+
+from app.support.clickhouse.import_service.parsers.beer_parser import parse_beer
+from app.support.clickhouse.import_service.parsers.scotch_parser import parse_scotch
+from app.support.clickhouse.import_service.parsers.spirits_parser import parse_spirits
+from app.support.clickhouse.import_service.parsers.wine_data_parser import parse_wine_data
+from app.support.clickhouse.import_service.parsers.wine_parser import parse_wine
+from app.support.clickhouse.import_service.parsers.winemag_130k_parser import parse_winemag_130k
+from app.support.clickhouse.import_service.parsers.winemag_first150k_parser import parse_winemag_first150k
 
 PARSERS = {'beer_data.csv': parse_beer, 'scotch_review.csv': parse_scotch, 'spirits_data.csv': parse_spirits,
            'wine.csv': parse_wine, 'wine_data.csv': parse_wine_data, 'winemag-data-130k-v2.csv': parse_winemag_130k,
