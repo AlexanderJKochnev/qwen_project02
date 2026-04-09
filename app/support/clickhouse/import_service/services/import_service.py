@@ -3,7 +3,7 @@ import hashlib
 
 import pandas as pd
 from loguru import logger
-from app.support.clickhouse.schemas import BeverageCreate
+from app.support.clickhouse.import_service.schemas import BeverageCreate
 from app.support.clickhouse.import_service.services.embedding import ImportEmbedding
 
 

@@ -4,8 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import Optional, List
 
 from app.support.clickhouse.dependencies import get_repository
-from app.support.clickhouse.repository import BeverageRepository
-from app.support.clickhouse.schemas import BeverageCategory, BeverageCreate, BeverageUpdate
+from app.support.clickhouse.import_service.repositories.beverage_repository import BeverageRepository
+# from app.support.clickhouse.repository import BeverageRepository
+from app.support.clickhouse.import_service.schemas import BeverageCategory, BeverageCreate, BeverageUpdate
 
 router = APIRouter(prefix="/beverages", tags=["beverages"])
 

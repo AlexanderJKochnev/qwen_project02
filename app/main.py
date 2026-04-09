@@ -18,7 +18,6 @@ from app.core.exceptions import AppBaseException
 from app.core.config.database.db_async import DatabaseManager  # init_db_extensions
 # from app.core.config.database.ollama_async import get_ollama_manager
 from app.core.config.database.db_mongo import MongoDBManager, get_mongodb
-from app.core.config.database.click_async import ClickHouseManager  # , get_ch_client
 # from app.core.config.database.redis_async import redis_manager
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.mongodb.router import router as MongoRouter
@@ -29,7 +28,6 @@ from app.preact.delete.router import DeleteRouter
 from app.preact.handbook.router import HandbookRouter
 from app.preact.patch.router import PatchRouter
 from app.support.api.router import ApiRouter
-from app.support.clickhouse.repository import BeverageRepository
 from app.support.clickhouse.service import EmbeddingService
 # -------ИМПОРТ РОУТЕРОВ----------
 from app.support.gemma.router import GemmaRouter
@@ -57,8 +55,8 @@ from app.support.vintage.router import VintageConfigRouter, DesignationRouter, C
 from app.support.parcel.router import ParcelRouter, SiteRouter
 from app.support.source.router import SourceRouter
 from app.support.vllm.router import VllmRouter
-from app.core.config.database.click_async import ClickHouseManager, get_ch_client
-from app.support.clickhouse.model import ensure_table_exists
+from app.core.config.database.click_async import ClickHouseManager  # , get_ch_client
+# from app.support.clickhouse.model import ensure_table_exists
 from app.support.clickhouse.router import router as click_router
 from app.support.clickhouse.search_router import router as click_search_router
 # from app.arq_worker_routes import router as ArqWorkerRouter
@@ -100,8 +98,6 @@ async def lifespan(app: FastAPI):
     print(f"Embedding service status: {status}")
 
     # Создание таблицы
-    repo = BeverageRepository(app.state.ch_client)
-    await repo.ensure_table()
     # Загружаем только лёгкую Static модель для запросов
     # GPU модель загрузится только при импорте
     logger.success("✅ Query model loaded (Static, CPU, 50MB)")

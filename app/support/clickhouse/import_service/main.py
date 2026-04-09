@@ -6,12 +6,7 @@ from pathlib import Path
 from app.core.config.database.click_async import ClickHouseManager
 from app.support.clickhouse.import_service.parsers import PARSERS
 from app.support.clickhouse.import_service.services.import_service import ImportService
-from app.support.clickhouse.repository import BeverageRepository
-
-# from app.core.database.clickhouse import ClickHouseManager
-# from repositories.beverage_repo import BeverageRepository
-# from services.import_service import ImportService
-# from parsers import PARSERS
+from app.support.clickhouse.import_service.repositories.beverage_repository import BeverageRepository
 
 
 async def main():

@@ -1,5 +1,5 @@
 # app.support.clickhouse.service.py
-# app/services/embedding_service.py (после разделения)
+# это легкий CPU embedding
 import asyncio
 from model2vec import StaticModel
 from pathlib import Path

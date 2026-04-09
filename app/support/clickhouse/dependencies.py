@@ -1,8 +1,8 @@
 # app.support.clickhouse.dependencies.py
 # app/api/dependencies.py
-from fastapi import Request, Depends
+from fastapi import Request
 
-from app.support.clickhouse.repository import BeverageRepository
+from app.support.clickhouse.import_service.repositories.beverage_repository import BeverageRepository
 from app.support.clickhouse.service import EmbeddingService
 
 # Глобальный синглтон для эмбеддингов (создаётся при старте)

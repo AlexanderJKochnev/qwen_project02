@@ -1,3 +1,4 @@
+# это import & GPU embedding
 from pathlib import Path
 from sentence_transformers import SentenceTransformer
 from loguru import logger
