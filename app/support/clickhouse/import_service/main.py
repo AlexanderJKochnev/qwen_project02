@@ -3,7 +3,7 @@ import asyncio
 # from loguru import logger
 from pathlib import Path
 
-from app.core.config.database.click_async import ClickHouseManager
+from app.support.clickhouse.import_service.click_async import ClickHouseManager
 from app.support.clickhouse.import_service.parsers import PARSERS
 from app.support.clickhouse.import_service.services.import_service import ImportService
 from app.support.clickhouse.import_service.repositories.beverage_repository import BeverageRepository
