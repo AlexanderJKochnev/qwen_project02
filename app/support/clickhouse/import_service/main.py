@@ -2,11 +2,10 @@
 import asyncio
 # from loguru import logger
 from pathlib import Path
-
-from app.support.clickhouse.import_service.click_async import ClickHouseManager
-from app.support.clickhouse.import_service.parsers import PARSERS
-from app.support.clickhouse.import_service.services.import_service import ImportService
-from app.support.clickhouse.import_service.repositories.beverage_repository import BeverageRepository
+from .click_async import ClickHouseManager
+from .parsers import PARSERS
+from .import_service import ImportService
+from .beverage_repository import BeverageRepository
 
 
 async def main():

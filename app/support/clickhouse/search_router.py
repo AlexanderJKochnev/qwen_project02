@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, BackgroundTasks
 
 from app.support.clickhouse.dependencies import get_embedding_service, get_repository
-from app.support.clickhouse.import_service.repositories.beverage_repository import BeverageRepository
+from app.support.clickhouse.import_service.beverage_repository import BeverageRepository
 # from app.support.clickhouse.repository import BeverageRepository
 from app.support.clickhouse.import_service.schemas import RAGResponse, SearchQuery, SearchResult
 from app.support.clickhouse.service import EmbeddingService

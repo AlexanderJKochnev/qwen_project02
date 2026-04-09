@@ -2,7 +2,7 @@
 from typing import Optional
 
 import clickhouse_connect
-from app.support.clickhouse.import_service.project_config import settings
+from .project_config import settings
 from fastapi import Request
 from loguru import logger
 from contextlib import asynccontextmanager
