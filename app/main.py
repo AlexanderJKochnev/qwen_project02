@@ -94,8 +94,8 @@ async def lifespan(app: FastAPI):
     logger.success("✅ ClickHouse connected")
     global _embedding_service
     _embedding_service = EmbeddingService()
-    status = _embedding_service.get_status()
-    print(f"Embedding service status: {status}")
+    # status = _embedding_service.get_status()
+    # print(f"Embedding service status: {status}")
 
     # Создание таблицы
     # Загружаем только лёгкую Static модель для запросов
