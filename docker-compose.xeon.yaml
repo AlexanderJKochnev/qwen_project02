@@ -261,8 +261,8 @@ services:
       context: ./app/support/clickhouse/import_service
       dockerfile: Dockerfile
     container_name: import-service
-    depends_on:
-      - clickhouse
+    # depends_on:
+    #   - clickhouse
     volumes:
       # CSV файлы
       - ${BIND_VOLUMES}/rag_csv:/app/data
