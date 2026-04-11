@@ -1,32 +1,28 @@
 # app.support.clickhouse.service.py
-import os
-from typing import List
 from fastembed import TextEmbedding
+from fastembed.common.model_description import PoolingType, ModelSource
 
 
 class EmbeddingService:
     def __init__(self):
-        # Если ваш HF кэш находится в нестандартном месте, раскомментируйте:
-        os.environ["HF_HOME"] = "/app/cache"
+        # 1. Регистрируем модель вручную
+        # FastEmbed сам скачает ONNX-веса с HF, если их нет в cache_dir
+        TextEmbedding.add_custom_model(
+            model="intfloat/multilingual-e5-small", pooling=PoolingType.MEAN, normalization=True, dim=384,
+            sources=ModelSource(hf="intfloat/multilingual-e5-small"), model_file="onnx/model.onnx"
+        )
 
-        # FastEmbed возьмет multilingual-e5-small, которая дает 384d.
-        # При первом запуске он создаст оптимизированную копию в cache_dir.
+        # 2. Теперь модель доступна для инициализации
         self.model = TextEmbedding(
             model_name="intfloat/multilingual-e5-small", cache_dir="./.fastembed_cache"
         )
 
-    def get_query_embedding(self, query: str) -> List[float]:
-        """
-        Преобразует текст в вектор 384d на CPU.
-        """
-        # Префикс 'query: ' обязателен для моделей E5!
+    def get_query_embedding(self, query: str):
+        # Обязательный префикс для E5
         prefixed_query = f"query: {query}"
-
-        # Инференс через ONNX (очень быстро на CPU)
-        # embed() возвращает итератор, берем первый (и единственный) элемент
+        # Получаем вектор 384d
         embeddings = list(self.model.embed([prefixed_query]))
         return embeddings[0].tolist()
 
 
-# Инициализируем один раз при импорте
 embedding_service = EmbeddingService()
