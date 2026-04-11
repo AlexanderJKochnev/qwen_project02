@@ -39,7 +39,7 @@ class BeverageRepository:
             cosineDistance(embedding, %(query_vec)s) AS distance
         FROM {self.table}
         {where_clause}
-        ORDER BY distance DESC
+        ORDER BY distance ASC
         LIMIT %(limit)s
         """
 
