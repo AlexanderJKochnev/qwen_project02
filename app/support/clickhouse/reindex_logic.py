@@ -8,76 +8,81 @@ async def reindex_data(ch_client):
     source_table = "beverages_rag"
     target_table = "beverages_rag_v2"
     
-    # 1. Явно определяем список всех колонок КРОМЕ embedding
-    # Убедись, что этот список совпадает с твоим CREATE TABLE
-    columns_to_read = ['id', 'name', 'description', 'category', 'country', 'brand', 'abv', 'price', 'rating',
-            'attributes', 'file_hash', 'source_file', 'created_at']
-    full_columns_to_write = columns_to_read + ['embedding']
+    # Порядок важен
+    columns = ['id', 'name', 'description', 'category', 'country', 'brand', 'abv', 'price', 'rating', 'attributes',
+            'file_hash', 'source_file', 'created_at']
     
     def create_rag_string(row):
         name = str(row.get('name', ''))
-        category = str(row.get('category', ''))
-        header = f"Product: {name}. Category: {category}."
+        cat = str(row.get('category', ''))
+        header = f"Product: {name}. Category: {cat}."
         if row.get('brand'): header += f" Brand: {row['brand']}."
+        
         specs = ""
         if row.get('country'): specs += f" Country: {row['country']}."
         if row.get('abv'): specs += f" ABV: {row['abv']}%."
+        
         desc = f" | Description: {row.get('description', '')}"
+        
         attr_str = ""
         if row.get('attributes'):
             try:
                 attrs = row['attributes']
                 if isinstance(attrs, str): attrs = json.loads(attrs)
-                if attrs and isinstance(attrs, dict):
+                if isinstance(attrs, dict):
                     attr_str = " | Attributes: " + ", ".join([f"{k}: {v}" for k, v in attrs.items()])
             except Exception: pass
+        
         return (header + specs + desc + attr_str)[:1000].strip()
     
-    logger.info(f"Starting reindexing from {source_table} to {target_table}")
+    logger.info("Starting reindexing (Column-to-Row conversion)...")
     
     try:
-        # 2. Читаем строго определенные колонки
-        cols_query = ", ".join(columns_to_read)
-        query = f"SELECT {cols_query} FROM {source_table} LIMIT 100"
-        settings = {'max_block_size': 10000}
+        col_names_str = ", ".join(columns)
+        query = f"SELECT {col_names_str} FROM {source_table} LIMIT 100"
         
-        stream_context = await ch_client.query_column_block_stream(query, settings = settings)
-        
-        async with stream_context as stream:
+        async with await ch_client.query_column_block_stream(query) as stream:
             total_count = 0
-            async for block_rows in stream:
-                # 3. Сопоставляем данные строго по нашему списку columns_to_read
-                rows = [dict(zip(columns_to_read, row)) for row in block_rows]
+            async for block_columns in stream:
+                # ВАЖНО: block_columns — это список СТОЛБЦОВ.
+                # Транспонируем их в СТРОКИ:
+                block_rows = list(zip(*block_columns))
                 
-                texts_to_embed = [create_rag_string(r) for r in rows]
-                embeddings_iter = embedding_service.model.embed(texts_to_embed, batch_size = 128)
-                embeddings_list = [e.tolist() for e in embeddings_iter]
+                # Теперь block_rows — это список кортежей-строк, и zip с именами сработает:
+                rows = [dict(zip(columns, row)) for row in block_rows]
                 
-                final_data_to_insert = []
+                # 1. Тексты для эмбеддингов
+                texts = [create_rag_string(r) for r in rows]
+                
+                # 2. Генерация векторов
+                emb_gen = embedding_service.model.embed(texts, batch_size = 128)
+                embeddings = [e.tolist() for e in emb_gen]
+                
+                # 3. Сборка финальных кортежей для вставки
+                final_batch = []
+                full_cols = columns + ['embedding']
+                
                 for i, row in enumerate(rows):
-                    row['embedding'] = embeddings_list[i]
+                    row['embedding'] = embeddings[i]
                     
-                    # Фикс JSON
-                    attrs = row.get('attributes')
-                    if isinstance(attrs, str):
-                        try: row['attributes'] = json.loads(attrs)
+                    # Фикс JSON для ClickHouse
+                    if isinstance(row.get('attributes'), str):
+                        try: row['attributes'] = json.loads(row['attributes'])
                         except Exception: row['attributes'] = {}
-                    elif not isinstance(attrs, dict):
+                    elif row.get('attributes') is None:
                         row['attributes'] = {}
                     
-                    # 4. Собираем кортеж строго по списку full_columns_to_write
-                    final_data_to_insert.append(tuple(row[col] for col in full_columns_to_write))
+                    # Собираем кортеж в правильном порядке
+                    final_batch.append(tuple(row[col] for col in full_cols))
                 
-                # 5. Вставка
-                await ch_client.insert(
-                        target_table, final_data_to_insert, column_names = full_columns_to_write
-                        )
+                # 4. Вставка
+                await ch_client.insert(target_table, final_batch, column_names = full_cols)
                 
                 total_count += len(rows)
                 logger.info(f"Successfully indexed {total_count} rows...")
         
-        logger.success(f"Finish! Total {total_count} rows moved to {target_table}")
+        logger.success("Reindexing finished!")
     
     except Exception as e:
-        logger.exception(f"Reindexing failed: {e}")
+        logger.exception(f"Fatal error: {e}")
         raise e
