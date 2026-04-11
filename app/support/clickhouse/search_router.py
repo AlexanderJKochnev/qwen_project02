@@ -1,5 +1,4 @@
 # app.support.clikhouse.search_router.py
-# app/api/routes/search.py
 from fastapi import APIRouter, Depends, BackgroundTasks
 
 from app.support.clickhouse.dependencies import get_embedding_service, get_repository

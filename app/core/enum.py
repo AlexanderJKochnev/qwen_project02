@@ -42,3 +42,12 @@ Languages = Enum("Languages", {v: v for v in data['language']}, type=str)
 Writers = Enum("writer", {v: v for v in data['writer']}, type=str)
 CliSearchMode = Enum("mode", {v: v for v in ['auto', 'ranked', 'word',
                      'and', 'or', 'phrase', 'fuzzy', 'fuzzy2', 'like']}, type=str)
+Rag_category = Enum('category', {v: v for v in {"wine", "whisky", "beer", "spirits", "vodka", "gin", "schnapps",
+                                                "brandy", "rum", "tequila", "ready-to-drink", "baijiu",
+                                                "sparkling wine", "red wine", "white wine", "rose wine",
+                                                "sake", "port", "ice wine", "dessert wines", "non-alcoholic wine",
+                                                "sherry", "madeira", "champagne", "marsala", "vermouth", "orange wine",
+                                                "pedro ximenez", "zinfandel", "fortified wine", "fruit wine", "chianti blend",
+                                                "cachaca", "sangria", "mezcal", "absinthe", "soju", "ouzo", "grain alcohol",
+                                                "aquavit", "aguardiente", "other"}
+                                 }, type=str)

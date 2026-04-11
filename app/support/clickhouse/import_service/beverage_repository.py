@@ -1,4 +1,4 @@
-# app.support.clickhouse.repository.py
+# app.support.clickhouse.import_service.beverage_repository.py
 from typing import Optional, List, Dict
 import json
 from .schemas import BeverageCategory, BeverageCreate

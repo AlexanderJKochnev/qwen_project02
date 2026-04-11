@@ -1,8 +1,9 @@
 # app.support.clickhouse.service.py
-# это легкий CPU embedding
-import asyncio
-from model2vec import StaticModel
 from pathlib import Path
+from typing import List
+
+from model2vec import StaticModel
+import asyncio
 
 
 class EmbeddingService:
@@ -14,8 +15,11 @@ class EmbeddingService:
         if self._model is None:
             self._model = StaticModel.from_pretrained(str(self.model_path))
 
-    async def encode_query(self, text: str) -> list[float]:
+    async def encode_query(self, text: str) -> List[float]:
+        loop = asyncio.get_event_loop()
         self._ensure_model()
-        return await asyncio.get_event_loop().run_in_executor(
-            None, lambda: self._model.encode([text])[0].tolist()
-        )
+
+        def _encode():
+            return self._model.encode([text])[0].tolist()
+
+        return await loop.run_in_executor(None, _encode)

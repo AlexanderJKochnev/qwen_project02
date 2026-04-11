@@ -1,4 +1,7 @@
 ## настройка debian 13
+0. настройка логов
+    sudo mkdir -p /var/log/journal
+    sudo systemctl restart systemd-journald
 1. удаление графических оболочек (из под su)
     apt purge -y gnome* x11-common xserver-xorg* desktop-base task-gnome-desktop tasksel
     apt purge -y kde* plasma* xfce4* lxde*
