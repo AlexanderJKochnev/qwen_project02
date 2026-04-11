@@ -101,7 +101,7 @@ services:
       - ${BIND_VOLUMES}/${COMPOSE_PROJECT_NAME}_upload_volume:/app/upload_volume
       # CSV файлы
       - ${BIND_VOLUMES}/distill/models:/app/models
-      - ${BIND_VOLUMES}/distill/cache:/app/cache
+      - ${BIND_VOLUMES}/distill/onnx:/app/onnx
     ulimits:
       nofile:
         soft: 65535
