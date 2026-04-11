@@ -11,7 +11,7 @@ class EmbeddingService:
         try:
             self.model = TextEmbedding(
                 model_name="intfloat/multilingual-e5-small",
-                cache_dir="./.fastembed_cache",
+                cache_dir="/app/model",
                 # Параметр local_files_only=True заставит искать в кэше,
                 # если вы не хотите лезть в сеть
             )
@@ -21,7 +21,7 @@ class EmbeddingService:
             # но подменяя саму модель (редкий хак для FastEmbed)
             self.model = TextEmbedding(
                 model_name="BAAI/bge-small-en-v1.5",  # Любая поддерживаемая с 384d
-                cache_dir="./.fastembed_cache"
+                cache_dir="/app/model"
             )
             # Принудительно меняем путь к модели, если нужно (но обычно try выше срабатывает)
 
