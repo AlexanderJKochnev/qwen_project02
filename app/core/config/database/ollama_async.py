@@ -212,6 +212,8 @@ def get_ollama_manager(host: str = OLLAMA_HOST, timeout: float = OLLAMA_TIMEOUT)
     """
     Функция для получения singleton экземпляра менеджера.
     """
+    logger.warning('ollama_manager is deactivated')
+    return
     global _ollama_manager_instance
     if _ollama_manager_instance is None:
         _ollama_manager_instance = OllamaClientManager(host=host, timeout=timeout)
