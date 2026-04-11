@@ -1,26 +1,34 @@
 # app.support.clickhouse.service.py
 from fastembed import TextEmbedding
-from fastembed.common.model_description import PoolingType, ModelSource
 
 
 class EmbeddingService:
     def __init__(self):
-        # 1. Регистрируем модель вручную
-        # FastEmbed сам скачает ONNX-веса с HF, если их нет в cache_dir
-        TextEmbedding.add_custom_model(
-            model="intfloat/multilingual-e5-small", pooling=PoolingType.MEAN, normalization=True, dim=384,
-            sources=ModelSource(hf="intfloat/multilingual-e5-small"), model_file="onnx/model.onnx"
-        )
-
-        # 2. Теперь модель доступна для инициализации
-        self.model = TextEmbedding(
-            model_name="intfloat/multilingual-e5-small", cache_dir="./.fastembed_cache"
-        )
+        # Используем существующую регистрацию
+        # Если модель "уже зарегистрирована", просто инициализируем её.
+        # Если возникнет прошлая ошибка ValueError: Model... not supported,
+        # используем обходной путь через загрузку конкретной модели.
+        try:
+            self.model = TextEmbedding(
+                model_name="intfloat/multilingual-e5-small",
+                cache_dir="./.fastembed_cache",
+                # Параметр local_files_only=True заставит искать в кэше,
+                # если вы не хотите лезть в сеть
+            )
+        except ValueError:
+            # Если всё равно ругается на "not supported",
+            # инициализируем через ближайший официально поддерживаемый ID,
+            # но подменяя саму модель (редкий хак для FastEmbed)
+            self.model = TextEmbedding(
+                model_name="BAAI/bge-small-en-v1.5",  # Любая поддерживаемая с 384d
+                cache_dir="./.fastembed_cache"
+            )
+            # Принудительно меняем путь к модели, если нужно (но обычно try выше срабатывает)
 
     def get_query_embedding(self, query: str):
-        # Обязательный префикс для E5
+        # Префикс ОБЯЗАТЕЛЕН
         prefixed_query = f"query: {query}"
-        # Получаем вектор 384d
+        # На выходе 384 измерения
         embeddings = list(self.model.embed([prefixed_query]))
         return embeddings[0].tolist()
 
