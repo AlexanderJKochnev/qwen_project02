@@ -35,7 +35,7 @@ class EmbeddingService:
 
         # Генерируем вектор
         embeddings = list(self.model.embed([clean_query]))
-        return embeddings.tolist()
+        return embeddings
 
 
 embedding_service = EmbeddingService()
