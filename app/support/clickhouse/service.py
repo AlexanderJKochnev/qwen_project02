@@ -4,6 +4,7 @@ from fastembed import TextEmbedding
 import os
 from loguru import logger
 
+
 class EmbeddingService:
     def __init__(self):
         # Используем имя из "белого списка" FastEmbed с той же размерностью (384)
@@ -17,7 +18,7 @@ class EmbeddingService:
                 model_name=self.fake_model_name,
                 cache_dir=model_path,
                 local_files_only=True,
-                threads=os.cpu_count()
+                threads=7
             )
             logger.success(f"EmbeddingService: E5 weights loaded via alias {self.fake_model_name}")
         except Exception as e:
@@ -35,5 +36,6 @@ class EmbeddingService:
         except Exception as e:
             logger.error(f"EmbeddingService error: {e}")
             return []
+
 
 embedding_service = EmbeddingService()
