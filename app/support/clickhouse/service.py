@@ -27,10 +27,15 @@ class EmbeddingService:
 
     def get_query_embedding(self, query: str):
         # Префикс ОБЯЗАТЕЛЕН
-        prefixed_query = f"query: {query}"
-        # На выходе 384 измерения
-        embeddings = list(self.model.embed([prefixed_query]))
-        return embeddings[0].tolist()
+        # prefixed_query = f"query: {query}"
+        # # На выходе 384 измерения
+        # embeddings = list(self.model.embed([prefixed_query]))
+        # return embeddings[0].tolist()
+        clean_query = query
+
+        # Генерируем вектор
+        embeddings = list(self.model.embed([clean_query]))
+        return embeddings.tolist()
 
 
 embedding_service = EmbeddingService()
