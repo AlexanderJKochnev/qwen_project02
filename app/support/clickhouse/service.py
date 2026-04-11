@@ -1,25 +1,32 @@
 # app.support.clickhouse.service.py
-from pathlib import Path
+import os
 from typing import List
-
-from model2vec import StaticModel
-import asyncio
+from fastembed import TextEmbedding
 
 
 class EmbeddingService:
-    def __init__(self, models_dir: str = "/app/models"):
-        self.model_path = Path(models_dir) / "distilled_e5_256d"
-        self._model = None
+    def __init__(self):
+        # Если ваш HF кэш находится в нестандартном месте, раскомментируйте:
+        os.environ["HF_HOME"] = "/app/cache"
 
-    def _ensure_model(self):
-        if self._model is None:
-            self._model = StaticModel.from_pretrained(str(self.model_path))
+        # FastEmbed возьмет multilingual-e5-small, которая дает 384d.
+        # При первом запуске он создаст оптимизированную копию в cache_dir.
+        self.model = TextEmbedding(
+            model_name="intfloat/multilingual-e5-small", cache_dir="./.fastembed_cache"
+        )
 
-    async def encode_query(self, text: str) -> List[float]:
-        loop = asyncio.get_event_loop()
-        self._ensure_model()
+    def get_query_embedding(self, query: str) -> List[float]:
+        """
+        Преобразует текст в вектор 384d на CPU.
+        """
+        # Префикс 'query: ' обязателен для моделей E5!
+        prefixed_query = f"query: {query}"
 
-        def _encode():
-            return self._model.encode([text])[0].tolist()
+        # Инференс через ONNX (очень быстро на CPU)
+        # embed() возвращает итератор, берем первый (и единственный) элемент
+        embeddings = list(self.model.embed([prefixed_query]))
+        return embeddings[0].tolist()
 
-        return await loop.run_in_executor(None, _encode)
+
+# Инициализируем один раз при импорте
+embedding_service = EmbeddingService()

@@ -60,5 +60,5 @@ polyfactory~=2.22.2
 rapidfuzz==3.5.2
 tenacity==8.2.3
 async-lru==2.0.4
-
+fastembed
 model2vec>=0.1.0
