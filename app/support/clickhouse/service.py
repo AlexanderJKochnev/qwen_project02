@@ -27,3 +27,6 @@ class EmbeddingService:
         # Это вернет Similarity ~1.0 для точных совпадений
         embeddings = list(self.model.embed([query]))
         return embeddings[0].tolist()
+
+
+embedding_service = EmbeddingService()
