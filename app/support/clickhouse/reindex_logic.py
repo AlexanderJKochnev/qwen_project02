@@ -1,5 +1,4 @@
 import json
-import uuid
 from loguru import logger
 from app.support.clickhouse.service import embedding_service
 
@@ -8,71 +7,78 @@ async def reindex_data(ch_client):
     source_table = "beverages_rag"
     target_table = "beverages_rag_v2"
 
-    # Тот самый формат строки, который мы утвердили
     def create_rag_string(row):
+        # 1. Заголовок (Name, Category, Brand)
         header = f"Product: {row['name']}. Category: {row['category']}."
         if row.get('brand'):
             header += f" Brand: {row['brand']}."
 
+        # 2. Технические данные (Country, ABV)
         specs = ""
         if row.get('country'):
             specs += f" Country: {row['country']}."
         if row.get('abv'):
             specs += f" ABV: {row['abv']}%."
 
+        # 3. Атрибуты из JSON (Ставим ПЕРЕД описанием, чтобы не обрезались)
         attr_str = ""
         if row.get('attributes'):
             try:
-                # ClickHouse может вернуть dict или строку JSON
                 attrs = row['attributes']
                 if isinstance(attrs, str):
                     attrs = json.loads(attrs)
-                attr_str = " | Attributes: " + ", ".join([f"{k}: {v}" for k, v in attrs.items()])
+                if attrs:
+                    attr_str = " | Attributes: " + ", ".join([f"{k}: {v}" for k, v in attrs.items()])
             except Exception as e:
-                logger.error(f'ClickHouse может вернуть dict или строку JSON {e}')
+                logger.warning(f"Attributes parse error: {e}")
 
+        # 4. Описание (В самый конец, оно может быть длинным)
         desc = f" | Description: {row.get('description', '')}"
-        # Лимит 1000 символов для e5-small
+
+        # Сборка с лимитом 1000 символов (актуально для e5-small)
+        # Порядок: Header -> Specs -> Attributes -> Description
         return (header + specs + desc + attr_str)[:1000].strip()
 
     logger.info(f"Starting reindexing from {source_table} to {target_table}")
 
     try:
-        # Читаем данные блоками (по 5000 строк оптимально для RAM)
+        # Для теста оставляем LIMIT 100. Для боя — убираем.
+        # Настройка max_block_size = 10000 оптимальна для твоего Xeon и 64GB RAM
         query = f"SELECT * EXCEPT(embedding) FROM {source_table} LIMIT 100"
+        settings = {'max_block_size': 10000}
 
-        # Получаем стрим блоков
-        stream = ch_client.query_column_block_stream(query)
+        # Получаем стрим блоков данных
+        stream = ch_client.query_column_block_stream(query, settings=settings)
 
         total_count = 0
         for block in stream:
-            # Превращаем блок в список словарей для обработки
             column_names = block.column_names
+            # Превращаем блок в список словарей
             rows = [dict(zip(column_names, row)) for row in block.result_rows]
 
             # 1. Формируем тексты для нейронки
             texts_to_embed = [create_rag_string(r) for r in rows]
 
-            # 2. Генерируем эмбеддинги ПАЧКОЙ (это даст x5 к скорости на CPU)
-            # Мы используем напрямую внутреннюю модель fastembed
-            embeddings_iter = embedding_service.model.embed(texts_to_embed, batch_size=64)
+            # 2. Генерируем эмбеддинги ПАЧКОЙ по 128 (оптимально для AVX2)
+            # Убедись, что в embedding_service.model threads=14
+            embeddings_iter = embedding_service.model.embed(texts_to_embed, batch_size=128)
             embeddings_list = [e.tolist() for e in embeddings_iter]
 
-            # 3. Привязываем векторы обратно к строкам
+            # 3. Обрабатываем данные перед вставкой
             for i, row in enumerate(rows):
                 row['embedding'] = embeddings_list[i]
 
-                # Маленький фикс: если UUID пришел строкой, оставляем,
-                # если объектом — clickhouse-connect сам его поймет.
-                # Но JSON поле должно быть именно словарем.
+                # Корректируем формат JSON для ClickHouse
                 if isinstance(row.get('attributes'), str):
                     try:
                         row['attributes'] = json.loads(row['attributes'])
                     except Exception as e:
-                        logger.error(f'парсинг json. {e}')
+                        logger.error(f'Корректируем формат JSON для ClickHouse {e}')
                         row['attributes'] = {}
+                elif row.get('attributes') is None:
+                    row['attributes'] = {}
 
-            # 4. Массовая вставка в новую таблицу
+            # 4. Массовая вставка пачки
             ch_client.insert(target_table, rows, column_names=column_names + ['embedding'])
 
             total_count += len(rows)
