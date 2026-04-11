@@ -1,5 +1,6 @@
 # app.support.clickhouse.service.py
 from fastembed import TextEmbedding
+from loguru import logger
 
 
 class EmbeddingService:
@@ -15,7 +16,8 @@ class EmbeddingService:
                 # Параметр local_files_only=True заставит искать в кэше,
                 # если вы не хотите лезть в сеть
             )
-        except ValueError:
+        except ValueError as e:
+            logger.error(f'редкий хак для FastEmbed BAAI/bge-small-en-v1.5')
             # Если всё равно ругается на "not supported",
             # инициализируем через ближайший официально поддерживаемый ID,
             # но подменяя саму модель (редкий хак для FastEmbed)
