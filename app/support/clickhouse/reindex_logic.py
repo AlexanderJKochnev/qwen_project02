@@ -42,47 +42,42 @@ async def reindex_data(ch_client):
     logger.info(f"Starting reindexing from {source_table} to {target_table}")
 
     try:
-        # Для теста оставляем LIMIT 100. Для боя — убираем.
-        # Настройка max_block_size = 10000 оптимальна для твоего Xeon и 64GB RAM
         query = f"SELECT * EXCEPT(embedding) FROM {source_table} LIMIT 100"
         settings = {'max_block_size': 10000}
 
-        # Получаем стрим блоков данных
-        stream = ch_client.query_column_block_stream(query, settings=settings)
+        # 1. Добавляем await перед вызовом стрима
+        # 2. Используем async with для контекстного менеджера
+        async with await ch_client.query_column_block_stream(query, settings=settings) as stream:
+            total_count = 0
+            # 3. Используем async for для итерации по блокам
+            async for block in stream:
+                column_names = block.column_names
+                rows = [dict(zip(column_names, row)) for row in block.result_rows]
 
-        total_count = 0
-        for block in stream:
-            column_names = block.column_names
-            # Превращаем блок в список словарей
-            rows = [dict(zip(column_names, row)) for row in block.result_rows]
+                # Далее без изменений...
+                texts_to_embed = [create_rag_string(r) for r in rows]
 
-            # 1. Формируем тексты для нейронки
-            texts_to_embed = [create_rag_string(r) for r in rows]
+                # ВАЖНО: embed() в fastembed — это обычный итератор (не асинхронный)
+                # поэтому здесь оставляем обычный list() или цикл
+                embeddings_iter = embedding_service.model.embed(texts_to_embed, batch_size=128)
+                embeddings_list = [e.tolist() for e in embeddings_iter]
 
-            # 2. Генерируем эмбеддинги ПАЧКОЙ по 128 (оптимально для AVX2)
-            # Убедись, что в embedding_service.model threads=14
-            embeddings_iter = embedding_service.model.embed(texts_to_embed, batch_size=128)
-            embeddings_list = [e.tolist() for e in embeddings_iter]
-
-            # 3. Обрабатываем данные перед вставкой
-            for i, row in enumerate(rows):
-                row['embedding'] = embeddings_list[i]
-
-                # Корректируем формат JSON для ClickHouse
-                if isinstance(row.get('attributes'), str):
-                    try:
-                        row['attributes'] = json.loads(row['attributes'])
-                    except Exception as e:
-                        logger.error(f'Корректируем формат JSON для ClickHouse {e}')
+                for i, row in enumerate(rows):
+                    row['embedding'] = embeddings_list[i]
+                    if isinstance(row.get('attributes'), str):
+                        try:
+                            row['attributes'] = json.loads(row['attributes'])
+                        except Exception as e:
+                            logger.error(f"json.loads(row['attributes'] {e}")
+                            row['attributes'] = {}
+                    elif row.get('attributes') is None:
                         row['attributes'] = {}
-                elif row.get('attributes') is None:
-                    row['attributes'] = {}
 
-            # 4. Массовая вставка пачки
-            ch_client.insert(target_table, rows, column_names=column_names + ['embedding'])
+                # 4. Вставка тоже должна быть асинхронной (зависит от клиента, обычно await)
+                await ch_client.insert(target_table, rows, column_names=column_names + ['embedding'])
 
-            total_count += len(rows)
-            logger.info(f"Successfully indexed {total_count} rows...")
+                total_count += len(rows)
+                logger.info(f"Successfully indexed {total_count} rows...")
 
         logger.success(f"Finish! Total {total_count} rows moved to {target_table}")
 
