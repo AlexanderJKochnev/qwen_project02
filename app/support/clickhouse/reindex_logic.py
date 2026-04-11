@@ -39,7 +39,7 @@ async def reindex_data(ch_client):
     
     try:
         col_names_str = ", ".join(columns)
-        query = f"SELECT {col_names_str} FROM {source_table} LIMIT 100"
+        query = f"SELECT {col_names_str} FROM {source_table}"
         
         async with await ch_client.query_column_block_stream(query) as stream:
             total_count = 0
