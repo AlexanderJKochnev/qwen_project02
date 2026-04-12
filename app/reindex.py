@@ -8,9 +8,9 @@ from app.support.clickhouse.reindex_worker import run_reindexing
 
 async def main():
     manager = ClickHouseManager()
-    client = await manager.connect()
+    # client = await manager.connect()
     try:
-        await run_reindexing(client)
+        await run_reindexing(manager)
         # await reindex_data(client)
     finally:
         await manager.close()
