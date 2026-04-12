@@ -7,7 +7,7 @@ from loguru import logger
 
 class EmbeddingService:
     def __init__(self):
-        self.model_path = "/app/models"
+        self.model_path = "/app/models/distilled_e5_256d"
         self.model_name = "qhoxie/embeddinggemma-model2vec-256d"
         self.model = None
 
