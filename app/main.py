@@ -58,7 +58,7 @@ from app.support.vllm.router import VllmRouter
 from app.core.config.database.click_async import ClickHouseManager  # , get_ch_client
 # from app.support.clickhouse.model import ensure_table_exists
 from app.support.clickhouse.router import router as click_router
-from app.support.clickhouse.search_router import router as click_search_router
+# from app.support.clickhouse.search_router import router as click_search_router
 # from app.arq_worker_routes import router as ArqWorkerRouter
 # from app.support.warehouse.router import WarehouseRouter
 
@@ -190,7 +190,7 @@ app.include_router(ApiRouter().router)
 app.include_router(GemmaRouter().router)
 app.include_router(web_router)
 app.include_router(click_router)
-app.include_router(click_search_router)
+# app.include_router(click_search_router)
 app.include_router(LwinRouter().router)
 app.include_router(PromptRouter().router)
 app.include_router(ProptionRouter().router)
