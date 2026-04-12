@@ -18,6 +18,7 @@ async def search_beverages(
         ch_client=Depends(get_ch_client)  # Ваша зависимость из ClickHouseManager
 ):
     # 1. Получаем вектор 384d на CPU (займет ~15-20мс)
+    q = f"{q}. {category}. | "
     query_vector = embedding_service.get_query_embedding(q)
 
     # 2. Ищем в ClickHouse (индекс HNSW подхватится автоматически)
