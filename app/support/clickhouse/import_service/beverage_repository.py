@@ -12,7 +12,7 @@ class BeverageRepository:
 
     def __init__(self, client):
         self.client = client
-        self.table = "beverages_rag_v2"
+        self.table = "beverages_rag"
 
     async def create(self, data: BeverageCreate, file_hash: str, source_file: str, embedding: List[float]) -> str:
         """Создание записи"""

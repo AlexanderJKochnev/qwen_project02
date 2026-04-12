@@ -7,7 +7,7 @@ class BeverageRepository:
 
     def __init__(self, client):
         self.client = client
-        self.table = "beverages_rag_v2"
+        self.table = "beverages_rag"
 
     async def vector_search(
             self, query_embedding: List[float], category: Optional[str] = None, limit: int = 10
