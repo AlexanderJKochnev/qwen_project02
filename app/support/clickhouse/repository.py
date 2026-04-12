@@ -22,6 +22,7 @@ class BeverageRepository:
         query = f"""
             SELECT
                 name, brand, category, country, abv, price, rating, description, attributes,
+                cosineDistance(embedding, %(vec)s) AS dist,
                 1 - cosineDistance(embedding, %(vec)s) AS similarity
             FROM {self.table}
             {where_clause}
