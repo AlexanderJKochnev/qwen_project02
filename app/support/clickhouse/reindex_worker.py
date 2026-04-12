@@ -1,10 +1,11 @@
 # app/support/clickhouse/reindex_worker.py
 import json
 import asyncio
+import time
 from loguru import logger
 from app.support.clickhouse.service import embedding_service
 
-# SQL скрипт для создания таблицы (фиксируем структуру и индексы здесь)
+# SQL скрипт для создания таблицы (фиксируем здесь для анналов)
 CREATE_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS beverages_rag_v2 (
     id UUID DEFAULT generateUUIDv4(),
@@ -21,9 +22,7 @@ CREATE TABLE IF NOT EXISTS beverages_rag_v2 (
     file_hash String,
     source_file String,
     created_at DateTime DEFAULT now(),
-    -- Индекс для опечаток и подстрок (Вариант 1)
     INDEX idx_name_ngram name TYPE ngrambf_v1(3, 512, 2, 0) GRANULARITY 1,
-    -- Векторный индекс для семантики (Вариант 2)
     INDEX idx_embedding embedding TYPE vector_similarity('hnsw', 'cosineDistance', 384) GRANULARITY 100
 ) ENGINE = MergeTree
 ORDER BY (category, name, created_at)
@@ -31,119 +30,126 @@ ORDER BY (category, name, created_at)
 
 
 def create_hybrid_string(row):
-    """
-    Формирует строку для FastEmbed.
-    Приоритет: Факты (Name/Brand) -> Мета -> Описание.
-    """
-    facts = []
-    if row.get('name'):
-        facts.append(f"Name: {row['name']}")
+    """Формирует строку для FastEmbed (Header -> Specs -> Description -> Attributes)"""
+    name = str(row.get('name', ''))
+    cat = str(row.get('category', ''))
+
+    header = f"Product: {name}. Category: {cat}."
     if row.get('brand'):
-        facts.append(f"Brand: {row['brand']}")
-    if row.get('category'):
-        facts.append(f"Category: {row['category']}")
+        header += f" Brand: {row['brand']}."
+
+    specs = ""
     if row.get('country'):
-        facts.append(f"Origin: {row['country']}")
+        specs += f" Country: {row['country']}."
     if row.get('abv'):
-        facts.append(f"Alcohol: {row['abv']}%")
+        specs += f" ABV: {row['abv']}%."
 
-    # Собираем факты через точку, отделяем описание пайпом
-    facts_part = ". ".join(facts)
-    desc_part = str(row.get('description', ''))
+    desc = f" | Description: {row.get('description', '')}"
 
-    return f"{facts_part} | {desc_part}"[:1000].strip()
+    attr_str = ""
+    if row.get('attributes'):
+        try:
+            attrs = row['attributes']
+            if isinstance(attrs, str):
+                attrs = json.loads(attrs)
+            if isinstance(attrs, dict):
+                attr_str = " | Attributes: " + ", ".join([f"{k}: {v}" for k, v in attrs.items()])
+        except Exception as e:
+            logger.error(f"Attr parse error: {e}")
+
+    return (header + specs + desc + attr_str)[:1000].strip()
 
 
 async def run_reindexing(ch_manager):
-    """
-    Основной воркер переиндексации с защитой от обрывов.
-    """
     source_table = "beverages_rag"
     target_table = "beverages_rag_v2"
     batch_size = 2000
 
-    # 1. Инициализация таблицы
+    # 1. Подготовка таблицы
     try:
         client = await ch_manager.connect()
         await client.command(CREATE_TABLE_SQL)
-        logger.success(f"✅ Table {target_table} is ready (Created or already exists)")
+        logger.success(f"✅ Table {target_table} ready")
     except Exception as e:
-        logger.error(f"❌ Failed to ensure table {target_table}: {e}")
+        logger.error(f"❌ Table creation failed: {e}")
         return
+
+    columns = ['id', 'name', 'description', 'category', 'country', 'brand', 'abv', 'price', 'rating', 'attributes',
+               'file_hash', 'source_file', 'created_at']
+    full_columns = columns + ['embedding']
 
     logger.info("🚀 Starting Safe Hybrid Reindexing (FastEmbed CPU)...")
 
-    # Жесткий список колонок для исключения ошибок транспонирования
-    columns = ['id', 'name', 'description', 'category', 'country', 'brand', 'abv', 'price', 'rating', 'attributes',
-               'file_hash', 'source_file', 'created_at']
-    full_cols = columns + ['embedding']
-
     while True:
         try:
-            # Проверяем соединение
+            # Проверка/Восстановление соединения
             if not ch_manager.client:
                 await ch_manager.connect()
             client = ch_manager.client
 
-            # 2. Выбираем ID, которых нет в v2 (Докачка)
-            # Используем LIMIT для контроля RAM на Xeon
+            # 2. Докачка: выбираем только отсутствующие ID
             query = f"""
-                SELECT {", ".join(columns)} FROM {source_table}
+                SELECT {', '.join(columns)} FROM {source_table}
                 WHERE id NOT IN (SELECT id FROM {target_table})
                 LIMIT {batch_size}
             """
+            settings = {'max_block_size': batch_size, 'max_execution_time': 0}
 
-            # Настройки для стабильности
-            settings = {'select_sequential_consistency': 1, 'max_execution_time': 0, 'max_block_size': batch_size}
+            # Используем проверенный вчера асинхронный стрим
+            async with await client.query_column_block_stream(query, settings=settings) as stream:
+                total_in_batch = 0
 
-            result = await client.query(query, settings=settings)
+                async for block_columns in stream:
+                    t_start = time.time()
 
-            # Если данных больше нет — выходим
-            if not result.result_rows:
-                logger.success("🏁 REINDEXING COMPLETE! Target table is up to date.")
-                break
+                    # --- РАБОЧАЯ МЕХАНИКА ВЧЕРАШНЕГО ДНЯ ---
+                    # 1. Транспонируем колонки в строки
+                    block_rows = list(zip(*block_columns))
+                    rows = [dict(zip(columns, row)) for row in block_rows]
+                    # ---------------------------------------
 
-            # 3. Транспонируем поколоночный блок в строки (fix 'dict' issues)
-            block_rows = list(zip(*result.result_rows))
-            rows = [dict(zip(columns, r)) for r in block_rows]
+                    if not rows:
+                        continue
 
-            # 4. Генерация эмбеддингов
-            texts = [create_hybrid_string(r) for r in rows]
-
-            try:
-                # Напрямую используем модель из сервиса
-                embeddings_iter = embedding_service.model.embed(texts, batch_size=128)
-                embeddings_list = [e.tolist() for e in embeddings_iter]
-            except Exception as inf_e:
-                logger.error(f"⚠️ Inference error on batch: {inf_e}")
-                await asyncio.sleep(2)
-                continue
-
-            # 5. Подготовка пачки к вставке
-            final_data = []
-            for i, row in enumerate(rows):
-                row['embedding'] = embeddings_list[i]
-
-                # Чистим JSON атрибуты
-                attrs = row.get('attributes')
-                if isinstance(attrs, str):
+                    # 3. Эмбеддинги (FastEmbed CPU)
+                    texts = [create_hybrid_string(r) for r in rows]
                     try:
-                        row['attributes'] = json.loads(attrs)
-                    except Exception:
-                        row['attributes'] = {}
-                elif attrs is None or not isinstance(attrs, dict):
-                    row['attributes'] = {}
+                        embeddings_iter = embedding_service.model.embed(texts, batch_size=128)
+                        embeddings = [e.tolist() for e in embeddings_iter]
+                    except Exception as e:
+                        logger.error(f"Inference error: {e}")
+                        continue
 
-                # Собираем кортеж строго по списку full_cols
-                final_data.append(tuple(row[col] for col in full_cols))
+                    # 4. Сборка для вставки
+                    final_batch = []
+                    for i, row in enumerate(rows):
+                        row['embedding'] = embeddings[i]
 
-            # 6. Асинхронная вставка
-            await client.insert(target_table, final_data, column_names=full_cols)
+                        # Фикс JSON
+                        attrs = row.get('attributes')
+                        if isinstance(attrs, str):
+                            try:
+                                row['attributes'] = json.loads(attrs)
+                            except Exception as e:
+                                logger.error(f'ERROR1 {e}')
+                                row['attributes'] = {}
+                        elif attrs is None:
+                            row['attributes'] = {}
 
-            # Логируем текущий прогресс
-            count_v2 = await client.command(f"SELECT count() FROM {target_table}")
-            logger.info(f"📊 Progress: {count_v2} rows in v2 (+{len(rows)} in this batch)")
+                        final_batch.append(tuple(row[col] for col in full_columns))
+
+                    # 5. Вставка
+                    await client.insert(target_table, final_batch, column_names=full_columns)
+
+                    total_in_batch += len(rows)
+                    t_end = time.time()
+                    logger.info(f"Indexed {len(rows)} rows. Speed: {len(rows) / (t_end - t_start):.1f} r/s")
+
+                # Если после прохода стрима в этом цикле ничего не пришло — значит всё
+                if total_in_batch == 0:
+                    logger.success("🏁 ALL DONE. No more records to reindex.")
+                    return
 
         except Exception as e:
-            logger.error(f"🔌 Connection or Logic Error: {e}. Retrying in 10s...")
+            logger.error(f"🔌 Worker Error: {e}. Retrying in 10s...")
             await asyncio.sleep(10)
