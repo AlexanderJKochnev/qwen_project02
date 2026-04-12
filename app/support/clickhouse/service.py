@@ -18,7 +18,7 @@ class EmbeddingService:
                 model_name=self.fake_model_name,
                 cache_dir=model_path,
                 local_files_only=True,
-                threads=None
+                threads=8
             )
             logger.success(f"EmbeddingService: E5 weights loaded via alias {self.fake_model_name}")
         except Exception as e:
