@@ -114,7 +114,7 @@ async def run_reindexing(ch_manager):
                     # 3. Эмбеддинги (FastEmbed CPU)
                     texts = [create_hybrid_string(r) for r in rows]
                     try:
-                        embeddings_iter = embedding_service.model.embed(texts, batch_size=128)
+                        embeddings_iter = embedding_service.model.embed(texts, batch_size=256)
                         embeddings = [e.tolist() for e in embeddings_iter]
                     except Exception as e:
                         logger.error(f"Inference error: {e}")
