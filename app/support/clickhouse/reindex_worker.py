@@ -32,16 +32,20 @@ async def run_reindexing(ch_manager):
     target_table = "beverages_rag_v2"
     batch_size = 5000
 
-    # 1. Подготовка таблицы
+    # Явно задаем колонки, чтобы порядок в SELECT и словаре был идентичен
+    columns = ['id', 'name', 'description', 'category', 'country', 'brand', 'abv', 'price', 'rating', 'attributes',
+               'file_hash', 'source_file', 'created_at']
+    full_columns = columns + ['embedding']
+
     try:
         client = await ch_manager.connect()
         await client.command(CREATE_TABLE_SQL)
-        logger.success(f"✅ Table {target_table} ready (256d)")
+        logger.success(f"✅ Table {target_table} ready")
     except Exception as e:
-        logger.error(f"❌ Table init failed: {e}")
+        logger.exception(f"❌ Failed to ensure table {target_table}: {e}")
         return
 
-    logger.info("🚀 Starting 256d Reindexing via StaticModel (Model2Vec)...")
+    logger.info("🚀 Starting 256d Reindexing (StaticModel)...")
 
     while True:
         try:
@@ -49,54 +53,73 @@ async def run_reindexing(ch_manager):
                 await ch_manager.connect()
             client = ch_manager.client
 
-            # 2. Выбираем ID, которых нет в v2
-            query = f"SELECT * EXCEPT(embedding) FROM {source_table} WHERE id NOT IN (SELECT id FROM {target_table}) LIMIT {batch_size}"
+            # 1. Читаем данные. NOT IN гарантирует, что мы не дублируем записи.
+            query = f"SELECT {', '.join(columns)} FROM {source_table} WHERE id NOT IN (SELECT id FROM {target_table}) LIMIT {batch_size}"
             result = await client.query(query, settings={'select_sequential_consistency': 1})
 
             if not result.result_rows:
                 logger.success("🏁 All records reindexed (256d)!")
                 break
 
-            # 3. Транспонируем колонки в строки
-            # Исправлено: забираем названия колонок из результата
-            column_names = list(result.column_names)
-            block_rows = list(zip(*result.result_rows))
-            rows = [dict(zip(column_names, row)) for row in block_rows]
+            # 2. Обработка колоночного вывода
+            # col_data[0] - это все ID, col_data[1] - все Name и т.д.
+            col_data = result.result_rows
+            num_rows = len(col_data[0])
 
-            # 4. Формируем тексты (простая склейка без спец. префиксов)
-            texts = [f"{r.get('name', '')} {r.get('brand', '')} {r.get('category', '')} {r.get('description', '')}" for
-                     r in rows]
+            rows = []
+            for i in range(num_rows):
+                row = {}
+                for col_idx, col_name in enumerate(columns):
+                    val = col_data[col_idx][i]
+                    # Принудительно в строку для текстовых полей, чтобы не было TypeError в драйвере
+                    if col_name in ['name', 'description', 'category', 'brand', 'country']:
+                        row[col_name] = str(val) if val is not None else ""
+                    else:
+                        row[col_name] = val
+                rows.append(row)
 
-            # 5. Генерация векторов (StaticModel летает на CPU)
+            # 3. Подготовка текстов для эмбеддингов
+            texts = [f"{r['name']} {r['brand']} {r['category']} {r['description']}" for r in rows]
+
+            # 4. Генерация векторов
             t_start = time.time()
-            vectors = embedding_service.model.encode(texts)
+            try:
+                vectors = embedding_service.model.encode(texts)
+            except Exception as e:
+                logger.exception(f"Model encode failed: {e}")
+                await asyncio.sleep(5)
+                continue
             t_end = time.time()
 
-            # 6. Сборка кортежей для вставки
-            final_batch = []
-            full_columns = column_names + ['embedding']
-
+            # 5. Сборка финального батча
+            final_data = []
             for i, row in enumerate(rows):
                 row['embedding'] = vectors[i].tolist()
 
-                # Фикс JSON
+                # Парсинг JSON поля attributes
                 attrs = row.get('attributes')
                 if isinstance(attrs, str):
                     try:
                         row['attributes'] = json.loads(attrs)
-                    except:
+                    except Exception as e:
+                        logger.error(f"JSON Parse error at row {row.get('id')}: {e}")
                         row['attributes'] = {}
-                elif attrs is None:
+                elif attrs is None or not isinstance(attrs, dict):
                     row['attributes'] = {}
 
-                # Собираем кортеж СТРОГО по списку имен
-                final_batch.append(tuple(row[col] for col in full_columns))
+                # Собираем кортеж СТРОГО в порядке full_columns
+                final_data.append(tuple(row[col] for col in full_columns))
 
-            # 7. Вставка
-            await client.insert(target_table, final_batch, column_names=full_columns)
+            # 6. Вставка в ClickHouse
+            try:
+                await client.insert(target_table, final_data, column_names=full_columns)
+            except Exception as e:
+                logger.exception(f"ClickHouse insert failed: {e}")
+                await asyncio.sleep(10)
+                continue
 
-            logger.info(f"Indexed {len(rows)} rows. Inference speed: {len(rows) / (t_end - t_start):.1f} r/s")
+            logger.info(f"Indexed {len(rows)} rows. Neural speed: {len(rows) / (t_end - t_start):.1f} r/s")
 
         except Exception as e:
-            logger.error(f"🔌 Worker Error: {e}. Retrying in 10s...")
+            logger.exception(f"🔌 Worker main loop error: {e}")
             await asyncio.sleep(10)
