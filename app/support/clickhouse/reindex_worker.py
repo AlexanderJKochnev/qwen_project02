@@ -63,7 +63,7 @@ def create_hybrid_string(row):
 async def run_reindexing(ch_manager):
     source_table = "beverages_rag"
     target_table = "beverages_rag_v2"
-    batch_size = 2000
+    batch_size = 1000
 
     # 1. Подготовка таблицы
     try:
