@@ -116,7 +116,7 @@ async def run_reindexing(ch_manager):
                     try:
                         t_inf_start = time.time()
                         embeddings_iter = embedding_service.model.embed(texts, batch_size=64,
-                                                                        parallel=None)
+                                                                        parallel=2)
                         embeddings = [e.tolist() for e in embeddings_iter]
                         t_inf_end = time.time()
                         logger.info(f"Inference time: {t_inf_end - t_inf_start:.2f}s for {len(texts)} rows")
