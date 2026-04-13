@@ -19,6 +19,7 @@ class HashingRouter(BaseRouter):
         # то что ниже удалить - было нужно до relation
         self.router.add_api_route(
             "/", self.goahed, methods=["GET"],
+            openapi_extra={'x-request-schema': None}
         )
 
     async def goahead(self, session: AsyncSession):
