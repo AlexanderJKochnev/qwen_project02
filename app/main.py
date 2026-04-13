@@ -58,7 +58,6 @@ from app.support.vllm.router import VllmRouter
 from app.core.config.database.click_async import ClickHouseManager  # , get_ch_client
 # from app.support.clickhouse.model import ensure_table_exists
 from app.support.clickhouse.router import router as click_router
-from app.support.hashing.router import HashingRouter
 
 ch_manager = ClickHouseManager()
 
@@ -222,7 +221,6 @@ app.include_router(OrchestratorRouter().router)
 # app.include_router(ArqWorkerRouter)
 app.include_router(auth_router)
 app.include_router(user_router)
-app.include_router(HashingRouter().router)
 
 
 @app.get("/")
