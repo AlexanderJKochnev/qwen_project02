@@ -11,7 +11,7 @@ class WordHash(Base):
         таблица всех слов в базе данных
         нужна для автозаполнения при поиске
     """
-    word: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    word: Mapped[str] = mapped_column(String, nullable=False, index=True, unique=True)
     hash: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
     freq: Mapped[str] = mapped_column(Integer, nullable=False, default=0)
 
