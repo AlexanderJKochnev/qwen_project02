@@ -1,6 +1,7 @@
 # app.core.hash_norm.py
 """  нормализация текста для хэширования """
-
+import cityhash
+import struct
 import string
 
 # 1. Формируем строку всех допустимых символов
@@ -44,3 +45,37 @@ def fast_normalize(text):
     clean_tokens = [t.strip('#') for t in tokens if len(t) > 1]
 
     return clean_tokens
+
+
+def to_signed_bigint(unsigned_64):
+    """Конвертирует unsigned CityHash в signed BigInt для Postgres"""
+    return struct.unpack('q', struct.pack('Q', unsigned_64))[0]
+
+
+def is_valid_token(t):
+    # Если это число
+    if t.isdigit() or ('#' in t and t.replace('#', '').isdigit()):
+        try:
+            # Пытаемся понять, входит ли число в наш диапазон
+            # Для дробных (1#6) берем целую часть
+            val = int(t.split('#')[0])
+            return 1 <= val <= 2050
+        except ValueError:
+            return False
+    # Если это слово - оставляем (мы уже отсекли 1-символьные в fast_normalize)
+    return True
+
+
+def fast_normalize_v2(text):
+    # ... логика с final_map и .translate() из предыдущего шага ...
+    text = text.lower().translate(final_map)
+    tokens = text.split()
+
+    clean_hashes = []
+    for t in tokens:
+        t = t.strip('#')
+        if len(t) > 1 and is_valid_token(t):
+            h_unsigned = cityhash.CityHash64(t)
+            clean_hashes.append(to_signed_bigint(h_unsigned))
+
+    return list(set(clean_hashes)), tokens  # возвращаем хеши
