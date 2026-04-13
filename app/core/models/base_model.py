@@ -240,7 +240,7 @@ class Search:
     """ поисковое поле для триграммного индекса """
     __abstract__ = True
 
-    word_hashes: Mapped[List[int]] = mapped_column(ARRAY(BigInteger), nullable=False)
+    word_hashes: Mapped[List[int]] = mapped_column(ARRAY(BigInteger), nullable=True)
 
     @declared_attr
     def search_content(cls) -> Mapped[Optional[str]]:
