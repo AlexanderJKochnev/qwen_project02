@@ -81,6 +81,7 @@ async def get_db():
 async def init_db_extensions():
     """Инициализация расширений PostgreSQL"""
     async with DatabaseManager.session_maker() as session:
-        # Установка расширения pg_trgm, если оно еще не установлено
-        await session.execute(text("CREATE EXTENSION IF NOT EXISTS pg_trgm;"))
+        # Установка расширений pg_trgm, если оно еще не установлено
+        # await session.execute(text("CREATE EXTENSION IF NOT EXISTS pg_trgm;"))
+        await session.execute(text("CREATE EXTENSION IF NOT EXISTS intarray;"))
         await session.commit()

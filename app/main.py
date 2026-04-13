@@ -15,7 +15,7 @@ from time import perf_counter
 from app.auth.routers import auth_router, user_router
 # from app.core.config.project_config import settings
 from app.core.exceptions import AppBaseException
-from app.core.config.database.db_async import DatabaseManager  # init_db_extensions
+from app.core.config.database.db_async import DatabaseManager, init_db_extensions
 # from app.core.config.database.ollama_async import get_ollama_manager
 from app.core.config.database.db_mongo import MongoDBManager, get_mongodb
 # from app.core.config.database.redis_async import redis_manager
@@ -84,6 +84,8 @@ async def lifespan(app: FastAPI):
         logger.critical(
             f"Lifespan: ОШИБКА ПОДКЛЮЧЕНИЯ К БД: {e}, {DatabaseManager.connection_string=}"
         )  # Если БД не отвечает, часто нет смысла запускать приложение  # raise e
+    await init_db_extensions()
+    logger.success("расширения Postgresql установлены")
     await MongoDBManager.connect()  # Подключаем Mongo
     logger.success("Lifespan: соединение с MongoDB установлены")
     # await init_db_extensions()  # подключение расщирений Postgresql
@@ -92,24 +94,9 @@ async def lifespan(app: FastAPI):
     app.state.ch_client = await ch_manager.connect()
     #  app.state.ch_client = global_ch_manager.client
     logger.success("✅ ClickHouse connected")
-    global _embedding_service
-    _embedding_service = EmbeddingService()
-    # status = _embedding_service.get_status()
-    # print(f"Embedding service status: {status}")
-
-    # Создание таблицы
-    # Загружаем только лёгкую Static модель для запросов
-    # GPU модель загрузится только при импорте
-    logger.success("✅ Query model loaded (Static, CPU, 50MB)")
-
-    # Создаём таблицу
-    # await ensure_table_exists()
-
-    # await redis_manager.connect(host="redis", port=6379)  # запускаем redis
-    # logger.success("Lifespan: Redis запущен, соединение установлено")
-    # ollama_manager = get_ollama_manager()
-    # app.state.ollama_manager = ollama_manager
-    # await ollama_manager.get_client()
+    # global _embedding_service
+    # _embedding_service = EmbeddingService()
+    # logger.success("✅ Query model loaded (Static, CPU, 50MB)")
     yield
 
     # --- SHUTDOWN ---

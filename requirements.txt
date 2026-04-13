@@ -62,3 +62,4 @@ tenacity==8.2.3
 async-lru==2.0.4
 fastembed
 model2vec>=0.1.0
+cityhash

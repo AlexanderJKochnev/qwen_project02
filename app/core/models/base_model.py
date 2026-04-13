@@ -1,10 +1,10 @@
 # app/core/models/base_model.py
 
-from datetime import datetime, timezone, date
+from datetime import datetime, date
 from decimal import Decimal
-from typing import Annotated, Optional, Type
+from typing import Annotated, Optional, Type, List
 # from sqlalchemy.dialects.postgresql import MONEY
-from sqlalchemy import DateTime, DECIMAL, func, text, Text, Computed, inspect
+from sqlalchemy import DateTime, DECIMAL, func, text, Text, Computed, inspect, BigInteger, ARRAY
 from sqlalchemy.dialects.postgresql import TSVECTOR
 # from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy.ext.asyncio import AsyncAttrs
@@ -239,6 +239,8 @@ class BaseFullFree(Base, BaseIntFree, BaseAt, BaseLang):
 class Search:
     """ поисковое поле для триграммного индекса """
     __abstract__ = True
+
+    word_hashes: Mapped[List[int]] = mapped_column(ARRAY(BigInteger), nullable=False)
 
     @declared_attr
     def search_content(cls) -> Mapped[Optional[str]]:
