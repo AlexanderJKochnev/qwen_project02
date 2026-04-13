@@ -2,7 +2,7 @@ from __future__ import annotations
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Any, TYPE_CHECKING, Type
 from cityhash import CityHash64
-from app.core.hash_norm import fast_normalize
+from app.core.hash_norm import fast_normalize, get_hashes_from_text
 
 
 if TYPE_CHECKING:
@@ -44,14 +44,6 @@ def extract_text_ultra_fast(data: Any, skip_keys: set = None) -> str:
     return ' '.join(result)
 
 
-# Интегрируем быстрый нормализатор (обсужденный ранее)
-def get_hashes_from_text(text: str) -> list[int]:
-    tokens = fast_normalize(text)
-    # Используем 64-битный хеш (совместим с BigInteger)
-    # cityhash или mmh3 детерминированы и очень быстры
-    return [CityHash64(t) for t in tokens]
-
-
 async def reindex_items(instance: Item,
                         model: Type[Drink],
                         repository: DrinkRepository,
@@ -65,5 +57,5 @@ async def reindex_items(instance: Item,
     drink_dict = drink.to_dict()
     raw_text: str = extract_text_ultra_fast(drink_dict, skip_keys)
     instance.search_content = raw_text.lower()    # удалить после настройки word_hashes
-    instance.word_hashes = get_hashes_from_text(raw_text)
+    instance.word_hashes = get_hashes_for_item(raw_text)
     return instance

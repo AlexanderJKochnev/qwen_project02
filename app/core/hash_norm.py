@@ -1,65 +1,69 @@
 # app.core.hash_norm.py
 """  нормализация текста для хэширования """
 import string
-from functools import lru_cache
-import cityhash
+from loguru import logger
 import struct
+from functools import lru_cache
+from typing import List
 
-# 1. Формируем строку всех допустимых символов
-allowed_chars = (string.ascii_lowercase + string.digits + "abcdefghijklmnopqrstuvwxyz" +
-                 "абвгдёежзийклмнопрстуфхцчшщъыьэюя" + "., ")  # добавляем точку и запятую, как вы просили
+import cityhash
 
+# --- КОНФИГУРАЦИЯ И НОРМАЛИЗАЦИЯ ---
 
-# 2. Создаем карту для translate:
-# По умолчанию заменяем ВЕЩЬ символ (0-65535 для Unicode) на пробел
-trans_map = {i: ' ' for i in range(65536)}
+_EXTRA_FIXES = {
+    'ü': 'u', 'ö': 'o', 'ä': 'a', 'ß': 'ss', 'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
+    'à': 'a', 'â': 'a', 'î': 'i', 'ï': 'i', 'ô': 'o', 'û': 'u', 'ù': 'u', 'ç': 'c',
+    'ñ': 'n', 'á': 'a', 'í': 'i', 'ó': 'o', 'ú': 'u', 'ã': 'a', 'õ': 'o', 'å': 'a',
+    'ø': 'o', 'æ': 'ae', 'ł': 'l', 'ń': 'n', 'ś': 's', 'ź': 'z', 'ż': 'z',
+    '.': '#', ',': '#'
+}
 
-# 3. Переопределяем разрешенные символы (они остаются самими собой)
-for char in allowed_chars:
-    trans_map[ord(char)] = char
-
-# 4. Добавляем вашу европейскую диакритику (сразу с заменой)
-extra_fixes = {'ü': 'u', 'ö': 'o', 'ä': 'a', 'ß': 'ss', 'é': 'e', 'è': 'e', 'ç': 'c',  # и так далее
-               }
-for char, replacement in extra_fixes.items():
-    trans_map[ord(char)] = replacement
-
-# 5. Реализуем замену разделителей (.,) на спецсимвол для чисел
-# Чтобы потом просто сделать .replace('.', '#').replace(',', '#')
-trans_map[ord('.')] = '#'
-trans_map[ord(',')] = '#'
-
-# Финальный объект для translate
-final_map = str.maketrans({chr(k): v for k, v in trans_map.items()})
+_ALLOWED = string.ascii_lowercase + string.digits + "абвгдёежзийклмнопрстуфхцчшщъыьэюя#"
+_TRANS_MAP = str.maketrans({
+    **{chr(i): ' ' for i in range(65536)},
+    **{c: c for c in _ALLOWED},
+    **_EXTRA_FIXES
+})
 
 
-def to_signed_bigint(unsigned_64):
-    """Конвертирует unsigned CityHash в signed BigInt для Postgres"""
-    return struct.unpack('q', struct.pack('Q', unsigned_64))[0]
+@lru_cache(maxsize=65536)
+def get_cached_hash(token: str) -> int:
+    """Детерминированный CityHash64 -> Signed BigInt."""
+    h_unsigned = cityhash.CityHash64(token)
+    return struct.unpack('q', struct.pack('Q', h_unsigned))[0]
 
 
-def is_valid_token(t):
-    # Если это число
-    if t.isdigit() or ('#' in t and t.replace('#', '').isdigit()):
+def is_valid_token(t: str) -> bool:
+    """Фильтрация: длина > 1 и числа только в диапазоне 1-2050."""
+    if not t or len(t) < 2:
+        return False
+    clean_t = t.replace('#', '')
+    if clean_t.isdigit():
         try:
-            # Пытаемся понять, входит ли число в наш диапазон
-            # Для дробных (1#6) берем целую часть
             val = int(t.split('#')[0])
             return 1 <= val <= 2050
-        except ValueError:
+        except Exception as e:
+            logger.error(f' is_valid_token. {e}')
             return False
-    # Если это слово - оставляем (мы уже отсекли 1-символьные в fast_normalize)
     return True
 
 
-@lru_cache(maxsize=32768)
-def get_cached_hash(token: str) -> int:
-    """Детерминированный CityHash64 -> Signed BigInt"""
-    return struct.unpack('q', struct.pack('Q', cityhash.CityHash64(token)))[0]
+def tokenize(text: str) -> List[str]:
+    """Превращает сырой текст в список чистых слов (с сохранением повторов)."""
+    if not text:
+        return []
+    return [
+        t for t in (w.strip('#') for w in text.lower().translate(_TRANS_MAP).split())
+        if is_valid_token(t)
+    ]
+
+# --- ФУНКЦИИ ДЛЯ ПОДДЕРЖКИ БАЗЫ ---
 
 
-def fast_normalize_v4(text: str):
-    """Минималистичный генератор токенов"""
-    # translate + split + фильтр в одном списковом включении
-    return [t for t in (w.strip('#') for w in text.lower().translate(final_map).split()) if
-            len(t) > 1 and is_valid_token(t)]
+def get_hashes_for_item(text: str) -> List[int]:
+    """
+    Генерирует уникальные хеши для поля word_hashes (для GIN индекса).
+    Использовать в макросе обновления айтема.
+    """
+    # set() здесь уместен, т.к. для GIN индекса дубликаты вредны
+    return [get_cached_hash(t) for t in set(tokenize(text))]

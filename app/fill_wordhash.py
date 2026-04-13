@@ -1,42 +1,51 @@
+from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, insert
-from app.core.hash_norm import fast_normalize_v4, get_cached_hash
+from app.core.hash_norm import get_cached_hash, tokenize
 from app.support import Item
 from app.support.hashing.model import WordHash
 from collections import Counter
+from app.core.config.database.db_async import get_db
 
 
-async def seed_word_dictionary_v2(session: AsyncSession):
-    # 1. Загружаем данные
-    result = await session.execute(select(Item.search_content).where(Item.search_content != None))
+async def seed_word_dictionary(session: AsyncSession, item_model: Any, word_model: Any):
+    """
+    Скрипт начального наполнения таблицы-словаря WordHash.
+    """
+    # 1. Выкачиваем весь сырой текст из основной таблицы
+    # (Добавьте .limit() или чанки, если памяти < 16ГБ)
+    res = await session.execute(select(item_model.search_content).where(item_model.search_content.is_not(None)))
 
-    # 2. Собираем ВСЕ токены из всех строк в один плоский список
-    # Это быстрее, чем обновлять словарь на каждой итерации
     all_tokens = []
-    for raw_text in result.scalars():
-        _, tokens = fast_normalize_v4(raw_text)
-        all_tokens.extend(tokens)
+    print("Начинаю токенизацию данных...")
+
+    for raw_text in res.scalars():
+        # Собираем ВСЕ слова (с повторами) для правильного freq
+        all_tokens.extend(tokenize(raw_text))
 
     if not all_tokens:
+        print("Нет данных для индексации.")
         return
 
-    # 3. Уникальные значения и их количество одним махом (через Counter на базе хеш-таблиц C)
+    # 2. Считаем частотность (Counter сделает set и count за один проход на C)
+    print(f"Токенов собрано: {len(all_tokens)}. Считаю частотность...")
     counts = Counter(all_tokens)
 
-    # 4. Формируем финальный список для вставки
-    # Хеши берем из кэша (они там уже лежат после шага 2)
+    # 3. Подготовка к вставке
     data_to_insert = [{"word": w, "hash": get_cached_hash(w), "freq": c} for w, c in counts.items()]
 
-    # 5. Массовая вставка батчами
+    # 4. Массовая вставка батчами по 5000 строк
+    print(f"Уникальных слов: {len(data_to_insert)}. Записываю в БД...")
     for i in range(0, len(data_to_insert), 5000):
-        batch = data_to_insert[i: i + 5000]
-        # Так как данные внутри батча уникальны (благодаря Counter),
-        # ON CONFLICT сработает только для старых данных в БД
-        stmt = insert(WordHash).values(batch)
+        batch = data_to_insert[i:i + 5000]
+        stmt = insert(word_model).values(batch)
+        # Если слово уже есть, прибавляем частоту к существующей
         stmt = stmt.on_conflict_do_update(
-            index_elements=['word'], set_={'freq': WordHash.freq + stmt.excluded.freq}
+            index_elements=['word'], set_={'freq': word_model.freq + stmt.excluded.freq}
         )
         await session.execute(stmt)
 
     await session.commit()
-    print(f"Обработано {len(counts)} уникальных слов.")
+    print("Готово.")
+
+seed_word_dictionary(get_db(), Item, WordHash)
