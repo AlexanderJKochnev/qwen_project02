@@ -1,11 +1,10 @@
-from typing import Any
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, insert
-from app.core.hash_norm import get_cached_hash, tokenize
-from app.support import Item
-from app.support.hashing.model import WordHash
 from collections import Counter
-from app.core.config.database.db_async import get_db
+from typing import Any
+
+from sqlalchemy import insert, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.hash_norm import get_cached_hash, tokenize
 
 
 async def seed_word_dictionary(session: AsyncSession, item_model: Any, word_model: Any):
@@ -46,6 +45,5 @@ async def seed_word_dictionary(session: AsyncSession, item_model: Any, word_mode
         await session.execute(stmt)
 
     await session.commit()
-    print("Готово.")
+    return len(data_to_insert)
 
-seed_word_dictionary(get_db(), Item, WordHash)
