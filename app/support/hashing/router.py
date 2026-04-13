@@ -1,27 +1,15 @@
 # app/support/hashing/router.py
-from app.core.routers.base import BaseRouter
+from fastapi import APIRouter
 from app.support import Item
 from app.support.hashing.model import WordHash
 from sqlalchemy.ext.asyncio import AsyncSession
-# from app.core.config.database.db_async import get_db
 from app.fill_wordhash import seed_word_dictionary
 
 
-class HashingRouter(BaseRouter):
-    def __init__(self):
-        super().__init__(
-            model=WordHash,
-            prefix="/wordhash",
-        )
+router = APIRouter(prefix="/hashing", tags=["hashing"])
 
-    def setup_routes(self):
-        # super().setup_routes()
-        # то что ниже удалить - было нужно до relation
-        self.router.add_api_route(
-            "/", self.goahead, methods=["GET"],
-            openapi_extra={'x-request-schema': None}
-        )
 
-    async def goahead(self, session: AsyncSession):
-        nmbr = await seed_word_dictionary(session, Item, WordHash)
-        return {f'{nmbr} records shall be added'}
+@router.get("/search")
+async def goahead(self, session: AsyncSession):
+    nmbr = await seed_word_dictionary(session, Item, WordHash)
+    return {f'{nmbr} records shall be added'}
