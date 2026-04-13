@@ -1,8 +1,7 @@
 from __future__ import annotations
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Any, TYPE_CHECKING, Type
-from cityhash import CityHash64
-from app.core.hash_norm import fast_normalize, get_hashes_from_text
+from app.core.hash_norm import get_hashes_for_item
 
 
 if TYPE_CHECKING:
