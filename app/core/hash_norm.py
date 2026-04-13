@@ -1,8 +1,9 @@
 # app.core.hash_norm.py
 """  нормализация текста для хэширования """
+import string
+from functools import lru_cache
 import cityhash
 import struct
-import string
 
 # 1. Формируем строку всех допустимых символов
 allowed_chars = (string.ascii_lowercase + string.digits + "abcdefghijklmnopqrstuvwxyz" +
@@ -32,21 +33,6 @@ trans_map[ord(',')] = '#'
 final_map = str.maketrans({chr(k): v for k, v in trans_map.items()})
 
 
-def fast_normalize(text):
-    # 1. translate убирает мусор, меняет умляуты и ставит # на место точек/запятых
-    text = text.lower().translate(final_map)
-
-    # 2. Теперь разбиваем по пробелам.
-    # split() без аргументов эффективно схлопывает любые цепочки пробелов
-    tokens = text.split()
-
-    # 3. Очищаем токены от '#' по краям (если это была точка в конце предложения)
-    # но оставляем внутри (1#6)
-    clean_tokens = [t.strip('#') for t in tokens if len(t) > 1]
-
-    return clean_tokens
-
-
 def to_signed_bigint(unsigned_64):
     """Конвертирует unsigned CityHash в signed BigInt для Postgres"""
     return struct.unpack('q', struct.pack('Q', unsigned_64))[0]
@@ -66,16 +52,14 @@ def is_valid_token(t):
     return True
 
 
-def fast_normalize_v2(text):
-    # ... логика с final_map и .translate() из предыдущего шага ...
-    text = text.lower().translate(final_map)
-    tokens = text.split()
+@lru_cache(maxsize=32768)
+def get_cached_hash(token: str) -> int:
+    """Детерминированный CityHash64 -> Signed BigInt"""
+    return struct.unpack('q', struct.pack('Q', cityhash.CityHash64(token)))[0]
 
-    clean_hashes = []
-    for t in tokens:
-        t = t.strip('#')
-        if len(t) > 1 and is_valid_token(t):
-            h_unsigned = cityhash.CityHash64(t)
-            clean_hashes.append(to_signed_bigint(h_unsigned))
 
-    return list(set(clean_hashes)), tokens  # возвращаем хеши
+def fast_normalize_v4(text: str):
+    """Минималистичный генератор токенов"""
+    # translate + split + фильтр в одном списковом включении
+    return [t for t in (w.strip('#') for w in text.lower().translate(final_map).split()) if
+            len(t) > 1 and is_valid_token(t)]
