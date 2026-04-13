@@ -46,7 +46,7 @@ ItemListViewAdapter: TypeAdapter = TypeAdapter(List[ItemListView])
 
 class ItemService(Service):
     default = ['vol', 'drink_id', 'image_id']
-    BATCH_SIZE = 500  # Оптимально для баланса память/скорость
+    BATCH_SIZE = 1500  # Оптимально для баланса память/скорость
 
     @classmethod
     def _level_up_(cls, lang_prefixes: list, item: dict) -> dict:
@@ -536,6 +536,9 @@ class ItemService(Service):
                             content = extract_text_ultra_fast(drink_dict, cls.skip_keys)
                             # строку ниже удалить после тестирования хэш индекса
                             item.word_hashes = get_hashes_for_item(content)
+                            if not item.word_hashes:
+                                logger.error(f'{content=}')
+                                break
                             item.search_content = content.lower()
 
                     # Фиксируем пачку в БД
