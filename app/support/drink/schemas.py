@@ -258,7 +258,7 @@ class CustomReadSchema(LangMixin, NewReadSchema):
     def serialize_sugar(self, value: Optional[float]) -> Optional[str]:
         if value is None:
             return None
-        return f"{int(round(value))}%"
+        return f"{int(round(value))}"
 
 
 class DrinkRead(ReadNoNameSchema, CustomReadSchema):

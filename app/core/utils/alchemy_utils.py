@@ -915,7 +915,7 @@ def transform(source: dict, lang: str, languages: tuple) -> dict:
     country = reg.get("country") or {}
     # составные
     if alcv := d.get('alc'):
-        alc = f"{alcv}%"
+        alc = f"{alcv}"
     else:
         alc = None
 
@@ -1010,7 +1010,7 @@ def transform_api_list_view(source: dict, def_lang: str, languages: tuple) -> di
     country = reg.get("country") or {}
 
     if alcv := d.get('alc'):
-        alc = f"{alcv}%"
+        alc = f"{alcv}"
     else:
         alc = None
     vol = d.get('vol', "")
