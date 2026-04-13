@@ -252,7 +252,7 @@ class CustomReadSchema(LangMixin, NewReadSchema):
     def serialize_alc(self, value: Optional[float]) -> Optional[str]:
         if value is None:
             return None
-        return f"{int(round(value))}%"
+        return f"{int(round(value))}"
 
     @field_serializer('sugar', when_used='unless-none')
     def serialize_sugar(self, value: Optional[float]) -> Optional[str]:
