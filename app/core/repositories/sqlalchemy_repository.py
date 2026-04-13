@@ -16,6 +16,8 @@ from sqlalchemy.orm import load_only, aliased
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql.elements import Label
+
+from app.core.hash_norm import get_hashes_for_item
 from app.core.models.base_model import get_model_by_name
 from app.core.exceptions import AppBaseException
 # from sqlalchemy.dialects import postgresql
@@ -817,14 +819,16 @@ class Repository(metaclass=RepositoryMeta):
                 return 0
 
             # 5. Обработка и обновление
-            processed_drinks = {}
+            processed_drinks: list = []
             for item_obj, drink_obj in rows:
                 if drink_obj.id not in processed_drinks:
                     # Логика как в reindex_items
                     drink_dict = drink_obj.to_dict()
-                    processed_drinks[drink_obj.id] = extract_text_ultra_fast(drink_dict, skip_keys).lower()
-
-                item_obj.search_content = processed_drinks[drink_obj.id]
+                    content = extract_text_ultra_fast(drink_dict, skip_keys).lower()
+                    processed_drinks.append(drink_obj.id)
+                    item_obj.word_hashes = get_hashes_for_item(content)
+                    # строку ниже удалить после тестирования хэш индекса
+                    item_obj.search_content = content
 
             # 6. Принудительная синхронизация с БД
             await session.flush()

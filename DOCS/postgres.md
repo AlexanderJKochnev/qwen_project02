@@ -53,3 +53,6 @@ SELECT
 FROM pg_indexes 
 WHERE tablename = 'producers';
 "
+
+# очистка таблицы и сброс счетчика
+TRUNCATE TABLE имя_таблицы RESTART IDENTITY;

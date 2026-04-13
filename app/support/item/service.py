@@ -15,6 +15,7 @@ from sqlalchemy import func, select, or_
 
 from app.core.config.database.db_async import DatabaseManager
 from app.core.config.project_config import settings
+from app.core.hash_norm import get_hashes_for_item
 from app.core.models.base_model import get_model_by_name
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.services.service import Service
@@ -533,6 +534,8 @@ class ItemService(Service):
                             # Используем вашу логику парсинга
                             drink_dict = item.drink.to_dict()
                             content = extract_text_ultra_fast(drink_dict, cls.skip_keys)
+                            # строку ниже удалить после тестирования хэш индекса
+                            item.word_hashes = get_hashes_for_item(content)
                             item.search_content = content.lower()
 
                     # Фиксируем пачку в БД
