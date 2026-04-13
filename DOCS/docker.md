@@ -32,6 +32,8 @@ sudo systemctl status docker.socket
 11. sudo mount --bind /mnt/hdd_data/volumes /var/lib/docker/volumes
 12. sudo systemctl daemon-reload
 
+##  запуск python макроса из docker (app.reindex.py)
+docker compose exec -it app python -m app.reindex
 
 
 
