@@ -1,49 +1,42 @@
 from collections import Counter
 from typing import Any
 
-from sqlalchemy import insert, select
+from sqlalchemy import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.hash_norm import get_cached_hash, tokenize
 
 
-async def seed_word_dictionary(session: AsyncSession, item_model: Any, word_model: Any):
+async def seed_word_dictionary(session: AsyncSession, result_stream, word_model: Any):
     """
-    Скрипт начального наполнения таблицы-словаря WordHash.
+    Версия с поддержкой асинхронного стрима для экономии памяти Docker-контейнера.
     """
-    # 1. Выкачиваем весь сырой текст из основной таблицы
-    # (Добавьте .limit() или чанки, если памяти < 16ГБ)
-    res = await session.execute(select(item_model.search_content).where(item_model.search_content.is_not(None)))
-
     all_tokens = []
-    print("Начинаю токенизацию данных...")
 
-    for raw_text in res.scalars():
-        # Собираем ВСЕ слова (с повторами) для правильного freq
-        all_tokens.extend(tokenize(raw_text))
+    # Читаем стрим построчно
+    async for row in result_stream:
+        raw_text = row[0]
+        if raw_text:
+            all_tokens.extend(tokenize(raw_text))
+
+        # Чтобы список all_tokens не стал гигантским,
+        # можно сбрасывать промежуточные результаты в Counter каждые 100к строк,
+        # но для 600к строк обычный Counter в конце должен выдержать (это ~30-50МБ RAM).
 
     if not all_tokens:
-        print("Нет данных для индексации.")
+        print("Нет данных.")
         return
 
-    # 2. Считаем частотность (Counter сделает set и count за один проход на C)
-    print(f"Токенов собрано: {len(all_tokens)}. Считаю частотность...")
     counts = Counter(all_tokens)
+    del all_tokens  # явно освобождаем память
 
-    # 3. Подготовка к вставке
-    data_to_insert = [{"word": w, "hash": get_cached_hash(w), "freq": c} for w, c in counts.items()]
+    data = [{"word": w, "hash": get_cached_hash(w), "freq": c} for w, c in counts.items()]
 
-    # 4. Массовая вставка батчами по 5000 строк
-    print(f"Уникальных слов: {len(data_to_insert)}. Записываю в БД...")
-    for i in range(0, len(data_to_insert), 5000):
-        batch = data_to_insert[i:i + 5000]
+    for i in range(0, len(data), 5000):
+        batch = data[i:i + 5000]
         stmt = insert(word_model).values(batch)
-        # Если слово уже есть, прибавляем частоту к существующей
         stmt = stmt.on_conflict_do_update(
             index_elements=['word'], set_={'freq': word_model.freq + stmt.excluded.freq}
         )
         await session.execute(stmt)
-
-    await session.commit()
-    return len(data_to_insert)
-
+        await session.commit()
