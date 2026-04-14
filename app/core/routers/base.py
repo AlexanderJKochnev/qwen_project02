@@ -293,7 +293,7 @@ class BaseRouter:
         """
         # print(f"📥 GET request for {self.model.__name__} from")
         after_date = back_to_the_future(after_date)
-        response = await self.service.get_all(after_date, page, page_size, self.repo, self.model, session)
+        response = await self.service.get(after_date, page, page_size, self.repo, self.model, session)
         # type_checking(response, 'get')
         for key in response:
             print(f'{key=}, {type(key)=}')
@@ -306,7 +306,8 @@ class BaseRouter:
             after_date: datetime = Query(delta,
                                          # (datetime.now(timezone.utc) - relativedelta(years=2)).isoformat(),
                                          description="Дата в формате ISO 8601 (например, 2024-01-01T00:00:00Z)"
-                                         ), session: AsyncSession = Depends(get_db)) -> List[TReadSchema]:
+                                         ), session: AsyncSession = Depends(get_db), limit: int = 20
+    ) -> List[TReadSchema]:
         """
             Получение все записей одним списком после указанной даты.
             По умолчанию задана дата - 2 года от сейчас
@@ -316,8 +317,8 @@ class BaseRouter:
         """
         try:
             after_date = back_to_the_future(after_date)
-            result = await self.service.get(after_date, self.repo, self.model, session)
-            # type_checking(result, 'get_all')
+            result = await self.service.get_all(after_date, self.repo, self.model, session)
+
             return result
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -368,14 +369,13 @@ class BaseRouter:
                          search: str = Query(None, description="Поисковый запрос. "
                                              "В случае пустого запроса будут "
                                              "выведены все данные "),
-                         session: AsyncSession = Depends(get_db)) -> List[TReadSchema]:
+                         session: AsyncSession = Depends(get_db), limit: int = 20) -> List[TReadSchema]:
         """
             Поиск по всем текстовым полям основной таблицы БЕЗ пагинации
             input_valudation_chema <>CreateRelation
             response_model <>ReadRelatio
         """
-        result = await self.service.search_all(search, self.repo, self.model, session)
-        # type_checking(result, 'search_all')
+        result = await self.service.search_all(search, self.repo, self.model, session, limit)
         return result
 
     async def search_geans(self, search: str = Query(None,
@@ -410,7 +410,9 @@ class BaseRouter:
                                                    "В случае пустого запроса будут "
                                                    "выведены все данные "),
                                similarity_threshold: float = Query(None, ge=0, le=1.0),
-                               session: AsyncSession = Depends(get_db)):
+                               session: AsyncSession = Depends(get_db),
+                               limit: int = 20  # ограничение что бы не подвесить сервер
+                               ):
         """
             Поиск по всем текстовым полям основной таблицы БЕЗ пагинации
             input_valudation_chema <>CreateRelation
@@ -418,7 +420,7 @@ class BaseRouter:
         """
         try:
             result = await self.service.search_geans_all(search, similarity_threshold,
-                                                         self.repo, self.model, session)
+                                                         self.repo, self.model, session, limit)
             content = orjson.dumps(result)
             return Response(content=content, media_type="application/json")
         except Exception as e:

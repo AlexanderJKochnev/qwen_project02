@@ -210,9 +210,9 @@ class Service(metaclass=ServiceMeta):
         return result
 
     @classmethod
-    async def get_all(cls, ater_date: datetime,
-                      page: int, page_size: int, repository: Type[Repository], model: ModelType,
-                      session: AsyncSession) -> Dict[str, Any]:
+    async def get(cls, ater_date: datetime,
+                  page: int, page_size: int, repository: Type[Repository], model: ModelType,
+                  session: AsyncSession) -> Dict[str, Any]:
         # Запрос с загрузкой связей и пагинацией
         skip = (page - 1) * page_size
         items, total = await repository.get_all(ater_date, skip, page_size, model, session)
@@ -220,9 +220,9 @@ class Service(metaclass=ServiceMeta):
         return result
 
     @classmethod
-    async def get(cls, after_date: datetime,
-                  repository: Type[Repository], model: ModelType,
-                  session: AsyncSession) -> Optional[List[ModelType]]:
+    async def get_all(cls, after_date: datetime,
+                      repository: Type[Repository], model: ModelType,
+                      session: AsyncSession) -> Optional[List[ModelType]]:
         # Запрос с загрузкой связей -  возвращает список
         result = await repository.get(after_date, model, session)
         return result
@@ -320,11 +320,11 @@ class Service(metaclass=ServiceMeta):
                          search: str,
                          repository: Type[Repository],
                          model: ModelType,
-                         session: AsyncSession) -> List[ModelType]:
+                         session: AsyncSession, limit: int = 20) -> List[ModelType]:
         """
             базовый поиск без пагинации
         """
-        result = await repository.search_all(search, model, session)
+        result = await repository.search_all(search, model, session, limit)
         return result
 
     @classmethod
@@ -512,14 +512,17 @@ class Service(metaclass=ServiceMeta):
                            session: AsyncSession,
                            ) -> Dict[str, Any]:
         try:
-            # Запрос с загрузкой связей и пагинацией
+            # Запрос с загрузкой связей и пагинацией УДАЛИТЬ ! ЭТОГО ИНДЕКСА БОЛЬШЕ НЕТ
+            logger.warning('this is undex is not available now. redirection to fts search')
+            return await cls.search_fts(search, page, page_size, repository, model, session)
+
             skip = (page - 1) * page_size
             if not search:
                 items, total = await repository.get_full_with_pagination(skip, page_size, model, session)
                 return make_paginated_response(items, total, page, page_size)
             # определаяем тип поиска (geans OR b-tree
             if hasattr(model, 'search_content'):
-                # 2. Формируем расчет веса (релевантности)
+                # 2. Формируем расчет веса (релевантности) УДАЛИТЬ НЕТ ТАКОГО ИНДЕКСА
                 relevance: Label = await cls.get_relevance(search, model, session, similarity_threshold)
                 items, total = await repository.search_geans(search, relevance, skip, page_size, model, session)
             else:
@@ -534,18 +537,19 @@ class Service(metaclass=ServiceMeta):
     @classmethod
     async def search_geans_all(cls, search: str, similarity_threshold: float,
                                repository: Type[Repository],
-                               model: ModelType, session: AsyncSession) -> List[dict]:
+                               model: ModelType, session: AsyncSession, limit: int = 20) -> List[dict]:
         try:
             # Запрос с загрузкой связей без пагинации
             # определаяем тип поиска (geans OR b-tree
             if not search:
                 return await repository.get_full(model, session)
             if hasattr(model, 'search_content'):
+                # УДАЛИТЬ - НЕТ ТАКОГО ИНДЕКСА
                 relevance: Label = await cls.get_relevance(search, model, session, similarity_threshold)
-                items = await repository.search_geans_all(search, relevance, model, session)
+                items = await repository.search_geans_all(search, relevance, model, session, limit)
             else:
                 # model is not indexed by GIN
-                items = await repository.search_all(search, model, session)
+                items = await repository.search_all(search, model, session, limit)
             return items
         except Exception as e:
             logger.error(f'search_geans_all.error: {e}')
@@ -620,7 +624,8 @@ class Service(metaclass=ServiceMeta):
     @classmethod
     async def search_fts_all(cls, search: str,
                              repository: Type[Repository],
-                             model: ModelType, session: AsyncSession) -> List[dict]:
+                             model: ModelType, session: AsyncSession,
+                             limit: int = 20) -> List[dict]:
         try:
             # Запрос с загрузкой связей без пагинации
             # определаяем тип поиска (tfs OR b-tree
@@ -628,7 +633,7 @@ class Service(metaclass=ServiceMeta):
                 return await repository.get_full(model, session)
             if hasattr(model, 'search_content'):
                 if formatted_search := formatted_query(search):
-                    items = await repository.search_fts_all(formatted_search, model, session)
+                    items = await repository.search_fts_all(formatted_search, model, session, limit)
                 else:
                     items = await repository.search_all(search, model, session)
             else:

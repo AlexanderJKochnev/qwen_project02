@@ -676,13 +676,15 @@ class Repository(metaclass=RepositoryMeta):
             raise AppBaseException(message=f'get_full_with_pagination.error; {str(e)}', status_code=404)
 
     @classmethod
-    async def get_full(cls, model: ModelType, session: AsyncSession, ) -> list:
+    async def get_full(cls, model: ModelType, session: AsyncSession, limit: int = 20) -> list:
         """
             Запрос полного списка с загрузкой связей NO PAGINATION - ОСТОРОЖНО МОЖЕТ БЫТЬ ОЧЕНЬ БОЛЬШИМ
             return List[instance]
         """
         try:
             stmt = cls.get_query(model).order_by(model.id.asc())
+            if limit:
+                stmt = stmt.limit(limit)
             result = await cls.nonpagination(stmt, session)
             return result
         except Exception as e:
@@ -693,10 +695,6 @@ class Repository(metaclass=RepositoryMeta):
                          model: ModelType, session: AsyncSession) -> Tuple[Any, int]:
         """ полнотекстовый поиск """
         try:
-            # words = re.findall(r'\w+', search)
-            # formatted_query = " & ".join([f"{word}:*" for word in words])
-            # formatted_query = " & ".join([f"{word}:*" for word in search.split()])
-            # condition = model.search_vector.bool_op("@@")(func.to_tsquery('simple', formatted_query))
             condition = model.search_vector.bool_op("@@")(func.to_tsquery(literal_column("'simple'"),
                                                                           search))
             # ниже - ищет только целые слова
