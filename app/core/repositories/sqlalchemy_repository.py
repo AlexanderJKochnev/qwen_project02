@@ -4,6 +4,7 @@
     get_all     result.mappings().all()
     get_by_id   result.scalar_one_or_none()
 """
+
 from abc import ABCMeta
 from re import search as research
 from datetime import datetime

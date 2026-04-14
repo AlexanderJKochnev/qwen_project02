@@ -3,7 +3,7 @@ from ollama import ListResponse, GenerateResponse
 # from fastapi import Request
 # from app.core.config.database.ollama_async import OllamaClientManager
 from app.core.config.project_config import settings
-from app.core.config.database.ollama_async import get_ollama_manager
+# from app.core.config.database.ollama_async import get_ollama_manager
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.support.ollama.model import Ollama, Prompt, ISOLanguage, Proption, WriterRule
 
@@ -11,7 +11,7 @@ from app.support.ollama.model import Ollama, Prompt, ISOLanguage, Proption, Writ
 class LLMRepository:
     def __init__(self):
         self.host = settings.OLLAMA_HOST
-        self.ollama_manager = get_ollama_manager()
+        # self.ollama_manager = get_ollama_manager()
         # self.client = AsyncClient(host=self.host)
 
     async def get_models_list(self) -> ListResponse:

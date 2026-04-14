@@ -7,16 +7,14 @@ from deepdiff import DeepDiff
 # from sqlalchemy.sql.elements import Label
 from fastapi import BackgroundTasks, HTTPException
 from loguru import logger
-from datetime import datetime, timedelta, timezone
 from pydantic import TypeAdapter, ValidationError
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from sqlalchemy import func, select, or_
 
 from app.core.config.database.db_async import DatabaseManager
 from app.core.config.project_config import settings
-from app.core.hash_norm import get_hashes_for_item
-from app.core.models.base_model import get_model_by_name
+from app.core.hash_norm import get_cached_hash, get_hashes_for_item, tokenize
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.services.service import Service
 from app.core.types import ModelType
@@ -32,6 +30,7 @@ from app.support import Drink, Item
 from app.support.drink.repository import DrinkRepository
 from app.support.drink.schemas import DrinkCreate, DrinkUpdate
 from app.support.drink.service import DrinkService
+from app.support.hashing.model import WordHash
 from app.support.item.repository import ItemRepository
 from app.support.item.schemas import (ItemCreate, ItemCreatePreact, ItemCreateRelation, ItemDetailManyToManyLocalized,
                                       ItemListView, ItemRead, ItemReadRelation, ItemUpdate,
@@ -565,3 +564,24 @@ class ItemService(Service):
         background_tasks.add_task(
             cls.run_reindex_worker, DatabaseManager.session_maker, force_all=force_all
         )
+
+    @staticmethod
+    async def execute_smart_search(query: str, session: AsyncSession, boost: float = 15.0):
+        # 1. Токенизация и сбор хешей (включая префикс последнего слова)
+        repo = ItemRepository
+        tokens = tokenize(query)
+        if not tokens:
+            return []
+
+        # Для простоты считаем все слова полными + ищем префиксы для последнего
+        search_hashes = [get_cached_hash(t) for t in tokens]
+        last_word_prefixes = await repo.get_hashes_by_prefix(session, tokens[-1])
+        all_target_hashes = list(set(search_hashes) | set(last_word_prefixes))
+
+        # 2. Получаем статистику частотности для весов
+        stats_stmt = select(WordHash.hash, WordHash.freq).where(WordHash.hash.in_(all_target_hashes))
+        stats_res = await session.execute(stats_stmt)
+        word_stats = [{"hash": r[0], "freq": r[1]} for r in stats_res.all()]
+
+        # 3. Финальный поиск
+        return await repo.find_items_weighted(session, word_stats, boost)
