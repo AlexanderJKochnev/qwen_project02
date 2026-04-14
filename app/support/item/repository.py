@@ -34,7 +34,7 @@ class ItemRepository(Repository):
 
     @classmethod
     def get_query(cls, model: ModelType):
-        excl = exclude_field_list(Item, ('search_vector', 'drink', 'search_content'))
+        excl = exclude_field_list(Item, ('search_vector', 'drink', 'search_content', 'word_hashes'))
         subquery = DrinkRepository.get_selectin()
         query = select(Item).options(load_only(*excl), selectinload(Item.drink).options(*subquery))
         return query
