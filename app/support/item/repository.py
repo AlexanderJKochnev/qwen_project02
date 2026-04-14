@@ -261,7 +261,8 @@ class ItemRepository(Repository):
     @classmethod
     async def search_by_trigram_index(cls, search_str: str, model: ModelType, session: AsyncSession,
                                       skip: int = None, limit: int = None):
-        """Поиск элементов с использованием триграммного индекса в связанной модели Drink"""
+        """ DELETE
+        Поиск элементов с использованием триграммного индекса в связанной модели Drink"""
         try:
             if search_str is None or search_str.strip() == '':
                 # Если search_str пустой, возвращаем все записи с пагинацией

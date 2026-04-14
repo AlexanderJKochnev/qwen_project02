@@ -421,8 +421,9 @@ class BaseRouter:
         try:
             result = await self.service.search_geans_all(search, similarity_threshold,
                                                          self.repo, self.model, session, limit)
-            content = orjson.dumps(result)
-            return Response(content=content, media_type="application/json")
+            return result
+            #  content = orjson.dumps(result)
+            # return Response(content=content, media_type="application/json")
         except Exception as e:
             raise HTTPException(status_code=501, detail=f'search_geans_all, {self.model.__name__}, {e}')
 

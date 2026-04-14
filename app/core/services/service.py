@@ -592,8 +592,8 @@ class Service(metaclass=ServiceMeta):
             else:
                 # model is not indexed by GIN
                 items = await repository.search_all(search, model, session)
-            result = [item.to_dict() for item in items]
-            return result
+            # result = [item.to_dict() for item in items]
+            return items
         except Exception as e:
             logger.error(f'search_geans_all.error: {e}')
             raise HTTPException(status_code=501, detail=f'{e}')
