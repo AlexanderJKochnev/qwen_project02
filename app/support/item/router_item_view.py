@@ -86,7 +86,7 @@ class ItemViewRouter:
 
         # Маршрут для поиска элементов с использованием fts индекса
         self.router.add_api_route(
-            "/search_geans_items/{lang}",
+            "/search_trigram/{lang}",  # путь не менять - используется preact
             self.search_by_geans_items,
             methods=["GET"],
             # response_model=PaginatedResponse[ItemListView],
