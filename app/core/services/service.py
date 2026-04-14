@@ -21,7 +21,8 @@ from app.core.services.click_service import FullTextSearch
 from app.core.types import ModelType
 from app.core.utils.alchemy_utils import formatted_query, has_column
 from app.core.utils.common_utils import flatten_dict_with_localized_fields, make_paging_dict
-from app.core.utils.pydantic_utils import get_data_for_search, get_repo, make_paginated_response, prepare_search_string
+from app.core.utils.pydantic_utils import (get_data_for_search, get_repo,
+                                           make_paginated_response, prepare_search_string, inst_dict, list_dict)
 from app.core.utils.reindexation import extract_text_ultra_fast, reindex_items
 from app.mongodb.service import ThumbnailImageService
 from app.service_registry import get_search_dependencies, register_service
@@ -90,7 +91,7 @@ class Service(metaclass=ServiceMeta):
             obj = await reindex_items(obj, drink_model, drink_repo, cls.skip_keys, session)
         result = await repository.create(obj, model, session)
         await session.commit()
-        return result
+        return inst_dict(result)
 
     @classmethod
     async def get_or_create(cls, data: Union[BaseModel, dict], repository: Repository,
@@ -218,7 +219,8 @@ class Service(metaclass=ServiceMeta):
         try:
             skip = (page - 1) * page_size
             items, total = await repository.get(ater_date, skip, page_size, model, session)
-            items_dict = [item.to_dict_fast() for item in items]
+            # items_dict = [item.to_dict_fast() for item in items]
+            items_dict = list_dict(items)
             result = make_paginated_response(items_dict, total, page, page_size)
             return result
         except Exception as e:

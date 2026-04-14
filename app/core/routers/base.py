@@ -1,5 +1,5 @@
 # app/core/routers/base.py
-import orjson
+
 from typing import Any, List, Type, TypeVar, Callable
 # from dateutil.relativedelta import relativedelta
 from datetime import datetime
@@ -109,16 +109,16 @@ class BaseRouter:
                                   openapi_extra={'x-request-schema': None})
         # search с пагинацией
         self.router.add_api_route("/search", self.search, methods=["GET"],
-                                  response_model=self.paginated_response,
+                                  # response_model=self.paginated_response,
                                   openapi_extra={'x-request-schema': None})
         # search без пагинации
         self.router.add_api_route("/search_all",
                                   self.search_all, methods=["GET"],
-                                  response_model=self.nonpaginated_response,
+                                  # response_model=self.nonpaginated_response,
                                   openapi_extra={'x-request-schema': None})
         self.router.add_api_route("/search_geans",
                                   self.search_geans, methods=["GET"],
-                                  response_model=self.paginated_response,
+                                  # response_model=self.paginated_response,
                                   openapi_extra={'x-request-schema': None}
                                   )
         self.router.add_api_route("/search_geans_all",
@@ -272,13 +272,9 @@ class BaseRouter:
         """
         obj = await self.service.get_by_id(id, self.repo, self.model, session)
         if obj is None:
-            raise HTTPException(status_code=404, detail=f'Запрашиваемый файл {id} не найден на сервере')
+            raise HTTPException(status_code=404, detail=f'Запрашиваемая запись {id} не найдена на сервере')
         response = obj.to_dict_fast(skip_empty=True)
         return orresponse(response)
-        # content = orjson.dumps(res)
-        # return Response(content=content, media_type="application/json")
-        # return res
-        # return validated_res.model_dump(exclude_none=True, exclude_unset=True)
 
     async def get(self,
                   after_date: datetime = Query(delta,
@@ -297,8 +293,9 @@ class BaseRouter:
         """
         after_date = back_to_the_future(after_date)
         response = await self.service.get(after_date, page, page_size, self.repo, self.model, session)
-        content = orjson.dumps(response)
-        return Response(content=content, media_type="application/json")
+        if obj is None:
+            raise HTTPException(status_code=404, detail=f'Запрашиваемый файл {id} не найден на сервере')
+        return orresponse(response)
         # return response
 
     async def get_all(
@@ -318,9 +315,7 @@ class BaseRouter:
         try:
             after_date = back_to_the_future(after_date)
             response = await self.service.get_all(after_date, self.repo, self.model, session)
-            content = orjson.dumps(response)
-            return Response(content=content, media_type="application/json")
-            # return response
+            return orresponse(response)
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                 detail=f"Internal server error. {e}")

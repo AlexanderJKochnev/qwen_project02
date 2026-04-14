@@ -7,7 +7,7 @@ from pydantic import BaseModel, create_model
 from sqlalchemy import Float, inspect, Integer, Numeric, String, Text
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.sql.type_api import TypeEngine
-from app.core.schemas.base import PaginatedResponse, PyModel
+from app.core.schemas.base import PaginatedResponse, PyModel, BaseModel
 from fastapi.routing import APIRoute
 from fastapi import Response
 import orjson
@@ -21,6 +21,17 @@ def orresponse(response: Union[List, Dict]):
     content = orjson.dumps(response)
     return Response(content=content, media_type="application/json")
 
+
+def list_dict(instances: List[Type[BaseModel]], skip_empty: bool = True) -> List[dict]:
+    """
+    преобразует список instances в список словарей
+    """
+    return [instance.to_dict_fast(skip_empty=skip_empty) for instance in instances]
+
+
+def inst_dict(instance: Type[BaseModel], skip_empty: bool = True) -> dict:
+    return instance.to_dict_fast(skip_empty=skip_empty)
+    
 
 def get_field_name(schema: Type[BaseModel]):
     """ возвращает все имена полей pydantic models """
