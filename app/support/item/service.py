@@ -566,7 +566,7 @@ class ItemService(Service):
         )
 
     @staticmethod
-    async def execute_smart_search(query: str, session: AsyncSession, boost: float = 15.0):
+    async def execute_smart_search(query: str, session: AsyncSession, boost: float = 15.0, limit: int = 15):
         # 1. Токенизация и сбор хешей (включая префикс последнего слова)
         repo = ItemRepository
         tokens = tokenize(query)
@@ -584,4 +584,4 @@ class ItemService(Service):
         word_stats = [{"hash": r[0], "freq": r[1]} for r in stats_res.all()]
 
         # 3. Финальный поиск
-        return await repo.find_items_weighted_v2(session, word_stats, boost)
+        return await repo.find_items_weighted_v2(session, word_stats, boost, limit)

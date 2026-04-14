@@ -223,9 +223,10 @@ class ItemViewRouter:
                            session: AsyncSession = Depends(get_db),
                            boost: float = Query(
                                15.0, description="Премия за редкое слово "
-                               "(записи с редким словом из запроса попадают наверх выборки )"),):
+                               "(записи с редким словом из запроса попадают наверх выборки)"),
+                           limit: int = Query(15, description='Количество записей (большое чило вызовет тормоза)')):
         """ новый поиск вместо триграмного  индекса ONLY FOR ITEMS_PREACT        """
         # result = await self.service.search_by_trigram_index(search_str, lang, ItemRepository,
         #                                                     Item, session, page, page_size)
-        result = await self.service.execute_smart_search(search_str, session, boost)
+        result = await self.service.execute_smart_search(search_str, session, boost, limit)
         return result
