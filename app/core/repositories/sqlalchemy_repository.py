@@ -113,7 +113,9 @@ class Repository(metaclass=RepositoryMeta):
                 .where(cast(literal(search), Text).op("<%")(model.search_content))
                 .order_by(desc(text("rank"))))
         if skip:
-            stmt = stmt.offset(skip).limit(limit)
+            stmt = stmt.offset(skip)
+        if limit:
+            stmt = stmt.limit(limit)
         response = await session.execute(stmt)
         matching_ids = [row[0] for row in response.fetchall()]
         # logger.warning(f'{len(matching_ids)=}')
@@ -353,7 +355,8 @@ class Repository(metaclass=RepositoryMeta):
 
     @classmethod
     async def get_all(cls, after_date: datetime, skip: int,
-                      limit: int, model: ModelType, session: AsyncSession, ) -> tuple:
+                      limit: int, model: ModelType, session: AsyncSession,
+                      ) -> tuple:
         """
             Запрос с загрузкой связей и пагинацией
             return Tuple[List[instances], int]
@@ -516,7 +519,9 @@ class Repository(metaclass=RepositoryMeta):
 
     @classmethod
     async def search_all(
-            cls, search: str, model: Type[ModelType], session: AsyncSession) -> Sequence[Row[Any] | RowMapping | Any]:
+        cls, search: str, model: Type[ModelType], session: AsyncSession,
+        limit: int = 20  # длина списка поисковой выдачи - что бы не уложить сервер
+    ) -> Sequence[Row[Any] | RowMapping | Any]:
         """
         Поиск по всем заданным текстовым полям основной таблицы
         если указана pagination - возвращвет pagination
@@ -539,6 +544,8 @@ class Repository(metaclass=RepositoryMeta):
             kwargs: dict = {}
             kwargs['search_str'] = search
             query = cls.apply_search_filter(cls.get_query(model), **kwargs)
+            if limit:
+                query = query.limit(limit)
             result = await session.execute(query)
             records = result.scalars().all()
             return records
@@ -631,13 +638,15 @@ class Repository(metaclass=RepositoryMeta):
 
     @classmethod
     async def search_geans_all(
-            cls, search: str, relevance: Label, model: ModelType,
-            session: AsyncSession, ) -> tuple:
+        cls, search: str, relevance: Label, model: ModelType,
+        session: AsyncSession,
+        limit: int = 20  # длина списка поисковой выдачи - что бы не уложить сервер
+    ) -> tuple:
         """
             Поисковый запрос
         """
         matching: list = []
-        matching = await cls.get_match(model, relevance, search, session)
+        matching: list = await cls.get_match(model, relevance, search, session, limit)
         items = await cls.get_greenlet(model, matching, session)
         return items
 
@@ -707,14 +716,17 @@ class Repository(metaclass=RepositoryMeta):
             raise AppBaseException(message=f'search_fts.error; {str(e)}', status_code=404)
 
     @classmethod
-    async def search_fts_all(cls, search: str, model: ModelType, session: AsyncSession) -> Tuple[Any, int]:
+    async def search_fts_all(cls, search: str, model: ModelType,
+                             session: AsyncSession,
+                             limit: int = 20  # длина списка поисковой выдачи - что бы не уложить сервер
+                             ) -> Tuple[Any, int]:
         """ полнотекстовый поиск without pagination"""
         try:
             # formatted_query = " & ".join(search.split())
             # formatted_query = " & ".join([f"{word}:*" for word in search.split()])
             condition = model.search_vector.bool_op("@@")(func.to_tsquery(literal_column("'simple'"),
                                                                           search))
-            stmp = cls.get_query(model).where(condition).limit(search_site)
+            stmp = cls.get_query(model).where(condition).limit(limit)
             # compiled = stmp.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
             # logger.error(f'{compiled=}')
             result = await session.execute(stmp)

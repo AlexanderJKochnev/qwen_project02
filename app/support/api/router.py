@@ -54,6 +54,14 @@ class ApiRouter(ItemRouter):
         # поиск api.search_geans_all -> core.repository.search_fts
         self.router.add_api_route("/search_all", self.search_geans_all,
                                   methods=["GET"],
+                                  # ДЛИНА СПИСКА ПОИСКОВОЙ ВЫДАЧИ
+                                  # response_model=List[dict],
+                                  openapi_extra={'x-request-schema': None}
+                                  )
+        # alternative search
+        self.router.add_api_route("/search_all_v2",
+                                  self.search_geans_all,
+                                  methods=["GET"],
                                   # response_model=List[dict],
                                   openapi_extra={'x-request-schema': None}
                                   )

@@ -21,7 +21,6 @@ from app.core.config.project_config import settings
 from app.core.schemas.base import PaginatedResponse
 from app.support.item.schemas import (ItemApiLangNonLocalized, ItemApi,
                                       ItemApiLangLocalizedInterim)
-# from app.core.utils.common_utils import jprint
 
 ItemApiAdapter: TypeAdapter = TypeAdapter(List[ItemApi])
 language: list = settings.LANGUAGES
