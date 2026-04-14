@@ -271,20 +271,9 @@ class BaseRouter:
             response_model <>ReadRelatio
         """
         obj = await self.service.get_by_id(id, self.repo, self.model, session)
-
-        # content = orjson.dumps(obj)
-        # return Response(content=content, media_type="application/json")
-
-        # validated_res = self.read_schema.validate(obj)
-        # logger.warning(f'{type(obj)}')
-        # logger.warning(f'{type(validated_res)=}')
         if obj is None:
             raise HTTPException(status_code=404, detail=f'Запрашиваемый файл {id} не найден на сервере')
-        # res = obj.to_dict()
         res = obj.to_dict_fast(skip_empty=True)
-        # from app.core.utils.common_utils import jprint
-        # jprint(res)
-        logger.warning(f'{type(res)=}')
         content = orjson.dumps(res)
         return Response(content=content, media_type="application/json")
         # return res
@@ -305,10 +294,8 @@ class BaseRouter:
             input_valudation_chema None
             response_model PaginatedResponse[<>ReadRelation>]
         """
-        # print(f"📥 GET request for {self.model.__name__} from")
         after_date = back_to_the_future(after_date)
         response = await self.service.get(after_date, page, page_size, self.repo, self.model, session)
-        # type_checking(response, 'get')
         for key in response:
             print(f'{key=}, {type(key)=}')
         # result = self.paginated_response(**response)
