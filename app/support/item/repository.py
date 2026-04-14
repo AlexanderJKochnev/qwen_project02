@@ -358,10 +358,10 @@ class ItemRepository(Repository):
             raise AppBaseException(message=f'search_by_drink_title_subtitle_only.error; {str(e)}', status_code=404)
 
     @staticmethod
-    async def find_items_weighted(
-            session: AsyncSession, word_stats: list[dict],  # [{'hash': int, 'freq': int}]
-            boost: float = 10.0, limit: int = 15
-    ):
+    async def find_items_weighted(cls,
+                                  session: AsyncSession, word_stats: list[dict],  # [{'hash': int, 'freq': int}]
+                                  boost: float = 10.0, limit: int = 15
+                                  ):
         """
             поиск по хэш индексу с учетом частотности слов
             word_stats:
@@ -394,7 +394,7 @@ class ItemRepository(Repository):
         return [{'id': item.id, 'score': score} for item, score in result]
 
     @staticmethod
-    async def get_hashes_by_prefix(session: AsyncSession, prefix: str, limit: int = 50) -> List[WordHash]:
+    async def get_hashes_by_prefix(cls, session: AsyncSession, prefix: str, limit: int = 50) -> List[WordHash]:
         """
         Поиск хешей в словаре по префиксу последнего слова.
         """
@@ -403,6 +403,41 @@ class ItemRepository(Repository):
         ).limit(limit))
         res = await session.execute(stmt)
         return res.scalars().all()
+
+    @staticmethod
+    async def find_items_weighted_v2(
+            cls,
+            session: AsyncSession, word_stats: list[dict],  # [{'hash': int, 'freq': int}]
+            boost: float = 10.0, limit: int = 15
+    ):
+        """
+            поиск по хэш индексу с учетом частотности слов
+            word_stats:
+            boost: коэффициент редкости - чем выше тем значимее редкое слово в ранжировании
+            limit:
+        """
+        if not word_stats:
+            return []
+
+        # Рассчитываем веса на стороне Python: W = boost / log(freq + 1.5)
+        # Добавляем 1.5, чтобы избежать деления на ноль и слишком резких скачков
+        case_parts = []
+        hashes_list = []
+        # вычисление скоринга
+        for item in word_stats:
+            h, freq = item['hash'], item['freq']
+            weight = (1.0 / math.log(freq + 1.5)) * boost
+            # CASE проверяет вхождение каждого хеша из запроса в массив word_hashes записи
+            case_parts.append(f"CASE WHEN word_hashes @> ARRAY[{h}::bigint] THEN {weight:.4f} ELSE 0 END")
+            hashes_list.append(h)
+        score_sql = f"({' + '.join(case_parts)})"
+        query = cls.get_query(Item)
+        stmt = (query.add_columns(text(f"{score_sql} AS score"))  # Добавляем score как колонку
+                     .where(Item.word_hashes.overlap(hashes_list)).order_by(desc(text("score"))).limit(limit))
+
+        result = await session.execute(stmt)
+        # return result.all()
+        return [{'id': item.id, 'score': score} for item, score in result]
 
 
 def get_drink_search_expression(cls):
