@@ -272,6 +272,7 @@ class BaseRouter:
         """
         obj = await self.service.get_by_id(id, self.repo, self.model, session)
         validated_res = self.read_schema.validate(obj)
+        logger.warning(f'{type(validated_res)=}')
         if obj is None:
             raise HTTPException(status_code=404, detail=f'Запрашиваемый файл {id} не найден на сервере')
         return validated_res.model_dump(exclude_none=True, exclude_unset=True)
