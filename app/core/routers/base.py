@@ -129,7 +129,7 @@ class BaseRouter:
         # get without pagination
         self.router.add_api_route("/all",
                                   self.get_all, methods=["GET"],
-                                  response_model=self.nonpaginated_response,  # List[self.read_response])
+                                  # response_model=self.nonpaginated_response,  # List[self.read_response])
                                   openapi_extra={'x-request-schema': None})
         # get full
         self.router.add_api_route("/full",
