@@ -300,7 +300,9 @@ class BaseRouter:
             print(f'{key=}, {type(key)=}')
         # result = self.paginated_response(**response)
         logger.info('результат получен в эндпойнт и сейчес будет возвращен')
-        return response
+        content = orjson.dumps(response)
+        return Response(content=content, media_type="application/json")
+        # return response
 
     async def get_all(
             self,
