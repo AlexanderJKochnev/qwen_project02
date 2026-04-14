@@ -437,7 +437,7 @@ class ItemRepository(Repository):
 
         result = await session.execute(stmt)
         # return result.all()
-        return [{'id': item.id, 'score': score} for item, score in result]
+        return [{**item.to_dict(), 'score': score} for item, score in result]
 
 
 def get_drink_search_expression(cls):

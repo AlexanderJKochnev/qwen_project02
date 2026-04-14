@@ -584,4 +584,4 @@ class ItemService(Service):
         word_stats = [{"hash": r[0], "freq": r[1]} for r in stats_res.all()]
 
         # 3. Финальный поиск
-        return await repo.find_items_weighted(session, word_stats, boost)
+        return await repo.find_items_weighted_v2(session, word_stats, boost)
