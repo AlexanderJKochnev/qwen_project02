@@ -296,10 +296,6 @@ class BaseRouter:
         """
         after_date = back_to_the_future(after_date)
         response = await self.service.get(after_date, page, page_size, self.repo, self.model, session)
-        for key in response:
-            print(f'{key=}, {type(key)=}')
-        # result = self.paginated_response(**response)
-        logger.info('результат получен в эндпойнт и сейчес будет возвращен')
         content = orjson.dumps(response)
         return Response(content=content, media_type="application/json")
         # return response
