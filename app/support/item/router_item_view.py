@@ -84,16 +84,27 @@ class ItemViewRouter:
             openapi_extra={'x-request-schema': None}
         )
 
-        # Маршрут для поиска элементов с использованием триграммного индекса
+        # Маршрут для поиска элементов с использованием fts индекса
         self.router.add_api_route(
-            "/search_trigram/{lang}",
-            self.search_by_trigram_index,
+            "/search_geans_items/{lang}",
+            self.search_by_geans_items,
             methods=["GET"],
             # response_model=PaginatedResponse[ItemListView],
             tags=self.tags,
-            summary="Поиск элементов по триграммному индексу в связанной модели Drink",
+            summary="Поиск элементов по fts index",
             openapi_extra={'x-request-schema': None}
         )
+        # Маршрут для поиска элементов с использованием fts индекса
+        self.router.add_api_route(
+            "/search_smart",
+            self.search_smart,
+            methods=["GET"],
+            # response_model=PaginatedResponse[ItemListView],
+            tags=self.tags,
+            summary="Поиск элементов по hash index + word..",
+            openapi_extra={'x-request-schema': None}
+        )
+
         self.router.add_api_route(
             "/preact/{id}",
             self.get_one,
@@ -174,20 +185,18 @@ class ItemViewRouter:
         )
         return result
 
-    async def search_by_trigram_index(self,
-                                      lang: str = Path(..., description="Язык локализации"),
-                                      search_str: str = Query(
-                                          None, description="Поисковый запрос "
-                                                            "(при отсутствии значения - выдает все записи)"),
-                                      page: int = Query(1, ge=1, description="Номер страницы"),
-                                      page_size: int = Query(15, ge=1, le=100, description="Размер страницы"),
-                                      similarity_thershold: float = Query(0.2,
-                                                                          ge=0., le=1.0,
-                                                                          description=("Толерантность поиска")),
-                                      session: AsyncSession = Depends(get_db)):
-        """ Поиск элементов с использованием триграммного индекса в связанной модели Drink
-            вместо старого триграммного используется новые geans
-        """
+    async def search_by_geans_items(self,
+                                    lang: str = Path(..., description="Язык локализации"),
+                                    search_str: str = Query(
+                                        None, description="Поисковый запрос "
+                                        "(при отсутствии значения - выдает все записи)"),
+                                    page: int = Query(1, ge=1, description="Номер страницы"),
+                                    page_size: int = Query(15, ge=1, le=100, description="Размер страницы"),
+                                    similarity_thershold: float = Query(0.2,
+                                                                        ge=0., le=1.0,
+                                                                        description=("Толерантность поиска")),
+                                    session: AsyncSession = Depends(get_db)):
+        """ новый поиск вместо триграмного  индекса ONLY FOR ITEMS_PREACT        """
         # result = await self.service.search_by_trigram_index(search_str, lang, ItemRepository,
         #                                                     Item, session, page, page_size)
         result = await self.service.search_geans_items(lang, search_str, similarity_thershold,
@@ -203,3 +212,20 @@ class ItemViewRouter:
         """
         await self.service.run_background_task(background_tasks, session, force_all)
         return {'result': True}
+
+    async def search_smart(self,
+                           # lang: str = Path(..., description="Язык локализации"),
+                           search_str: str = Query(
+                               None, description="Поисковый запрос "
+                               "(при отсутствии значения - выдает все записи)"),
+                           # page: int = Query(1, ge=1, description="Номер страницы"),
+                           # page_size: int = Query(15, ge=1, le=100, description="Размер страницы"),
+                           session: AsyncSession = Depends(get_db),
+                           boost: float = Query(
+                               15.0, description="Премия за редкое слово "
+                               "(записи с редким словом из запроса попадают наверх выборки )"),):
+        """ новый поиск вместо триграмного  индекса ONLY FOR ITEMS_PREACT        """
+        # result = await self.service.search_by_trigram_index(search_str, lang, ItemRepository,
+        #                                                     Item, session, page, page_size)
+        result = await self.service.execute_smart_search(search_str, session, boost)
+        return result
