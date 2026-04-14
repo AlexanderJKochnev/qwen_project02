@@ -390,7 +390,8 @@ class ItemRepository(Repository):
         ).limit(limit))
 
         result = await session.execute(stmt)
-        return result.all()
+        # return result.all()
+        return [{'id': item.id, 'score': score} for item, score in result]
 
     @staticmethod
     async def get_hashes_by_prefix(session: AsyncSession, prefix: str, limit: int = 50) -> List[WordHash]:
