@@ -393,7 +393,7 @@ class ItemRepository(Repository):
         # return result.all()
         return [{'id': item.id, 'score': score} for item, score in result]
 
-    @staticmethod
+    @classmethod
     async def get_hashes_by_prefix(cls, session: AsyncSession, prefix: str, limit: int = 50) -> List[WordHash]:
         """
         Поиск хешей в словаре по префиксу последнего слова.
@@ -404,7 +404,7 @@ class ItemRepository(Repository):
         res = await session.execute(stmt)
         return res.scalars().all()
 
-    @staticmethod
+    @classmethod
     async def find_items_weighted_v2(
             cls,
             session: AsyncSession, word_stats: list[dict],  # [{'hash': int, 'freq': int}]
