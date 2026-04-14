@@ -215,10 +215,14 @@ class Service(metaclass=ServiceMeta):
                   page: int, page_size: int, repository: Type[Repository], model: ModelType,
                   session: AsyncSession) -> Dict[str, Any]:
         # Запрос с загрузкой связей и пагинацией
-        skip = (page - 1) * page_size
-        items, total = await repository.get_all(ater_date, skip, page_size, model, session)
-        result = make_paginated_response(items, total, page, page_size)
-        return result
+        try:
+            skip = (page - 1) * page_size
+            items, total = await repository.get_all(ater_date, skip, page_size, model, session)
+            items_dict = [items.to_dict_fast() for item in items]
+            result = make_paginated_response(items_dict, total, page, page_size)
+            return result
+        except Exception as e:
+            logger.error(f'get  {e}')
 
     @classmethod
     async def get_all(cls, after_date: datetime,
