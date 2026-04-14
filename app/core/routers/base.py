@@ -281,6 +281,8 @@ class BaseRouter:
         if obj is None:
             raise HTTPException(status_code=404, detail=f'Запрашиваемый файл {id} не найден на сервере')
         res = obj.__dict__
+        from app.core.utils.common_utils import jprint
+        jprint(res)
         logger.warning(f'{type(res)=}')
         content = orjson.dumps(res)
         return Response(content=content, media_type="application/json")
