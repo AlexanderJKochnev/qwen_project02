@@ -227,9 +227,9 @@ class Service(metaclass=ServiceMeta):
     @classmethod
     async def get_all(cls, after_date: datetime,
                       repository: Type[Repository], model: ModelType,
-                      session: AsyncSession) -> Optional[List[ModelType]]:
+                      session: AsyncSession, limit: int = 20) -> Optional[List[ModelType]]:
         # Запрос с загрузкой связей -  возвращает список
-        result = await repository.get(after_date, model, session)
+        result = await repository.get_all(after_date, model, session, limit)
         return result
 
     @classmethod

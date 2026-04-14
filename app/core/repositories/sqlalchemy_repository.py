@@ -354,7 +354,7 @@ class Repository(metaclass=RepositoryMeta):
         return item
 
     @classmethod
-    async def get_all(cls, after_date: datetime, skip: int,
+    async def get(cls, after_date: datetime, skip: int,
                       limit: int, model: ModelType, session: AsyncSession,
                       ) -> tuple:
         """
@@ -371,7 +371,8 @@ class Repository(metaclass=RepositoryMeta):
         return result
 
     @classmethod
-    async def get(cls, after_date: datetime, model: ModelType, session: AsyncSession, ) -> list:
+    async def get_all(cls, after_date: datetime, model: ModelType, session: AsyncSession,
+                      limit: int = 20) -> list:
         """
             Запрос с загрузкой связей NO PAGINATION
             return List[instance]
@@ -381,6 +382,8 @@ class Repository(metaclass=RepositoryMeta):
         if hasattr(model, 'updated_at'):
             stmt = stmt.where(model.updated_at > after_date)
         stmt = stmt.order_by(model.id.asc())
+        if limit:
+            stmt = stmt.limit(limit)
         result = await cls.nonpagination(stmt, session)
         return result
 
