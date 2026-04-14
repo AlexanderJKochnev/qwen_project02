@@ -280,7 +280,9 @@ class BaseRouter:
         # logger.warning(f'{type(validated_res)=}')
         if obj is None:
             raise HTTPException(status_code=404, detail=f'Запрашиваемый файл {id} не найден на сервере')
-        return obj
+        content = orjson.dumps(obj, default=lambda x: x.__dict__)
+        return Response(content=content, media_type="application/json")
+        # return obj
         # return validated_res.model_dump(exclude_none=True, exclude_unset=True)
 
     async def get(self,
