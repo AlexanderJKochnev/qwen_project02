@@ -218,7 +218,7 @@ class Service(metaclass=ServiceMeta):
         try:
             skip = (page - 1) * page_size
             items, total = await repository.get_all(ater_date, skip, page_size, model, session)
-            items_dict = [items.to_dict_fast() for item in items]
+            items_dict = [item.to_dict_fast() for item in items]
             result = make_paginated_response(items_dict, total, page, page_size)
             return result
         except Exception as e:
