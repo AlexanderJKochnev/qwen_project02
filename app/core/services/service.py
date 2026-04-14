@@ -3,19 +3,21 @@ import asyncio
 from abc import ABCMeta
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
-from sqlalchemy.orm import selectinload
+
 from fastapi import BackgroundTasks, HTTPException
 from loguru import logger
-from sqlalchemy import func, select, text, update
+from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.sql.elements import Label, or_
+from sqlalchemy.orm import selectinload
+from sqlalchemy.sql.elements import or_
 
 from app.core.config.database.db_async import DatabaseManager
 from app.core.config.project_config import settings
 from app.core.models.base_model import Base, get_model_by_name
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.schemas.base import BaseModel, IndexFillResponse
+from app.core.services.click_service import FullTextSearch
 from app.core.types import ModelType
 from app.core.utils.alchemy_utils import formatted_query, has_column
 from app.core.utils.common_utils import flatten_dict_with_localized_fields, make_paging_dict
@@ -23,7 +25,6 @@ from app.core.utils.pydantic_utils import get_data_for_search, get_repo, make_pa
 from app.core.utils.reindexation import extract_text_ultra_fast, reindex_items
 from app.mongodb.service import ThumbnailImageService
 from app.service_registry import get_search_dependencies, register_service
-from app.core.services.click_service import FullTextSearch
 
 # from app.core.utils.common_utils import jprint
 
@@ -492,68 +493,20 @@ class Service(metaclass=ServiceMeta):
         logger.warning("background_tasks.add_task: status: ok")
 
     @classmethod
-    async def get_relevance(cls, search: str, model: ModelType,
-                            session: AsyncSession, similarity_threshold: float = None
-                            ) -> Label:
-        """
-            задаем порог толерантности к опечаткам/ошибкам ЕСЛИ что меняй в .env
-            чем меньше тем терпимее к ошибкам
-        """
-        if not similarity_threshold:
-            similarity_threshold = settings.SIMILARITY_THRESHOLD
-        await session.execute(text(f"SET LOCAL pg_trgm.similarity_threshold = {similarity_threshold}"))
-        # 2. Формируем расчет веса (релевантности)
-        return func.similarity(model.search_content, search).label("rank")
-
-    @classmethod
     async def search_geans(cls, search: str, similarity_threshold: float,
                            page: int, page_size: int,
                            repository: Type[Repository], model: ModelType,
                            session: AsyncSession,
                            ) -> Dict[str, Any]:
-        try:
-            # Запрос с загрузкой связей и пагинацией УДАЛИТЬ ! ЭТОГО ИНДЕКСА БОЛЬШЕ НЕТ
-            logger.warning('this is undex is not available now. redirection to fts search')
-            return await cls.search_fts(search, page, page_size, repository, model, session)
-
-            skip = (page - 1) * page_size
-            if not search:
-                items, total = await repository.get_full_with_pagination(skip, page_size, model, session)
-                return make_paginated_response(items, total, page, page_size)
-            # определаяем тип поиска (geans OR b-tree
-            if hasattr(model, 'search_content'):
-                # 2. Формируем расчет веса (релевантности) УДАЛИТЬ НЕТ ТАКОГО ИНДЕКСА
-                relevance: Label = await cls.get_relevance(search, model, session, similarity_threshold)
-                items, total = await repository.search_geans(search, relevance, skip, page_size, model, session)
-            else:
-                # model is not indexed by GIN
-                items, total = await repository.search(search, skip, page_size, model, session)
-            result: dict = make_paginated_response(items, total, page, page_size)
-            return result
-        except Exception as e:
-            logger.error(f'search_geans.error: {e}')
-            raise HTTPException(status_code=501, detail=f'{e}')
+        logger.warning('this is undex is not available now. Redirection to fts search')
+        return await cls.search_fts(search, page, page_size, repository, model, session)
 
     @classmethod
     async def search_geans_all(cls, search: str, similarity_threshold: float,
                                repository: Type[Repository],
                                model: ModelType, session: AsyncSession, limit: int = 20) -> List[dict]:
-        try:
-            # Запрос с загрузкой связей без пагинации
-            # определаяем тип поиска (geans OR b-tree
-            if not search:
-                return await repository.get_full(model, session)
-            if hasattr(model, 'search_content'):
-                # УДАЛИТЬ - НЕТ ТАКОГО ИНДЕКСА
-                relevance: Label = await cls.get_relevance(search, model, session, similarity_threshold)
-                items = await repository.search_geans_all(search, relevance, model, session, limit)
-            else:
-                # model is not indexed by GIN
-                items = await repository.search_all(search, model, session, limit)
-            return items
-        except Exception as e:
-            logger.error(f'search_geans_all.error: {e}')
-            raise HTTPException(status_code=501, detail=f'{e}')
+        logger.warning('this is undex is not available now. Redirection to fts search')
+        return await cls.search_fts_all(search, repository, model, session, limit)
 
     @classmethod
     async def get_image_by_id(self, id: int,
