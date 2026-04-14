@@ -14,7 +14,7 @@ from app.core.services.service import Service
 from app.core.schemas.base import (DeleteResponse, PaginatedResponse, ReadSchema,
                                    CreateResponse, UpdateSchema, CreateSchema)
 from app.core.exceptions import exception_to_http
-from app.core.utils.pydantic_utils import get_repo, get_service, get_pyschema
+from app.core.utils.pydantic_utils import get_repo, get_service, get_pyschema, orresponse
 
 
 paging = get_paging
@@ -273,9 +273,10 @@ class BaseRouter:
         obj = await self.service.get_by_id(id, self.repo, self.model, session)
         if obj is None:
             raise HTTPException(status_code=404, detail=f'Запрашиваемый файл {id} не найден на сервере')
-        res = obj.to_dict_fast(skip_empty=True)
-        content = orjson.dumps(res)
-        return Response(content=content, media_type="application/json")
+        response = obj.to_dict_fast(skip_empty=True)
+        return orresponse(response)
+        # content = orjson.dumps(res)
+        # return Response(content=content, media_type="application/json")
         # return res
         # return validated_res.model_dump(exclude_none=True, exclude_unset=True)
 
@@ -324,9 +325,9 @@ class BaseRouter:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                 detail=f"Internal server error. {e}")
 
-    async def get_full(self, session: AsyncSession = Depends(get_db)) -> List[TReadSchema]:
+    async def get_full(self, session: AsyncSession = Depends(get_db),  limit: int = 20) -> List[TReadSchema]:
         try:
-            return await self.service.get_full(self.repo, self.model, session)
+            return await self.service.get_full(self.repo, self.model, session, limit)
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                 detail=f"Internal server error. {e}")

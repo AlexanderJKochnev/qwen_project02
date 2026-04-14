@@ -235,10 +235,10 @@ class Service(metaclass=ServiceMeta):
 
     @classmethod
     async def get_full(
-        cls, repository: Type[Repository], model: ModelType, session: AsyncSession
+        cls, repository: Type[Repository], model: ModelType, session: AsyncSession, limit: int = 20
     ) -> Optional[List[ModelType]]:
         # Запрос с загрузкой связей -  возвращает список
-        result = await repository.get_full(model, session)
+        result = await repository.get_full(model, session, limit)
         return result
 
     @classmethod

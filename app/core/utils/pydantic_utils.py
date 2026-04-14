@@ -9,7 +9,17 @@ from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.sql.type_api import TypeEngine
 from app.core.schemas.base import PaginatedResponse, PyModel
 from fastapi.routing import APIRoute
+from fastapi import Response
+import orjson
 from app.service_registry import get_service as get_serv, get_repo as get_rep, get_pyschema as get_pyschem
+
+
+def orresponse(response: Union[List, Dict]):
+    """
+        предвращает все что jsonинтся  в bute code
+    """
+    content = orjson.dumps(response)
+    return Response(content=content, media_type="application/json")
 
 
 def get_field_name(schema: Type[BaseModel]):
