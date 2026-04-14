@@ -282,12 +282,12 @@ class BaseRouter:
             raise HTTPException(status_code=404, detail=f'Запрашиваемый файл {id} не найден на сервере')
         # res = obj.to_dict()
         res = obj.to_dict_fast(skip_empty=True)
-        from app.core.utils.common_utils import jprint
-        jprint(res)
+        # from app.core.utils.common_utils import jprint
+        # jprint(res)
         logger.warning(f'{type(res)=}')
-        content = orjson.dumps(res)
-        return Response(content=content, media_type="application/json")
-        # return obj
+        # content = orjson.dumps(res)
+        # return Response(content=content, media_type="application/json")
+        return res
         # return validated_res.model_dump(exclude_none=True, exclude_unset=True)
 
     async def get(self,
