@@ -355,8 +355,8 @@ class Repository(metaclass=RepositoryMeta):
 
     @classmethod
     async def get(cls, after_date: datetime, skip: int,
-                      limit: int, model: ModelType, session: AsyncSession,
-                      ) -> tuple:
+                  limit: int, model: ModelType, session: AsyncSession,
+                  ) -> tuple:
         """
             Запрос с загрузкой связей и пагинацией
             return Tuple[List[instances], int]

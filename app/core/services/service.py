@@ -217,7 +217,7 @@ class Service(metaclass=ServiceMeta):
         # Запрос с загрузкой связей и пагинацией
         try:
             skip = (page - 1) * page_size
-            items, total = await repository.get_all(ater_date, skip, page_size, model, session)
+            items, total = await repository.get(ater_date, skip, page_size, model, session)
             items_dict = [item.to_dict_fast() for item in items]
             result = make_paginated_response(items_dict, total, page, page_size)
             return result
