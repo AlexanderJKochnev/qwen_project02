@@ -280,7 +280,8 @@ class BaseRouter:
         # logger.warning(f'{type(validated_res)=}')
         if obj is None:
             raise HTTPException(status_code=404, detail=f'Запрашиваемый файл {id} не найден на сервере')
-        res = obj.to_dict()
+        # res = obj.to_dict()
+        res = obj.to_dict_fast()
         from app.core.utils.common_utils import jprint
         jprint(res)
         logger.warning(f'{type(res)=}')

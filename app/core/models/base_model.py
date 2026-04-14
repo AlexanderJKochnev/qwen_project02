@@ -168,6 +168,52 @@ class Base(AsyncAttrs, DeclarativeBase):
         return result
         """
 
+    def to_dict_fast(self, exclude=None):
+        """Быстрая версия без защиты от циклов"""
+        if exclude is None:
+            exclude = set()
+
+        state = inspect(self)
+        cls = self.__class__
+
+        # Динамическое кеширование
+        cache_key = f"{cls.__name__}_cols"
+        if not hasattr(cls, '_fast_cols'):
+            cls._fast_cols = {'cols': [c.key for c in state.mapper.column_attrs],
+                              'rels': [r.key for r in state.mapper.relationships]}
+
+        result = {}
+        loaded = state.dict
+
+        # Колонки
+        for key in cls._fast_cols['cols']:
+            if key in exclude or key in state.unloaded:
+                continue
+            value = loaded.get(key)
+            if value is not None:
+                # Словарь преобразований для часто встречающихся типов
+                if isinstance(value, (datetime, date)):
+                    result[key] = value.isoformat()
+                elif isinstance(value, Decimal):
+                    result[key] = float(value)
+                else:
+                    result[key] = value
+            else:
+                result[key] = None
+
+        # Связи (только загруженные)
+        for key in cls._fast_cols['rels']:
+            if key in exclude or key not in loaded:
+                continue
+            value = loaded[key]
+            if value is None:
+                result[key] = None
+            elif hasattr(value, 'to_dict_fast'):
+                result[key] = value.to_dict_fast(exclude) if not isinstance(value, list) else [v.to_dict_fast(exclude)
+                                                                                               for v in value if hasattr(v, 'to_dict_fast')]
+
+        return result
+
 
 class BaseAt:
     """ время создания/изменения записи """
