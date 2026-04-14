@@ -306,7 +306,7 @@ class BaseRouter:
                                          # (datetime.now(timezone.utc) - relativedelta(years=2)).isoformat(),
                                          description="Дата в формате ISO 8601 (например, 2024-01-01T00:00:00Z)"
                                          ), session: AsyncSession = Depends(get_db), limit: int = 20
-    ) -> List[TReadSchema]:
+    ):
         """
             Получение все записей одним списком после указанной даты.
             По умолчанию задана дата - 2 года от сейчас
@@ -316,9 +316,10 @@ class BaseRouter:
         """
         try:
             after_date = back_to_the_future(after_date)
-            result = await self.service.get_all(after_date, self.repo, self.model, session)
-
-            return result
+            response = await self.service.get_all(after_date, self.repo, self.model, session)
+            content = orjson.dumps(response)
+            return Response(content=content, media_type="application/json")
+            # return response
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                 detail=f"Internal server error. {e}")
