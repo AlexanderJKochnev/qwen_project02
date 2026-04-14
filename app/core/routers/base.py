@@ -293,7 +293,7 @@ class BaseRouter:
         """
         after_date = back_to_the_future(after_date)
         response = await self.service.get(after_date, page, page_size, self.repo, self.model, session)
-        if obj is None:
+        if response is None:
             raise HTTPException(status_code=404, detail=f'Запрашиваемый файл {id} не найден на сервере')
         return orresponse(response)
         # return response
@@ -320,7 +320,7 @@ class BaseRouter:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                 detail=f"Internal server error. {e}")
 
-    async def get_full(self, session: AsyncSession = Depends(get_db),  limit: int = 20) -> List[TReadSchema]:
+    async def get_full(self, session: AsyncSession = Depends(get_db), limit: int = 20) -> List[TReadSchema]:
         try:
             return await self.service.get_full(self.repo, self.model, session, limit)
         except Exception as e:
