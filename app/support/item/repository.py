@@ -2,7 +2,7 @@
 import math
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
 from sqlalchemy import func, literal_column, or_, select, Select, desc, text
-from sqlalchemy.dialects.postgresql import ARRAY, BIGINT
+# from sqlalchemy.dialects.postgresql import ARRAY, BIGINT
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import load_only, selectinload
 from sqlalchemy.types import String
@@ -357,7 +357,7 @@ class ItemRepository(Repository):
         except Exception as e:
             raise AppBaseException(message=f'search_by_drink_title_subtitle_only.error; {str(e)}', status_code=404)
 
-    @staticmethod
+    @classmethod
     async def find_items_weighted(cls,
                                   session: AsyncSession, word_stats: list[dict],  # [{'hash': int, 'freq': int}]
                                   boost: float = 10.0, limit: int = 15
