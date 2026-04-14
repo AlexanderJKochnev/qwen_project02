@@ -123,7 +123,7 @@ class BaseRouter:
                                   )
         self.router.add_api_route("/search_geans_all",
                                   self.search_geans_all, methods=["GET"],
-                                  response_model=self.nonpaginated_response,
+                                  # response_model=self.nonpaginated_response,
                                   openapi_extra={'x-request-schema': None}
                                   )
         # get without pagination
