@@ -155,9 +155,7 @@ class ItemViewRouter:
                                  session: AsyncSession = Depends(get_db)):
         """Получить список элементов с пагинацией и локализацией"""
         result = await self.service.get_list_view_page(page, page_size, ItemRepository, Item, session, lang)
-        # self.paginated_response
-
-        return result
+        return orresponse(result)
 
     async def get_detail(self, lang: str = Path(..., description="Язык локализации"),
                          id: int = Path(..., description="ID элемента"),
