@@ -254,7 +254,7 @@ class ItemRepository(Repository):
             result = []
             for item in items:
                 result.append(item.to_dict())
-            return result, total
+            return items, total
         except Exception as e:
             raise AppBaseException(message=f'search_by_drink_title_subtitle.error; {str(e)}', status_code=404)
 

@@ -184,7 +184,7 @@ class ItemViewRouter:
         result = await self.service.search_by_drink_title_subtitle(
             search, lang, ItemRepository, Item, session, page, page_size
         )
-        return result
+        return orresponse(result)
 
     async def search_by_geans_items(self,
                                     lang: str = Path(..., description="Язык локализации"),

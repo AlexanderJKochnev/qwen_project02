@@ -205,7 +205,8 @@ class ApiService(ItemService):
                 if formatted_search := formatted_query(search):
                     items, total = await repository.search_fts(formatted_search, skip, page_size, model, session)
                 else:
-                    items, totla = await repository.search_by_drink_title_subtitle(search, session, skip, page_size)
+                    items, total = await repository.search_by_drink_title_subtitle(search, session, skip, page_size)
+            items = list_dict(items)
             result = cls.convert_list_api_view(items)
             return make_paginated_response(result, total, page, page_size)
         except Exception as e:
