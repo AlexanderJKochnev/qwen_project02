@@ -3,7 +3,7 @@
 from typing import Any, List, Type, TypeVar, Callable
 # from dateutil.relativedelta import relativedelta
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, Query, status, Request, BackgroundTasks, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Request, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
 from app.auth.dependencies import get_active_user_or_internal
@@ -271,8 +271,6 @@ class BaseRouter:
             response_model <>ReadRelatio
         """
         obj = await self.service.get_by_id(id, self.repo, self.model, session)
-        if obj is None:
-            raise HTTPException(status_code=404, detail=f'Запрашиваемая запись {id} не найдена на сервере')
         response = obj.to_dict_fast(skip_empty=True)
         return orresponse(response)
 
