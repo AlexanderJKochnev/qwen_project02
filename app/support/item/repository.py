@@ -187,10 +187,7 @@ class ItemRepository(Repository):
             query = query.offset(skip).limit(limit)
             result = await session.execute(query)
             items = result.scalars().all()
-            result = []
-            for item in items:
-                result.append(item.to_dict())
-            return result, total
+            return items, total
         except Exception as e:
             raise AppBaseException(message=f'get_list_view_page.error; {str(e)}', status_code=404)
 
