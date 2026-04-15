@@ -365,10 +365,7 @@ class Service(metaclass=ServiceMeta):
         """ Получение и обработка записи по ID с автоматическим переводом недостающих локализованных полей """
         detail_fields = settings.DETAIL_VIEW
         obj = await repository.get_by_id(id, model, session)
-        # return obj
-        if not obj:
-            return None
-        result = flatten_dict_with_localized_fields(obj.to_dict(), detail_fields, lang)
+        result = flatten_dict_with_localized_fields(inst_dict(obj), detail_fields, lang)
         return result
 
     @classmethod
@@ -570,6 +567,7 @@ class Service(metaclass=ServiceMeta):
             skip = (page - 1) * page_size
             if not search:
                 items, total = await repository.get_full_with_pagination(skip, page_size, model, session)
+                items = list_dict(items)
                 return make_paginated_response(items, total, page, page_size)
             # определаяем тип поиска (geans OR b-tree
             if hasattr(model, 'search_content'):
@@ -580,6 +578,7 @@ class Service(metaclass=ServiceMeta):
             else:
                 # model is not indexed by GIN
                 items, total = await repository.search(search, skip, page_size, model, session)
+            items = list_dict(items)
             result: dict = make_paginated_response(items, total, page, page_size)
             return result
         except Exception as e:
@@ -595,17 +594,17 @@ class Service(metaclass=ServiceMeta):
             # Запрос с загрузкой связей без пагинации
             # определаяем тип поиска (tfs OR b-tree
             if not search:
-                return await repository.get_full(model, session)
+                response = await repository.get_full(model, session, limit)
+                return list_dict(response)
             if hasattr(model, 'search_content'):
                 if formatted_search := formatted_query(search):
                     items = await repository.search_fts_all(formatted_search, model, session, limit)
                 else:
-                    items = await repository.search_all(search, model, session)
+                    items = await repository.search_all(search, model, session, limit)
             else:
                 # model is not indexed by GIN
                 items = await repository.search_all(search, model, session)
-            # result = [item.to_dict() for item in items]
-            return items
+            return list_dict(items)
         except Exception as e:
             logger.error(f'search_geans_all.error: {e}')
             raise HTTPException(status_code=501, detail=f'{e}')
@@ -616,7 +615,7 @@ class Service(metaclass=ServiceMeta):
                           repository: Type[Repository], model: ModelType,
                           session: AsyncSession,
                           ch_client, table: str = 'items_search'):
-        """ поиск searh thru click """
+        """ поиск searh thru click - УДАЛИТЬ ПОТОМ ПОКА ПОИСК ПО CLICK SEARCH неподошел"""
         # 0. запрос в clickhouse
         click_service = FullTextSearch
         click: tuple = await click_service.search(search, table, ch_client, mode)

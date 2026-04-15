@@ -85,14 +85,14 @@ class BaseRouter:
     def setup_routes(self):
         """Настраивает маршруты"""
         self.router.add_api_route("", self.create, methods=["POST"],
-                                  response_model=self.create_response_schema,
+                                  # response_model=self.create_response_schema,
                                   openapi_extra={'x-request-schema': self.create_schema.__name__})
 
         self.router.add_api_route("/hierarchy",
                                   self.create_relation,
                                   status_code=status.HTTP_200_OK,
                                   methods=["POST"],
-                                  response_model=self.read_schema_relation,
+                                  # response_model=self.read_schema_relation,
                                   openapi_extra={'x-request-schema': self.create_schema_relation.__name__})
         """
         self.router.add_api_route("/batch",
@@ -150,7 +150,7 @@ class BaseRouter:
 
         self.router.add_api_route("",
                                   self.update_or_create, methods=["PATCH"],
-                                  response_model=self.read_schema,
+                                  # response_model=self.read_schema,
                                   openapi_extra={'x-request-schema': self.update_schema.__name__})
         self.router.add_api_route("/{id}",
                                   self.patch, methods=["PATCH"],
@@ -159,7 +159,7 @@ class BaseRouter:
 
         self.router.add_api_route("/{id}",
                                   self.delete, methods=["DELETE"],
-                                  response_model=self.delete_response,
+                                  # response_model=self.delete_response,
                                   openapi_extra={'x-request-schema': None})
 
     async def create(self, data: TCreateSchema,
@@ -172,7 +172,7 @@ class BaseRouter:
         try:
             # obj = await self.service.create(data, self.repo, self.model, session)
             obj, created = await self.service.get_or_create(data, self.repo, self.model, session)
-            return obj
+            return orresponse(obj)
         except Exception as e:
             detail = (f'ошибка создания записи {e}, model = {self.model}, '
                       f'create_schema = {self.create_schema}, '
@@ -188,7 +188,7 @@ class BaseRouter:
         """
         try:
             obj = await self.service.batch_get_or_create(data, self.repo, self.model, session)
-            return obj
+            return orresponse(obj)
         except Exception as e:
             detail = (f'ошибка создания записи {e}, model = {self.model}, '
                       f'create_schema = {self.create_schema}, '
@@ -210,7 +210,8 @@ class BaseRouter:
             if isinstance(obj, tuple):
                 obj, _ = obj
             # return obj
-            return await self.service.get_by_id(obj.id, self.repo, self.model, session)
+            response = await self.service.get_by_id(obj.id, self.repo, self.model, session)
+            return orresponse(response)
         except Exception as e:
             raise exception_to_http(e)
 
@@ -223,7 +224,7 @@ class BaseRouter:
         """
         try:
             obj, created = await self.service.update_or_create(data, self.repo, self.model, background_tasks, session)
-            return obj
+            return orresponse(obj)
         except Exception as e:
             detail = (f'ошибка обновления записи {e}, model = {self.model}, '
                       f'create_schema = {self.create_schema}, '
@@ -234,7 +235,7 @@ class BaseRouter:
 
     async def patch(self, id: int,
                     data: TUpdateSchema, background_tasks: BackgroundTasks,
-                    session: AsyncSession = Depends(get_db)) -> TReadSchema:
+                    session: AsyncSession = Depends(get_db)) -> dict:
         """
             Изменение одной записи по id
             input_valudation_chema <>Update
@@ -242,7 +243,7 @@ class BaseRouter:
         """
         result = await self.service.patch(id, data, self.repo, self.model, background_tasks,
                                           session)
-        return result
+        return orresponse(result)
 
     # @logger.catch(reraise=True)
     async def delete(self, id: int, background_tasks: BackgroundTasks,
@@ -358,7 +359,7 @@ class BaseRouter:
             response_model PaginatedResponse[<>ReadRelation>]
         """
         result = await self.service.search(search, page, page_size, self.repo, self.model, session)
-        return result
+        return orresponse(result)
 
     async def search_all(self,
                          search: str = Query(None, description="Поисковый запрос. "
@@ -371,7 +372,7 @@ class BaseRouter:
             response_model <>ReadRelatio
         """
         result = await self.service.search_all(search, self.repo, self.model, session, limit)
-        return result
+        return orresponse(result)
 
     async def search_geans(self, search: str = Query(None,
                                                      min_length=3, max_length=50,
@@ -395,7 +396,7 @@ class BaseRouter:
             result = await self.service.search_geans(search, similarity_threshold,
                                                      page, page_size, self.repo,
                                                      self.model, session)
-            return result
+            return orresponse(result)
         except Exception as e:
             logger.error(f'search_geans, {e}')
             raise HTTPException(status_code=501, detail=f'search_geans, {self.model.__name__}, {e}')
@@ -416,7 +417,7 @@ class BaseRouter:
         try:
             result = await self.service.search_geans_all(search, similarity_threshold,
                                                          self.repo, self.model, session, limit)
-            return result
+            return orresponse(result)
             #  content = orjson.dumps(result)
             # return Response(content=content, media_type="application/json")
         except Exception as e:
