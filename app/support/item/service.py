@@ -211,7 +211,8 @@ class ItemService(Service):
     async def get_detail_view(cls, lang: str, id: int, repository: ItemRepository, model: Item, session: AsyncSession):
         """Получение детального представления элемента с локализацией"""
         item_instance = await repository.get_detail_view(id, model, session)
-        item: dict = item_instance.to_dict()
+        # item: dict = item_instance.to_dict()
+        item: dict = inst_dict(item_instance)
         if not item:    # если ничего нет
             return None
         # задаем порядок замещения пустых полей

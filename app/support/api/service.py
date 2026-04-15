@@ -8,7 +8,7 @@ from loguru import logger
 # from sqlalchemy.sql.elements import Label
 # from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.types import ModelType
-from app.core.utils.pydantic_utils import get_field_name, make_paginated_response
+from app.core.utils.pydantic_utils import get_field_name, make_paginated_response, inst_dict, list_dict
 from app.core.utils.common_utils import camel_to_enum
 from app.support.item.service import ItemService
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -144,7 +144,7 @@ class ApiService(ItemService):
         repository = ItemRepository
         model = Item
         item_instance = await repository.get_detail_view(id, model, session)
-        item: dict = item_instance.to_dict()
+        item: dict = inst_dict(item_instance)
         if not item:
             return None
         # result: dict = cls.__api_view__(item)
