@@ -183,10 +183,11 @@ class ItemService(Service):
                             model: Type[Item], session: AsyncSession,
                             limit: int = 20):
         """Получение списка элементов для ListView с локализацией"""
-        items: List[ModelType] = await repository.get_list_view(model, session,  limit)
-        items_dict: List[Dict] = list_dict(items)
+        items: List[ModelType] = await repository.get_list_view(model, session, limit)
+        items: List[Dict] = list_dict(items)
         language = lang_sorted(lang)
-        result = ItemListViewAdapter.validate_python([transform_list_view(items_dict,
+
+        result = ItemListViewAdapter.validate_python([transform_list_view(item,
                                                       lang, tuple(language)) for
                                                       item in items])
         return result
