@@ -109,6 +109,7 @@ class ItemRepository(Repository):
     @classmethod
     def apply_search_filter(cls, model: Union[Select[Tuple], ModelType], **kwargs):
         """
+            DEPRECATED
             переопределяемый метод, стоит условия поиска и пагинации при необходимости
             категория wine имеет подкатегории которые как-бы категории поэтому костыль
         """
@@ -143,16 +144,18 @@ class ItemRepository(Repository):
             raise AppBaseException(message=f'search_geans.error; {str(e)}', status_code=404)
 
     @classmethod
-    async def get_list_view(cls, model: ModelType, session: AsyncSession):
-        """Получение списка элементов с плоскими полями для ListView"""
+    async def get_list_view(cls, model: ModelType, session: AsyncSession, limit: int = 20) -> List[ModelType]:
+        """
+            Получение списка элементов с плоскими полями для ListView
+            почему не подходит core get_list?
+        """
         try:
-            query = cls.get_query_for_list_view(Item).order_by(Item.id.asc())
+            query = cls.get_query_for_list_view(model).order_by(model.id.asc())
+            if limit:
+                query = query.limit(limit)
             result = await session.execute(query)
             items = result.scalars().all()
-            result = []
-            for item in items:
-                result.append(item.to_dict())
-            return result
+            return items
         except Exception as e:
             raise AppBaseException(message=f'get_list_view.error; {str(e)}', status_code=404)
 
@@ -160,7 +163,7 @@ class ItemRepository(Repository):
     async def get_detail_view(cls, id: int, model: ModelType, session: AsyncSession) -> Dict[str, Any]:
         """Получение детального представления элемента для DetailView"""
         try:
-            query = cls.get_query(Item).where(Item.id == id)
+            query = cls.get_query(model).where(model.id == id)
             result = await session.execute(query)
             item = result.scalar_one_or_none()
             # from app.core.utils.common_utils import jprint

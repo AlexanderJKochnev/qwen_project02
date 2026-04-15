@@ -112,7 +112,10 @@ class DrinkRepository(Repository):
                                       skip: int = None, limit: int = None,
                                       category_enum: str = None,
                                       country_enum: str = None):
-        """Поиск элементов с использованием триграммного индекса"""
+        """
+            DEPRECATED
+            Поиск элементов с использованием триграммного индекса УДАЛИТЬ НЕ РАБОТАЕТ
+        """
         try:
             from sqlalchemy.types import String
 

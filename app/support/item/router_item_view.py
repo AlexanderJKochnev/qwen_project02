@@ -139,9 +139,10 @@ class ItemViewRouter:
         return translated_dict
 
     async def get_list(self, lang: str = Path(..., description="Язык локализации"),
-                       session: AsyncSession = Depends(get_db)):
+                       session: AsyncSession = Depends(get_db),
+                       limit: int = 20):
         """Получить список элементов с локализацией"""
-        result = await self.service.get_list_view(lang, ItemRepository, Item, session)
+        result = await self.service.get_list_view(lang, ItemRepository, Item, session, limit)
 
         return result
 

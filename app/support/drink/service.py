@@ -52,7 +52,9 @@ class DrinkService(Service):
     async def get_dict_by_id(cls, id: int, repository: Type[Repository],
                              model: ModelType, session: AsyncSession) -> Optional[ModelType]:
         result = await super().get_by_id(id, repository, model, session)
-        # return result
+        """
+        УДАЛИТЬ - проверить и удалить
+        """
 
         try:
             subresult = model_to_dict(result)

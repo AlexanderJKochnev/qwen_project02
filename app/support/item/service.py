@@ -11,7 +11,7 @@ from pydantic import TypeAdapter, ValidationError
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-
+from app.core.utils.pydantic_utils import list_dict, inst_dict
 from app.core.config.database.db_async import DatabaseManager
 from app.core.config.project_config import settings
 from app.core.hash_norm import get_cached_hash, get_hashes_for_item, tokenize
@@ -178,11 +178,15 @@ class ItemService(Service):
         return result
 
     @classmethod
-    async def get_list_view(cls, lang: str, repository: ItemRepository, model: Item, session: AsyncSession):
+    async def get_list_view(cls, lang: str,
+                            repository: Type[ItemRepository],
+                            model: Type[Item], session: AsyncSession,
+                            limit: int = 20):
         """Получение списка элементов для ListView с локализацией"""
-        items = await repository.get_list_view(model, session)
+        items: List[ModelType] = await repository.get_list_view(model, session,  limit)
+        items_dict: List[Dict] = list_dict(items)
         language = lang_sorted(lang)
-        result = ItemListViewAdapter.validate_python([transform_list_view(item,
+        result = ItemListViewAdapter.validate_python([transform_list_view(items_dict,
                                                       lang, tuple(language)) for
                                                       item in items])
         return result
