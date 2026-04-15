@@ -315,8 +315,6 @@ class Repository(metaclass=RepositoryMeta):
         stmt = cls.get_query(model).where(model.id == id)
         result = await session.execute(stmt)
         obj = result.scalar_one_or_none()
-        if not obj:
-            raise AppBaseException(message="editing records is not found", status_code=404)
         return obj
 
     @classmethod
