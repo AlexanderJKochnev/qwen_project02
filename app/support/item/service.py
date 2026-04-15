@@ -186,7 +186,9 @@ class ItemService(Service):
         items: List[ModelType] = await repository.get_list_view(model, session, limit)
         items: List[Dict] = list_dict(items)
         language = lang_sorted(lang)
-
+        result = [transform_list_view(item, lang, tuple(language)) for item in items]
+        return result
+        
         result = ItemListViewAdapter.validate_python([transform_list_view(item,
                                                       lang, tuple(language)) for
                                                       item in items])

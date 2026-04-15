@@ -9,6 +9,7 @@ from fastapi import Depends, Path, Query, HTTPException, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.dependencies import get_active_user_or_internal
 from app.core.config.database.db_async import get_db
+from app.core.utils.pydantic_utils import orresponse
 from app.core.schemas.base import PaginatedResponse
 from app.dependencies import get_translator_func
 from app.support.item.model import Item
@@ -142,9 +143,10 @@ class ItemViewRouter:
                        session: AsyncSession = Depends(get_db),
                        limit: int = 20):
         """Получить список элементов с локализацией"""
-        result = await self.service.get_list_view(lang, ItemRepository, Item, session, limit)
 
-        return result
+        result = await self.service.get_list_view(lang, ItemRepository, Item, session, limit)
+        return orresponse(result)
+        # return result
 
     async def get_list_paginated(self,
                                  lang: str = Path(..., description="Язык локализации"),
