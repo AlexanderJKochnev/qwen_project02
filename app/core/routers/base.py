@@ -270,8 +270,7 @@ class BaseRouter:
             input_valudation_chema <>CreateRelation
             response_model <>ReadRelatio
         """
-        obj = await self.service.get_by_id(id, self.repo, self.model, session)
-        response = obj.to_dict_fast(skip_empty=True)
+        response = await self.service.get_by_id(id, self.repo, self.model, session)
         return orresponse(response)
 
     async def get(self,

@@ -20,8 +20,7 @@ def orresponse(response: Union[List, Dict, None]):
         предвращает все что jsonинтся  в bute code
     """
     if not response:
-        raise HTTPException(status_code=404,
-                            detail="record not found")
+        raise HTTPException(status_code=404, detail="record not found")
     content = orjson.dumps(response)
     return Response(content=content, media_type="application/json")
 
@@ -31,6 +30,8 @@ def list_dict(instances: List[ModelType], skip_empty: bool = True) -> List[dict]
     преобразует список instances в список словарей
     """
     try:
+        if not instances:
+            raise HTTPException(status_code=404, detail="records not found")
         return [instance.to_dict_fast(skip_empty=skip_empty) for instance in instances]
     except Exception as e:
         raise HTTPException(status_code=505, detail=f"fault in conversion list of instances to dict: {e}")
@@ -38,6 +39,8 @@ def list_dict(instances: List[ModelType], skip_empty: bool = True) -> List[dict]
 
 def inst_dict(instance: ModelType, skip_empty: bool = True) -> dict:
     try:
+        if not instance:
+            raise HTTPException(status_code=404, detail="record not found")
         return instance.to_dict_fast(skip_empty=skip_empty)
     except Exception as e:
         raise HTTPException(status_code=505, detail=f"fault in conversion instance to dict: {e}")
