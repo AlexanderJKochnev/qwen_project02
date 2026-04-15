@@ -106,11 +106,11 @@ class Service(metaclass=ServiceMeta):
                 default = cls.default
             if not isinstance(data, dict):
                 # если исходные данные не словарь
-                data_dict = data.model_dump(exclude_unset=True)
-            default_dict = {key: val for key, val in data_dict.items() if key in default}
-            instance = await repository.get_by_fields(default_dict, model, session)
+                data_dict: dict = data.model_dump(exclude_unset=True)
+            default_dict: dict = {key: val for key, val in data_dict.items() if key in default}
+            instance: ModelType = await repository.get_by_fields(default_dict, model, session)
             if instance:
-                return instance, False
+                return inst_dict(instance), False
             # запись не найдена
             obj = model(**data_dict)
             if model.__name__ == 'Item':
@@ -120,7 +120,7 @@ class Service(metaclass=ServiceMeta):
                 obj = await reindex_items(obj, drink_model, drink_repo, cls.skip_keys, session)
             instance = await repository.create(obj, model, session)
             await session.commit()
-            return instance, True
+            return inst_dict(instance), True
         except IntegrityError as e:
             await session.rollback()
             raise Exception(f'Integrity error: {e}')
@@ -154,7 +154,7 @@ class Service(metaclass=ServiceMeta):
                     instance = await repository.create(obj, model, session)
                     result.append(instance)
             await session.commit()
-            return result
+            return list_dict(result)
         except IntegrityError as e:
             await session.rollback()
             raise Exception(f'Integrity error: {e}')
@@ -165,7 +165,7 @@ class Service(metaclass=ServiceMeta):
     @classmethod
     async def update_or_create(cls, data: BaseModel, repository: Type[Repository],
                                model: Type[ModelType], background_tasks: BackgroundTasks, session: AsyncSession,
-                               default: List[str] = None, **kwargs) -> Tuple[ModelType, bool]:
+                               default: List[str] = None, **kwargs) -> Tuple[Dict, bool]:
         """
             находит и обновляет запись или создает если ее нет.
             этим методом нельзя обновить ключевые поля - используй path + id
@@ -183,7 +183,7 @@ class Service(metaclass=ServiceMeta):
             # запись найдена, обновляем
             result = await cls.patch(instance, data, repository, model, background_tasks, session)
             if result.get('success'):
-                return result.get('data'), False
+                return inst_dict(result.get('data')), False
             else:
                 raise HTTPException(status_code=501, detail=f"{result.get('message')}")
         except Exception as e:
@@ -239,10 +239,10 @@ class Service(metaclass=ServiceMeta):
     @classmethod
     async def get_full(
         cls, repository: Type[Repository], model: ModelType, session: AsyncSession, limit: int = 20
-    ) -> Optional[List[ModelType]]:
+    ) -> Optional[List[dict]]:
         # Запрос с загрузкой связей -  возвращает список
         result = await repository.get_full(model, session, limit)
-        return result
+        return list_dict(result)
 
     @classmethod
     async def get_full_with_pagination(
@@ -252,20 +252,21 @@ class Service(metaclass=ServiceMeta):
         # Запрос с загрузкой связей и пагинацией
         skip = (page - 1) * page_size
         items, total = await repository.get_full_with_pagination(skip, page_size, model, session)
+        items = list_dict(items)
         result = make_paginated_response(items, total, page, page_size)
         return result
 
     @classmethod
     async def get_by_id(
             cls, id: int, repository: Type[Repository],
-            model: ModelType, session: AsyncSession) -> Optional[ModelType]:
+            model: ModelType, session: AsyncSession) -> Optional[Dict]:
         """Получение записи по ID с автоматическим переводом недостающих локализованных полей"""
         result = await repository.get_by_id(id, model, session)
-        return result
+        return inst_dict(result)
 
     @classmethod
     async def get_by_ids(cls, ids: str | List[int], repository: Type[Repository],
-                         model: ModelType, session: AsyncSession) -> Optional[List[ModelType]]:
+                         model: ModelType, session: AsyncSession) -> Optional[List[Dict]]:
         """
         получение набора записей по набору ids
         """
@@ -274,14 +275,14 @@ class Service(metaclass=ServiceMeta):
             comma_separator = ','
             ids = tuple(int(b) for a in set(ids.split(comma_separator)) if (b := a.strip()).isdigit())
             result = await repository.get_by_ids(ids, model, session)
-        return result
+        return list_dict(result)
 
     @classmethod
     async def patch(cls, id: Union[int, Any], data: ModelType,
                     repository: Type[Repository],
                     model: ModelType,
                     background_tasks: BackgroundTasks,
-                    session: AsyncSession) -> dict:
+                    session: AsyncSession) -> Dict:
         """
         Редактирование записи по ID или instance
         Возвращает dict с результатом операции
@@ -297,6 +298,7 @@ class Service(metaclass=ServiceMeta):
         # Выполняем обновление
         result = await repository.patch(existing_item, data_dict, session)
         await cls.pre_run_background_task(id, background_tasks, repository, model)
+        result['data'] = inst_dict(result.get('data'))
         return result
 
     @classmethod
@@ -321,6 +323,7 @@ class Service(metaclass=ServiceMeta):
         """
         skip = (page - 1) * page_size
         items, total = await repository.search(search, skip, page_size, model, session)
+        items = list_dict(items)
         result = make_paginated_response(items, total, page, page_size)
         return result
 
@@ -329,12 +332,12 @@ class Service(metaclass=ServiceMeta):
                          search: str,
                          repository: Type[Repository],
                          model: ModelType,
-                         session: AsyncSession, limit: int = 20) -> List[ModelType]:
+                         session: AsyncSession, limit: int = 20) -> List[Dict]:
         """
             базовый поиск без пагинации
         """
         result = await repository.search_all(search, model, session, limit)
-        return result
+        return list_dict(result)
 
     @classmethod
     async def get_list_view_page(cls, page: int, page_size: int,
@@ -343,16 +346,17 @@ class Service(metaclass=ServiceMeta):
         # Запрос с загрузкой связей и пагинацией
         skip = (page - 1) * page_size
         items, total = await repository.get_list_view_page(skip, page_size, model, session)
+        items = list_dict(items)
         result = make_paginated_response(items, total, page, page_size)
         return result
 
     @classmethod
     async def get_list_view(cls, lang: str, repository: Type[Repository],
                             model: ModelType, session: AsyncSession, ) -> List[tuple]:
-        # Запрос с загрузкой связей и без пагинацией
+        # Запрос с загрузкой связей и без пагинации
         rows = await repository.get_list(model, session)
         list_fields = ['name']
-        result = [flatten_dict_with_localized_fields(obj.to_dict(), list_fields, lang) for obj in rows]
+        result = [flatten_dict_with_localized_fields(obj.to_dict_fast(), list_fields, lang) for obj in rows]
         return result
 
     @classmethod

@@ -259,7 +259,7 @@ class Repository(metaclass=RepositoryMeta):
                     setattr(obj, k, v)
             await session.flush()
             # await session.refresh(data) - не надо - дает ошибки
-            return {"success": True, "data": obj.to_dict()}
+            return {"success": True, "data": obj}
         except IntegrityError as e:
             raise AppBaseException(message=str(e.orig), status_code=404)
         except Exception as e:
