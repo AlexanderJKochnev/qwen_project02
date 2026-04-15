@@ -2,12 +2,13 @@
 from pydantic import TypeAdapter
 from decimal import Decimal
 from fastapi import HTTPException
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Type
 from datetime import datetime
 from loguru import logger
 # from sqlalchemy.sql.elements import Label
 # from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.types import ModelType
+from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.utils.pydantic_utils import get_field_name, make_paginated_response, inst_dict, list_dict
 from app.core.utils.common_utils import camel_to_enum
 from app.support.item.service import ItemService
@@ -108,7 +109,7 @@ class ApiService(ItemService):
     def convert_list_api_view(cls, items: List[ModelType]) -> List[Dict[str, Any]]:
         # api_view = cls.__api_view__
         api_view = transform_api_list_view
-        cleaned_list = [api_view(item.to_dict(), def_lang, lang_prefixes) for item in items]
+        cleaned_list = [api_view(inst_dict(item), def_lang, lang_prefixes) for item in items]
         # result = ItemApiAdapter.validate_python([api_view(item.to_dict()) for item in items])
         # cleaned_list = [item.model_dump(exclude_none=True, exclude_defaults=True) for item in result]
         return cleaned_list
@@ -214,9 +215,10 @@ class ApiService(ItemService):
             raise HTTPException(status_code=502, detail=f'search_geans. {e}')
 
     @classmethod
-    async def search_geans_all(cls, search: str, similarity_threshold: float,
-                               repository: ItemRepository,
-                               model: ModelType, session: AsyncSession) -> List[dict]:
+    async def search_geans_all(cls, search: str,
+                               repository: Type[ItemRepository],
+                               model: ModelType, session: AsyncSession,
+                               limit: int = 20) -> List[dict]:
         """ переделан под полнотекстовый поиск """
         try:
             if not search:

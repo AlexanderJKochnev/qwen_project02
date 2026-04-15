@@ -314,6 +314,7 @@ class ItemService(Service):
                                       model: Item, session: AsyncSession,
                                       page: int = None, page_size: int = None):
         """
+            DEPRECATED
             Поиск элементов с использованием триграммного индекса в связанной модели Drink с локализацией
             при пустом поисковом запросе выдает ВСЕ ЗАПИСИ !! ЭТО ВАЖНО !! ТАК И ДОЛЖНО БЫТЬ !!!
         """

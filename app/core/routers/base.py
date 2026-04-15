@@ -415,7 +415,7 @@ class BaseRouter:
             response_model <>ReadRelation
         """
         try:
-            result = await self.service.search_geans_all(search, similarity_threshold,
+            result = await self.service.search_geans_all(search,
                                                          self.repo, self.model, session, limit)
             return orresponse(result)
             #  content = orjson.dumps(result)

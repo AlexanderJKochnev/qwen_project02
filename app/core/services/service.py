@@ -511,7 +511,7 @@ class Service(metaclass=ServiceMeta):
         return await cls.search_fts(search, page, page_size, repository, model, session)
 
     @classmethod
-    async def search_geans_all(cls, search: str, similarity_threshold: float,
+    async def search_geans_all(cls, search: str,
                                repository: Type[Repository],
                                model: ModelType, session: AsyncSession, limit: int = 20) -> List[dict]:
         logger.warning('this is undex is not available now. Redirection to fts search')
