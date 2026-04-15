@@ -7,31 +7,41 @@ from pydantic import BaseModel, create_model
 from sqlalchemy import Float, inspect, Integer, Numeric, String, Text
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.sql.type_api import TypeEngine
-from app.core.schemas.base import PaginatedResponse, PyModel, BaseModel
+from app.core.schemas.base import PaginatedResponse, PyModel
 from fastapi.routing import APIRoute
-from fastapi import Response
+from fastapi import Response, HTTPException
 import orjson
 from app.service_registry import get_service as get_serv, get_repo as get_rep, get_pyschema as get_pyschem
+from app.core.types import ModelType
 
 
-def orresponse(response: Union[List, Dict]):
+def orresponse(response: Union[List, Dict, None]):
     """
         предвращает все что jsonинтся  в bute code
     """
+    if not response:
+        raise HTTPException(status_code=404,
+                            detail="record not found")
     content = orjson.dumps(response)
     return Response(content=content, media_type="application/json")
 
 
-def list_dict(instances: List[Type[BaseModel]], skip_empty: bool = True) -> List[dict]:
+def list_dict(instances: List[ModelType], skip_empty: bool = True) -> List[dict]:
     """
     преобразует список instances в список словарей
     """
-    return [instance.to_dict_fast(skip_empty=skip_empty) for instance in instances]
+    try:
+        return [instance.to_dict_fast(skip_empty=skip_empty) for instance in instances]
+    except Exception as e:
+        raise HTTPException(status_code=505, detail=f"fault in conversion list of instances to dict: {e}")
 
 
-def inst_dict(instance: Type[BaseModel], skip_empty: bool = True) -> dict:
-    return instance.to_dict_fast(skip_empty=skip_empty)
-    
+def inst_dict(instance: ModelType, skip_empty: bool = True) -> dict:
+    try:
+        return instance.to_dict_fast(skip_empty=skip_empty)
+    except Exception as e:
+        raise HTTPException(status_code=505, detail=f"fault in conversion instance to dict: {e}")
+
 
 def get_field_name(schema: Type[BaseModel]):
     """ возвращает все имена полей pydantic models """

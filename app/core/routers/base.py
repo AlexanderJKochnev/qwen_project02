@@ -322,7 +322,8 @@ class BaseRouter:
 
     async def get_full(self, session: AsyncSession = Depends(get_db), limit: int = 20) -> List[TReadSchema]:
         try:
-            return await self.service.get_full(self.repo, self.model, session, limit)
+            response = await self.service.get_full(self.repo, self.model, session, limit)
+            return orresponse(response)
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                 detail=f"Internal server error. {e}")
@@ -339,9 +340,10 @@ class BaseRouter:
         """
         # print(f"📥 GET request for {self.model.__name__} from")
         response = await self.service.get_full_with_pagination(page, page_size, self.repo, self.model, session)
+        return orresponse(response)
         # type_checking(response, 'get')
-        result = self.paginated_response(**response)
-        return result
+        # result = self.paginated_response(**response)
+        # return result
 
     async def search(self, search: str = Query(None, description="Поисковый запрос. "
                                                "В случае пустого запроса будут "
