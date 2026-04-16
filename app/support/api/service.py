@@ -155,7 +155,7 @@ class ApiService(ItemService):
     async def get_list_api_view(cls, after_date: datetime, repository, model,
                                 session: AsyncSession,):
         """ Получение списка элементов для api view """
-        items = await repository.get(after_date, model, session)
+        items = await repository.get_all(after_date, model, session)
         result = cls.convert_list_api_view(items)
         return result
 
@@ -164,7 +164,7 @@ class ApiService(ItemService):
                                      repository: ItemRepository, model: Item, session: AsyncSession):
         """Получение списка элементов для ListView с пагинацией и локализацией"""
         skip = (page - 1) * page_size
-        items, total = await repository.get_all(ater_date, skip, page_size, model, session)
+        items, total = await repository.get(ater_date, skip, page_size, model, session)
         result = cls.convert_list_api_view(items)
         # result = []
         # for item in items:

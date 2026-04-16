@@ -1,6 +1,6 @@
 # app/support/api/router.py
 import io
-from fastapi import HTTPException, status, Response
+from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.responses import StreamingResponse
 from datetime import datetime, timezone
