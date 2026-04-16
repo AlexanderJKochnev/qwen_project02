@@ -898,7 +898,7 @@ def get_multilang(obj: dict, base_key: str, languages: tuple) -> str:
     return base_val
 
 
-def transform(source: dict, lang: str, languages: tuple) -> dict:
+def transform(source: dict, lang: str, languages: Union[List, Tuple]) -> dict:
     d = source.get("drink", {})
     subcat = d.get("subcategory", {})
     cat = subcat.get("category", {})
@@ -962,7 +962,7 @@ def transform(source: dict, lang: str, languages: tuple) -> dict:
     }
 
 
-def transform_list_view(source: dict, lang: str, languages: tuple) -> dict:
+def transform_list_view(source: dict, lang: str, languages: Union[List, Tuple]) -> dict:
     d = source.get("drink", {})
     subcat = d.get("subcategory", {})
     cat = subcat.get("category", {})
@@ -985,7 +985,7 @@ def transform_list_view(source: dict, lang: str, languages: tuple) -> dict:
     }
 
 
-def transform_api_list_view(source: dict, def_lang: str, languages: tuple) -> dict:
+def transform_api_list_view(source: dict, def_lang: str, languages: Union[List, Tuple]) -> dict:
     """
     трансформация для api
     languages = {'', '_ru', ...}

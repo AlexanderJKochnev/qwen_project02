@@ -1,6 +1,6 @@
 # app/support/Item/repository.py
 import math
-from typing import Any, Dict, List, Optional, Tuple, Type, Union
+from typing import List, Optional, Tuple, Type, Union
 from sqlalchemy import func, literal_column, or_, select, Select, desc, text
 # from sqlalchemy.dialects.postgresql import ARRAY, BIGINT
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -160,7 +160,7 @@ class ItemRepository(Repository):
             raise AppBaseException(message=f'get_list_view.error; {str(e)}', status_code=404)
 
     @classmethod
-    async def get_detail_view(cls, id: int, model: ModelType, session: AsyncSession) -> Dict[str, Any]:
+    async def get_detail_view(cls, id: int, model: ModelType, session: AsyncSession) -> ModelType:
         """Получение детального представления элемента для DetailView"""
         try:
             query = cls.get_query(model).where(model.id == id)
@@ -359,44 +359,6 @@ class ItemRepository(Repository):
             raise AppBaseException(message=f'search_by_drink_title_subtitle_only.error; {str(e)}', status_code=404)
 
     @classmethod
-    async def find_items_weighted(cls,
-                                  session: AsyncSession, word_stats: list[dict],  # [{'hash': int, 'freq': int}]
-                                  boost: float = 10.0, limit: int = 15
-                                  ):
-        """
-            NOT USED. TEST VERSION
-            last type of search
-            поиск по хэш индексу с учетом частотности слов
-            word_stats:
-            boost: коэффициент редкости - чем выше тем значимее редкое слово в ранжировании
-            limit:
-        """
-        if not word_stats:
-            return []
-
-        # Рассчитываем веса на стороне Python: W = boost / log(freq + 1.5)
-        # Добавляем 1.5, чтобы избежать деления на ноль и слишком резких скачков
-        case_parts = []
-        hashes_list = []
-
-        for item in word_stats:
-            h, freq = item['hash'], item['freq']
-            weight = (1.0 / math.log(freq + 1.5)) * boost
-            # CASE проверяет вхождение каждого хеша из запроса в массив word_hashes записи
-            case_parts.append(f"CASE WHEN word_hashes @> ARRAY[{h}::bigint] THEN {weight:.4f} ELSE 0 END")
-            hashes_list.append(h)
-
-        score_sql = f"({' + '.join(case_parts)})"
-
-        stmt = (select(Item, text(f"{score_sql} AS score")).where(Item.word_hashes.overlap(hashes_list)).order_by(
-            desc(text("score"))
-        ).limit(limit))
-
-        result = await session.execute(stmt)
-        # return result.all()
-        return [{'id': item.id, 'score': score} for item, score in result]
-
-    @classmethod
     async def get_hashes_by_prefix(cls, session: AsyncSession, prefix: str, limit: int = 50) -> List[WordHash]:
         """
         Поиск хешей в словаре по префиксу последнего слова.
@@ -412,7 +374,7 @@ class ItemRepository(Repository):
             cls,
             session: AsyncSession, word_stats: list[dict],  # [{'hash': int, 'freq': int}]
             boost: float = 10.0, limit: int = 15
-    ):
+    ) -> List[dict]:
         """
             поиск по хэш индексу с учетом частотности слов
             word_stats:

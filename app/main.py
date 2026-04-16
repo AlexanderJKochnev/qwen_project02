@@ -28,7 +28,7 @@ from app.preact.delete.router import DeleteRouter
 from app.preact.handbook.router import HandbookRouter
 from app.preact.patch.router import PatchRouter
 from app.support.api.router import ApiRouter
-from app.support.clickhouse.service import EmbeddingService
+# from app.support.clickhouse.service import EmbeddingService
 # -------ИМПОРТ РОУТЕРОВ----------
 from app.support.gemma.router import GemmaRouter
 from app.support.category.router import CategoryRouter

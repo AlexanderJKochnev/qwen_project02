@@ -30,6 +30,7 @@ class ApiRouter(ItemRouter):
     """
     роутер для связи с приложением - не трогать ничего - выход неизменный
     """
+
     def __init__(self):
         super().__init__(prefix='/api', auth_dependency=get_current_api_user)
         self.paginated_response = PaginatedResponse[dict]
@@ -59,23 +60,23 @@ class ApiRouter(ItemRouter):
                                   openapi_extra={'x-request-schema': None}
                                   )
         # alternative search
-        self.router.add_api_route("/search_all_v2",
+        self.router.add_api_route("/search_by_fts",
                                   self.search_geans_all,
                                   methods=["GET"],
                                   # response_model=List[dict],
                                   openapi_extra={'x-request-schema': None}
+                                  )
+        # hash search
+        self.router.add_api_route("/search_by_hash",
+                                  self.smart_search_all,
+                                  methods=["GET"],
+                                  openapi_extra = {'x-request-schema': None}
                                   )
         self.router.add_api_route("/get_by_ids", self.search_by_ids,
                                   methods=["GET"],
                                   # response_model=List[dict],
                                   openapi_extra={'x-request-schema': None}
                                   )
-        """self.router.add_api_route("/mongo", self.get_images_after_date, methods=["GET"],
-                                  response_model=FileListResponse,
-                                  openapi_extra={'x-request-schema': None})
-        self.router.add_api_route("/mongo_all", self.get_images_list_after_date, methods=["GET"],
-                                  response_model=dict,
-                                  openapi_extra={'x-request-schema': None})"""
         self.router.add_api_route("/{id}", self.get_api, methods=["GET"],
                                   # response_model=dict,
                                   openapi_extra={'x-request-schema': None})
@@ -237,3 +238,20 @@ class ApiRouter(ItemRouter):
             return result
         except Exception as e:
             raise HTTPException(status_code=500, detail=e)
+
+    async def smart_search_all(self,
+                               search: str = Query(None, description="Поисковый запрос"
+                                                   ),
+                               session: AsyncSession = Depends(get_db),
+                               boost: float = Query(15, description="Премия за редкие слова"
+                                                    ),
+                               limit: int = 20):
+        """
+            поисковый запрос по хэш индексу
+        """
+        try:
+            service = ApiService
+            # repository = ItemRepository
+            return service.execute_smart_search(search, session, boost, limit)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f'{e}')

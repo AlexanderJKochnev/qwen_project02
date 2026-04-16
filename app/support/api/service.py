@@ -143,11 +143,10 @@ class ApiService(ItemService):
             }
         """
         repository = ItemRepository
-        model = Item
-        item_instance = await repository.get_detail_view(id, model, session)
-        item: dict = inst_dict(item_instance)
-        if not item:
+        item_instance = await repository.get_detail_view(id, Item, session)
+        if not item_instance:
             return None
+        item: dict = inst_dict(item_instance)
         # result: dict = cls.__api_view__(item)
         result: dict = transform_api_list_view(item, def_lang, lang_prefixes)
         return result
@@ -187,7 +186,7 @@ class ApiService(ItemService):
     @classmethod
     async def search_all(cls, search: str,
                          repository: ItemRepository, model: Item,
-                         session: AsyncSession) -> PaginatedResponse[ItemApi]:
+                         session: AsyncSession, limit: int = 20) -> PaginatedResponse[ItemApi]:
         """Поиск с пагинацией и локализацией"""
         items = await repository.search_all(search, model, session)
         result = cls.convert_list_api_view(items)
@@ -197,6 +196,7 @@ class ApiService(ItemService):
     async def search_geans(cls, search: str, similarity_threshold: float,
                            page: int, page_size: int,
                            repository: ItemRepository, model: Item, session: AsyncSession) -> Dict[str, Any]:
+        """ DEPRECATED """
         try:
             skip = (page - 1) * page_size
             if not search:
@@ -219,7 +219,7 @@ class ApiService(ItemService):
                                repository: Type[ItemRepository],
                                model: ModelType, session: AsyncSession,
                                limit: int = 20) -> List[dict]:
-        """ переделан под полнотекстовый поиск """
+        """ DEPRECATED переделан под полнотекстовый поиск """
         try:
             logger.warning('geans type of search is deprecated. redirect to fts (if available ) or '
                            'drink_title_subtitle')
@@ -247,3 +247,8 @@ class ApiService(ItemService):
         items = await repository.get_by_ids(ids_set, model, session)
         result = cls.convert_list_api_view(items)
         return result
+
+    @classmethod
+    async def execute_smart_search(query: str, session: AsyncSession, boost: float = 15.0, limit: int = 20):
+        items = super().execute_smart_search(query, session, boost, limit)
+        return [transform_api_list_view(item, def_lang, lang_prefixes) for item in items]
