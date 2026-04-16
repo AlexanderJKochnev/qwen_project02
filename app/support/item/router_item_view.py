@@ -230,4 +230,4 @@ class ItemViewRouter:
         # result = await self.service.search_by_trigram_index(search_str, lang, ItemRepository,
         #                                                     Item, session, page, page_size)
         result = await self.service.execute_smart_search(search_str, session, boost, limit)
-        return result
+        return orresponse(result)

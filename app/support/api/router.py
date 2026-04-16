@@ -1,6 +1,5 @@
 # app/support/api/router.py
 import io
-import orjson
 from fastapi import HTTPException, status, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.responses import StreamingResponse
@@ -11,6 +10,7 @@ from fastapi import Depends, Query
 from app.auth.dependencies import get_current_api_user
 from app.core.config.project_config import settings, get_paging
 from app.core.schemas.base import PaginatedResponse
+from app.core.utils.pydantic_utils import orresponse
 # from app.mongodb import router as mongorouter
 from app.core.config.database.db_async import get_db
 from app.core.utils.common_utils import back_to_the_future, delta_data
@@ -70,7 +70,7 @@ class ApiRouter(ItemRouter):
         self.router.add_api_route("/search_by_hash",
                                   self.smart_search_all,
                                   methods=["GET"],
-                                  openapi_extra = {'x-request-schema': None}
+                                  openapi_extra={'x-request-schema': None}
                                   )
         self.router.add_api_route("/get_by_ids", self.search_by_ids,
                                   methods=["GET"],
@@ -120,7 +120,7 @@ class ApiRouter(ItemRouter):
             # Проверяем, что дата не в будущем
             after_date = back_to_the_future(after_date)
             result = await image_service.get_images_list_after_date(after_date)
-            return {a: b for b, a in result}
+            return orresponse({a: b for b, a in result})
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
 
@@ -133,7 +133,8 @@ class ApiRouter(ItemRouter):
         # response = result.model_dump(exclude_none=True, exclude_unset=True)
         # validate_result = ItemApi.model_validate(result)
         # print('==========================')
-        return result
+        return orresponse(result)
+        # return result
 
     async def get_all(self, after_date: datetime = Query(
         (datetime.now(timezone.utc) - relativedelta(years=2)).isoformat(),
@@ -148,7 +149,8 @@ class ApiRouter(ItemRouter):
             service = ApiService
             repository = ItemRepository
             result = await service.get_list_api_view(after_date, repository, self.model, session)
-            return result
+            return orresponse(result)
+            # return result
 
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -171,9 +173,7 @@ class ApiRouter(ItemRouter):
         service = ApiService
         response = await service.get_list_api_view_page(after_date, page, page_size, self.repo, self.model, session)
         # result = self.paginated_response(**response)
-        content = orjson.dumps(response)
-        return Response(content=content, media_type="application/json")
-        # return result
+        return orresponse(response)
 
     async def get_image_by_id(self, id: int, session: AsyncSession = Depends(get_db),
                               image_service: ThumbnailImageService = Depends()):
@@ -235,7 +235,7 @@ class ApiRouter(ItemRouter):
             service = ApiService
             repository = ItemRepository
             result = await service.get_list_api_view_ids(search, repository, self.model, session)
-            return result
+            return orresponse(result)
         except Exception as e:
             raise HTTPException(status_code=500, detail=e)
 
@@ -252,6 +252,7 @@ class ApiRouter(ItemRouter):
         try:
             service = ApiService
             # repository = ItemRepository
-            return await service.execute_smart_search(search, session, boost, limit)
+            response = await service.execute_smart_search(search, session, boost, limit)
+            return orresponse(response)
         except Exception as e:
             raise HTTPException(status_code=500, detail=f'{e}')

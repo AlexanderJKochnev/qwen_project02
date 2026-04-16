@@ -1,7 +1,7 @@
 # app/support/Item/repository.py
 import math
 from typing import List, Optional, Tuple, Type, Union
-from sqlalchemy import func, literal_column, or_, select, Select, desc, text
+from sqlalchemy import func, literal_column, or_, select, Select, desc, text, and_
 # from sqlalchemy.dialects.postgresql import ARRAY, BIGINT
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import load_only, selectinload
@@ -403,6 +403,44 @@ class ItemRepository(Repository):
         result = await session.execute(stmt)
         # return result.all()
         return [{'score': score, **item.to_dict_fast()} for item, score in result]
+
+    @classmethod
+    async def find_items_keyset(cls,
+                                session: AsyncSession, word_stats: list[dict], last_score: float = None, last_id: int = None,
+                                limit: int = 15, boost: float = 15.0
+                                ):
+        """
+            поиск с постраничным выводом based on keyset
+        """
+        if not word_stats:
+            return []
+
+        # Формируем веса для CASE
+        case_parts = [
+            f"CASE WHEN word_hashes @> ARRAY[{d['hash']}::bigint] THEN {(1.0 / math.log(d['freq'] + 1.5)) * boost:.4f} ELSE 0 END"
+            for d in word_stats]
+        score_sql = f"({' + '.join(case_parts)})"
+        hashes_list = [d['hash'] for d in word_stats]
+
+        # Базовый запрос
+        stmt = select(Item, text(f"{score_sql} AS score")).where(Item.word_hashes.overlap(hashes_list))
+
+        # Условие Keyset: (score < last_score) ИЛИ (score == last_score И id < last_id)
+        if last_score is not None and last_id is not None:
+            # Используем text(), так как score — это вычисляемое поле, а не колонка
+            stmt = stmt.where(
+                or_(
+                    text(f"{score_sql} < :ls"), and_(
+                        text(f"{score_sql} = :ls"), Item.id < last_id
+                    )
+                )
+            ).params(ls=last_score)
+
+        # Сортировка по score, затем по id для стабильности
+        stmt = stmt.order_by(desc(text("score")), desc(Item.id)).limit(limit)
+
+        result = await session.execute(stmt)
+        return result.all()
 
 
 def get_drink_search_expression(cls):

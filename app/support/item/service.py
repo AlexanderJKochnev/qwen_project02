@@ -577,7 +577,7 @@ class ItemService(Service):
         )
 
     @staticmethod
-    async def execute_smart_search(query: str, session: AsyncSession, boost: float = 15.0, limit: int = 20):
+    async def execute_smart_search(query: str, session: AsyncSession, boost: float = 15.0, limit: int = 20) -> List[dict]:
         # 1. Токенизация и сбор хешей (включая префикс последнего слова)
         repo = ItemRepository
         tokens = tokenize(query)
@@ -596,3 +596,11 @@ class ItemService(Service):
 
         # 3. Финальный поиск
         return await repo.find_items_weighted_v2(session, word_stats, boost, limit)
+
+    @classmethod
+    async def execute_smart_search_keyset(query: str,
+                                          session: AsyncSession,
+                                          last_score: float = None,
+                                          last_id: int = None,
+                                          limit: int = 15) -> List[dict]:
+        pass
