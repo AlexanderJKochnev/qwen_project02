@@ -106,10 +106,15 @@ class ApiService(ItemService):
             raise HTTPException(status_code=503, detail=f'error.__api_view__.{e}')
 
     @classmethod
-    def convert_list_api_view(cls, items: List[ModelType]) -> List[Dict[str, Any]]:
-        # api_view = cls.__api_view__
+    def convert_list_api_view(cls, items: List[ModelType], cnv: bool = True) -> List[Dict[str, Any]]:
+        """
+            cnv
+        """
         api_view = transform_api_list_view
-        cleaned_list = [api_view(inst_dict(item), def_lang, lang_prefixes) for item in items]
+        if cnv:
+            cleaned_list = [api_view(inst_dict(item), def_lang, lang_prefixes) for item in items]
+        else:
+            cleaned_list = [api_view(item, def_lang, lang_prefixes) for item in items]
         # result = ItemApiAdapter.validate_python([api_view(item.to_dict()) for item in items])
         # cleaned_list = [item.model_dump(exclude_none=True, exclude_defaults=True) for item in result]
         return cleaned_list
@@ -204,7 +209,7 @@ class ApiService(ItemService):
             items: dict = response.get('items')
             if not items:
                 raise HTTPException(status_code=404, details=f'found nothig by request "{search}"')
-            response['itmes'] = cls.convert_list_api_view(items)
+            response['itmes'] = cls.convert_list_api_view(items, cnv=False)
             return response
             skip = (page - 1) * page_size
             if not search:
