@@ -250,5 +250,5 @@ class ApiService(ItemService):
 
     @classmethod
     async def execute_smart_search(cls, query: str, session: AsyncSession, boost: float = 15.0, limit: int = 20):
-        items = super().execute_smart_search(query, session, boost, limit)
+        items = await super().execute_smart_search(query, session, boost, limit)
         return [transform_api_list_view(item, def_lang, lang_prefixes) for item in items]
