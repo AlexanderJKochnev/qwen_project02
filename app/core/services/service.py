@@ -694,3 +694,30 @@ class Service(metaclass=ServiceMeta):
                     await asyncio.sleep(0.1)
 
             logger.info("Массовая переиндексация завершена успешно")
+
+    @classmethod
+    async def get_keyset(cls, page: int,
+            cls, search: str, page: int, page_size: int, repository: Type[Repository], model: ModelType,
+            session: AsyncSession, ) -> Dict[str, Any]:
+        try:
+            # Запрос с загрузкой связей и пагинацией
+            skip = (page - 1) * page_size
+            if not search:
+                items, total = await repository.get_full_with_pagination(skip, page_size, model, session)
+                items = list_dict(items)
+                return make_paginated_response(items, total, page, page_size)
+            # определаяем тип поиска (geans OR b-tree
+            if hasattr(model, 'search_content'):
+                if formatted_search := formatted_query(search):
+                    items, total = await repository.search_fts(formatted_search, skip, page_size, model, session)
+                else:
+                    items, total = await repository.search(search, skip, page_size, model, session)
+            else:
+                # model is not indexed by GIN
+                items, total = await repository.search(search, skip, page_size, model, session)
+            items = list_dict(items)
+            result: dict = make_paginated_response(items, total, page, page_size)
+            return result
+        except Exception as e:
+            logger.error(f'search_geans.error: {e}')
+            raise HTTPException(status_code = 501, detail = f'{e}')

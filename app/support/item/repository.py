@@ -403,7 +403,8 @@ class ItemRepository(Repository):
 
     @classmethod
     async def find_items_keyset(cls,
-                                session: AsyncSession, word_stats: list[dict], last_score: float = None, last_id: int = None,
+                                session: AsyncSession, word_stats: list[dict], last_score: float = None,
+                                last_id: int = None,
                                 limit: int = 15, boost: float = 15.0
                                 ):
         """

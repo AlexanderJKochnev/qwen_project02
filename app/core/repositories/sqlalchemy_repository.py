@@ -879,3 +879,20 @@ class Repository(metaclass=RepositoryMeta):
                 error_msg = f"Background Sync Error for {start_model.__name__}:{start_id}: {e}"
                 logger.error(error_msg)
                 # просто информируем - не прерываем работу?
+
+    @classmethod
+    async def get_keyset(cls, model: ModelType, session: AsyncSession,
+                         last_id: int = None,
+                         limit: int = 15) -> dict:
+        """
+            постраничный вывод по keyset
+            не знает сколько страниц всего, но быстрый доступ для страниц > 10
+        """
+        # Условие Keyset: (score < last_score) ИЛИ (score == last_score И id < last_id)
+        stmt = cls.get_query(model)
+        if last_id is not None:
+            stmt = stmt.where(model.id < last_id)
+        # Сортировка по score, затем по id для стабильности
+        stmt = stmt.order_by(desc(model.id)).limit(limit)
+        result = await session.execute(stmt)
+        return result.all()

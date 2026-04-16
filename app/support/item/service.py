@@ -463,13 +463,13 @@ class ItemService(Service):
                 result = []
             else:
                 language = lang_sorted(lang)
-                result = ItemListViewAdapter.validate_python([transform_list_view(item.to_dict(), lang, tuple(language))
+                result = ItemListViewAdapter.validate_python([transform_list_view(item, lang, tuple(language))
                                                               for item in items])
             response = make_paginated_response(result, total, page, page_size)
             return response
         except Exception as e:
             logger.error(f'search_geans. {e}')
-            raise HTTPException(status_code=502, detail=f'search_geans. {e}')
+            raise HTTPException(status_code=502, detail=f'search_geans_items. {e}')
 
     @classmethod
     async def search_geans_all_items(cls, lang: str, search: str, similarity_threshold: float,
@@ -596,11 +596,3 @@ class ItemService(Service):
 
         # 3. Финальный поиск
         return await repo.find_items_weighted_v2(session, word_stats, boost, limit)
-
-    @classmethod
-    async def execute_smart_search_keyset(query: str,
-                                          session: AsyncSession,
-                                          last_score: float = None,
-                                          last_id: int = None,
-                                          limit: int = 15) -> List[dict]:
-        pass

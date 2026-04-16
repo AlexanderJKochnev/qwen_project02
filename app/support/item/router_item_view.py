@@ -231,3 +231,18 @@ class ItemViewRouter:
         #                                                     Item, session, page, page_size)
         result = await self.service.execute_smart_search(search_str, session, boost, limit)
         return orresponse(result)
+
+    async def search_smart_keyset(self,
+                                  # lang: str = Path(..., description="Язык локализации"),
+                                  search_str: str = Query(
+                                      None, description="Поисковый запрос "
+                                      "(при отсутствии значения - выдает все записи)"),
+                                  page: int = Query(1, ge=1, description="Номер страницы"),
+                                  page_size: int = Query(15, ge=1, le=100, description="Размер страницы"),
+                                  session: AsyncSession = Depends(get_db)):
+        """ новый поиск вместо триграмного  индекса ONLY FOR ITEMS_PREACT        """
+        # result = await self.service.search_by_trigram_index(search_str, lang, ItemRepository,
+        #                                                     Item, session, page, page_size)
+
+        result = await self.search_smart_keyset(search_str, page, page_size, session)
+        return result
