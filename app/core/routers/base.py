@@ -405,7 +405,6 @@ class BaseRouter:
                                search: str = Query(None, description="Поисковый запрос. "
                                                    "В случае пустого запроса будут "
                                                    "выведены все данные "),
-                               similarity_threshold: float = Query(None, ge=0, le=1.0),
                                session: AsyncSession = Depends(get_db),
                                limit: int = 20  # ограничение что бы не подвесить сервер
                                ):

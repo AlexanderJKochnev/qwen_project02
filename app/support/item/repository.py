@@ -364,6 +364,8 @@ class ItemRepository(Repository):
                                   boost: float = 10.0, limit: int = 15
                                   ):
         """
+            NOT USED. TEST VERSION
+            last type of search
             поиск по хэш индексу с учетом частотности слов
             word_stats:
             boost: коэффициент редкости - чем выше тем значимее редкое слово в ранжировании
@@ -438,7 +440,7 @@ class ItemRepository(Repository):
 
         result = await session.execute(stmt)
         # return result.all()
-        return [{'score': score, **item.to_dict()} for item, score in result]
+        return [{'score': score, **item.to_dict_fast()} for item, score in result]
 
 
 def get_drink_search_expression(cls):

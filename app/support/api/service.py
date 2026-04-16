@@ -221,6 +221,8 @@ class ApiService(ItemService):
                                limit: int = 20) -> List[dict]:
         """ переделан под полнотекстовый поиск """
         try:
+            logger.warning('geans type of search is deprecated. redirect to fts (if available ) or '
+                           'drink_title_subtitle')
             if not search:
                 items = await repository.get_full(model, session)
             else:
