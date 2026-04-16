@@ -252,6 +252,6 @@ class ApiRouter(ItemRouter):
         try:
             service = ApiService
             # repository = ItemRepository
-            return service.execute_smart_search(search, session, boost, limit)
+            return await service.execute_smart_search(search, session, boost, limit)
         except Exception as e:
             raise HTTPException(status_code=500, detail=f'{e}')
