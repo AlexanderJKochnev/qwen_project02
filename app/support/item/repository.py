@@ -251,9 +251,6 @@ class ItemRepository(Repository):
 
             result = await session.execute(query)
             items = result.scalars().all()
-            result = []
-            for item in items:
-                result.append(item.to_dict())
             return items, total
         except Exception as e:
             raise AppBaseException(message=f'search_by_drink_title_subtitle.error; {str(e)}', status_code=404)
