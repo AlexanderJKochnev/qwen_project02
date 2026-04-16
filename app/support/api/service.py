@@ -198,6 +198,14 @@ class ApiService(ItemService):
                            repository: ItemRepository, model: Item, session: AsyncSession) -> Dict[str, Any]:
         """ DEPRECATED """
         try:
+            response = await super().search_geans(search,
+                                                  similarity_threshold, page, page_size, repository, model,
+                                                  session)
+            items: dict = response.get('items')
+            if not items:
+                raise HTTPException(status_code=404, details=f'found nothig by request "{search}"')
+            response['itmes'] = cls.convert_list_api_view(items)
+            return response
             skip = (page - 1) * page_size
             if not search:
                 items, total = await repository.get_full_with_pagination(skip, page_size, model, session)
