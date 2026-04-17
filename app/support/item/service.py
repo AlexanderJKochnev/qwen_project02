@@ -548,7 +548,7 @@ class ItemService(Service):
                                 logger.warning('f{item.drink_id} empty')
                             tmp = get_hashes_for_item(content)
                             if tmp:
-                                logger.warning('f{item.drink_id} {tmp}')
+                                logger.warning(f'{item.drink_id}, {tmp}')
                             item.word_hashes = tmp
                             # строку ниже удалить после тестирования хэш индекса
                             if not item.word_hashes:
