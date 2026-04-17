@@ -743,5 +743,7 @@ class Service(metaclass=ServiceMeta):
         if len(items_out) == limit:
             next_cursor = {"score": items_out[-1]["score"], "id": items_out[-1]["id"]}
 
-        return {"total_found": total_count, "items": items_out, "next_cursor": next_cursor,
-                "has_more": next_cursor is not None}
+        result = {"total_found": total_count, "items": items_out, "next_cursor": next_cursor,
+                  "has_more": next_cursor is not None}
+        logger.warning(result)
+        return result
