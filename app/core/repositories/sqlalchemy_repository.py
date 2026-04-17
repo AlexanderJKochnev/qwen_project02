@@ -965,7 +965,7 @@ class Repository(metaclass=RepositoryMeta):
         result = await session.execute(stmt, params)
         return [{'score': score, **item.to_dict_fast()} for item, score in result]
 
-    @staticmethod
+    @classmethod
     async def get_word_data_by_prefix(cls, session: AsyncSession, prefix: str, limit: int = 50):
         """Возвращает список словарей {hash, freq, word} для префикса."""
         from app.support.hashing.model import WordHash
