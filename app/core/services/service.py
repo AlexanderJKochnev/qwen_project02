@@ -732,5 +732,4 @@ class Service(metaclass=ServiceMeta):
             next_cursor = {"score": results[-1]["score"], "id": results[-1]["id"]}
         result = {"total_found": total_count, "items": results, "next_cursor": next_cursor,
                   "has_more": next_cursor is not None}
-        logger.warning(result)
         return result
