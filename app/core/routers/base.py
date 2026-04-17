@@ -1,6 +1,6 @@
 # app/core/routers/base.py
 
-from typing import Any, List, Type, TypeVar, Callable
+from typing import Any, List, Optional, Type, TypeVar, Callable
 # from dateutil.relativedelta import relativedelta
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Request, BackgroundTasks
@@ -160,6 +160,10 @@ class BaseRouter:
         self.router.add_api_route("/{id}",
                                   self.delete, methods=["DELETE"],
                                   # response_model=self.delete_response,
+                                  openapi_extra={'x-request-schema': None})
+        self.router.add_api_route("search_by_hash",
+                                  self.api_smart_search,
+                                  methods=['GET'],
                                   openapi_extra={'x-request-schema': None})
 
     async def create(self, data: TCreateSchema,
@@ -421,6 +425,19 @@ class BaseRouter:
             # return Response(content=content, media_type="application/json")
         except Exception as e:
             raise HTTPException(status_code=501, detail=f'search_geans_all, {self.model.__name__}, {e}')
+
+    async def api_smart_search(self,
+                               query: str = Query(None, description="Поисковый запрос."),
+                               ls: Optional[float] = Query(None, description="Предыдущий range"),  # last_score
+                               li: Optional[int] = Query(None, description="Последний id предыдущего запроса."),  # last_id
+                               session: AsyncSession = Depends(get_db), limit: int = 15
+                               ):
+        """
+            запрос на постраничный поиск по хэш индексу - работает только с моделямии с хэш индексом.
+            работает только с preact. тут только посмотреть - оценить.
+        """
+        cursor = {"score": ls, "id": li} if ls is not None else None
+        return await self.service.search_by_hash_cursor(query, self.model, self.repo, session, cursor, limit)
 
 
 class LightRouter:

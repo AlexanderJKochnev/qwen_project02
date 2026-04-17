@@ -16,7 +16,6 @@ from app.support.category.model import Category
 from app.support.country.model import Country
 from app.support.drink.model import Drink
 from app.support.drink.repository import DrinkRepository  # , get_drink_search_expression
-from app.support.hashing.model import WordHash
 from app.support.item.model import Item
 from app.support.parcel.model import Site
 from app.support.producer.model import Producer
@@ -354,17 +353,6 @@ class ItemRepository(Repository):
             return items
         except Exception as e:
             raise AppBaseException(message=f'search_by_drink_title_subtitle_only.error; {str(e)}', status_code=404)
-
-    @classmethod
-    async def get_hashes_by_prefix(cls, session: AsyncSession, prefix: str, limit: int = 50) -> List[WordHash]:
-        """
-        Поиск хешей в словаре по префиксу последнего слова.
-        """
-        stmt = (select(WordHash.hash).where(WordHash.word.like(f"{prefix.lower()}%")).order_by(
-            WordHash.freq.desc()
-        ).limit(limit))
-        res = await session.execute(stmt)
-        return res.scalars().all()
 
     @classmethod
     async def find_items_weighted_v2(

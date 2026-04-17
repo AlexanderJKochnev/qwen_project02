@@ -4,7 +4,7 @@
     get_all     result.mappings().all()
     get_by_id   result.scalar_one_or_none()
 """
-
+from functools import lru_cache
 from abc import ABCMeta
 from re import search as research
 from datetime import datetime
@@ -896,3 +896,85 @@ class Repository(metaclass=RepositoryMeta):
         stmt = stmt.order_by(desc(model.id)).limit(limit)
         result = await session.execute(stmt)
         return result.all()
+
+    @classmethod
+    @lru_cache(maxsize=2000)
+    async def get_cached_total_count(model: ModelType, session: AsyncSession, hashes_tuple: tuple) -> int:
+        """
+        Кэширует общее количество найденных записей.
+        ВАЖНО: lru_cache не поддерживает списки, поэтому передаем tuple.
+        для моделей с хэщ индексом
+        """
+        if not hashes_tuple:
+            return 0
+
+        hashes = list(hashes_tuple)
+        stmt = (select(func.count()).select_from(model).where(model.word_hashes.bool_op("&&")(hashes)))
+        result = await session.execute(stmt)
+        return result.scalar() or 0
+
+    # В Service Layer вызываем так:
+    # Превращаем список хешей в кортеж для кэша
+    # hashes_tuple = tuple(sorted(all_hashes))
+    # total_count = await get_cached_total_count(session, hashes_tuple)
+
+    @classmethod
+    async def get_search_metadata(cls, model: ModelType, session: AsyncSession, hashes: List[int]):
+        """
+        Получает частоты слов для расчета весов и общее кол-во записей.
+        """
+        # 1. Получаем частоты из WordHash
+        from app.support.hashing.model import WordHash
+        stats_stmt = select(WordHash.hash, WordHash.freq).where(WordHash.hash.in_(hashes))
+        stats_res = await session.execute(stats_stmt)
+        word_stats: dict = {r.hash: r.freq for r in stats_res.all()}
+        hashes_tuple = tuple(sorted(hashes))
+        # 2. Получаем Total Count (первый раз по настоящему затем из кэша)
+        total_count = await cls.get_cached_total_count(session, hashes_tuple)
+        return word_stats, total_count
+
+    @classmethod
+    async def find_items_hybrid(
+            cls, model: ModelType,
+            session: AsyncSession, word_weights: dict[int, float],  # hash -> weight
+            last_score: Optional[float] = None, last_id: Optional[int] = None, limit: int = 15
+    ):
+        """
+        Keyset пагинация с динамическим расчетом SCORE в БД.
+        """
+        hashes = list(word_weights.keys())
+
+        # Строим CASE для скоринга
+        case_parts = [f"CASE WHEN word_hashes @> ARRAY[{h}::bigint] THEN {w:.4f} ELSE 0 END" for h, w in
+                      word_weights.items()]
+        score_sql = f"({' + '.join(case_parts)})"
+
+        # Базовый запрос
+        # Используем .bool_op("&&") если .overlap() не подхватывается
+        stmt = select(model, text(f"{score_sql} AS score")).where(model.word_hashes.bool_op("&&")(hashes))
+
+        # Keyset фильтрация (якорь)
+        if last_score is not None and last_id is not None:
+            stmt = stmt.where(
+                or_(
+                    text(f"{score_sql} < :ls"), and_(text(f"{score_sql} = :ls"), model.id < last_id)
+                )
+            ).params(ls=last_score)
+
+        # Сортировка: Сначала вес, потом ID (для детерминированности)
+        stmt = stmt.order_by(text("score DESC"), model.id.desc()).limit(limit)
+
+        result = await session.execute(stmt)
+        return result.all()
+
+    @classmethod
+    async def get_hashes_by_prefix(cls, session: AsyncSession, prefix: str, limit: int = 50) -> List[WordHash]:
+        """
+        Поиск хешей в словаре по префиксу последнего слова.
+        """
+        from app.support.hashing.model import WordHash
+        stmt = (select(WordHash.hash).where(WordHash.word.like(f"{prefix.lower()}%")).order_by(
+                WordHash.freq.desc()
+                ).limit(limit))
+        res = await session.execute(stmt)
+        return res.scalars().all()
