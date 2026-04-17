@@ -703,33 +703,34 @@ class Service(metaclass=ServiceMeta):
         """
             поиск по хэш индексу с паниеацией
         """
+        logger.warning('ALARAM 3')
         if not hasattr(model, 'word_hashes'):
             raise HTTPException(status_code=502, detail='this model has no hash index')
         # 1. Нормализация
         tokens = tokenize(query)
         if not tokens:
             return {"items": [], "total": 0}
-
+        logger.warning('ALARAM 4')
         # 2. Сбор всех целевых хешей (включая префиксы последнего слова)
         main_hashes = [get_cached_hash(t) for t in tokens]
         prefix_hashes = await repo.get_hashes_by_prefix(session, tokens[-1])
         all_hashes = list(set(main_hashes) | set(prefix_hashes))
-
+        logger.warning('ALARAM 5')
         # 3. Метаданные (Частоты и Total)
         # В идеале: закэшировать word_weights в Redis на 5 минут по ключу MD5(query)
         word_freqs, total_count = await repo.get_search_metadata(session, all_hashes)
-
+        logger.warning('ALARAM 6')
         boost = 15.0
         word_weights = {h: (1.0 / math.log(freq + 1.5)) * boost for h, freq in word_freqs.items()}
-
+        logger.warning('ALARAM 7')
         # 4. Поиск данных
         last_score = cursor.get("score") if cursor else None
         last_id = cursor.get("id") if cursor else None
-
+        logger.warning('ALARAM 8')
         results = await repo.find_items_hybrid(
             session, word_weights, last_score, last_id, limit
         )
-
+        logger.warning('ALARAM 9')
         # 5. Формирование ответа
         items_out = []
         for row in results:
@@ -737,12 +738,12 @@ class Service(metaclass=ServiceMeta):
             item_dict = {column.name: getattr(row.Item, column.name) for column in row.Item.__table__.columns}
             item_dict["score"] = round(float(row.score), 4)
             items_out.append(item_dict)
-
+        logger.warning('ALARAM 10')
         # Определяем следующий курсор
         next_cursor = None
         if len(items_out) == limit:
             next_cursor = {"score": items_out[-1]["score"], "id": items_out[-1]["id"]}
-
+        logger.warning('ALARAM 11')
         result = {"total_found": total_count, "items": items_out, "next_cursor": next_cursor,
                   "has_more": next_cursor is not None}
         logger.warning(result)
