@@ -956,8 +956,9 @@ class Repository(metaclass=RepositoryMeta):
         score_sql = f"({' + '.join(case_parts)})"
         logger.warning(f'ALARAM 8.3  {score_sql}')
         # Базовый запрос
-        # Используем .bool_op("&&") если .overlap() не подхватывается
-        stmt = select(model, text(f"{score_sql} AS score")).where(model.word_hashes.bool_op("&&")(hashes))
+        query = cls.get_query(model)
+        stmt = query.add_columns(text(f"{score_sql} AS score"))  # добавляем колонку
+        stmt = stmt.where(model.word_hashes.bool_op("&&")(hashes))
         logger.warning('ALARAM 8.4')
         # Keyset фильтрация (якорь)
         if last_score is not None and last_id is not None:

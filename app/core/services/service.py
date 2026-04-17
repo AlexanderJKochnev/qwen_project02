@@ -728,7 +728,7 @@ class Service(metaclass=ServiceMeta):
         last_id = cursor.get("id") if cursor else None
         logger.warning('ALARAM 8')
         results = await repo.find_items_hybrid(model, session, word_weights, last_score, last_id, limit)
-        logger.warning('ALARAM 9')
+        logger.warning(f'ALARAM 9, {results=}')
         # 5. Формирование ответа
         items_out = []
         for row in results:
