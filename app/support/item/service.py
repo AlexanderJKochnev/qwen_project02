@@ -496,7 +496,7 @@ class ItemService(Service):
             return
 
         async with _REINDEX_LOCK:
-            logger.info("Запуск массовой переиндексации...")
+            logger.info("Запуск массовой переиндексации...items")
 
             # Определяем критерии устаревания (2 года)
             # two_years_ago = datetime.now(timezone.utc) - timedelta(days=730)
@@ -559,7 +559,7 @@ class ItemService(Service):
                     # Короткая пауза, чтобы дать event loop подышать
                     await asyncio.sleep(0.1)
 
-            logger.info("Массовая переиндексация завершена успешно")
+            logger.info("Массовая переиндексация завершена успешно.Items")
 
     @classmethod
     async def run_background_task(

@@ -11,5 +11,3 @@ from app.support.hashing.model import WordHash
 
 class WordHashRepository(Repository):
     model = WordHash
-
-    

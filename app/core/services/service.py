@@ -637,7 +637,7 @@ class Service(metaclass=ServiceMeta):
             return
         Item = get_model_by_name('Item')
         async with _REINDEX_LOCK:
-            logger.info("Запуск массовой переиндексации...")
+            logger.info("Запуск массовой переиндексации...core")
 
             # Определяем критерии устаревания (2 года)
             # two_years_ago = datetime.now(timezone.utc) - timedelta(days=730)
@@ -695,7 +695,7 @@ class Service(metaclass=ServiceMeta):
                     # Короткая пауза, чтобы дать event loop подышать
                     await asyncio.sleep(0.1)
 
-            logger.info("Массовая переиндексация завершена успешно")
+            logger.info("Массовая переиндексация завершена успешно. Core")
 
     @classmethod
     async def search_by_hash_cursor(cls, query: str, model: ModelType, repo: Type[Repository],
