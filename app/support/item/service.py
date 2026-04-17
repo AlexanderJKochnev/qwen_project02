@@ -494,12 +494,13 @@ class ItemService(Service):
         async with session_factory() as session:
             # 1. Получаем СТРИМ всех ID и контента, которые нужно обновить
             # Это гарантирует, что мы пройдем по списку ОДИН РАЗ
+            logger.warning('start')
             stmt = select(Item).options(selectinload(Item.drink))
             if not force_all:
                 stmt = stmt.where(or_(Item.word_hashes == None, func.cardinality(Item.word_hashes) == 0))
             
             result_stream = await session.stream(stmt)
-            
+            logger.warning('start2')
             batch_count = 0
             async for row in result_stream:
                 item = row[0]
@@ -517,9 +518,11 @@ class ItemService(Service):
                 if batch_count >= cls.BATCH_SIZE:
                     await session.commit()
                     logger.info(f"Зафикисирован батч: {cls.BATCH_SIZE} записей")
-                    batch_count = 0  # После коммита объекты в сессии инвалидируются,   # стрим продолжит работу со следующими
+                    batch_count = 0
+                    # После коммита объекты в сессии инвалидируются,
+                    # стрим продолжит работу со следующими
             
-            await session.commit()  # финальный остаток
+            await session.commit() # финальный остаток
 
     @classmethod
     async def run_background_task(
