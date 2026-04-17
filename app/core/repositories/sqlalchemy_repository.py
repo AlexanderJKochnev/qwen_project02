@@ -944,7 +944,7 @@ class Repository(metaclass=RepositoryMeta):
         """
         hashes = list(word_weights.keys())
         # Строим CASE для скоринга
-        case_parts = [f"CASE WHEN word_hashes @> ARRAY[{h}::bigint] THEN {w:.4f} ELSE 0 END" for h, w in
+        case_parts = [f"CASE WHEN word_hashes @> ARRAY[{h}::bigint] THEN {w:.8f} ELSE 0 END" for h, w in
                       word_weights.items()]
         score_sql = f"({' + '.join(case_parts)})"
         # Базовый запрос
