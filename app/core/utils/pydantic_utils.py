@@ -1,6 +1,7 @@
 # app/core/utils/pydantic_utils.py
 # from pydantic import create_model, BaseModel
 from decimal import Decimal
+from datetime import datetime
 from typing import List, Optional, Type, Union, Dict, Any, Set
 import re
 from pydantic import BaseModel, create_model
@@ -15,13 +16,24 @@ from app.service_registry import get_service as get_serv, get_repo as get_rep, g
 from app.core.types import ModelType
 
 
+def custom_serializer(obj):
+    """Обработка различных типов для orjson"""
+    if isinstance(obj, Decimal):
+        return str(obj)
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    if isinstance(obj, set):
+        return list(obj)
+    raise TypeError(f"Тип {type(obj)} не поддерживается")
+
+
 def orresponse(response: Union[List, Dict, None]):
     """
         предвращает все что jsonинтся  в bute code
     """
     if not response:
         raise HTTPException(status_code=404, detail="record not found")
-    content = orjson.dumps(response)
+    content = orjson.dumps(response, default=custom_serializer)
     return Response(content=content, media_type="application/json")
 
 
