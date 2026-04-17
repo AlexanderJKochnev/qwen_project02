@@ -727,9 +727,7 @@ class Service(metaclass=ServiceMeta):
         last_score = cursor.get("score") if cursor else None
         last_id = cursor.get("id") if cursor else None
         logger.warning('ALARAM 8')
-        results = await repo.find_items_hybrid(
-            session, word_weights, last_score, last_id, limit
-        )
+        results = await repo.find_items_hybrid(model, session, word_weights, last_score, last_id, limit)
         logger.warning('ALARAM 9')
         # 5. Формирование ответа
         items_out = []
