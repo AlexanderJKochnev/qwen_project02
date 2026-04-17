@@ -2,5 +2,5 @@
 from app.core.services.service import Service
 
 
-class HashingService(Service):
+class WordHashingService(Service):
     pass

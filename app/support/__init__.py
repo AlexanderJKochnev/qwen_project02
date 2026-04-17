@@ -24,6 +24,7 @@ from app.support.producer.model import Producer, ProducerTitle
 from app.support.vintage.model import VintageConfig, Designation, Classification
 from app.support.parcel.model import Site, Parcel
 from app.support.source.model import Source
+from app.support.hashing.model import WordHash
 # from app.support.migration.model import Migration
 
 # schemas
@@ -47,7 +48,7 @@ from app.support.parser.schemas import (StatusCreate, StatusCreateResponseSchema
                                         NameCreate, NameCreateResponseSchema, NameRead, NameUpdate,
                                         ImageCreate, ImageCreateResponseSchema, ImageRead, ImageUpdate,
                                         RawdataCreate, RawdataCreateResponseSchema, RawdataRead, RawdataUpdate)
-
+from app.support.hashing.schemas import WordHashCreate, WordHashRead, WordHashUpdate
 from app.support.category.service import CategoryService
 from app.support.country.service import CountryService
 from app.support.item.service import ItemService
@@ -65,6 +66,7 @@ from app.support.producer.service import ProducerService, ProducerTitleService
 from app.support.vintage.service import VintageConfigService, DesignationService, ClassificationService
 from app.support.parcel.service import ParcelService, SiteService
 from app.support.source.service import SourceService
+from app.support.hashing.service import WordHashingService
 
 # from app.support.warehouse.service import WarehouseService
 from app.support.warehouse.repository import WarehouseRepository
