@@ -142,6 +142,10 @@ class BaseRouter:
                                   self.get_full_with_pagination,
                                   methods=["GET"],
                                   openapi_extra={'x-request-schema': None})
+        self.router.add_api_route("/search_by_hash",
+                                  self.api_smart_search,
+                                  methods=['GET'],
+                                  openapi_extra={'x-request-schema': None})
         # get one buy id
         self.router.add_api_route("/{id}",
                                   self.get_one, methods=["GET"],
@@ -160,10 +164,6 @@ class BaseRouter:
         self.router.add_api_route("/{id}",
                                   self.delete, methods=["DELETE"],
                                   # response_model=self.delete_response,
-                                  openapi_extra={'x-request-schema': None})
-        self.router.add_api_route("/search_by_hash",
-                                  self.api_smart_search,
-                                  methods=['GET'],
                                   openapi_extra={'x-request-schema': None})
 
     async def create(self, data: TCreateSchema,
@@ -428,10 +428,9 @@ class BaseRouter:
 
     async def api_smart_search(self, session: AsyncSession = Depends(get_db),
                                query: str = Query(None, description="Поисковый запрос."),
-                               ls: Optional[float] = None,  # = Query(None, description="Предыдущий range"),
+                               ls: Optional[float] = Query(None, description="Предыдущий range"),
                                # last_score
-                               li: Optional[int] = None,  # = Query(None, description="Последний id предыдущего
-                               # запроса."),
+                               li: Optional[int] =  Query(None, description="Последний id предыдущего запроса."),
                                limit: int = 20
                                ):
         """
