@@ -703,6 +703,7 @@ class Service(metaclass=ServiceMeta):
     async def smart_search_weighted(cls, query: str, session: AsyncSession, repo: Type[Repository],
                                     boost: float = 15.0, penalty: float = 0.1):
         tokens = tokenize(query)
+        logger.warning(f'{query=}  {tokens=}')
         if not tokens:
             return {}
 
