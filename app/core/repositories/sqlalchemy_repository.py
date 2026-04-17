@@ -968,7 +968,7 @@ class Repository(metaclass=RepositoryMeta):
         return result.all()
 
     @classmethod
-    async def get_hashes_by_prefix(cls, session: AsyncSession, prefix: str, limit: int = 50) -> List[WordHash]:
+    async def get_hashes_by_prefix(cls, session: AsyncSession, prefix: str, limit: int = 50) -> List[ModelType]:
         """
         Поиск хешей в словаре по префиксу последнего слова.
         """
