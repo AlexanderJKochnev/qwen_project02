@@ -721,7 +721,6 @@ class Service(metaclass=ServiceMeta):
         # 4. Поиск данных
         last_score = cursor.get("score") if cursor else None
         last_id = cursor.get("id") if cursor else None
-        logger.warning(f'{last_id=}, {last_score=}')
         results: List[dict] = await repo.find_items_hybrid(model, session, word_weights, last_score, last_id, limit)
         # 5. Формирование ответа
         if not results:
@@ -732,7 +731,7 @@ class Service(metaclass=ServiceMeta):
             results = results[0:-1]
             next_cursor = {"score": results[-1]["score"], "id": results[-1]["id"]}
         for n, key in enumerate(results):
-            logger.warning(f'{n}: {key.get('id')}')
+            logger.warning(f"{n}: id={key.get('id')}, score={key.get('score')}")
         result = {"total_found": total_count, "items": results, "next_cursor": next_cursor,
                   "has_more": next_cursor is not None}
         return result
