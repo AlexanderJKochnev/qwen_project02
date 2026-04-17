@@ -161,7 +161,7 @@ class BaseRouter:
                                   self.delete, methods=["DELETE"],
                                   # response_model=self.delete_response,
                                   openapi_extra={'x-request-schema': None})
-        self.router.add_api_route("search_by_hash",
+        self.router.add_api_route("/search_by_hash",
                                   self.api_smart_search,
                                   methods=['GET'],
                                   openapi_extra={'x-request-schema': None})
