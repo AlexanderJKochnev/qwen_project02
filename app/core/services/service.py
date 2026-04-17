@@ -732,7 +732,7 @@ class Service(metaclass=ServiceMeta):
             results = results[0:-1]
             next_cursor = {"score": results[-1]["score"], "id": results[-1]["id"]}
         for n, key in enumerate(results):
-            logger.warning(f'{n}: {key}')
+            logger.warning(f'{n}: {key.get('id')}')
         result = {"total_found": total_count, "items": results, "next_cursor": next_cursor,
                   "has_more": next_cursor is not None}
         return result
