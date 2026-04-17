@@ -4,7 +4,8 @@
     get_all     result.mappings().all()
     get_by_id   result.scalar_one_or_none()
 """
-from functools import lru_cache
+# from functools import lru_cache
+from async_lru import alru_cache
 from abc import ABCMeta
 from re import search as research
 from datetime import datetime
@@ -898,7 +899,7 @@ class Repository(metaclass=RepositoryMeta):
         return result.all()
 
     @classmethod
-    @lru_cache(maxsize=2000)
+    @alru_cache(maxsize=2000)
     async def get_cached_total_count(cls, model: ModelType, session: AsyncSession, hashes_tuple: tuple) -> int:
         """
         Кэширует общее количество найденных записей.
@@ -964,14 +965,13 @@ class Repository(metaclass=RepositoryMeta):
         result = await session.execute(stmt, params)
         return [{'score': score, **item.to_dict_fast()} for item, score in result]
 
-    @classmethod
-    async def get_hashes_by_prefix(cls, session: AsyncSession, prefix: str, limit: int = 50) -> List[ModelType]:
-        """
-        Поиск хешей в словаре по префиксу последнего слова.
-        """
+    @staticmethod
+    async def get_word_data_by_prefix(cls, session: AsyncSession, prefix: str, limit: int = 50):
+        """Возвращает список словарей {hash, freq, word} для префикса."""
         from app.support.hashing.model import WordHash
-        stmt = (select(WordHash.hash).where(WordHash.word.like(f"{prefix.lower()}%")).order_by(
-                WordHash.freq.desc()
-                ).limit(limit))
+        stmt = (select(WordHash.hash, WordHash.freq, WordHash.word).where(
+            WordHash.word.like(f"{prefix.lower()}%")
+        ).order_by(WordHash.freq.desc()).limit(limit))
         res = await session.execute(stmt)
-        return res.scalars().all()
+        # Возвращаем объекты для анализа
+        return [{"hash": r.hash, "freq": r.freq, "word": r.word} for r in res.all()]

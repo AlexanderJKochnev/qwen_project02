@@ -1,5 +1,6 @@
 # app.core.service/service.py
 import asyncio
+from async_lru import alru_cache
 import math
 from abc import ABCMeta
 from datetime import datetime
@@ -698,30 +699,66 @@ class Service(metaclass=ServiceMeta):
             logger.info("Массовая переиндексация завершена успешно. Core")
 
     @classmethod
+    @alru_cache(maxsize=2000)
+    async def smart_search_weighted(cls, query: str, session: AsyncSession,
+                                    boost: float = 15.0, penalty: float = 0.1):
+        tokens = tokenize(query)
+        if not tokens:
+            return {}
+
+        last_token = tokens[-1]
+        full_tokens = tokens[:-1]
+
+        # Сюда соберем финальные веса: {hash: final_weight}
+        weighted_hashes = {}
+
+        # 1. Обрабатываем все полные слова (кроме последнего)
+        full_hashes = [get_cached_hash(t) for t in full_tokens]
+        # Добавляем само последнее слово в список на "полную" проверку
+        full_hashes.append(get_cached_hash(last_token))
+
+        # 2. Получаем данные из WordHash (ОДИН ЗАПРОС для префиксов и полных слов)
+        # Ищем префиксы для последнего слова
+        prefix_data = await cls.repo.get_word_data_by_prefix(session, last_token)
+
+        # 3. Рассчитываем веса с учетом "премии"
+        for item in prefix_data:
+            h, freq, word = item['hash'], item['freq'], item['word']
+
+            # Базовый вес TF-IDF
+            base_weight = (1.0 / math.log(freq + 1.5)) * boost
+
+            # ПРОВЕРКА НА ПОЛНОЕ СОВПАДЕНИЕ
+            # Если слово из базы совпадает с любым токеном запроса - даем полный вес
+            if word in tokens:
+                weighted_hashes[h] = base_weight
+            else:
+                # Если это расширение префикса (prive -> privera) - штрафуем в 10 раз
+                weighted_hashes[h] = base_weight * penalty
+        return weighted_hashes
+
+        # 4. Финальный поиск в репозитории (передаем уже готовый словарь {hash: weight})
+        # return await cls.find_items_hybrid(session, weighted_hashes)
+
+    @classmethod
     async def search_by_hash_cursor(cls, query: str, model: ModelType, repo: Type[Repository],
-                                    session: AsyncSession, cursor: dict = None, limit: int = 20, boost: int = 15):
+                                    session: AsyncSession, cursor: dict = None,
+                                    limit: int = 20, boost: float = 15, penalty: float = 0.1):
         """
             поиск по хэш индексу с пагинацией
             ПРОБЛЕМА - ПРИ РАВНЫХ SCORE ПЕРЕНОСИТ НА СЛЕЛДУЮЩУ СТРАНИЦУ ЗАПСИИМ С ПРЕДУДЫУЩЕЙ
         """
         if not hasattr(model, 'word_hashes'):
             raise HTTPException(status_code=502, detail='this model has no hash index')
-        # 1. Нормализация
-        tokens = tokenize(query)
-        if not tokens:
-            return {"items": [], "total": 0}
-        # 2. Сбор всех целевых хешей (включая префиксы последнего слова)
-        main_hashes = [get_cached_hash(t) for t in tokens]
-        prefix_hashes = await repo.get_hashes_by_prefix(session, tokens[-1])
-        all_hashes = list(set(main_hashes) | set(prefix_hashes))
-        # 3. Метаданные (Частоты и Total)
-        # В идеале: закэшировать word_weights в Redis на 5 минут по ключу MD5(query)
-        word_freqs, total_count = await repo.get_search_metadata(model, session, all_hashes)
-        word_weights = {h: (1.0 / math.log(freq + 1.5)) * boost for h, freq in word_freqs.items()}
-        # 4. Поиск данных
+        # 1. Нормализация, сбор хэшей, взвешивание
+        weighted_hashes: dict = await cls.smart_search_weighted(query, session, boost, penalty)
+        if not weighted_hashes:
+            return {"items": [], "total_found": 0}
         last_score = cursor.get("score") if cursor else None
         last_id = cursor.get("id") if cursor else None
-        results: List[dict] = await repo.find_items_hybrid(model, session, word_weights, last_score, last_id, limit)
+        hashes_tuple = tuple(weighted_hashes.keys())
+        total_count = await repo.get_cached_total_count(model, session, hashes_tuple)
+        results: List[dict] = await repo.find_items_hybrid(model, session, weighted_hashes, last_score, last_id, limit)
         # 5. Формирование ответа
         if not results:
             return {"items": [], "total": 0}
