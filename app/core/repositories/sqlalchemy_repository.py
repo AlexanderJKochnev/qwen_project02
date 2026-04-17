@@ -926,16 +926,11 @@ class Repository(metaclass=RepositoryMeta):
         # 1. Получаем частоты из WordHash
         from app.support.hashing.model import WordHash
         stats_stmt = select(WordHash.hash, WordHash.freq).where(WordHash.hash.in_(hashes))
-        logger.warning('ALARM 5.1.')
         stats_res = await session.execute(stats_stmt)
-        logger.warning('ALARM 5.2.')
         word_stats: dict = {r.hash: r.freq for r in stats_res.all()}
-        logger.warning('ALARM 5.3.')
         hashes_tuple = tuple(sorted(hashes))
-        logger.warning(f'ALARM 5.3. {hashes_tuple}')
         # 2. Получаем Total Count (первый раз по настоящему затем из кэша)
         total_count = await cls.get_cached_total_count(model, session, hashes_tuple)
-        logger.warning('ALARM 5.4.')
         return word_stats, total_count
 
     @classmethod
@@ -965,11 +960,11 @@ class Repository(metaclass=RepositoryMeta):
                     text(f"{score_sql} < :ls"), and_(
                         # Используем небольшой допуск (epsilon) или >= для float
                         # Но в Keyset лучше просто строгое соответствие и ID
-                        text(f"ABS({score_sql} - :ls) < 0.0001"), model.id < id
+                        text(f"ABS({score_sql} - :ls) < 0.0001"), text(f"{model.id} < ld")
                     )
                 ))
 
-            params = {"ls": last_score, "id": last_id}
+            params = {"ls": last_score, "ld": last_id}
         else:
             params = {}
         # Сортировка: Сначала вес, потом ID (для детерминированности)
