@@ -955,9 +955,17 @@ class Repository(metaclass=RepositoryMeta):
         if last_score is not None and last_id is not None:
             logger.warning(f'ALARM: Фильтрация по курсору активна: score < {last_score}')
             # Используем явные именованные параметры через bindparam в text
+
             stmt = stmt.where(
-                text(f""" (id < :li) """))
-            params = {'li': last_id}
+                text(
+                    f"""
+                            ( {score_sql} < :ls )
+                            OR
+                            ( ABS({score_sql} - :ls) < 0.0001 AND id < :li )
+                        """
+                )
+            )
+            params = {"ls": last_score, "li": last_id}
         else:
             params = {}
         # Сортировка: Сначала вес, потом ID (для детерминированности)
