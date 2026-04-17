@@ -698,7 +698,7 @@ class Service(metaclass=ServiceMeta):
             logger.info("Массовая переиндексация завершена успешно")
 
     @classmethod
-    async def search_by_hash_cursor(query: str, model: ModelType, repo: Type[Repository],
+    async def search_by_hash_cursor(cls, query: str, model: ModelType, repo: Type[Repository],
                                     session: AsyncSession, cursor: dict = None, limit: int = 15):
         """
             поиск по хэш индексу с паниеацией
