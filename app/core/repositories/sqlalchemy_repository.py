@@ -958,13 +958,18 @@ class Repository(metaclass=RepositoryMeta):
         stmt = stmt.where(model.word_hashes.bool_op("&&")(hashes))
         # Keyset фильтрация (якорь)
         if last_score is not None and last_id is not None:
-            logger.warning('ALARM')
+            logger.warning(f'ALARM: Фильтрация по курсору активна: score < {last_score}')
+            # Используем явные именованные параметры через bindparam в text
             stmt = stmt.where(
                 or_(
-                    text(f"{score_sql} < :ls"), and_(text(f"{score_sql} = :ls"), model.id < last_id)
-                )
-            )
-            params = {"ls": last_score}
+                    text(f"{score_sql} < :ls"), and_(
+                        # Используем небольшой допуск (epsilon) или >= для float
+                        # Но в Keyset лучше просто строгое соответствие и ID
+                        text(f"ABS({score_sql} - :ls) < 0.0001"), model.id < id
+                    )
+                ))
+
+            params = {"ls": last_score, "id": last_id}
         else:
             params = {}
         # Сортировка: Сначала вес, потом ID (для детерминированности)
