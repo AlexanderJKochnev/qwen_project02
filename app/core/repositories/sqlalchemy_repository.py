@@ -959,10 +959,8 @@ class Repository(metaclass=RepositoryMeta):
             stmt = stmt.where(
                 text(
                     f"""
-                            ( {score_sql} < :ls )
-                            OR
-                            ( ABS({score_sql} - :ls) < 0.0001)
-                        """
+                            ( {score_sql} <= :ls )
+                    """
                 )
             )
             params = {"ls": last_score}
