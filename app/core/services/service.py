@@ -727,23 +727,19 @@ class Service(metaclass=ServiceMeta):
         last_score = cursor.get("score") if cursor else None
         last_id = cursor.get("id") if cursor else None
         logger.warning('ALARAM 8')
-        results = await repo.find_items_hybrid(model, session, word_weights, last_score, last_id, limit)
+        results: List[dict] = await repo.find_items_hybrid(model, session, word_weights, last_score, last_id, limit)
         logger.warning(f'ALARAM 9, {type(results)=}')
         logger.warning(f'ALARAM 9.1., {len(results)=}, {results[-1].get("id")=}, {results[-1].get("score")=}')
         # 5. Формирование ответа
-        items_out = []
-        for row in results:
-            # Превращаем Row в dict, учитывая структуру (Item, score)
-            item_dict = {column.name: getattr(row.model, column.name) for column in row.model.__table__.columns}
-            item_dict["score"] = round(float(row.score), 4)
-            items_out.append(item_dict)
+        if not results:
+            return {"items": [], "total": 0}
         logger.warning('ALARAM 10')
         # Определяем следующий курсор
         next_cursor = None
-        if len(items_out) == limit:
-            next_cursor = {"score": items_out[-1]["score"], "id": items_out[-1]["id"]}
+        if len(results) == limit:
+            next_cursor = {"score": results[-1]["score"], "id": results[-1]["id"]}
         logger.warning('ALARAM 11')
-        result = {"total_found": total_count, "items": items_out, "next_cursor": next_cursor,
+        result = {"total_found": total_count, "items": results, "next_cursor": next_cursor,
                   "has_more": next_cursor is not None}
         logger.warning(result)
         return result
