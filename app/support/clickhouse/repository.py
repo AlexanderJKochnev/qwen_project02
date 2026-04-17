@@ -71,3 +71,39 @@ class BeverageRepository:
         except Exception as e:
             logger.error(f"Failed to insert data into {self.table}: {e}")
             raise e
+
+    async def get_word_hash(self, skip: int = 0, limit: int = 20):
+        query = f"""
+            SELECT
+                word
+                hash,
+                freq
+            FROM beverages_words
+            LIMIT {limit} OFFSET {skip}
+        """
+
+        try:
+            # Выполняем запрос
+            result = await self.client.query(query)  # , parameters=params)
+
+            if not result.result_rows:
+                return []
+            final_items = []
+            for row_dict in result.named_results():
+                # ClickHouse-connect может вернуть JSON как строку или dict
+                attrs = row_dict.get('attributes')
+                if isinstance(attrs, str):
+                    try:
+                        row_dict['attributes'] = json.loads(attrs)
+                    except Exception:
+                        row_dict['attributes'] = {}
+
+                # Округляем для красоты
+                if 'similarity' in row_dict:
+                    row_dict['similarity'] = round(float(row_dict['similarity']), 4)
+
+                final_items.append(row_dict)
+
+            return final_items
+        except Exception as e:
+            logger.error(f'error {e}')

@@ -10,6 +10,14 @@ from app.core.enum import Rag_category
 router = APIRouter(prefix="/beverages", tags=["beverages"])
 
 
+@router.get("/get")
+async def get(page: int = 1, page_size: int = 20, ch_client=Depends(get_ch_client)):
+    skip = (page - 1) * page_size
+    repo = BeverageRepository(ch_client)
+    result = await repo.get_word_hash(skip, page_size)
+    return result
+
+
 @router.get("/search")
 async def search_beverages(
         q: str = Query(..., description="Поисковый запрос (просто текст)"),
