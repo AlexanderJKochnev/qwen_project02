@@ -75,7 +75,7 @@ class BeverageRepository:
     async def get_word_hash(self, skip: int = 0, limit: int = 20):
         query = f"""
             SELECT
-                word
+                word,
                 hash,
                 freq
             FROM beverages_words
