@@ -957,6 +957,7 @@ class Repository(metaclass=RepositoryMeta):
             # Используем явные именованные параметры через bindparam в text
             stmt = stmt.where(
                 text(f""" (id < :li) """))
+            params = {'li': last_id}
         else:
             params = {}
         # Сортировка: Сначала вес, потом ID (для детерминированности)
