@@ -491,80 +491,35 @@ class ItemService(Service):
 
     @classmethod
     async def run_reindex_worker(cls, session_factory, force_all: bool = False):
-        if _REINDEX_LOCK.locked():
-            logger.info("Воркер уже запущен, пропускаю...")
-            return
-
-        async with _REINDEX_LOCK:
-            logger.info("Запуск массовой переиндексации...items")
-
-            # Определяем критерии устаревания (2 года)
-            # two_years_ago = datetime.now(timezone.utc) - timedelta(days=730)
-            # Item = get_model_by_name('Item')
-
-            async with session_factory() as session:
-                # 1. Строим фильтр
-                filters = []
-                if not force_all:
-                    filters.append(
-                        or_(
-                            Item.search_content.is_(None),
-                            # Item.search_content == "",
-                            # Item.updated_at < two_years_ago
-                        )
-                    )
-
-                # 2. Считаем общий объем работы
-                count_stmt = select(func.count()).select_from(Item)
-                if filters:
-                    count_stmt = count_stmt.where(*filters)
-                total_to_process = await session.scalar(count_stmt)
-
-                logger.info(f"Найдено {total_to_process} записей для обработки")
-
-                # 3. Пакетная обработка
-                processed = 0
-                while processed < total_to_process:
-                    # Загружаем пачку Item вместе с Drink (важно для скорости!)
-                    stmt = (select(Item).options(selectinload(Item.drink)).limit(cls.BATCH_SIZE).order_by(Item.id)
-                            # Стабильная сортировка для смещения
-                            )
-                    if filters:
-                        stmt = stmt.where(*filters)
-
-                    result = await session.execute(stmt)
-                    items = result.scalars().all()
-
-                    if not items:
-                        break
-
-                    # Обрабатываем пачку
-                    for item in items:
-                        if item.drink_id:
-                            # Используем вашу логику парсинга
-                            drink_dict = item.drink.to_dict()
-                            content = extract_text_ultra_fast(drink_dict, cls.skip_keys)
-                            if not content:
-                                logger.warning('f{item.drink_id} empty')
-                            tmp = get_hashes_for_item(content)
-                            if tmp:
-                                logger.warning(f'{item.drink_id}, {tmp}')
-                            item.word_hashes = tmp
-                            # строку ниже удалить после тестирования хэш индекса
-                            if not item.word_hashes:
-                                logger.error(f'{content=}')
-                                break
-                            item.search_content = content.lower()
-
-                    # Фиксируем пачку в БД
+        async with session_factory() as session:
+            # 1. Получаем СТРИМ всех ID и контента, которые нужно обновить
+            # Это гарантирует, что мы пройдем по списку ОДИН РАЗ
+            stmt = select(Item).options(selectinload(Item.drink))
+            if not force_all:
+                stmt = stmt.where(or_(Item.word_hashes == None, func.cardinality(Item.word_hashes) == 0))
+            
+            result_stream = await session.stream(stmt)
+            
+            batch_count = 0
+            async for row in result_stream:
+                item = row[0]
+                if item.drink:
+                    drink_dict = item.drink.to_dict()
+                    content = extract_text_ultra_fast(drink_dict, cls.skip_keys)
+                    
+                    # Твоя логика
+                    item.search_content = content.lower()
+                    item.word_hashes = get_hashes_for_item(content)
+                    
+                    batch_count += 1
+                
+                # Коммитим каждые 1500 записей
+                if batch_count >= cls.BATCH_SIZE:
                     await session.commit()
-                    processed += len(items)
-                    logger.info(f"Прогресс: {processed}/{total_to_process}")
-
-                    # Короткая пауза, чтобы дать event loop подышать
-                    await asyncio.sleep(0.1)
-
-            logger.info("Массовая переиндексация завершена успешно.Items")
+                    logger.info(f"Зафикисирован батч: {cls.BATCH_SIZE} записей")
+                    batch_count = 0  # После коммита объекты в сессии инвалидируются,   # стрим продолжит работу со следующими
+            
+            await session.commit()  # финальный остаток
 
     @classmethod
     async def run_background_task(
