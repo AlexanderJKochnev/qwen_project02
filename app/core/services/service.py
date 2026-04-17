@@ -1,22 +1,20 @@
 # app.core.service/service.py
 import asyncio
-from async_lru import alru_cache
 import math
 from abc import ABCMeta
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
+from async_lru import alru_cache
 from fastapi import BackgroundTasks, HTTPException
 from loguru import logger
-from sqlalchemy import func, select, update
+from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
-from sqlalchemy.sql.elements import or_
 
 from app.core.config.database.db_async import DatabaseManager
 from app.core.config.project_config import settings
-from app.core.hash_norm import get_cached_hash, tokenize
+from app.core.hash_norm import tokenize
 from app.core.models.base_model import Base, get_model_by_name
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.schemas.base import BaseModel, IndexFillResponse
@@ -24,9 +22,9 @@ from app.core.services.click_service import FullTextSearch
 from app.core.types import ModelType
 from app.core.utils.alchemy_utils import formatted_query, has_column
 from app.core.utils.common_utils import flatten_dict_with_localized_fields, make_paging_dict
-from app.core.utils.pydantic_utils import (get_data_for_search, get_repo,
-                                           make_paginated_response, prepare_search_string, inst_dict, list_dict)
-from app.core.utils.reindexation import extract_text_ultra_fast, reindex_items
+from app.core.utils.pydantic_utils import (get_data_for_search, get_repo, inst_dict, list_dict, make_paginated_response,
+                                           prepare_search_string)
+from app.core.utils.reindexation import reindex_items
 from app.mongodb.service import ThumbnailImageService
 from app.service_registry import get_search_dependencies, register_service
 
@@ -632,116 +630,6 @@ class Service(metaclass=ServiceMeta):
             return []
 
     @classmethod
-    async def run_reindex_worker(cls, session_factory, force_all: bool = False):
-        if _REINDEX_LOCK.locked():
-            logger.info("Воркер уже запущен, пропускаю...")
-            return
-        Item = get_model_by_name('Item')
-        async with _REINDEX_LOCK:
-            logger.info("Запуск массовой переиндексации...core")
-
-            # Определяем критерии устаревания (2 года)
-            # two_years_ago = datetime.now(timezone.utc) - timedelta(days=730)
-            # Item = get_model_by_name('Item')
-
-            async with session_factory() as session:
-                # 1. Строим фильтр
-                filters = []
-                if not force_all:
-                    filters.append(
-                        or_(
-                            Item.search_content.is_(None),
-                            # Item.search_content == "",
-                            # Item.updated_at < two_years_ago
-                        )
-                    )
-
-                # 2. Считаем общий объем работы
-                count_stmt = select(func.count()).select_from(Item)
-                if filters:
-                    count_stmt = count_stmt.where(*filters)
-                total_to_process = await session.scalar(count_stmt)
-
-                logger.info(f"Найдено {total_to_process} записей для обработки")
-
-                # 3. Пакетная обработка
-                processed = 0
-                while processed < total_to_process:
-                    # Загружаем пачку Item вместе с Drink (важно для скорости!)
-                    stmt = (select(Item).options(selectinload(Item.drink)).limit(cls.BATCH_SIZE).order_by(Item.id)
-                            # Стабильная сортировка для смещения
-                            )
-                    if filters:
-                        stmt = stmt.where(*filters)
-
-                    result = await session.execute(stmt)
-                    items = result.scalars().all()
-
-                    if not items:
-                        break
-
-                    # Обрабатываем пачку
-                    for item in items:
-                        if item.drink:
-                            # Используем вашу логику парсинга
-                            drink_dict = item.drink.to_dict()
-                            content = extract_text_ultra_fast(drink_dict, cls.skip_keys)
-                            item.search_content = content.lower()
-
-                    # Фиксируем пачку в БД
-                    await session.commit()
-                    processed += len(items)
-                    logger.info(f"Прогресс: {processed}/{total_to_process}")
-
-                    # Короткая пауза, чтобы дать event loop подышать
-                    await asyncio.sleep(0.1)
-
-            logger.info("Массовая переиндексация завершена успешно. Core")
-
-    @classmethod
-    @alru_cache(maxsize=2000)
-    async def smart_search_weighted(cls, query: str, session: AsyncSession, repo: Type[Repository],
-                                    boost: float = 15.0, penalty: float = 0.1):
-        tokens = tokenize(query)
-        logger.warning(f'{query=}  {tokens=}')
-        if not tokens:
-            return {}
-
-        last_token = tokens[-1]
-        full_tokens = tokens[:-1]
-
-        # Сюда соберем финальные веса: {hash: final_weight}
-        weighted_hashes = {}
-
-        # 1. Обрабатываем все полные слова (кроме последнего)
-        full_hashes = [get_cached_hash(t) for t in full_tokens]
-        # Добавляем само последнее слово в список на "полную" проверку
-        full_hashes.append(get_cached_hash(last_token))
-
-        # 2. Получаем данные из WordHash (ОДИН ЗАПРОС для префиксов и полных слов)
-        # Ищем префиксы для последнего слова
-        prefix_data = await repo.get_word_data_by_prefix(session, last_token)
-
-        # 3. Рассчитываем веса с учетом "премии"
-        for item in prefix_data:
-            h, freq, word = item['hash'], item['freq'], item['word']
-
-            # Базовый вес TF-IDF
-            base_weight = (1.0 / math.log(freq + 1.5)) * boost
-
-            # ПРОВЕРКА НА ПОЛНОЕ СОВПАДЕНИЕ
-            # Если слово из базы совпадает с любым токеном запроса - даем полный вес
-            if word in tokens:
-                weighted_hashes[h] = base_weight
-            else:
-                # Если это расширение префикса (prive -> privera) - штрафуем в 10 раз
-                weighted_hashes[h] = base_weight * penalty
-        return weighted_hashes
-
-        # 4. Финальный поиск в репозитории (передаем уже готовый словарь {hash: weight})
-        # return await cls.find_items_hybrid(session, weighted_hashes)
-
-    @classmethod
     async def search_by_hash_cursor(cls, query: str, model: ModelType, repo: Type[Repository],
                                     session: AsyncSession, cursor: dict = None,
                                     limit: int = 20, boost: float = 15, penalty: float = 0.1):
@@ -813,8 +701,7 @@ class Service(metaclass=ServiceMeta):
             limit: int = 20, boost: float = 15, penalty: float = 0.1
     ):
         """
-            поиск по хэш индексу с пагинацией
-            ПРОБЛЕМА - ПРИ РАВНЫХ SCORE ПЕРЕНОСИТ НА СЛЕЛДУЮЩУ СТРАНИЦУ ЗАПСИИМ С ПРЕДУДЫУЩЕЙ
+            поиск по хэш индексу без пагинации
         """
         if not hasattr(model, 'word_hashes'):
             raise HTTPException(status_code=502, detail='this model has no hash index')

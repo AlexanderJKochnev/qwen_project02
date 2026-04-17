@@ -8,7 +8,7 @@ from loguru import logger
 # from sqlalchemy.sql.elements import Label
 # from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.types import ModelType
-from app.core.repositories.sqlalchemy_repository import Repository
+# from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.utils.pydantic_utils import get_field_name, make_paginated_response, inst_dict, list_dict
 from app.core.utils.common_utils import camel_to_enum
 from app.support.item.service import ItemService
@@ -262,6 +262,10 @@ class ApiService(ItemService):
         return result
 
     @classmethod
-    async def execute_smart_search(cls, query: str, session: AsyncSession, boost: float = 15.0, limit: int = 20):
-        items = await super().execute_smart_search(query, session, boost, limit)
+    async def execute_smart_search(cls, query: str, session: AsyncSession,
+                                   boost: float = 15.0,
+                                   limit: int = 20,
+                                   penalty: float = 0.1):
+        # items = await super().execute_smart_search(query, session, boost, limit)
+        items = await super().search_by_hash(query, Item, ItemRepository, session, limit, boost, penalty)
         return [transform_api_list_view(item, def_lang, lang_prefixes) for item in items]
