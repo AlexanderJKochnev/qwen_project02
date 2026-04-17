@@ -20,8 +20,6 @@ async def get_embedding_service() -> EmbeddingService:
     """Dependency для сервиса эмбеддингов (синглтон)"""
     global _embedding_service
     if _embedding_service is None:
-        _embedding_service = EmbeddingService()
+        pass
+        # _embedding_service = EmbeddingService()
     return _embedding_service
-
-# Глобальный синглтон для эмбеддингов
-_embedding_service = None

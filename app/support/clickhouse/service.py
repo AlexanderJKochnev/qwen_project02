@@ -1,6 +1,5 @@
 # app.support.clickhouse.service.py
 import os
-import json
 from model2vec import StaticModel
 from loguru import logger
 
