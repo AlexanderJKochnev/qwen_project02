@@ -961,11 +961,11 @@ class Repository(metaclass=RepositoryMeta):
                     f"""
                             ( {score_sql} < :ls )
                             OR
-                            ( ABS({score_sql} - :ls) < 0.0001 AND id < :li )
+                            ( ABS({score_sql} - :ls) < 0.0001)
                         """
                 )
-            )
-            params = {"ls": last_score, "li": last_id}
+            ).where(model.id < last_id)
+            params = {"ls": last_score}
         else:
             params = {}
         # Сортировка: Сначала вес, потом ID (для детерминированности)
