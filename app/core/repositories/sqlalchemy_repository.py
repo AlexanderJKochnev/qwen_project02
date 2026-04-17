@@ -960,7 +960,7 @@ class Repository(metaclass=RepositoryMeta):
                     text(f"{score_sql} < :ls"), and_(
                         # Используем небольшой допуск (epsilon) или >= для float
                         # Но в Keyset лучше просто строгое соответствие и ID
-                        text(f"ABS({score_sql} - :ls) < 0.0001"), model.id < last_id
+                        text(f"ABS({score_sql} - :ls) < 0.0001"), model.id > last_id
                     )
                 ))
 
