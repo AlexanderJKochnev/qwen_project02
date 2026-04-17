@@ -432,14 +432,16 @@ class BaseRouter:
                                # last_score
                                li: Optional[int] = Query(None, description="Последний id предыдущего запроса."),
                                limit: int = 20,
-                               boost: int = Query(15, description="Премия за уникальность.")
+                               boost: float = Query(15, description="Премия за уникальность."),
+                               penalty: float = Query(0.1, description = "Штраф за неполное слово.")
                                ):
         """
             запрос на постраничный поиск по хэш индексу - работает только с моделямии с хэш индексом.
             работает только с preact. тут только посмотреть - оценить.
         """
         cursor = {"score": ls, "id": li} if ls is not None else None
-        result = await self.service.search_by_hash_cursor(query, self.model, self.repo, session, cursor, limit, boost)
+        result = await self.service.search_by_hash_cursor(query, self.model, self.repo, session,
+                                                          cursor, limit, boost, penalty)
         return result
 
 

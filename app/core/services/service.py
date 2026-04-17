@@ -700,7 +700,7 @@ class Service(metaclass=ServiceMeta):
 
     @classmethod
     @alru_cache(maxsize=2000)
-    async def smart_search_weighted(cls, query: str, session: AsyncSession,
+    async def smart_search_weighted(cls, query: str, session: AsyncSession, repo: Type[Repository],
                                     boost: float = 15.0, penalty: float = 0.1):
         tokens = tokenize(query)
         if not tokens:
@@ -719,7 +719,7 @@ class Service(metaclass=ServiceMeta):
 
         # 2. Получаем данные из WordHash (ОДИН ЗАПРОС для префиксов и полных слов)
         # Ищем префиксы для последнего слова
-        prefix_data = await cls.repo.get_word_data_by_prefix(session, last_token)
+        prefix_data = await repo.get_word_data_by_prefix(session, last_token)
 
         # 3. Рассчитываем веса с учетом "премии"
         for item in prefix_data:
@@ -751,7 +751,7 @@ class Service(metaclass=ServiceMeta):
         if not hasattr(model, 'word_hashes'):
             raise HTTPException(status_code=502, detail='this model has no hash index')
         # 1. Нормализация, сбор хэшей, взвешивание
-        weighted_hashes: dict = await cls.smart_search_weighted(query, session, boost, penalty)
+        weighted_hashes: dict = await cls.smart_search_weighted(query, session, repo, boost, penalty)
         if not weighted_hashes:
             return {"items": [], "total_found": 0}
         last_score = cursor.get("score") if cursor else None
