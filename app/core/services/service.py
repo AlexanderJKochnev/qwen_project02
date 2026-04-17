@@ -702,6 +702,7 @@ class Service(metaclass=ServiceMeta):
                                     session: AsyncSession, cursor: dict = None, limit: int = 20):
         """
             поиск по хэш индексу с пагинацией
+            ПРОБЛЕМА - ПРИ РАВНЫХ SCORE ПЕРЕНОСИТ НА СЛЕЛДУЮЩУ СТРАНИЦУ ЗАПСИИМ С ПРЕДУДЫУЩЕЙ
         """
         if not hasattr(model, 'word_hashes'):
             raise HTTPException(status_code=502, detail='this model has no hash index')

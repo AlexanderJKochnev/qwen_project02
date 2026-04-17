@@ -65,5 +65,4 @@ def get_hashes_for_item(text: str) -> List[int]:
     Генерирует уникальные хеши для поля word_hashes (для GIN индекса).
     Использовать в макросе обновления айтема.
     """
-    # set() здесь уместен, т.к. для GIN индекса дубликаты вредны
     return [get_cached_hash(t) for t in set(tokenize(text))]
