@@ -943,7 +943,7 @@ class Repository(metaclass=RepositoryMeta):
             cls, model: ModelType,
             session: AsyncSession, word_weights: dict[int, float],  # hash -> weight
             last_score: Optional[float] = None, last_id: Optional[int] = None, limit: int = 15
-    ):
+    ) -> List[dict]:
         """
         Keyset пагинация с динамическим расчетом SCORE в БД.
         """
@@ -973,7 +973,7 @@ class Repository(metaclass=RepositoryMeta):
         logger.warning('ALARAM 8.6')
         result = await session.execute(stmt)
         logger.warning('ALARAM 8.7')
-        return result.all()
+        return [{'score': score, **item.to_dict_fast()} for item, score in result]
 
     @classmethod
     async def get_hashes_by_prefix(cls, session: AsyncSession, prefix: str, limit: int = 50) -> List[ModelType]:
