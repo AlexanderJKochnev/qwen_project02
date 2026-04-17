@@ -1,4 +1,4 @@
-# app.support.hashing.schemas.py
+# app.support.wordhash.schemas.py
 from typing import Optional
 from app.core.schemas.base import PkSchema, BaseModel
 

@@ -93,10 +93,10 @@ async def test_user_authentication_failure(authenticated_client_with_db, test_db
 
 @pytest.mark.asyncio
 async def test_password_hashing_functions(authenticated_client_with_db, test_db_session):
-    """Test password hashing and verification functions"""
+    """Test password wordhash and verification functions"""
     user_repo = UserRepository()
     
-    # Test password hashing
+    # Test password wordhash
     plain_password = "testpassword123"
     hashed_password = user_repo.get_password_hash(plain_password)
     

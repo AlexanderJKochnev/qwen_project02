@@ -30,7 +30,7 @@ from app.support import Drink, Item
 from app.support.drink.repository import DrinkRepository
 from app.support.drink.schemas import DrinkCreate, DrinkUpdate
 from app.support.drink.service import DrinkService
-from app.support.hashing.model import WordHash
+from app.support.wordhash.model import WordHash
 from app.support.item.repository import ItemRepository
 from app.support.item.schemas import (ItemCreate, ItemCreatePreact, ItemCreateRelation, ItemDetailManyToManyLocalized,
                                       ItemListView, ItemRead, ItemReadRelation, ItemUpdate,

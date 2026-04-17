@@ -904,7 +904,7 @@ class Repository(metaclass=RepositoryMeta):
         Получает частоты слов для расчета весов и общее кол-во записей.
         """
         # 1. Получаем частоты из WordHash
-        from app.support.hashing.model import WordHash
+        from app.support.wordhash.model import WordHash
         stats_stmt = select(WordHash.hash, WordHash.freq).where(WordHash.hash.in_(hashes))
         stats_res = await session.execute(stats_stmt)
         word_stats: dict = {r.hash: r.freq for r in stats_res.all()}
@@ -952,7 +952,7 @@ class Repository(metaclass=RepositoryMeta):
         - Данные для всех полных слов (hennessy)
         - Данные по префиксу для последнего слова (prive%)
         """
-        from app.support.hashing.model import WordHash
+        from app.support.wordhash.model import WordHash
         stmt = (select(WordHash.hash, WordHash.freq, WordHash.word).where(
                 or_(
                     WordHash.word.in_(full_words),  # Полные слова (hennessy, prive)

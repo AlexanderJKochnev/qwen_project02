@@ -1,4 +1,4 @@
-# app.support.hashing.service.py
+# app.support.wordhash.service.py
 from app.core.services.service import Service
 
 

@@ -1,4 +1,4 @@
-# app/support/hashing/model.py
+# app/support/wordhash/model.py
 # список всех слов с хэшем
 from __future__ import annotations
 from sqlalchemy import BigInteger, String, Integer

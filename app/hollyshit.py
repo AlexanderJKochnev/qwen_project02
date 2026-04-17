@@ -6,7 +6,7 @@ from sqlalchemy import select
 from app.core.config.database.db_async import DatabaseManager
 from app.fill_wordhash import seed_word_dictionary
 from app.support import Item
-from app.support.hashing.model import WordHash
+from app.support.wordhash.model import WordHash
 
 
 async def run_seeding():

@@ -58,7 +58,7 @@ from app.support.vllm.router import VllmRouter
 from app.core.config.database.click_async import ClickHouseManager  # , get_ch_client
 # from app.support.clickhouse.model import ensure_table_exists
 from app.support.clickhouse.router import router as click_router
-from app.support.hashing.router import WordHashRouter
+from app.support.wordhash.router import WordHashRouter
 
 ch_manager = ClickHouseManager()
 
