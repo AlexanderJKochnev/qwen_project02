@@ -946,7 +946,8 @@ class Repository(metaclass=RepositoryMeta):
         # Строим CASE для скоринга
         case_parts = [f"CASE WHEN word_hashes @> ARRAY[{h}::bigint] THEN {w:.8f} ELSE 0 END" for h, w in
                       word_weights.items()]
-        score_sql = f"({' + '.join(case_parts)})"
+        # score_sql = f"({' + '.join(case_parts)})"
+        score_sql = f"ROUND(CAST(({' + '.join(case_parts)}) AS numeric), 4)"
         # Базовый запрос
         query = cls.get_query(model)
         stmt = query.add_columns(text(f"{score_sql} AS score"))  # добавляем колонку
