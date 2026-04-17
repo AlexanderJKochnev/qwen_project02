@@ -437,7 +437,9 @@ class BaseRouter:
             работает только с preact. тут только посмотреть - оценить.
         """
         cursor = {"score": ls, "id": li} if ls is not None else None
-        return await self.service.search_by_hash_cursor(query, self.model, self.repo, session, cursor, limit)
+        result = await self.service.search_by_hash_cursor(query, self.model, self.repo, session, cursor, limit)
+        logger.warning(result)
+        return result
 
 
 class LightRouter:
