@@ -963,10 +963,13 @@ class Repository(metaclass=RepositoryMeta):
                 or_(
                     text(f"{score_sql} < :ls"), and_(text(f"{score_sql} = :ls"), model.id < last_id)
                 )
-            ).params(ls=last_score)
+            )
+            params = {"ls": last_score}
+        else:
+            params = {}
         # Сортировка: Сначала вес, потом ID (для детерминированности)
         stmt = stmt.order_by(text("score DESC"), model.id.desc()).limit(limit)
-        result = await session.execute(stmt)
+        result = await session.execute(stmt, params)
         return [{'score': score, **item.to_dict_fast()} for item, score in result]
 
     @classmethod
