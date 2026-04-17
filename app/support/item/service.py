@@ -540,12 +540,17 @@ class ItemService(Service):
 
                     # Обрабатываем пачку
                     for item in items:
-                        if item.drink:
+                        if item.drink_id:
                             # Используем вашу логику парсинга
                             drink_dict = item.drink.to_dict()
                             content = extract_text_ultra_fast(drink_dict, cls.skip_keys)
-                            # строку ниже удалить после тестирования хэш индекса
+                            if not content:
+                                logger.warning('f{item.drink_id} empty')
+                            tmp = get_hashes_for_item(content)
+                            if not tmp:
+                                logger.warning('f{item.drink_id} hashech empty')
                             item.word_hashes = get_hashes_for_item(content)
+                            # строку ниже удалить после тестирования хэш индекса
                             if not item.word_hashes:
                                 logger.error(f'{content=}')
                                 break
