@@ -947,32 +947,26 @@ class Repository(metaclass=RepositoryMeta):
         """
         Keyset пагинация с динамическим расчетом SCORE в БД.
         """
-        logger.warning(f'ALARAM 8.1  {word_weights}')
         hashes = list(word_weights.keys())
-        logger.warning('ALARAM 8.2')
         # Строим CASE для скоринга
         case_parts = [f"CASE WHEN word_hashes @> ARRAY[{h}::bigint] THEN {w:.4f} ELSE 0 END" for h, w in
                       word_weights.items()]
         score_sql = f"({' + '.join(case_parts)})"
-        logger.warning(f'ALARAM 8.3  {score_sql}')
         # Базовый запрос
         query = cls.get_query(model)
         stmt = query.add_columns(text(f"{score_sql} AS score"))  # добавляем колонку
         stmt = stmt.where(model.word_hashes.bool_op("&&")(hashes))
-        logger.warning('ALARAM 8.4')
         # Keyset фильтрация (якорь)
         if last_score is not None and last_id is not None:
+            logger('ALARM')
             stmt = stmt.where(
                 or_(
                     text(f"{score_sql} < :ls"), and_(text(f"{score_sql} = :ls"), model.id < last_id)
                 )
             ).params(ls=last_score)
-        logger.warning('ALARAM 8.5')
         # Сортировка: Сначала вес, потом ID (для детерминированности)
         stmt = stmt.order_by(text("score DESC"), model.id.desc()).limit(limit)
-        logger.warning('ALARAM 8.6')
         result = await session.execute(stmt)
-        logger.warning('ALARAM 8.7')
         return [{'score': score, **item.to_dict_fast()} for item, score in result]
 
     @classmethod

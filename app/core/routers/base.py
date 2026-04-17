@@ -430,16 +430,14 @@ class BaseRouter:
                                query: str = Query(None, description="Поисковый запрос."),
                                ls: Optional[float] = Query(None, description="Предыдущий range"),
                                # last_score
-                               li: Optional[int] =  Query(None, description="Последний id предыдущего запроса."),
+                               li: Optional[int] = Query(None, description="Последний id предыдущего запроса."),
                                limit: int = 20
                                ):
         """
             запрос на постраничный поиск по хэш индексу - работает только с моделямии с хэш индексом.
             работает только с preact. тут только посмотреть - оценить.
         """
-        logger.warning('ALARAM 1')
         cursor = {"score": ls, "id": li} if ls is not None else None
-        logger.warning('ALARAM 2')
         result = await self.service.search_by_hash_cursor(query, self.model, self.repo, session, cursor, limit)
         logger.warning(result)
         return result

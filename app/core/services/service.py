@@ -699,46 +699,37 @@ class Service(metaclass=ServiceMeta):
 
     @classmethod
     async def search_by_hash_cursor(cls, query: str, model: ModelType, repo: Type[Repository],
-                                    session: AsyncSession, cursor: dict = None, limit: int = 15):
+                                    session: AsyncSession, cursor: dict = None, limit: int = 20):
         """
-            поиск по хэш индексу с паниеацией
+            поиск по хэш индексу с пагинацией
         """
-        logger.warning('ALARAM 3')
         if not hasattr(model, 'word_hashes'):
             raise HTTPException(status_code=502, detail='this model has no hash index')
         # 1. Нормализация
         tokens = tokenize(query)
         if not tokens:
             return {"items": [], "total": 0}
-        logger.warning('ALARAM 4')
         # 2. Сбор всех целевых хешей (включая префиксы последнего слова)
         main_hashes = [get_cached_hash(t) for t in tokens]
         prefix_hashes = await repo.get_hashes_by_prefix(session, tokens[-1])
         all_hashes = list(set(main_hashes) | set(prefix_hashes))
-        logger.warning('ALARAM 5')
         # 3. Метаданные (Частоты и Total)
         # В идеале: закэшировать word_weights в Redis на 5 минут по ключу MD5(query)
         word_freqs, total_count = await repo.get_search_metadata(model, session, all_hashes)
-        logger.warning('ALARAM 6')
         boost = 15.0
         word_weights = {h: (1.0 / math.log(freq + 1.5)) * boost for h, freq in word_freqs.items()}
-        logger.warning('ALARAM 7')
         # 4. Поиск данных
         last_score = cursor.get("score") if cursor else None
         last_id = cursor.get("id") if cursor else None
-        logger.warning('ALARAM 8')
+        logger.warning(f'{last_id=}, {last_score=}')
         results: List[dict] = await repo.find_items_hybrid(model, session, word_weights, last_score, last_id, limit)
-        logger.warning(f'ALARAM 9, {type(results)=}')
-        logger.warning(f'ALARAM 9.1., {len(results)=}, {results[-1].get("id")=}, {results[-1].get("score")=}')
         # 5. Формирование ответа
         if not results:
             return {"items": [], "total": 0}
-        logger.warning('ALARAM 10')
         # Определяем следующий курсор
         next_cursor = None
         if len(results) == limit:
             next_cursor = {"score": results[-1]["score"], "id": results[-1]["id"]}
-        logger.warning('ALARAM 11')
         result = {"total_found": total_count, "items": results, "next_cursor": next_cursor,
                   "has_more": next_cursor is not None}
         logger.warning(result)
