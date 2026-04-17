@@ -958,7 +958,7 @@ class Repository(metaclass=RepositoryMeta):
         stmt = stmt.where(model.word_hashes.bool_op("&&")(hashes))
         # Keyset фильтрация (якорь)
         if last_score is not None and last_id is not None:
-            logger('ALARM')
+            logger.warning('ALARM')
             stmt = stmt.where(
                 or_(
                     text(f"{score_sql} < :ls"), and_(text(f"{score_sql} = :ls"), model.id < last_id)
