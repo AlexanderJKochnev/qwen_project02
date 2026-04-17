@@ -956,15 +956,7 @@ class Repository(metaclass=RepositoryMeta):
             logger.warning(f'ALARM: Фильтрация по курсору активна: score < {last_score}')
             # Используем явные именованные параметры через bindparam в text
             stmt = stmt.where(
-                text(
-                    f"""
-                            ({score_sql} < :ls)
-                            OR
-                            (ABS({score_sql} - :ls) < 0.0001 AND id < :li)
-                        """
-                )
-            )
-            params = {"ls": last_score, "li": last_id}
+                text(f""" (id < :li) """))
         else:
             params = {}
         # Сортировка: Сначала вес, потом ID (для детерминированности)
