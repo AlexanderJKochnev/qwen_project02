@@ -926,11 +926,16 @@ class Repository(metaclass=RepositoryMeta):
         # 1. Получаем частоты из WordHash
         from app.support.hashing.model import WordHash
         stats_stmt = select(WordHash.hash, WordHash.freq).where(WordHash.hash.in_(hashes))
+        logger.warning('ALARM 5.1.')
         stats_res = await session.execute(stats_stmt)
+        logger.warning('ALARM 5.2.')
         word_stats: dict = {r.hash: r.freq for r in stats_res.all()}
+        logger.warning('ALARM 5.3.')
         hashes_tuple = tuple(sorted(hashes))
+        logger.warning(f'ALARM 5.3. {hashes_tuple}')
         # 2. Получаем Total Count (первый раз по настоящему затем из кэша)
         total_count = await cls.get_cached_total_count(session, hashes_tuple)
+        logger.warning('ALARM 5.4.')
         return word_stats, total_count
 
     @classmethod
