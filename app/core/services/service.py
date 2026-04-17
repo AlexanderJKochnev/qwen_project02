@@ -752,7 +752,8 @@ class Service(metaclass=ServiceMeta):
         if not hasattr(model, 'word_hashes'):
             raise HTTPException(status_code=502, detail='this model has no hash index')
         # 1. Нормализация, сбор хэшей, взвешивание
-        weighted_hashes: dict = await cls.smart_search_weighted(query, session, repo, boost, penalty)
+        # weighted_hashes: dict = await cls.smart_search_weighted(query, session, repo, boost, penalty)
+        weighted_hashes: dict = await cls.get_weighted_hashes(query, repo, session, boost, penalty)
         if not weighted_hashes:
             return {"items": [], "total_found": 0}
         last_score = cursor.get("score") if cursor else None
@@ -773,3 +774,35 @@ class Service(metaclass=ServiceMeta):
         result = {"total_found": total_count, "items": results, "next_cursor": next_cursor,
                   "has_more": next_cursor is not None}
         return result
+
+    @classmethod
+    @alru_cache(maxsize=2000)
+    async def get_weighted_hashes(
+            cls, query: str, repo: Any, session: AsyncSession, boost: float = 15.0, penalty: float = 0.1
+    ):
+        tokens = tokenize(query)
+        if not tokens:
+            return {}
+
+        last_token = tokens[-1]
+        full_tokens = tokens[:-1]  # Все слова, кроме последнего
+
+        # ОДИН ЗАПРОС: частоты для hennessy + префиксы для prive
+        word_data = await repo.get_word_data_for_search(session, full_tokens, last_token)
+
+        weighted_hashes = {}
+        for item in word_data:
+            h, freq, word = item['hash'], item['freq'], item['word']
+
+            # Базовый вес TF-IDF
+            base_weight = (1.0 / math.log(freq + 1.5)) * boost
+
+            # Логика ПРЕМИИ:
+            # Если слово из БД совпадает с любым словом запроса целиком -> полный вес
+            if word in tokens:
+                weighted_hashes[h] = base_weight
+            else:
+                # Если это "хвост" от префикса (privera для prive) -> штрафуем
+                weighted_hashes[h] = base_weight * penalty
+
+        return weighted_hashes

@@ -902,6 +902,7 @@ class Repository(metaclass=RepositoryMeta):
     @alru_cache(maxsize=2000)
     async def get_cached_total_count(cls, model: ModelType, session: AsyncSession, hashes_tuple: tuple) -> int:
         """
+        DELETE
         Кэширует общее количество найденных записей.
         ВАЖНО: lru_cache не поддерживает списки, поэтому передаем tuple.
         для моделей с хэщ индексом
@@ -966,12 +967,19 @@ class Repository(metaclass=RepositoryMeta):
         return [{'score': score, **item.to_dict_fast()} for item, score in result]
 
     @classmethod
-    async def get_word_data_by_prefix(cls, session: AsyncSession, prefix: str, limit: int = 50):
-        """Возвращает список словарей {hash, freq, word} для префикса."""
+    async def get_word_data_for_search(cls, session: AsyncSession, full_words: list[str],
+                                       last_word: str, limit: int = 50):
+        """
+        За один запрос получает:
+        - Данные для всех полных слов (hennessy)
+        - Данные по префиксу для последнего слова (prive%)
+        """
         from app.support.hashing.model import WordHash
         stmt = (select(WordHash.hash, WordHash.freq, WordHash.word).where(
-            WordHash.word.like(f"{prefix.lower()}%")
-        ).order_by(WordHash.freq.desc()).limit(limit))
+                or_(
+                    WordHash.word.in_(full_words),  # Полные слова (hennessy, prive)
+                    WordHash.word.like(f"{last_word}%")  # Префиксы последнего (prive, privera)
+                )
+                ).order_by(WordHash.freq.desc()).limit(limit + len(full_words)))
         res = await session.execute(stmt)
-        # Возвращаем объекты для анализа
         return [{"hash": r.hash, "freq": r.freq, "word": r.word} for r in res.all()]
