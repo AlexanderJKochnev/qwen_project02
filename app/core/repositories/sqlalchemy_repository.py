@@ -973,8 +973,7 @@ class Repository(metaclass=RepositoryMeta):
         logger.warning('ALARAM 8.6')
         result = await session.execute(stmt)
         logger.warning('ALARAM 8.7')
-        result result.all()
-        
+        return result.all()
 
     @classmethod
     async def get_hashes_by_prefix(cls, session: AsyncSession, prefix: str, limit: int = 50) -> List[ModelType]:
