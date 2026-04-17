@@ -726,9 +726,10 @@ class Service(metaclass=ServiceMeta):
         # 5. Формирование ответа
         if not results:
             return {"items": [], "total": 0}
-        # Определяем следующий курсор
-        next_cursor = None
-        if len(results) == limit:
+        if len(results) <= limit:  # это последняя страница
+            next_cursor = None
+        else:
+            results = results[0:-1]
             next_cursor = {"score": results[-1]["score"], "id": results[-1]["id"]}
         result = {"total_found": total_count, "items": results, "next_cursor": next_cursor,
                   "has_more": next_cursor is not None}

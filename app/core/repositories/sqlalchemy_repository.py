@@ -960,7 +960,7 @@ class Repository(metaclass=RepositoryMeta):
         else:
             params = {}
         # Сортировка: Сначала вес, потом ID (для детерминированности)
-        stmt = stmt.order_by(text(f"{score_sql} DESC"), model.id.desc()).limit(limit)
+        stmt = stmt.order_by(text(f"{score_sql} DESC"), model.id.desc()).limit(limit+1)
         result = await session.execute(stmt, params)
         return [{'score': score, **item.to_dict_fast()} for item, score in result]
 
