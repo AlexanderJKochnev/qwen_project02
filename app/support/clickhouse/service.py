@@ -12,7 +12,9 @@ class EmbeddingService:
 
         try:
             # 1. Пробуем загрузить локально
+            return
             if os.path.exists(os.path.join(self.model_path, "model.safetensors")):
+                pass
                 logger.info(f"Loading Model2Vec from local path: {self.model_path}")
                 os.environ["HF_HUB_OFFLINE"] = "1"
                 self.model = StaticModel.from_pretrained(self.model_path)
