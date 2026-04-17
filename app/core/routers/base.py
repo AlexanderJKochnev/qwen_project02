@@ -426,11 +426,11 @@ class BaseRouter:
         except Exception as e:
             raise HTTPException(status_code=501, detail=f'search_geans_all, {self.model.__name__}, {e}')
 
-    async def api_smart_search(self,
+    async def api_smart_search(self, session: AsyncSession = Depends(get_db),
                                query: str = Query(None, description="Поисковый запрос."),
-                               ls: Optional[float] = Query(None, description="Предыдущий range"),  # last_score
-                               li: Optional[int] = Query(None, description="Последний id предыдущего запроса."),  # last_id
-                               session: AsyncSession = Depends(get_db), limit: int = 15
+                               ls: float = None,  # = Query(None, description="Предыдущий range"),  # last_score
+                               li: int = None,  # = Query(None, description="Последний id предыдущего запроса."),
+                               limit: int = 20
                                ):
         """
             запрос на постраничный поиск по хэш индексу - работает только с моделямии с хэш индексом.
