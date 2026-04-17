@@ -146,6 +146,10 @@ class BaseRouter:
                                   self.api_smart_search,
                                   methods=['GET'],
                                   openapi_extra={'x-request-schema': None})
+        self.router.add_api_route("/search_by_hash_pagination",
+                                  self.api_smart_search,
+                                  methods=['GET'],
+                                  openapi_extra={'x-request-schema': None})
         # get one buy id
         self.router.add_api_route("/{id}",
                                   self.get_one, methods=["GET"],
@@ -426,15 +430,15 @@ class BaseRouter:
         except Exception as e:
             raise HTTPException(status_code=501, detail=f'search_geans_all, {self.model.__name__}, {e}')
 
-    async def api_smart_search(self, session: AsyncSession = Depends(get_db),
-                               query: str = Query(None, description="Поисковый запрос."),
-                               ls: Optional[float] = Query(None, description="Предыдущий range"),
-                               # last_score
-                               li: Optional[int] = Query(None, description="Последний id предыдущего запроса."),
-                               limit: int = 20,
-                               boost: float = Query(15, description="Премия за уникальность."),
-                               penalty: float = Query(0.1, description = "Штраф за неполное слово.")
-                               ):
+    async def api_smart_search_cursor(self, session: AsyncSession = Depends(get_db),
+                                      query: str = Query(None, description="Поисковый запрос."),
+                                      ls: Optional[float] = Query(None, description="Предыдущий range"),
+                                      # last_score
+                                      li: Optional[int] = Query(None, description="Последний id предыдущего запроса."),
+                                      limit: int = 20,
+                                      boost: float = Query(15, description="Премия за уникальность."),
+                                      penalty: float = Query(0.1, description="Штраф за неполное слово.")
+                                      ):
         """
             запрос на постраничный поиск по хэш индексу - работает только с моделямии с хэш индексом.
             работает только с preact. тут только посмотреть - оценить.
@@ -442,7 +446,21 @@ class BaseRouter:
         cursor = {"score": ls, "id": li} if ls is not None else None
         result = await self.service.search_by_hash_cursor(query, self.model, self.repo, session,
                                                           cursor, limit, boost, penalty)
-        return result
+        return orresponse(result)
+
+    async def api_smart_search(self, session: AsyncSession = Depends(get_db),
+                               query: str = Query(None, description="Поисковый запрос."),
+                               limit: int = 20,
+                               boost: float = Query(15, description="Премия за уникальность."),
+                               penalty: float = Query(0.1, description="Штраф за неполное слово.")
+                               ):
+        """
+            запрос на постраничный поиск по хэш индексу - работает только с моделямии с хэш индексом.
+            работает только с preact. тут только посмотреть - оценить.
+        """
+        result = await self.service.search_by_hash(query, self.model, self.repo, session,
+                                                   limit, boost, penalty)
+        return orresponse(result)
 
 
 class LightRouter:

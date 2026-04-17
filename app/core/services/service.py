@@ -806,3 +806,23 @@ class Service(metaclass=ServiceMeta):
                 weighted_hashes[h] = base_weight * penalty
 
         return weighted_hashes
+    
+    @classmethod
+    async def search_by_hash(
+            cls, query: str, model: ModelType, repo: Type[Repository], session: AsyncSession,
+            limit: int = 20, boost: float = 15, penalty: float = 0.1
+            ):
+        """
+            поиск по хэш индексу с пагинацией
+            ПРОБЛЕМА - ПРИ РАВНЫХ SCORE ПЕРЕНОСИТ НА СЛЕЛДУЮЩУ СТРАНИЦУ ЗАПСИИМ С ПРЕДУДЫУЩЕЙ
+        """
+        if not hasattr(model, 'word_hashes'):
+            raise HTTPException(status_code=502, detail='this model has no hash index')
+        # 1. Нормализация, сбор хэшей, взвешивание
+        # weighted_hashes: dict = await cls.smart_search_weighted(query, session, repo, boost, penalty)
+        weighted_hashes: dict = await cls.get_weighted_hashes(query, repo, session, boost, penalty)
+        if not weighted_hashes:
+            return {"items": [], "total_found": 0}
+        results: List[dict] = await repo.find_items_hybrid(model, session, weighted_hashes,
+                                                           None, None, limit)
+        return results

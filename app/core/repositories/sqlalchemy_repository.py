@@ -899,28 +899,6 @@ class Repository(metaclass=RepositoryMeta):
         return result.all()
 
     @classmethod
-    @alru_cache(maxsize=2000)
-    async def get_cached_total_count(cls, model: ModelType, session: AsyncSession, hashes_tuple: tuple) -> int:
-        """
-        DELETE
-        Кэширует общее количество найденных записей.
-        ВАЖНО: lru_cache не поддерживает списки, поэтому передаем tuple.
-        для моделей с хэщ индексом
-        """
-        if not hashes_tuple:
-            return 0
-
-        hashes = list(hashes_tuple)
-        stmt = (select(func.count()).select_from(model).where(model.word_hashes.bool_op("&&")(hashes)))
-        result = await session.execute(stmt)
-        return result.scalar() or 0
-
-    # В Service Layer вызываем так:
-    # Превращаем список хешей в кортеж для кэша
-    # hashes_tuple = tuple(sorted(all_hashes))
-    # total_count = await get_cached_total_count(session, hashes_tuple)
-
-    @classmethod
     async def get_search_metadata(cls, model: ModelType, session: AsyncSession, hashes: List[int]):
         """
         Получает частоты слов для расчета весов и общее кол-во записей.
