@@ -498,7 +498,7 @@ class ItemService(Service):
             stmt = select(Item).options(selectinload(Item.drink))
             if not force_all:
                 stmt = stmt.where(or_(Item.word_hashes == None, func.cardinality(Item.word_hashes) == 0))
-            
+
             result_stream = await session.stream(stmt)
             logger.warning('start2')
             batch_count = 0
@@ -507,13 +507,13 @@ class ItemService(Service):
                 if item.drink:
                     drink_dict = item.drink.to_dict()
                     content = extract_text_ultra_fast(drink_dict, cls.skip_keys)
-                    
+
                     # Твоя логика
                     item.search_content = content.lower()
                     item.word_hashes = get_hashes_for_item(content)
-                    
+
                     batch_count += 1
-                
+
                 # Коммитим каждые 1500 записей
                 if batch_count >= cls.BATCH_SIZE:
                     await session.commit()
@@ -521,8 +521,9 @@ class ItemService(Service):
                     batch_count = 0
                     # После коммита объекты в сессии инвалидируются,
                     # стрим продолжит работу со следующими
-            
-            await session.commit() # финальный остаток
+
+            await session.commit()  # финальный остаток
+            logger.success('индексация завершена')
 
     @classmethod
     async def run_background_task(
