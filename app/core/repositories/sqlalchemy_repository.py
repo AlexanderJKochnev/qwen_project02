@@ -934,7 +934,7 @@ class Repository(metaclass=RepositoryMeta):
         hashes_tuple = tuple(sorted(hashes))
         logger.warning(f'ALARM 5.3. {hashes_tuple}')
         # 2. Получаем Total Count (первый раз по настоящему затем из кэша)
-        total_count = await cls.get_cached_total_count(session, hashes_tuple)
+        total_count = await cls.get_cached_total_count(model, session, hashes_tuple)
         logger.warning('ALARM 5.4.')
         return word_stats, total_count
 
