@@ -899,7 +899,7 @@ class Repository(metaclass=RepositoryMeta):
 
     @classmethod
     @lru_cache(maxsize=2000)
-    async def get_cached_total_count(model: ModelType, session: AsyncSession, hashes_tuple: tuple) -> int:
+    async def get_cached_total_count(cls, model: ModelType, session: AsyncSession, hashes_tuple: tuple) -> int:
         """
         Кэширует общее количество найденных записей.
         ВАЖНО: lru_cache не поддерживает списки, поэтому передаем tuple.
