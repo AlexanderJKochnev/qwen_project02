@@ -733,7 +733,7 @@ class Service(metaclass=ServiceMeta):
         items_out = []
         for row in results:
             # Превращаем Row в dict, учитывая структуру (Item, score)
-            item_dict = {column.name: getattr(row.Item, column.name) for column in row.Item.__table__.columns}
+            item_dict = {column.name: getattr(row.model, column.name) for column in row.model.__table__.columns}
             item_dict["score"] = round(float(row.score), 4)
             items_out.append(item_dict)
         logger.warning('ALARAM 10')
