@@ -769,8 +769,8 @@ class Service(metaclass=ServiceMeta):
         else:
             results = results[0:-1]
             next_cursor = {"score": results[-1]["score"], "id": results[-1]["id"]}
-        for n, key in enumerate(results):
-            logger.warning(f"{n}: id={key.get('id')}, score={key.get('score')}")
+        # for n, key in enumerate(results):
+        #     logger.warning(f"{n}: id={key.get('id')}, score={key.get('score')}")
         result = {"total_found": total_count, "items": results, "next_cursor": next_cursor,
                   "has_more": next_cursor is not None}
         return result
@@ -806,12 +806,12 @@ class Service(metaclass=ServiceMeta):
                 weighted_hashes[h] = base_weight * penalty
 
         return weighted_hashes
-    
+
     @classmethod
     async def search_by_hash(
             cls, query: str, model: ModelType, repo: Type[Repository], session: AsyncSession,
             limit: int = 20, boost: float = 15, penalty: float = 0.1
-            ):
+    ):
         """
             поиск по хэш индексу с пагинацией
             ПРОБЛЕМА - ПРИ РАВНЫХ SCORE ПЕРЕНОСИТ НА СЛЕЛДУЮЩУ СТРАНИЦУ ЗАПСИИМ С ПРЕДУДЫУЩЕЙ
