@@ -718,7 +718,7 @@ class Service(metaclass=ServiceMeta):
         logger.warning('ALARAM 5')
         # 3. Метаданные (Частоты и Total)
         # В идеале: закэшировать word_weights в Redis на 5 минут по ключу MD5(query)
-        word_freqs, total_count = await repo.get_search_metadata(session, all_hashes)
+        word_freqs, total_count = await repo.get_search_metadata(model, session, all_hashes)
         logger.warning('ALARAM 6')
         boost = 15.0
         word_weights = {h: (1.0 / math.log(freq + 1.5)) * boost for h, freq in word_freqs.items()}
