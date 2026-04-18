@@ -224,6 +224,9 @@ class Background:
         result = await session.execute(stmt)
 
         # Превращаем в словари
+        drinks = {drink.id: drink.to_dict_fast() for drink in result.unique().scalars()}
+        logger.debug(f"📦 Загружено {len(drinks)} Drink записей")
+        return drinks
         drinks = {}
         for drink in result.scalars():
             try:
