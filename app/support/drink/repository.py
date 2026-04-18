@@ -3,7 +3,7 @@ from typing import List, Optional, Type
 
 from sqlalchemy import func, select, exists
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, joinedload
 from app.core.exceptions import AppBaseException
 from app.support.producer.model import Producer
 from app.core.repositories.sqlalchemy_repository import ModelType, Repository
@@ -43,6 +43,22 @@ class DrinkRepository(Repository):
             параллельно запятая
         """
         return select(Drink).options(*cls.get_selectin())
+
+    @classmethod
+    def get_joined(cls, drink_ids):
+        return select(Drink).where(Drink.id.in_(drink_ids)).options(
+            joinedload(Drink.site).joinedload(Site.subregion).joinedload(Subregion.region),
+            joinedload(Drink.subcategory).joinedload(Subcategory.category),
+            joinedload(Drink.sweetness),
+            joinedload(Drink.food_associations).joinedload(DrinkFood.food).joinedload(Food.superfood),
+            joinedload(Drink.varietal_associations).joinedload(DrinkVarietal.varietal),
+            joinedload(Drink.source),
+            joinedload(Drink.producer).joinedload(Producer.producertitle),
+            joinedload(Drink.parcel),
+            joinedload(Drink.designation),
+            joinedload(Drink.classification),
+            joinedload(Drink.vintageconfig)
+        )
 
     @classmethod
     async def search_in_main_table(cls,
