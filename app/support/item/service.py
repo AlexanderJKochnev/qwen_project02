@@ -490,8 +490,8 @@ class ItemService(Service):
             logger.error(f'search_gens_all. {e}')
             raise HTTPException(status_code=503, detail=f'search_gens_all. {e}')
 
-    @background
     @classmethod
+    @background
     async def run_reindex_worker(cls, session_factory, force_all: bool = False):
         async with session_factory() as session:
             # 1. Получаем СТРИМ всех ID и контента, которые нужно обновить
