@@ -6,7 +6,7 @@ from loguru import logger
 from sqlalchemy import inspect, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
-
+from app.core.utils.alchemy_utils import get_sql_from_query
 from app.core.hash_norm import get_word_hashes_dict
 from app.core.models.base_model import get_model_by_name
 from app.core.utils.backgound_tasks import background_unique
@@ -70,7 +70,7 @@ class Background:
                 current_model, target_item, target_drink, path_str
             )
             stmt = stmt.where(current_model.id == start_id)
-
+            logger.warning(f'{get_sql_from_query(stmt)=}')
             logger.debug(f"🔍 Выполнение запроса для {current_model.__name__}.{start_id}")
 
             result = await session.execute(stmt)
