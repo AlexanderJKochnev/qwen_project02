@@ -1,2 +1,10 @@
 ## ОТЛОЖЕННЫЕ ДОРАБОТКИ.
- 
+1. ЗАМЕНА ИНДЕКСА FTS на HASH
+   1. item.serv ice.run_reindex_worker:
+      1. удалить item.search_content = content.lower()
+   2. app.core.utils.reindexation
+      1. удалить instance.search_content = raw_text.lower()
+   3. app/core/models/base_model
+      1. class Search - удалить все кроме word_hashes...
+   4. 
+2. 

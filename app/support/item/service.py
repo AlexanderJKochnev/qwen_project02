@@ -14,6 +14,7 @@ from sqlalchemy.orm import selectinload
 from app.core.utils.pydantic_utils import list_dict, inst_dict
 from app.core.config.database.db_async import DatabaseManager
 from app.core.config.project_config import settings
+from app.core.utils.backgound_tasks import background
 from app.core.hash_norm import get_cached_hash, get_hashes_for_item, tokenize
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.services.service import Service
@@ -489,6 +490,7 @@ class ItemService(Service):
             logger.error(f'search_gens_all. {e}')
             raise HTTPException(status_code=503, detail=f'search_gens_all. {e}')
 
+    @background
     @classmethod
     async def run_reindex_worker(cls, session_factory, force_all: bool = False):
         async with session_factory() as session:

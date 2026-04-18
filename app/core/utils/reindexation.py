@@ -1,3 +1,4 @@
+# app.core.utils.reindexation.py
 from __future__ import annotations
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Any, TYPE_CHECKING, Type
@@ -55,7 +56,6 @@ async def reindex_items(instance: Item,
     drink = await repository.get_by_id(drink_id, model, session)
     drink_dict = drink.to_dict()
     raw_text: str = extract_text_ultra_fast(drink_dict, skip_keys)
-    
     instance.search_content = raw_text.lower()    # удалить после настройки word_hashes
     instance.word_hashes = get_hashes_for_item(raw_text)
     return instance

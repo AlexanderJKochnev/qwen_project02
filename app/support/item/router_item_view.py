@@ -8,7 +8,7 @@ from typing import List, Annotated, Callable
 from fastapi import Depends, Path, Query, HTTPException, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.dependencies import get_active_user_or_internal
-from app.core.config.database.db_async import get_db
+from app.core.config.database.db_async import get_db, DatabaseManager
 from app.core.utils.pydantic_utils import orresponse
 from app.core.schemas.base import PaginatedResponse
 from app.dependencies import get_translator_func
@@ -16,6 +16,7 @@ from app.support.item.model import Item
 from app.support.item.repository import ItemRepository
 from app.support.item.schemas import ItemDetailView, ItemListView, ItemReadPreactForUpdate
 from app.support.item.service import ItemService
+
 
 
 class ItemViewRouter:
@@ -211,7 +212,8 @@ class ItemViewRouter:
         """
              старт заполнения индекса! результат см в логах
         """
-        await self.service.run_background_task(background_tasks, session, force_all)
+        await self.service.run_reindex_worker(DatabaseManager.session_maker, force_all, background_tasks)
+        # await self.service.run_background_task(background_tasks, session, force_all)
         return {'result': True}
 
     async def search_smart(self,
