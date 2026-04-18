@@ -314,18 +314,20 @@ class Background:
 
         chunk_size = 2000
         total = 0
-
+        real_total = 0
         for i in range(0, len(values), chunk_size):
             chunk = values[i:i + chunk_size]
             stmt = pg_insert(WordHashModel).values(chunk)
             stmt = stmt.on_conflict_do_update(
                 index_elements=['word'], set_={'freq': WordHashModel.freq + stmt.excluded.freq}
             )
-            await session.execute(stmt)
+            tmp = await session.execute(stmt)
+            real_total += tmp.rowcount
             total += len(chunk)
 
         await session.flush()
-        logger.success(f"💾 WordHash: обработано {total} слов (добавлены новые, обновлена частота существующих)")
+        logger.success(f"💾 WordHash: обработано {total} слов (добавлены новые, обновлена частота существующих) "
+                       f"{real_total}")
 
     def extract_text_optimized(data: Any, skip_keys: set = None) -> str:
         """
