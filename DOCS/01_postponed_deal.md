@@ -9,4 +9,4 @@
    4. app/core/repositories/sqlalchemy_repository.py
       1. sync_items_by_path  # cюда нужно добавить обновление wordhash
       2. 
-2. 
+2. Error: HTTP 500: {"detail":"ReadRouter, countries: 'dict' object has no attribute 'to_dict'"}

@@ -830,7 +830,7 @@ class Repository(metaclass=RepositoryMeta):
             if not rows:
                 logger.info('sync_items_by_path. no records for update')
                 return 0
-
+            logger.info('sync_items_by_path 1')
             # 5. Обработка и обновление
             processed_drinks: list = []
             for item_obj, drink_obj in rows:
@@ -838,16 +838,21 @@ class Repository(metaclass=RepositoryMeta):
                     # Логика как в reindex_items
                     drink_dict = drink_obj.to_dict_fast()
                     content = extract_text_ultra_fast(drink_dict, skip_keys).lower()
+                    logger.info('sync_items_by_path 2')
                     processed_drinks.append(drink_obj.id)
+                    logger.info('sync_items_by_path 3')
                     word_hashes_dict = get_word_hashes_dict(content)
                     # word_hashes = get_hashes_for_item(content)
+                    logger.info('sync_items_by_path 4')
                     item_obj.word_hashes = list(word_hashes_dict.values())
                     # обновление wordhash
+                    logger.info('sync_items_by_path 5')
                     wordhash_dict = [{'word': w, 'hash': h, 'freq': 1} for w, h in word_hashes_dict.items()]
                     stmt = pg_insert(WordHashModel).values(wordhash_dict)
                     stmt = stmt.on_conflict_do_update(
                         index_elements=['word'], set_={'freq': WordHashModel.freq + stmt.excluded.freq}
                     )
+                    logger.info('sync_items_by_path 6')
                     # строку ниже удалить после тестирования хэш индекса
                     item_obj.search_content = content
 
