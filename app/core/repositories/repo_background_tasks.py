@@ -10,7 +10,7 @@ from sqlalchemy.orm import aliased
 from app.core.hash_norm import get_word_hashes_dict
 from app.core.models.base_model import get_model_by_name
 from app.core.utils.backgound_tasks import background_unique
-from app.core.utils.reindexation import extract_text_optimized
+from app.core.utils.reindexation import extract_text_optimized, extract_text_ultra_fast
 
 
 class Background:
@@ -253,7 +253,8 @@ class Background:
 
             # Извлекаем текст
             try:
-                content = extract_text_optimized(drink_dict, skip_keys)
+                content = extract_text_ultra_fast(drink_dict, skip_keys)
+                # content = extract_text_optimized(drink_dict, skip_keys)
             except Exception as e:
                 logger.error(f"Ошибка извлечения текста для Drink {drink_id}: {e}")
                 content = ""
