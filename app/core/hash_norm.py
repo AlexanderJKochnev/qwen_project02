@@ -2,11 +2,12 @@
 """  нормализация текста для хэширования """
 import string
 from loguru import logger
-import struct
+from ctypes import c_int64
 from functools import lru_cache
 from typing import List
 
 import cityhash
+import farmhash
 
 # --- КОНФИГУРАЦИЯ И НОРМАЛИЗАЦИЯ ---
 
@@ -29,8 +30,9 @@ _TRANS_MAP = str.maketrans({
 @lru_cache(maxsize=65536)
 def get_cached_hash(token: str) -> int:
     """Детерминированный CityHash64 -> Signed BigInt."""
-    h_unsigned = cityhash.CityHash64(token)
-    return struct.unpack('q', struct.pack('Q', h_unsigned))[0]
+    # h_unsigned = cityhash.CityHash64(token)
+    # return struct.unpack('q', struct.pack('Q', h_unsigned))[0]
+    return c_int64(farmhash.Fingerprint64(token.encode('utf-8'))).value
 
 
 def is_valid_token(t: str) -> bool:

@@ -302,6 +302,12 @@ class BaseFullFree(Base, BaseIntFree, BaseAt, BaseLang):
         return ""
 
 
+class Hash:
+    """ поле для HASH индексирования """
+    __abstract__ = True
+    hash: Mapped[int] = mapped_column(BIGINT, nullable=False, index=True)
+
+
 class Search:
     """ поисковое поле для триграммного индекса """
     __abstract__ = True
