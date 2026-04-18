@@ -4,6 +4,7 @@
     get_all     result.mappings().all()
     get_by_id   result.scalar_one_or_none()
 """
+import asyncio
 from abc import ABCMeta
 from re import search as research
 from datetime import datetime
@@ -25,6 +26,7 @@ from app.core.exceptions import AppBaseException
 # from sqlalchemy.sql.elements import ColumnElement
 from app.core.utils.alchemy_utils import (create_enum_conditions, get_sqlalchemy_fields,
                                           create_search_conditions2, get_field_list)
+from app.core.repositories.repo_background_tasks import Background
 from app.core.utils.reindexation import extract_text_ultra_fast
 from app.service_registry import register_repo
 from app.core.types import ModelType
@@ -46,7 +48,7 @@ class RepositoryMeta(ABCMeta):
         return new_class
 
 
-class Repository(metaclass=RepositoryMeta):
+class Repository(Background, metaclass=RepositoryMeta):
     __abstract__ = True
     model: ModelType
 
@@ -790,7 +792,7 @@ class Repository(metaclass=RepositoryMeta):
             target_drink = aliased(DrinkModel)
             target_item = aliased(ItemModel)
 
-            # 2. Строим запрос от текущей модели (Category) к целям (Item, Drink)
+            # 2. Строим запрос от текущей модели к целям (Item, Drink)
             stmt = select(target_item, target_drink).select_from(current_model)
 
             # 3. Динамическая цепочка JOIN по метаданным
@@ -835,7 +837,6 @@ class Repository(metaclass=RepositoryMeta):
             processed_drinks: list = []
             for item_obj, drink_obj in rows:
                 if drink_obj.id not in processed_drinks:
-                    # Логика как в reindex_items
                     drink_dict = drink_obj.to_dict_fast()
                     content = extract_text_ultra_fast(drink_dict, skip_keys).lower()
                     logger.info('sync_items_by_path 2')
@@ -865,7 +866,7 @@ class Repository(metaclass=RepositoryMeta):
 
     @classmethod
     @background
-    async def run_sync_background(
+    async def run_sync_background_(
             cls, start_model: ModelType, start_id: int, path_str: str, session_factory, skip_keys: set
     ):
         """

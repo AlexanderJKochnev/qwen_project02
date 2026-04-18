@@ -5,6 +5,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Type, TypeVar, Union, Set
 from fastapi import Query
+from sqlalchemy.dialects import postgresql
 from pydantic import BaseModel, create_model, Field
 from sqlalchemy import and_, Column, ColumnElement, func, inspect, or_, String, Text, Unicode, UnicodeText
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -1063,3 +1064,15 @@ def api_mapping(cat_dict: dict, subcat_dict: dict) -> tuple:
     elif x == 'Fortified Wine':
         x = 'port'
     return camel_to_enum(x), subcat_dict
+
+
+def get_sql_from_query(stmt):
+    """
+    Преобразует SQLAlchemy запрос в строку SQL для non-ORM
+    sql_query = get_sql_from_query(stmt
+    logger.info(f"Executing SQL: {sql_query}")
+    Выполняем
+    result = await session.execute(text(sql_query))
+    """
+    compiled = stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
+    return str(compiled)
