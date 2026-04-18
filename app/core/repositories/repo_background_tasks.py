@@ -143,7 +143,7 @@ class Background:
         """
         Обрабатывает пары (item_id, drink_id) с логированием прогресса
         """
-        chunk_size = 5000
+        chunk_size = 1500
         total = len(pairs)
         updated_count = 0
         all_word_hashes = {}
