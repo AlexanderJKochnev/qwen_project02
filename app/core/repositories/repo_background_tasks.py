@@ -301,7 +301,7 @@ class Background:
 
     @classmethod
     async def _bulk_upsert_wordhash(cls, session: AsyncSession, word_hashes: dict):
-        """Массовый upsert WordHash"""
+        """Добавляет новые слова и обновляет частоту существующих"""
         if not word_hashes:
             return
 
@@ -310,25 +310,22 @@ class Background:
         WordHashModel = cls._get_model('WordHash')
 
         # Подготавливаем данные
-        values = [{'word': word, 'hash': hash_val} for word, hash_val in word_hashes.items()]
+        values = [{'word': word, 'hash': hash_val, 'freq': 1} for word, hash_val in word_hashes.items()]
 
-        # Вставляем чанками по 1000
-        chunk_size = 1000
-        inserted = 0
+        chunk_size = 2000
+        total = 0
 
         for i in range(0, len(values), chunk_size):
             chunk = values[i:i + chunk_size]
             stmt = pg_insert(WordHashModel).values(chunk)
             stmt = stmt.on_conflict_do_update(
-                index_elements=['word'],  # уникальный индекс по полю word
-                set_={'hash': stmt.excluded.hash,  # обновляем hash
-                      'freq': WordHashModel.freq + stmt.excluded.freq  # если нужна частота
-                      })
+                index_elements=['word'], set_={'freq': WordHashModel.freq + stmt.excluded.freq}
+            )
             await session.execute(stmt)
-            inserted += len(chunk)
+            total += len(chunk)
 
         await session.flush()
-        logger.debug(f"💾 WordHash: upsert {inserted} записей")
+        logger.success(f"💾 WordHash: обработано {total} слов (добавлены новые, обновлена частота существующих)")
 
     def extract_text_optimized(data: Any, skip_keys: set = None) -> str:
         """
