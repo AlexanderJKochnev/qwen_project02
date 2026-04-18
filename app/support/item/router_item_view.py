@@ -212,7 +212,7 @@ class ItemViewRouter:
         """
              старт заполнения индекса! результат см в логах
         """
-        await self.service.run_reindex_worker(DatabaseManager.session_maker, force_all, background_tasks)
+        await self.service.run_reindex_worker(DatabaseManager.session_maker, force_all, background_tasks=background_tasks)
         # await self.service.run_background_task(background_tasks, session, force_all)
         return {'result': True}
 
@@ -227,7 +227,7 @@ class ItemViewRouter:
                            boost: float = Query(
                                15.0, description="Премия за редкое слово "
                                "(записи с редким словом из запроса попадают наверх выборки)"),
-                           limit: int = Query(15, description='Количество записей (большое чило вызовет тормоза)')):
+                           limit: int = Query(15, description='Количество записей (большое чиcло вызовет тормоза)')):
         """ новый поиск вместо триграмного  индекса ONLY FOR ITEMS_PREACT        """
         # result = await self.service.search_by_trigram_index(search_str, lang, ItemRepository,
         #                                                     Item, session, page, page_size)
