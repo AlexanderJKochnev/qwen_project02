@@ -255,8 +255,8 @@ class Background:
 
             # Извлекаем текст
             try:
-                content = extract_text_ultra_fast(drink_dict, skip_keys)
-                # content = extract_text_optimized(drink_dict, skip_keys)
+                # content = extract_text_ultra_fast(drink_dict, skip_keys)
+                content = extract_text_optimized(drink_dict, skip_keys)
             except Exception as e:
                 logger.error(f"Ошибка извлечения текста для Drink {drink_id}: {e}")
                 content = ""
