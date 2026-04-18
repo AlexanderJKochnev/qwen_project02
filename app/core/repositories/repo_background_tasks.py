@@ -1,15 +1,16 @@
 # app.core.repositories.repo_backround_tasks.py
-from loguru import logger
-from typing import Any, Optional
-from sqlalchemy.ext.asyncio import AsyncSession
-from rich.progress import Progress, BarColumn, TextColumn, TimeElapsedColumn
 import asyncio
-from sqlalchemy.orm import aliased
+from typing import Any, Optional
+
+from loguru import logger
 from sqlalchemy import inspect, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import aliased
+
 from app.core.hash_norm import get_word_hashes_dict
 from app.core.models.base_model import get_model_by_name
-from app.core.utils.reindexation import extract_text_optimized
 from app.core.utils.backgound_tasks import background_unique
+from app.core.utils.reindexation import extract_text_optimized
 
 
 class Background:
@@ -140,63 +141,67 @@ class Background:
             cls, session: AsyncSession, pairs: list, skip_keys: set
     ) -> int:
         """
-        Обрабатывает пары (item_id, drink_id) с прогресс-баром
+        Обрабатывает пары (item_id, drink_id) с логированием прогресса
         """
         chunk_size = 500
         total = len(pairs)
         updated_count = 0
         all_word_hashes = {}
 
-        # Создаем прогресс-бар
-        with Progress(
-                TextColumn("[progress.description]{task.description}"), BarColumn(),
-                TextColumn("[progress.percentage]{task.percentage:>3.0f}%"), TimeElapsedColumn(),
-                TextColumn("• {task.fields[processed]}/{task.fields[total]}"), console=None  # Авто-определение консоли
-        ) as progress:
-            task_id = progress.add_task(
-                "[cyan]Обработка записей...", total=total, processed=0
+        logger.info(f"🔄 Начало обработки {total} записей")
+
+        # Логируем прогресс каждые 5%
+        next_log_percent = 5
+        start_time = asyncio.get_event_loop().time()
+
+        for i in range(0, total, chunk_size):
+            chunk = pairs[i:i + chunk_size]
+
+            # Получаем Drink данные для чанка
+            drinks = await cls._load_drinks_batch(session, chunk)
+
+            # Обрабатываем чанк
+            chunk_updates, chunk_hashes = await cls._process_chunk(
+                chunk, drinks, skip_keys
             )
 
-            # Обрабатываем чанками
-            for i in range(0, total, chunk_size):
-                chunk = pairs[i:i + chunk_size]
+            # Сохраняем результаты
+            if chunk_updates:
+                await cls._bulk_update_items(session, chunk_updates)
+                updated_count += len(chunk_updates)
 
-                # Получаем Drink данные для чанка
-                drinks = await cls._load_drinks_batch(session, chunk)
+            # Накопливаем WordHash
+            for word, hash_val in chunk_hashes.items():
+                if word not in all_word_hashes:
+                    all_word_hashes[word] = hash_val
 
-                # Обрабатываем чанк
-                chunk_updates, chunk_hashes = await cls._process_chunk(
-                    chunk, drinks, skip_keys
+            # Логируем прогресс
+            current_percent = (updated_count / total) * 100
+            if current_percent >= next_log_percent:
+                elapsed = asyncio.get_event_loop().time() - start_time
+                speed = updated_count / elapsed if elapsed > 0 else 0
+                logger.info(
+                    f"📈 Прогресс: {current_percent:.1f}% "
+                    f"({updated_count}/{total}) "
+                    f"скорость: {speed:.0f} зап/сек"
                 )
+                next_log_percent += 5
 
-                # Сохраняем результаты
-                if chunk_updates:
-                    await cls._bulk_update_items(session, chunk_updates)
-                    updated_count += len(chunk_updates)
+            # Даем время другим задачам
+            await asyncio.sleep(0.01)
 
-                # Накопливаем WordHash
-                for word, hash_val in chunk_hashes.items():
-                    if word not in all_word_hashes:
-                        all_word_hashes[word] = hash_val
-
-                # Обновляем прогресс
-                progress.update(
-                    task_id, advance=len(chunk), processed=min(updated_count, total)
-                )
-
-                # Логируем каждый 10% для истории
-                if updated_count % (total // 10 + 1) == 0:
-                    percent = (updated_count / total) * 100
-                    logger.info(f"📈 Прогресс: {percent:.1f}% ({updated_count}/{total})")
-
-                # Даем время другим задачам
-                await asyncio.sleep(0.01)
+        # Финальный лог
+        elapsed = asyncio.get_event_loop().time() - start_time
+        logger.success(
+            f"✅ Обработка завершена: {updated_count} записей за {elapsed:.1f} сек, "
+            f"средняя скорость: {updated_count / elapsed:.0f} зап/сек"
+        )
 
         # Сохраняем WordHash
         if all_word_hashes:
             await cls._bulk_upsert_wordhash(session, all_word_hashes)
+            logger.info(f"💾 WordHash: сохранено {len(all_word_hashes)} уникальных слов")
 
-        logger.info(f"💾 WordHash: сохранено {len(all_word_hashes)} уникальных слов")
         return updated_count
 
     @classmethod
