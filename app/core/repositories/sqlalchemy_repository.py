@@ -4,8 +4,6 @@
     get_all     result.mappings().all()
     get_by_id   result.scalar_one_or_none()
 """
-# from functools import lru_cache
-from async_lru import alru_cache
 from abc import ABCMeta
 from re import search as research
 from datetime import datetime
@@ -13,13 +11,14 @@ from loguru import logger
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
 from sqlalchemy import and_, func, Row, RowMapping, select, Select, update, desc, cast, Text, text, literal, \
     literal_column, or_
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy import inspect
 from sqlalchemy.orm import load_only, aliased
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql.elements import Label
-
-from app.core.hash_norm import get_hashes_for_item
+from app.core.utils.backgound_tasks import background
+from app.core.hash_norm import get_hashes_for_item, get_word_hashes_dict
 from app.core.models.base_model import get_model_by_name
 from app.core.exceptions import AppBaseException
 # from sqlalchemy.dialects import postgresql
@@ -782,10 +781,10 @@ class Repository(metaclass=RepositoryMeta):
             Синхронизирует search_content у всех Item, связанных с измененной записью.
             Решает проблему DuplicateAliasError через алиасы.
         """
-        try:
-            # 1. Получаем классы моделей
+        try:            # 1. Получаем классы моделей
             ItemModel = get_model_by_name('Item')
             DrinkModel = get_model_by_name('Drink')
+            WordHashModel = get_model_by_name('WordHash')
 
             # Используем алиасы, чтобы SQLAlchemy не путалась при джоинах
             target_drink = aliased(DrinkModel)
@@ -829,6 +828,7 @@ class Repository(metaclass=RepositoryMeta):
             rows = result.all()
 
             if not rows:
+                logger.info('sync_items_by_path. no records for update')
                 return 0
 
             # 5. Обработка и обновление
@@ -836,26 +836,37 @@ class Repository(metaclass=RepositoryMeta):
             for item_obj, drink_obj in rows:
                 if drink_obj.id not in processed_drinks:
                     # Логика как в reindex_items
-                    drink_dict = drink_obj.to_dict()
+                    drink_dict = drink_obj.to_dict_fast()
                     content = extract_text_ultra_fast(drink_dict, skip_keys).lower()
                     processed_drinks.append(drink_obj.id)
-                    item_obj.word_hashes = get_hashes_for_item(content)
+                    word_hashes_dict = get_word_hashes_dict(content)
+                    # word_hashes = get_hashes_for_item(content)
+                    item_obj.word_hashes = list(word_hashes_dict.values())
+                    # обновление wordhash
+                    wordhash_dict = [{'word': w, 'hash': h, 'freq': 1} for w, h in word_hashes_dict.items()]
+                    stmt = pg_insert(WordHashModel).values(wordhash_dict)
+                    stmt = stmt.on_conflict_do_update(
+                        index_elements=['word'], set_={'freq': WordHashModel.freq + stmt.excluded.freq}
+                    )
                     # строку ниже удалить после тестирования хэш индекса
                     item_obj.search_content = content
 
             # 6. Принудительная синхронизация с БД
             await session.flush()
-
+            logger.success(f'updated {len(rows)} records')
             return len(rows)
         except Exception as e:
             raise AppBaseException(message=f'sync_items_by_path.error; {str(e)}', status_code=404)
 
     @classmethod
+    @background
     async def run_sync_background(
             cls, start_model: ModelType, start_id: int, path_str: str, session_factory, skip_keys: set
     ):
         """
-        Фоновая обертка: создает новую сессию и запускает синхронизацию.
+        Фоновая обертка: создает новую сессию и запускает синхронизацию:
+        Синхронизирует search_content у всех Item, связанных с измененной записью.
+        Решает проблему DuplicateAliasError через алиасы.
         """
         logger.warning(f'run_sync_background {start_id=}, {path_str=}')
         async with session_factory() as session:

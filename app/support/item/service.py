@@ -12,7 +12,6 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from app.core.utils.pydantic_utils import list_dict, inst_dict
-from app.core.config.database.db_async import DatabaseManager
 from app.core.config.project_config import settings
 from app.core.utils.backgound_tasks import background
 from app.core.hash_norm import get_cached_hash, get_hashes_for_item, tokenize
@@ -526,21 +525,6 @@ class ItemService(Service):
 
             await session.commit()  # финальный остаток
             logger.success('индексация завершена')
-
-    @classmethod
-    async def run_background_task(
-            cls, background_tasks: BackgroundTasks, session: AsyncSession, force_all: bool = False
-    ):
-        """
-        Запускает фоновое обслуживание индексов. через endpoint
-        """
-        # Если мы вызвали это после изменений в БД, сначала пушим их
-        await session.commit()
-
-        # Добавляем воркер в фон
-        background_tasks.add_task(
-            cls.run_reindex_worker, DatabaseManager.session_maker, force_all=force_all
-        )
 
     @staticmethod
     async def execute_smart_search(query: str, session: AsyncSession, boost: float = 15.0, limit: int = 20) -> List[dict]:

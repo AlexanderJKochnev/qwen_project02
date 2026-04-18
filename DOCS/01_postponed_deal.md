@@ -6,5 +6,7 @@
       1. удалить instance.search_content = raw_text.lower()
    3. app/core/models/base_model
       1. class Search - удалить все кроме word_hashes...
-   4. 
+   4. app/core/repositories/sqlalchemy_repository.py
+      1. sync_items_by_path  # cюда нужно добавить обновление wordhash
+      2. 
 2. 

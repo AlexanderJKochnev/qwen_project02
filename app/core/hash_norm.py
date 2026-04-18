@@ -4,7 +4,8 @@ import string
 from loguru import logger
 from ctypes import c_int64
 from functools import lru_cache
-from typing import List
+from typing import List, Dict
+
 
 import cityhash
 import farmhash
@@ -29,7 +30,7 @@ _TRANS_MAP = str.maketrans({
 
 @lru_cache(maxsize=65536)
 def get_cached_hash(token: str) -> int:
-    """Детерминированный CityHash64 -> Signed BigInt."""
+    """Детерминированный Fingerprint64"""
     # h_unsigned = cityhash.CityHash64(token)
     # return struct.unpack('q', struct.pack('Q', h_unsigned))[0]
     return c_int64(farmhash.Fingerprint64(token.encode('utf-8'))).value
@@ -65,6 +66,14 @@ def tokenize(text: str) -> List[str]:
 def get_hashes_for_item(text: str) -> List[int]:
     """
     Генерирует уникальные хеши для поля word_hashes (для GIN индекса).
-    Использовать в макросе обновления айтема.
+    Использовать в макросе массового обновления айтема.
     """
     return [get_cached_hash(t) for t in set(tokenize(text))]
+
+
+def get_word_hashes_dict(text: str) -> Dict:
+    """
+        Генерирует пары word: уникальный хеш для поля word_hashes (для GIN индекса).
+        Использовать в макросе  массового обновления I.
+    """
+    return {t: get_cached_hash(t) for t in set(tokenize(text))}

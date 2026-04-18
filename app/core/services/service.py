@@ -495,11 +495,16 @@ class Service(metaclass=ServiceMeta):
         logger.warning(f'background_tasks.add_task {path=}')
         if not path or path.split('.')[-1].capitalize() != 'Item':
             return
-        background_tasks.add_task(
-            repository.run_sync_background, start_model=model, start_id=id,
-            path_str=path, session_factory=DatabaseManager.session_maker,
-            skip_keys=cls.skip_keys
-        )
+        await repository.run_sync_background(start_model=model, start_id=id,
+                                             path_str=path, session_factory=DatabaseManager.session_maker,
+                                             skip_keys=cls.skip_keys,
+                                             background_tasks=background_tasks)
+
+        # background_tasks.add_task(
+        #     repository.run_sync_background, start_model=model, start_id=id,
+        #     path_str=path, session_factory=DatabaseManager.session_maker,
+        #     skip_keys=cls.skip_keys
+        # )
         logger.warning("background_tasks.add_task: status: ok")
 
     @classmethod
