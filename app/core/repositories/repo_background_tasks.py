@@ -143,7 +143,7 @@ class Background:
         """
         Обрабатывает пары (item_id, drink_id) с логированием прогресса
         """
-        chunk_size = 500
+        chunk_size = 5000
         total = len(pairs)
         updated_count = 0
         all_word_hashes = {}
@@ -319,7 +319,11 @@ class Background:
         for i in range(0, len(values), chunk_size):
             chunk = values[i:i + chunk_size]
             stmt = pg_insert(WordHashModel).values(chunk)
-            stmt = stmt.on_conflict_do_nothing()
+            stmt = stmt.on_conflict_do_update(
+                index_elements=['word'],  # уникальный индекс по полю word
+                set_={'hash': stmt.excluded.hash,  # обновляем hash
+                      'freq': WordHashModel.freq + stmt.excluded.freq  # если нужна частота
+                      })
             await session.execute(stmt)
             inserted += len(chunk)
 
