@@ -273,32 +273,31 @@ class Background:
 
         return updates, word_hashes
 
+    @classmethod
+    async def _bulk_update_items(cls, session: AsyncSession, updates: list):
+        """Массовое обновление Item полей"""
+        if not updates:
+            return
 
-@classmethod
-async def _bulk_update_items(cls, session: AsyncSession, updates: list):
-    """Массовое обновление Item полей"""
-    if not updates:
-        return
+        ItemModel = cls._get_model('Item')
 
-    ItemModel = cls._get_model('Item')
+        # Получаем все Item одним запросом
+        item_ids = [u['id'] for u in updates]
+        stmt = select(ItemModel).where(ItemModel.id.in_(item_ids))
+        result = await session.execute(stmt)
+        items = {item.id: item for item in result.scalars()}
 
-    # Получаем все Item одним запросом
-    item_ids = [u['id'] for u in updates]
-    stmt = select(ItemModel).where(ItemModel.id.in_(item_ids))
-    result = await session.execute(stmt)
-    items = {item.id: item for item in result.scalars()}
+        # Обновляем поля
+        updated = 0
+        for update in updates:
+            item = items.get(update['id'])
+            if item:
+                item.search_content = update['search_content']
+                item.word_hashes = update['word_hashes']
+                updated += 1
 
-    # Обновляем поля
-    updated = 0
-    for update in updates:
-        item = items.get(update['id'])
-        if item:
-            item.search_content = update['search_content']
-            item.word_hashes = update['word_hashes']
-            updated += 1
-
-    await session.flush()
-    logger.debug(f"✏️ Обновлено Item: {updated}/{len(updates)}")
+        await session.flush()
+        logger.debug(f"✏️ Обновлено Item: {updated}/{len(updates)}")
 
     @classmethod
     async def _bulk_upsert_wordhash(cls, session: AsyncSession, word_hashes: dict):
@@ -359,6 +358,7 @@ async def _bulk_update_items(cls, session: AsyncSession, updates: list):
                 stack.extend(reversed(current))
 
         return ' '.join(parts)
+
 
 """
     class YourService:
