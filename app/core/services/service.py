@@ -61,7 +61,7 @@ class Service(metaclass=ServiceMeta):
     #  список уникальных полей для get_or_create, update_or_create
     default: list = ['name']
     # список полей исключенных из fts индексации
-    skip_keys = {'id', 'created_at', 'udated_at', 'alc', 'sugar', 'age', 'sparkling', 'subcategory_id', 'sweetness_id',
+    skip_keys = {'id', 'created_at', 'updated_at', 'alc', 'sugar', 'age', 'sparkling', 'subcategory_id', 'sweetness_id',
                  'source_id', 'producer_id', 'vintageconfig_id', 'classification_id', 'designation_id', 'site_id',
                  'parcel_id', 'category_id', 'drink_id', 'food_id', 'superfood_id', 'varietal_id', 'percentage'}
 

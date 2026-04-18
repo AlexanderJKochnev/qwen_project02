@@ -212,13 +212,15 @@ class Background:
         Загружает Drink данные для чанка пар
         Возвращает словарь {drink_id: drink_dict}
         """
+        from app.support.drink.repository import DrinkRepository
         DrinkModel = cls._get_model('Drink')
-
+        stmt = DrinkRepository.get_query(DrinkModel)
         # Получаем уникальные drink_id
         drink_ids = list(set([drink_id for _, drink_id in chunk]))
 
         # Загружаем Drink объекты
-        stmt = select(DrinkModel).where(DrinkModel.id.in_(drink_ids))
+        # stmt = select(DrinkModel).where(DrinkModel.id.in_(drink_ids))
+        stmt = stmt.where(DrinkModel.id.in_(drink_ids))
         result = await session.execute(stmt)
 
         # Превращаем в словари
