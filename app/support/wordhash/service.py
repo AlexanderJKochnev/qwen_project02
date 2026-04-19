@@ -13,7 +13,7 @@ from app.support.wordhash.repository import WordHashRepository
 class WordHashService(Service):
 
     @classmethod
-    async def rebuild_all_hashes(cls, background_tasks, session_factory):
+    async def rebuild_all_hashes(cls, background_tasks, session_factory, session):
         """Точка входа - запуск пересчета"""
         return await cls._run_rebuild_stream(session_factory=session_factory, background_tasks=background_tasks)
 
