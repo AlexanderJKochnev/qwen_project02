@@ -15,11 +15,15 @@ class WordHashService(Service):
     @classmethod
     async def rebuild_all_hashes(cls, background_tasks, session_factory):
         """Точка входа - запуск пересчета"""
-        return await cls._run_rebuild_stream(session_factory=session_factory, background_tasks=background_tasks)
+        try:
+            background_tasks.add_task(cls._run_rebuild_stream, session_factory)
+            return
+        except Exception as e:
+            logger.error(f'rebuild_all_hashes. {e}')
+        # return await cls._run_rebuild_stream(session_factory=session_factory, background_tasks=background_tasks)
 
     @classmethod
-    @background_unique
-    async def _run_rebuild_stream(cls, session_factory, background_tasks):
+    async def _run_rebuild_stream(cls, session_factory):
         """Фоновая задача пересчета через stream"""
         async with session_factory() as session:
             try:
