@@ -21,11 +21,11 @@ class WordHashRouter(BaseRouter):
 
     def setup_routes(self):
         self.router.add_api_route("/rebuild_hash", self.rebuild_wordhash,
-                                  methods=["GET"], response_model=None,
+                                  methods=["GET"], response_model=dict,
                                   openapi_extra={'x-request-schema': None})
         super().setup_routes()
 
-    async def rebuild_wordhash(self, x: int, background_tasks: BackgroundTasks) -> dict:
+    async def rebuild_wordhash(self, background_tasks: BackgroundTasks) -> dict:
         # Запускает полный пересчет всех хэшей в фоне
         await self.service.rebuild_all_hashes(background_tasks, DatabaseManager.session_maker)
         # await WordHashService._run_rebuild_stream(session_factory=session_factory, background_tasks=background_tasks)
