@@ -19,7 +19,7 @@ class WordHashService(Service):
 
     @classmethod
     @background_unique
-    async def _run_rebuild_stream(cls, session_factory):
+    async def _run_rebuild_stream(cls, session_factory, background_tasks):
         """Фоновая задача пересчета через stream"""
         async with session_factory() as session:
             try:
