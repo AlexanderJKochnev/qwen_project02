@@ -21,8 +21,9 @@ class WordHashRouter(BaseRouter):
 
     def setup_routes(self):
         self.router.add_api_route("/rebuild_hash", self.rebuild_wordhash,
-                                  methods=["GET"], response_model=dict,
-                                  openapi_extra={'x-request-schema': None})
+                                  methods=["GET"])
+        # , response_model=dict,
+                                  # openapi_extra={'x-request-schema': None})
         super().setup_routes()
 
     async def rebuild_wordhash(self, background_tasks: BackgroundTasks) -> dict:
