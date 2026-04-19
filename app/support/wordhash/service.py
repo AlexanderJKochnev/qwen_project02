@@ -15,7 +15,7 @@ class WordHashService(Service):
     @classmethod
     async def rebuild_all_hashes(cls, background_tasks, session_factory):
         """Точка входа - запуск пересчета"""
-        return await cls._run_rebuild_stream(session_factory, background_tasks=background_tasks)
+        return await cls._run_rebuild_stream(session_factory=session_factory, background_tasks=background_tasks)
 
     @classmethod
     @background_unique
