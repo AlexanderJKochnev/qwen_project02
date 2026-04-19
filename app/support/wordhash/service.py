@@ -6,7 +6,7 @@ from loguru import logger
 # services/wordhash_service.py
 from app.core.hash_norm import get_cached_hash
 from app.core.services.service import Service
-from app.core.utils.backgound_tasks import background, background_unique
+from app.core.utils.backgound_tasks import background_unique
 from app.support.wordhash.repository import WordHashRepository
 
 
@@ -15,14 +15,10 @@ class WordHashService(Service):
     @classmethod
     async def rebuild_all_hashes(cls, background_tasks, session_factory):
         """Точка входа - запуск пересчета"""
-        try:
-            background_tasks.add_task(cls._run_rebuild_stream, session_factory)
-            return
-        except Exception as e:
-            logger.error(f'rebuild_all_hashes. {e}')
-        # return await cls._run_rebuild_stream(session_factory=session_factory, background_tasks=background_tasks)
+        return await cls._run_rebuild_stream(session_factory=session_factory, background_tasks=background_tasks)
 
     @classmethod
+    @background_unique
     async def _run_rebuild_stream(cls, session_factory):
         """Фоновая задача пересчета через stream"""
         async with session_factory() as session:
