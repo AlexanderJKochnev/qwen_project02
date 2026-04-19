@@ -216,10 +216,8 @@ class Background:
         DrinkModel = cls._get_model('Drink')
         # Получаем уникальные drink_id
         drink_ids = list(set([drink_id for _, drink_id in chunk]))
-        # stmt = DrinkRepository.get_joined(drink_ids)
         stmt = DrinkRepository.get_query(DrinkModel)
         # Загружаем Drink объекты
-        # stmt = select(DrinkModel).where(DrinkModel.id.in_(drink_ids))
         stmt = stmt.where(DrinkModel.id.in_(drink_ids))
         result = await session.execute(stmt)
 
