@@ -6,7 +6,7 @@ from loguru import logger
 # services/wordhash_service.py
 from app.core.hash_norm import get_cached_hash
 from app.core.services.service import Service
-from app.core.utils.backgound_tasks import background_unique
+from app.core.utils.backgound_tasks import background, background_unique
 from app.support.wordhash.repository import WordHashRepository
 
 
@@ -18,7 +18,7 @@ class WordHashService(Service):
         return await cls._run_rebuild_stream(session_factory, background_tasks=background_tasks)
 
     @classmethod
-    @background_unique
+    @background
     async def _run_rebuild_stream(cls, session_factory):
         """Фоновая задача пересчета через stream"""
         async with session_factory() as session:
