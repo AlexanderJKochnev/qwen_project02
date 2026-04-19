@@ -19,16 +19,16 @@ class WordHashRouter(BaseRouter):
         self.service = WordHashService
 
     def setup_routes(self):
-        super().setup_routes()
         # то что ниже удалить - было нужно до relation
         self.router.add_api_route("/rebuildhash", self.rebuild_wordhash,
                                   methods=["GET"],
                                   openapi_extra={'x-request-schema': None})
+        super().setup_routes()
 
     async def rebuild_wordhash(
             background_tasks: BackgroundTasks,
             # session_factory=Depends(get_db)
-    ):
+    ) -> dict:
         """Запускает полный пересчет всех хэшей в фоне"""
         await WordHashService.rebuild_all_hashes(
             # session_factory=session_factory,
