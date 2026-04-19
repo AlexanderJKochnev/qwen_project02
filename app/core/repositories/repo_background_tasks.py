@@ -220,7 +220,7 @@ class Background:
         stmt = DrinkRepository.get_query(DrinkModel)
         # Загружаем Drink объекты
         # stmt = select(DrinkModel).where(DrinkModel.id.in_(drink_ids))
-        # stmt = stmt.where(DrinkModel.id.in_(drink_ids))
+        stmt = stmt.where(DrinkModel.id.in_(drink_ids))
         result = await session.execute(stmt)
 
         # Превращаем в словари
