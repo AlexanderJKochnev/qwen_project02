@@ -31,8 +31,6 @@ class WordHashRouter(BaseRouter):
             session_factory=DatabaseManager.session_maker
     ) -> dict:
         """Запускает полный пересчет всех хэшей в фоне"""
-        await WordHashService.rebuild_all_hashes(
-            background_tasks=background_tasks,
-            session_factory=session_factory
-        )
+        # await WordHashService.rebuild_all_hashes(background_tasks=background_tasks, session_factory=session_factory)
+        await WordHashService._run_rebuild_stream(session_factory, background_tasks=background_tasks)
         return {"status": "queued", "message": "Пересчет хэшей запущен"}
