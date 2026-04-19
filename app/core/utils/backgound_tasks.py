@@ -39,6 +39,7 @@ def background_unique(func: Callable) -> Callable:
     async def wrapper(*args, **kwargs):
         background_tasks = kwargs.pop('background_tasks')
         lock = _locks.setdefault(func.__name__, asyncio.Lock())
+        logger.warning(func.__name__)
 
         async def task_with_lock():
             async with lock:
