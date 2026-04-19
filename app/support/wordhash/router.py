@@ -26,9 +26,8 @@ class WordHashRouter(BaseRouter):
                                   openapi_extra={'x-request-schema': None})
         super().setup_routes()
 
-    async def rebuild_wordhash(self, background_tasks: BackgroundTasks, session_factory=DatabaseManager.session_maker
-    ) -> dict:
+    async def rebuild_wordhash(self, background_tasks: BackgroundTasks):
         """Запускает полный пересчет всех хэшей в фоне"""
-        await WordHashService.rebuild_all_hashes(background_tasks, session_factory)
+        await WordHashService.rebuild_all_hashes(background_tasks, DatabaseManager.session_maker)
         # await WordHashService._run_rebuild_stream(session_factory=session_factory, background_tasks=background_tasks)
         return {"status": "queued", "message": "Пересчет хэшей запущен"}
