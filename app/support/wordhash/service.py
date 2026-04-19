@@ -16,11 +16,11 @@ class WordHashService(Service):
     @classmethod
     async def rebuild_all_hashes(cls, background_tasks):
         """Точка входа - запуск пересчета"""
-        return await cls._run_rebuild_stream(background_tasks)
+        return await cls._run_rebuild_stream(background_tasks=background_tasks)
 
     @classmethod
     @background_unique
-    async def _run_rebuild_stream(cls, background_tasks):
+    async def _run_rebuild_stream(cls):
         """Фоновая задача пересчета через stream"""
         async with DatabaseManager.session_maker() as session:
             try:
