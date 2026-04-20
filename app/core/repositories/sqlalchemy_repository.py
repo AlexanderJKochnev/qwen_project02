@@ -4,33 +4,32 @@
     get_all     result.mappings().all()
     get_by_id   result.scalar_one_or_none()
 """
-import asyncio
 from abc import ABCMeta
-from re import search as research
 from datetime import datetime
-from loguru import logger
+from re import search as research
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
-from sqlalchemy import and_, func, Row, RowMapping, select, Select, update, desc, cast, Text, text, literal, \
-    literal_column, or_
+
+from loguru import logger
+from sqlalchemy import and_, cast, desc, func, inspect, literal, literal_column, or_, Row, RowMapping, select, Select, \
+    Text, text, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
-from sqlalchemy import inspect
-from sqlalchemy.orm import load_only, aliased
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import aliased, load_only
 from sqlalchemy.sql.elements import Label
-from app.core.utils.backgound_tasks import background
-from app.core.hash_norm import get_hashes_for_item, get_word_hashes_dict
-from app.core.models.base_model import get_model_by_name
+
+from app.core.config.project_config import settings
 from app.core.exceptions import AppBaseException
+from app.core.hash_norm import get_word_hashes_dict
+from app.core.models.base_model import get_model_by_name
+from app.core.repositories.repo_background_tasks import Background
+from app.core.types import ModelType
 # from sqlalchemy.dialects import postgresql
 # from sqlalchemy.sql.elements import ColumnElement
-from app.core.utils.alchemy_utils import (create_enum_conditions, get_sqlalchemy_fields,
-                                          create_search_conditions2, get_field_list)
-from app.core.repositories.repo_background_tasks import Background
+from app.core.utils.alchemy_utils import (create_enum_conditions, create_search_conditions2, get_field_list)
+from app.core.utils.backgound_tasks import background
 from app.core.utils.reindexation import extract_text_ultra_fast
 from app.service_registry import register_repo
-from app.core.types import ModelType
-from app.core.config.project_config import settings
 
 # длина списка поисковой выдачи
 search_site = min(settings.PAGE_DEFAULT, 20)
@@ -573,8 +572,6 @@ class Repository(Background, metaclass=RepositoryMeta):
         #         .order_by(model.id.asc()))
         result = await cls.pagination(stmt, skip, limit, session)
         return result
-
-
 
     @classmethod
     async def get_list(cls, model: ModelType, session: AsyncSession, ) -> List[Dict]:
