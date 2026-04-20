@@ -13,7 +13,7 @@ export const HandbookList = () => {
     { id: 'sweetness', name: 'Sweetness', endpoint: '/sweetness/all' },
     { id: 'superfoods', name: 'Superfoods', endpoint: '/superfoods/all' },
     { id: 'foods', name: 'Foods', endpoint: '/foods/all' },
-    { id: 'varietals', name: 'Varietals', endpoint: '/varietals/all' }
+    { id: 'varietals', name: 'Varietals', endpoint: '/varietals/all' },
     { id: 'parcels', name: 'Parcels', endpoint: '/parcels/all' }
   ]);
 
