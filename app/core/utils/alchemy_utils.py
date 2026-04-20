@@ -889,14 +889,15 @@ def get_multilang(obj: dict, base_key: str, languages: Union[list, tuple, set]) 
     """
         выбор перевода: сначала текущий lang, потом остальные из кортежа
     """
-    logger.warning(f'get_multilang {languages=} {base_key=}')
     if not obj:
         return ""
     # Пробегаем по списку альтернатив
     for lng in languages:
         val = obj.get(f"{base_key}{lng}")
         logger.warning(f"{base_key}{lng}: {val}")
-        return val
+        if val:
+            return val
+    # logger.warning(f"{base_key}{lng}: ")
     return ""
 
 
