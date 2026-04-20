@@ -1023,7 +1023,11 @@ def transform_api_list_view(source: dict, def_lang: str, languages: Union[List, 
         "changed_at": source.get("updated_at"),
         "category": category,  # camel_to_enum(cat.get('name')),
         "country": camel_to_enum(country.get("name"))}
-    main = {key: val for key, val in main.items() if val}
+    keys = ("id", "vol", "image_id", "changed_at", "category", "country")
+    vals = (source.get("id"), vol, source.get("image_id"), source.get("updated_at"), category, camel_to_enum(
+            country.get("name")))
+    main = {key: val for key, val in zip(keys, vals) if val}
+    # main = {key: val for key, val in main.items() if val}
 
     for lang in languages:
         des = get_multilang(designation, "name", languages)
@@ -1046,8 +1050,14 @@ def transform_api_list_view(source: dict, def_lang: str, languages: Union[List, 
             f'{get_multilang(prod, "name", languages)}'.strip() if prod else None,
             "type": f'{get_multilang(subcat, "name", languages)}' if subcat else None,
         }
+        
         lng = def_lang if lang == '' else lang[1:]
         main[lng] = tmp
+        # ---------- TBS -----------
+        from app.core.utils.common_utils import jprint
+        from loguru import logger
+        jprint(main)
+        logger.warning('==================item is here==============')  # -----------TBS ENDS --------
     return main
 
 

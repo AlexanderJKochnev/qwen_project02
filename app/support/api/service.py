@@ -153,12 +153,6 @@ class ApiService(ItemService):
         if not item_instance:
             return None
         item: dict = inst_dict(item_instance)
-        # ---------- TBS -----------
-        from app.core.utils.common_utils import jprint
-        from loguru import logger
-        jprint(item)
-        logger.warning('==================item is here==============')
-        # -----------TBS ENDS --------
         # result: dict = cls.__api_view__(item)
         result: dict = transform_api_list_view(item, def_lang, lang_prefixes)
         return result
