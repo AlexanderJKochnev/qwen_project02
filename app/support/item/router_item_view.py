@@ -18,7 +18,6 @@ from app.support.item.schemas import ItemDetailView, ItemListView, ItemReadPreac
 from app.support.item.service import ItemService
 
 
-
 class ItemViewRouter:
     def __init__(self, prefix: str = '/items_view', tags: List[str] = None):
         from fastapi import APIRouter
@@ -167,6 +166,10 @@ class ItemViewRouter:
             raise HTTPException(status_code=404, detail=f"Item with id {id} not found")
         # Create ItemDetailView instance
         # result = ItemDetailView.validate(item)
+        from app.core.utils.common_utils import jprint
+        from loguru import logger
+        jprint(item)
+        logger.warning('item is here')
         return item
 
     async def search_by_drink_title_subtitle_paginated(self,
