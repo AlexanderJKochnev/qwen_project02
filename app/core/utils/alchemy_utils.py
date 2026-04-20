@@ -885,18 +885,17 @@ def level_up(source: dict, key: str, rename: Set[str] = ['id']) -> dict:
     return source
 
 
-def get_multilang(obj: dict, base_key: str, languages: tuple) -> str:
-    """ Умный выбор перевода: сначала текущий lang, потом остальные из кортежа, потом база. """
+def get_multilang(obj: dict, base_key: str, languages: Union[list, tuple, set]) -> str:
+    """
+        выбор перевода: сначала текущий lang, потом остальные из кортежа
+    """
     if not obj:
-        return ""
+        return None
     # Пробегаем по списку альтернатив
     for lng in languages:
-        val = obj.get(f"{base_key}{lng}", "")
-        val = val if val else ""
+        val = obj.get(f"{base_key}{lng}")
         return val
-    base_val = obj.get(base_key, "")
-    base_val = base_val if base_val else ""
-    return base_val
+    return None
 
 
 def transform(source: dict, lang: str, languages: Union[List, Tuple]) -> dict:
