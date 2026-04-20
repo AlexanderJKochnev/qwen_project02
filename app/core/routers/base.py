@@ -477,7 +477,7 @@ class BaseRouter:
             input_valudation_chema None
             response_model PaginatedResponse[<>ReadRelation>]
         """
-        response = await self.service.get_list_view_page(page, page_size, self.repo, self.model, session, lanf)
+        response = await self.service.get_list_view_page(page, page_size, self.repo, self.model, session, lang)
         if response is None:
             raise HTTPException(status_code=404, detail=f'Запрашиваемые данные не найдены на сервере')
         return orresponse(response)
