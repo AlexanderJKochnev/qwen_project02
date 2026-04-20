@@ -36,7 +36,7 @@ class HandbookRouterPage(PreactRouter):
         repo = self.get_repo(model)
         service = self.get_service(model)
         # print(f'{route.response_model=}, {repo=}')
-        rows = await service.get_list_view_page(lang, page, page_size, repo, model, session)
+        rows = await service.get_list_view_page(page, page_size, repo, model, session, lang)
         content = orjson.dumps(rows)
         return Response(content=content, media_type="application/json")
         # return rows
