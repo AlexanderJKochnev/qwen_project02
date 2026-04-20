@@ -13,6 +13,7 @@ from app.preact.core.router import PreactRouter
 from app.core.config.database.db_async import get_db
 from app.core.utils.pydantic_utils import get_pyschema
 from app.core.utils.exception_handler import ValidationError_handler
+from app.core.utils.pydantic_utils import orresponse
 
 
 class ReadRouter(PreactRouter):
@@ -41,9 +42,9 @@ class ReadRouter(PreactRouter):
             repo = self.get_repo(model)
             service = self.get_service(model)
             obj = await service.get_by_id(id, repo, model, session)
-            result_dict = obj.to_dict()
+            result_dict = obj
             # translated_dict = await translation(result_dict)
-            return result_dict
+            return orresponse(result_dict)
         except ValidationError as exc:
             ValidationError_handler(exc)
         except Exception as exc:
