@@ -166,8 +166,8 @@ class ItemViewRouter:
         if not item:
             raise HTTPException(status_code=404, detail=f"Item with id {id} not found")
         # Create ItemDetailView instance
-        result = ItemDetailView.validate(item)
-        return result
+        # result = ItemDetailView.validate(item)
+        return item
 
     async def search_by_drink_title_subtitle_paginated(self,
                                                        lang: str = Path(..., description="Язык локализации"),
