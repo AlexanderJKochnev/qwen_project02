@@ -223,6 +223,7 @@ class ItemRouter(BaseRouter):
         Обновляет или создает Drink в зависимости от drink_action
         """
         try:
+            logger.warning('update_item_drink =============================')
             data_dict = json.loads(data)
             # drink_action = data_dict.get('drink_action')
             item_drink_data = ItemUpdatePreact(**data_dict)
