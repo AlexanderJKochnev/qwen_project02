@@ -135,6 +135,7 @@ class Background:
         for rel in mapper.relationships:
             logger.warning(f'{rel.mapper.class_.__name__.lower()} == {part_lower=}')
             if rel.mapper.class_.__name__.lower() == part_lower:
+                logger.warning(f'{rel.key} MATCH')
                 return rel.key
         return None
 
