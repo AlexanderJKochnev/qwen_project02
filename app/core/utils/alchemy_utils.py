@@ -973,8 +973,12 @@ def transform_list_view(source: dict, lang: str, languages: Union[List, Tuple]) 
     reg = subreg.get("region") or {}
     country = reg.get("country") or {}
     keys = ("id", "vol", "image_id", "title", "category", "country")
-    values = (source.get("id"), source.get("vol"), source.get("image_id"),
-              get_multilang(d, "title", languages), get_multilang(country, "name", languages))
+    values = (source.get("id"),
+              source.get("vol"),
+              source.get("image_id"),
+              get_multilang(d, "title", languages),
+              get_multilang(cat, "name", languages),
+              get_multilang(country, "name", languages))
     return {key: val for key, val in zip(keys, values) if val}
     """return {
         "id": source.get("id"),
