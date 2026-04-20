@@ -137,9 +137,9 @@ class BaseRouter:
                                   methods=["GET"],
                                   # response_model=self.nonpaginated_response,
                                   openapi_extra={'x-request-schema': None})
-        # get full
-        self.router.add_api_route("/full_page",
-                                  self.get_full_with_pagination,
+        # get list view
+        self.router.add_api_route("/list_view",
+                                  self.get_list_view_page,
                                   methods=["GET"],
                                   openapi_extra={'x-request-schema': None})
         self.router.add_api_route("/search_by_hash",
