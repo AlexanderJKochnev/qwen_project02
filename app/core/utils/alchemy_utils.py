@@ -1032,8 +1032,8 @@ def transform_api_list_view(source: dict, def_lang: str, languages: Union[List, 
     main = {key: val for key, val in zip(keys, vals) if val}
     lang_keys = ("alc", "vol", "title", "subtitle", "desription", "region", "recommendation",
                  "madeof", "producer", "type", "varietal", "pairing")
-    languages1 = languages
     for n, lang in enumerate(languages):
+        languages1 = languages
         languages1.pop(n)
         languages1.insert(0, lang)
         logger.success(f'{n=}, {lang=}, {languages1=}')
