@@ -27,7 +27,7 @@ class Parcel(BaseFull):
     )
 
 
-# @registers_search_update("drink.item")
+@registers_search_update("drink.item")
 class Site(BaseFullFree):
     """
     виноградник в subregion
