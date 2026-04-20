@@ -1016,6 +1016,7 @@ def transform_api_list_view(source: dict, def_lang: str, languages: Union[List, 
         alc = None
     vol = source.get('vol', None)
 
+    """
     main = {
         "id": source.get("id"),
         "vol": vol,
@@ -1023,16 +1024,34 @@ def transform_api_list_view(source: dict, def_lang: str, languages: Union[List, 
         "changed_at": source.get("updated_at"),
         "category": category,  # camel_to_enum(cat.get('name')),
         "country": camel_to_enum(country.get("name"))}
+    """
     keys = ("id", "vol", "image_id", "changed_at", "category", "country")
     vals = (source.get("id"), vol, source.get("image_id"), source.get("updated_at"), category, camel_to_enum(
             country.get("name")))
     main = {key: val for key, val in zip(keys, vals) if val}
-    # main = {key: val for key, val in main.items() if val}
-
+    lang_keys = ("alc", "vol", "title", "subtitle", "desription", "region", "recommendation",
+                 "madeof", "producer", "type", "varietal", "pairing")
     for lang in languages:
         des = get_multilang(designation, "name", languages)
         if not des:
             des = ''
+        lang_vals = (alc, vol,
+                     f'{get_multilang(d, "title", languages).replace(des or "", "").replace(anno or "", "")} '
+                     f'{anno or ""} {des or ""}'.strip(), get_multilang(d, "subtitle", languages),
+                     get_multilang(d, "description", languages),
+                     f'{get_multilang(reg, "name", languages)}. '
+                     f'{get_multilang(subreg, "name", languages)}. '
+                     f'{get_multilang(site, "name", languages)}'.strip(),
+                     get_multilang(d, "recommendation", languages), get_multilang(d, "madeof", languages),
+                     f'{get_multilang(prod.get('producertitle'), "name", languages)} '
+                     f'{get_multilang(prod, "name", languages)}'.strip() if prod else None,
+                     f'{get_multilang(subcat, "name", languages)}' if subcat else None,
+                     [f"{get_multilang(va.get('varietal', {}), 'name', languages)} {va.get('percentage', 0)} %"
+                      for va in d.get("varietal_associations", [])],
+                     [get_multilang(fa.get("food", {}), "name", languages) for fa in d.get("food_associations", [])]
+                     )
+        tmp = {key: val for key, val in zip(lang_keys, lang_vals) if val}
+        """
         tmp = {
             "alc": alc,
             "vol": vol,
@@ -1050,7 +1069,8 @@ def transform_api_list_view(source: dict, def_lang: str, languages: Union[List, 
             f'{get_multilang(prod, "name", languages)}'.strip() if prod else None,
             "type": f'{get_multilang(subcat, "name", languages)}' if subcat else None,
         }
-        
+        """
+
         lng = def_lang if lang == '' else lang[1:]
         main[lng] = tmp
         # ---------- TBS -----------
