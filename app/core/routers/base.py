@@ -462,6 +462,27 @@ class BaseRouter:
                                                    limit, boost, penalty)
         return orresponse(result)
 
+    async def get_list_view_page(
+        self,
+            lang: str = Query('en', description='язык для вывода данных'),
+            page: int = Query(1, ge=1),
+            page_size: int = Query(paging.get('def', 20),
+                                   ge=paging.get('min', 1),
+                                   le=paging.get('max', 1000)),
+            session: AsyncSession = Depends(get_db)
+    ):
+        """
+            Получение постранично всех записей после заданной даты.
+            По умолчанию задана дата - 2 года от сейчас
+            input_valudation_chema None
+            response_model PaginatedResponse[<>ReadRelation>]
+        """
+        response = await self.service.get_list_view_page(page, page_size, self.repo, self.model, session, lanf)
+        if response is None:
+            raise HTTPException(status_code=404, detail=f'Запрашиваемые данные не найдены на сервере')
+        return orresponse(response)
+        # return response
+
 
 class LightRouter:
     """
