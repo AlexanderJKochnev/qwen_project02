@@ -14,7 +14,8 @@ export const HandbookList = () => {
     { id: 'superfoods', name: 'Superfoods', endpoint: '/superfoods/all' },
     { id: 'foods', name: 'Foods', endpoint: '/foods/all' },
     { id: 'varietals', name: 'Varietals', endpoint: '/varietals/all' },
-    { id: 'parcels', name: 'Parcel', endpoint: '/parcels/all' }
+    { id: 'parcels', name: 'Parcel', endpoint: '/parcels/all' },
+    { id: 'sites', name: 'Site', endpoint: '/sites/all' }
   ]);
 
   return (

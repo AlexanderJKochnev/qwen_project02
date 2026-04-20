@@ -40,6 +40,7 @@ export const HandbookDetail = () => {
       'foods': `/get/foods/${language}/${id}`,
       'varietals': `/get/varietals/${language}/${id}`,
       'parcels': `/get/parcels/${language}/${id}`,
+      'sites': `/get/sites/${language}/${id}`,
     };
     return endpoints[type] || `/get/${type}/${language}/${id}`;
   };
@@ -100,6 +101,7 @@ export const HandbookDetail = () => {
       'foods': 'Food',
       'varietals': 'Varietal',
       'parcels': 'Parcel',
+      'sites': 'Site',
     };
     return names[type] || type.charAt(0).toUpperCase() + type.slice(1);
   };
