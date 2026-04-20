@@ -1023,11 +1023,13 @@ def transform_api_list_view(source: dict, def_lang: str, languages: Union[List, 
         "changed_at": source.get("updated_at"),
         "category": category,  # camel_to_enum(cat.get('name')),
         "country": camel_to_enum(country.get("name"))}
+    main = {key: val for key, val in main.items() if val}
+
     for lang in languages:
         des = get_multilang(designation, "name", languages)
         if not des:
             des = ''
-        tmp = ({
+        tmp = {
             "alc": alc,
             "vol": vol,
             "title": f'{get_multilang(d, "title", languages).replace(des or "", "").replace(anno or "", "")} '
@@ -1043,7 +1045,7 @@ def transform_api_list_view(source: dict, def_lang: str, languages: Union[List, 
             "producer": f'{get_multilang(prod.get('producertitle'), "name", languages)} '
             f'{get_multilang(prod, "name", languages)}'.strip() if prod else None,
             "type": f'{get_multilang(subcat, "name", languages)}' if subcat else None,
-        })
+        }
         lng = def_lang if lang == '' else lang[1:]
         main[lng] = tmp
     return main
