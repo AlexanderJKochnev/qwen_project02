@@ -918,8 +918,26 @@ def transform(source: dict, lang: str, languages: Union[List, Tuple]) -> dict:
         alc = f"{alcv}"
     else:
         alc = None
-
-    return {
+    keys = ("id", "vol", "count", "image_id", "alc", "title", "subtitle", "description", "country", "region", "subregion",
+            "site", "category", "subcategory", "varietal", "pairing", "source", "first_vintage", "last_vintage", "display_name",
+            "producer", "anno", "classification", "vintageconfig", "designation")
+    values = (source.get("id"), source.get("vol"), source.get("count"), source.get("image_id"), alc,
+              get_multilang(d, "title", languages), get_multilang(d, "subtitle", languages),
+              get_multilang(d, "description", languages), get_multilang(country, "name", languages),
+              get_multilang(reg, "name", languages), get_multilang(subreg, "name", languages),
+              get_multilang(site, "name", languages), get_multilang(cat, "name", languages),
+              get_multilang(subcat, "name", languages),
+              [f"{get_multilang(va.get('varietal', {}), 'name', languages)} {va.get('percentage', 0)} %" for va in
+               d.get("varietal_associations", [])],
+              [get_multilang(fa.get("food", {}), "name", languages) for fa in d.get("food_associations", [])],
+              d.get("source", {}).get("name"), d.get("first_vintage"), d.get("last_vintage"), d.get("display_name"),
+              f'{get_multilang(prod.get('producertitle'), "name", languages)} '
+              f'{get_multilang(prod, "name", languages)}'.strip() if prod else None,
+              d.get("anno"), get_multilang(classification, "name", languages),
+              get_multilang(vintageconfig, "name", languages),
+              get_multilang(designation, "name", languages))
+    return {key: val for key, val in zip(keys, values) if val}
+    """return {
         "id": source.get("id"),
         "vol": source.get("vol"),
         "count": source.get("count"),
@@ -959,7 +977,7 @@ def transform(source: dict, lang: str, languages: Union[List, Tuple]) -> dict:
         "classification": get_multilang(classification, "name", languages),
         "vintageconfig": get_multilang(vintageconfig, "name", languages),
         "designation": get_multilang(designation, "name", languages),
-    }
+    }"""
 
 
 def transform_list_view(source: dict, lang: str, languages: Union[List, Tuple]) -> dict:
@@ -1054,10 +1072,6 @@ def transform_api_list_view(source: dict, def_lang: str, languages: Union[List, 
         tmp = {key: val for key, val in zip(lang_keys, lang_vals) if val}
         lng = def_lang if lang == '' else lang[1:]
         main[lng] = tmp
-    # ---------- TBS -----------
-    from app.core.utils.common_utils import jprint
-    jprint(main)
-    logger.warning('==================item is here==============')  # -----------TBS ENDS --------
     return main
 
 
