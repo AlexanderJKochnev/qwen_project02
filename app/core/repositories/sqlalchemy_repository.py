@@ -558,7 +558,7 @@ class Repository(Background, metaclass=RepositoryMeta):
     @classmethod
     async def get_list_paging(cls, skip: int, limit: int,
                               model: ModelType, session: AsyncSession, ) -> Tuple[List[Dict], int]:
-        """Запрос с загрузкой связей и пагинацией - ListView плиткой ? не используется?"""
+        """Запрос с загрузкой связей и пагинацией - ListView плиткой ? используется?"""
         stmt = cls.get_short_query(model).offset(skip).limit(limit)
         fields = get_sqlalchemy_fields(stmt, exclude_list=['description*',])
         stmt = select(*fields)

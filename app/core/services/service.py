@@ -341,12 +341,12 @@ class Service(metaclass=ServiceMeta):
         return list_dict(result)
 
     @classmethod
-    async def get_list_view_page(cls, lang: str, page: int, page_size: int,
-                                 repository: Type[Repository], model: ModelType, session: AsyncSession,
+    async def get_list_view_page(cls, page: int, page_size: int,
+                                 repository: Type[Repository], model: ModelType, session: AsyncSession, lang: str
                                  ) -> Dict[str, Any]:
         # Запрос с загрузкой связей и пагинацией
         skip = (page - 1) * page_size
-        items, total = await repository.get_list_view_page(skip, page_size, model, session)
+        items, total = await repository.get_list_paging(skip, page_size, model, session)
 
         list_fields = ['name']
         result = [flatten_dict_with_localized_fields(obj.to_dict_fast(), list_fields, lang) for obj in items]

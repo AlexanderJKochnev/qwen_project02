@@ -79,7 +79,7 @@ class ItemRouter(BaseRouter):
                                       page: int = Query(1, ge=1, description="Номер страницы"),
                                       page_size: int = Query(20, ge=1, le=100, description="Размер страницы"),
                                       session: AsyncSession = Depends(get_db)):
-        """Получить список элементов с пагинацией и локализацией"""
+        """Получить список элементов с пагинацией и локализацией - нигде не вызывется"""
 
         result = await self.service.get_list_view_page(lang, page, page_size, ItemRepository, Item, session)
         return result
