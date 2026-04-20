@@ -560,14 +560,21 @@ class Repository(Background, metaclass=RepositoryMeta):
                               model: ModelType, session: AsyncSession, ) -> Tuple[List[Dict], int]:
         """Запрос с загрузкой связей и пагинацией - ListView плиткой ? используется?"""
         stmt = cls.get_short_query(model).offset(skip).limit(limit)
-        fields = get_sqlalchemy_fields(stmt, exclude_list=['description*',])
-        stmt = select(*fields)
+        # fields = get_sqlalchemy_fields(stmt, exclude_list=['description*',])
+        # stmt = select(*fields)
 
         # получение результата всех записей
-        total = cls.get_all_count(model, session)
-        result = await session.execute(stmt)
-        rows: List[Dict] = result.mappings().all()
-        return rows, total
+        # total = cls.get_all_count(model, session)
+        # result = await session.execute(stmt)
+        # rows: List[Dict] = result.mappings().all()
+        # return rows, total
+        stmt = stmt.order_by(model.id.asc())
+        # stmt = (cls.get_query(model).where(model.updated_at > after_date)
+        #         .order_by(model.id.asc()))
+        result = await cls.pagination(stmt, skip, limit, session)
+        return result
+
+
 
     @classmethod
     async def get_list(cls, model: ModelType, session: AsyncSession, ) -> List[Dict]:
