@@ -216,8 +216,9 @@ class ItemService(Service):
         # ---------- TBS -----------
         from app.core.utils.common_utils import jprint
         from loguru import logger
+        jprint(item_instance.to_dict())
+        logger.warning('==================item is here==============')
         jprint(item)
-        logger.warning('item is here')
         # -----------TBS ENDS --------
         if not item:    # если ничего нет
             return None
