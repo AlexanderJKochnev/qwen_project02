@@ -658,7 +658,6 @@ class JsonConverter():
                         k3, k2 = k2, k2.lower()
                         self.data[key][k2] = self.data[key].pop(k3)
                     if v2:
-                        """ """
                         v2 = self.field_processing(k2, v2)
                         if k2 in ['region', 'region_ru']:
                             if ',' in v2:
