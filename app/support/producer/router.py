@@ -15,7 +15,7 @@ class ProducerRouter(BaseRouter):
     def __init__(self):
         super().__init__(
             model=Producer,
-            prefix="/producer",
+            prefix="/producers",
         )
 
     async def create(self, data: ProducerCreate,
@@ -36,7 +36,7 @@ class ProducerTitleRouter(BaseRouter):
     def __init__(self):
         super().__init__(
             model=ProducerTitle,
-            prefix="/producer_title",
+            prefix="/producertitles",
         )
 
     async def create(self, data: ProducerTitleCreate,
