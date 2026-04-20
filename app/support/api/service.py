@@ -83,7 +83,8 @@ class ApiService(ItemService):
                         region = subregion.get('region')
                         lf = localized_field_with_replacement(region, 'name', lang_suff, 'region')
                         lt = localized_field_with_replacement(subregion, 'name', lang_suff, 'subregion')
-                        lf['region'] = f"{lf['region']}. {lt['subregion']}".replace('None', '').replace('..', '.').strip()
+                        lf['region'] = f"{lf['region']}. {lt['subregion']}".replace(
+                            'None', '').replace('..', '.').strip()
                     elif k == 'type':  # subcategory for other
                         if subcategory := item.get('subcategory'):
                             if ((category := subcategory.get('category')) and
@@ -152,6 +153,12 @@ class ApiService(ItemService):
         if not item_instance:
             return None
         item: dict = inst_dict(item_instance)
+        # ---------- TBS -----------
+        from app.core.utils.common_utils import jprint
+        from loguru import logger
+        jprint(item)
+        logger.warning('==================item is here==============')
+        # -----------TBS ENDS --------
         # result: dict = cls.__api_view__(item)
         result: dict = transform_api_list_view(item, def_lang, lang_prefixes)
         return result
