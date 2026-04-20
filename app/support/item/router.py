@@ -81,7 +81,7 @@ class ItemRouter(BaseRouter):
                                       session: AsyncSession = Depends(get_db)):
         """Получить список элементов с пагинацией и локализацией"""
 
-        result = await self.service.get_list_view_page(page, page_size, ItemRepository, Item, session)
+        result = await self.service.get_list_view_page(lang, page, page_size, ItemRepository, Item, session)
         return result
 
     async def get_detail_view(self, lang: str = Path(..., description="Язык локализации"),
