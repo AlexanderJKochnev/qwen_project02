@@ -26,6 +26,7 @@ from app.preact.get.router import GetRouter
 from app.preact.read.router import ReadRouter
 from app.preact.delete.router import DeleteRouter
 from app.preact.handbook.router import HandbookRouter
+from app.preact.handbook_page.router import HandbookRouterPage
 from app.preact.patch.router import PatchRouter
 from app.support.api.router import ApiRouter
 # from app.support.clickhouse.service import EmbeddingService
@@ -184,6 +185,7 @@ app.include_router(OllamaRouter().router)
 app.include_router(VllmRouter().router)
 app.include_router(MongoRouter)
 app.include_router(HandbookRouter().router)
+app.include_router(HandbookRouterPage().router)
 app.include_router(CreateRouter().router)
 app.include_router(GetRouter().router)
 app.include_router(ReadRouter().router)
