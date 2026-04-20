@@ -1,0 +1,3 @@
+## REMEMBER IT!
+
+# Контракты выходных данных формируются в app.core.utils.alchemy_utils.py в методах transform...
