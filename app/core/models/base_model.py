@@ -170,8 +170,8 @@ class Base(AsyncAttrs, DeclarativeBase):
 
     def to_dict_fast(self, exclude=None, skip_empty=True):
         """
-            Быстрая версия с пропуском пустых значений
-            exlude - список  полей которые долджны быть исключены из вывода
+        Быстрая версия с пропуском пустых значений
+        exclude - список полей которые должны быть исключены из вывода
         """
         if exclude is None:
             exclude = set()
@@ -208,28 +208,56 @@ class Base(AsyncAttrs, DeclarativeBase):
 
         # Связи
         for key in cls._fast_cols['rels']:
-            if key in exclude or key not in loaded:
+            if key in exclude:
                 continue
+
+            # Проверяем наличие значения в loaded
+            if key not in loaded:
+                continue
+
             value = loaded[key]
 
-            # Проверяем пустоту для связей
-            if skip_empty:
-                if value is None:
-                    continue
-                if isinstance(value, list) and not value:
-                    continue
-
+            # Обработка None значения
             if value is None:
                 if not skip_empty:
                     result[key] = None
+                continue
+
+            # Обработка списка объектов
+            if isinstance(value, list):
+                converted_list = []
+                for item in value:
+                    if hasattr(item, 'to_dict_fast'):
+                        converted_item = item.to_dict_fast(exclude, skip_empty)
+                        # Добавляем только если converted_item не пустой (при skip_empty=True)
+                        if not skip_empty or converted_item:
+                            converted_list.append(converted_item)
+                    elif hasattr(item, 'to_dict'):
+                        converted_item = item.to_dict()
+                        if not skip_empty or converted_item:
+                            converted_list.append(converted_item)
+                    else:
+                        # Если объект не имеет методов to_dict, пробуем преобразовать напрямую
+                        if not skip_empty or item:
+                            converted_list.append(item)
+
+                # Добавляем результат, если список не пустой (при skip_empty=True)
+                if not skip_empty or converted_list:
+                    result[key] = converted_list
+
+            # Обработка одиночного связанного объекта
             elif hasattr(value, 'to_dict_fast'):
-                if isinstance(value, list):
-                    # Рекурсивно фильтруем элементы списка
-                    converted = [v.to_dict_fast(exclude, skip_empty) for v in value if hasattr(v, 'to_dict_fast')]
-                    if not skip_empty or converted:  # Не добавляем пустые списки
-                        result[key] = converted
-                else:
-                    result[key] = value.to_dict_fast(exclude, skip_empty)
+                converted = value.to_dict_fast(exclude, skip_empty)
+                if not skip_empty or converted:
+                    result[key] = converted
+            elif hasattr(value, 'to_dict'):
+                converted = value.to_dict()
+                if not skip_empty or converted:
+                    result[key] = converted
+            else:
+                # Если объект не имеет методов to_dict, добавляем как есть
+                if not skip_empty or value:
+                    result[key] = value
 
         return result
 
