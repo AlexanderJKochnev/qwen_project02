@@ -101,6 +101,7 @@ class Background:
         stmt = select(target_item.id, target_drink.id).select_from(start_model)
         current = start_model
         path_parts = path_str.split('.')
+        logger.warning(f'{current=}, {path_parts=}')
 
         for part in path_parts:
             # Находим relationship
@@ -108,7 +109,7 @@ class Background:
             rel_key = cls._find_relationship(mapper, part)
 
             if not rel_key:
-                raise AttributeError(f"Связь '{part}' не найдена в {current.__name__}")
+                raise AttributeError(f"Связь {part} не найдена в {current.__name__}")
 
             # Определяем следующий класс
             next_model = getattr(current, rel_key).property.mapper.class_
@@ -132,6 +133,7 @@ class Background:
         """Ищет relationship по имени"""
         part_lower = part_name.lower()
         for rel in mapper.relationships:
+            logger.warning(f'{rel.mapper.class_.__name__.lower()} == {part_lower=}')
             if rel.mapper.class_.__name__.lower() == part_lower:
                 return rel.key
         return None
