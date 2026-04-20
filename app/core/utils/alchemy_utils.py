@@ -1,6 +1,7 @@
 import copy
 import json
 import re
+from loguru import logger  # noqa: F401
 from enum import Enum
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Type, TypeVar, Union, Set
@@ -1031,7 +1032,8 @@ def transform_api_list_view(source: dict, def_lang: str, languages: Union[List, 
     main = {key: val for key, val in zip(keys, vals) if val}
     lang_keys = ("alc", "vol", "title", "subtitle", "desription", "region", "recommendation",
                  "madeof", "producer", "type", "varietal", "pairing")
-    for lang in languages:
+    for n, lang in enumerate(languages):
+        logger.success(f'{n=}, {lang=}, {languages=}')
         des = get_multilang(designation, "name", languages)
         if not des:
             des = ''
@@ -1075,7 +1077,6 @@ def transform_api_list_view(source: dict, def_lang: str, languages: Union[List, 
         main[lng] = tmp
         # ---------- TBS -----------
         from app.core.utils.common_utils import jprint
-        from loguru import logger
         jprint(main)
         logger.warning('==================item is here==============')  # -----------TBS ENDS --------
     return main
