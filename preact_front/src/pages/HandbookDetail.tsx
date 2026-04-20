@@ -41,6 +41,10 @@ export const HandbookDetail = () => {
       'varietals': `/get/varietals/${language}/${id}`,
       'parcels': `/get/parcels/${language}/${id}`,
       'sites': `/get/sites/${language}/${id}`,
+      'producertitles': `/get/producertitles/${language}/${id}`,
+      'vintageconfigs': `/get/vintageconfigs/${language}/${id}`,
+      'designations': `/get/designations/${language}/${id}`,
+      'classifications': `/get/classifications/${language}/${id}`,
     };
     return endpoints[type] || `/get/${type}/${language}/${id}`;
   };
@@ -102,6 +106,10 @@ export const HandbookDetail = () => {
       'varietals': 'Varietal',
       'parcels': 'Parcel',
       'sites': 'Site',
+      'producertitles': 'ProducerTitle',
+      'vintageconfigs': 'VintageConfig',
+      'designations': 'Designation',
+      'classifications': 'Classification'
     };
     return names[type] || type.charAt(0).toUpperCase() + type.slice(1);
   };

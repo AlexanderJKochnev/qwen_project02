@@ -15,7 +15,11 @@ export const HandbookList = () => {
     { id: 'foods', name: 'Foods', endpoint: '/foods/all' },
     { id: 'varietals', name: 'Varietals', endpoint: '/varietals/all' },
     { id: 'parcels', name: 'Parcel', endpoint: '/parcels/all' },
-    { id: 'sites', name: 'Site', endpoint: '/sites/all' }
+    { id: 'sites', name: 'Site', endpoint: '/sites/all' },
+    { id: 'producertitle', name: 'ProducerTitle', endpoint: '/producertitles/all' },
+    { id: 'vintageconfigs', name: 'VintageConfig', endpoint: '/vintageconfigs/all' },
+    { id: 'designations', name: 'Designation', endpoint: '/designations/all' },
+    { id: 'classifications', name: 'Classification', endpoint: '/classifications/all' }
   ]);
 
   return (
