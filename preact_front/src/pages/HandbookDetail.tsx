@@ -39,6 +39,7 @@ export const HandbookDetail = () => {
       'sweetness': `/get/sweetness/${language}/${id}`,
       'foods': `/get/foods/${language}/${id}`,
       'varietals': `/get/varietals/${language}/${id}`,
+      'parcels': `/get/parcels/${language}/${id}`
     };
     return endpoints[type] || `/get/${type}/${language}/${id}`;
   };
@@ -98,6 +99,7 @@ export const HandbookDetail = () => {
       'sweetness': 'Sweetness',
       'foods': 'Food',
       'varietals': 'Varietal',
+      'parcels': 'Parcel'
     };
     return names[type] || type.charAt(0).toUpperCase() + type.slice(1);
   };

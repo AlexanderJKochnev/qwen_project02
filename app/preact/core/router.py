@@ -35,13 +35,13 @@ class PreactRouter:
                        'foods': Food,
                        'sweetness': Sweetness,
                        'varietals': Varietal,
-                       'producer': Producer,
-                       'producertitle': ProducerTitle,
-                       'vintageconfig': VintageConfig,
-                       'designation': Designation,
-                       'classification': Classification,
-                       'site': Site,
-                       'parcel': Parcel
+                       'producers': Producer,
+                       'producertitles': ProducerTitle,
+                       'vintageconfigs': VintageConfig,
+                       'designations': Designation,
+                       'classifications': Classification,
+                       'sites': Site,
+                       'parcels': Parcel
                        }
         self.router = APIRouter(prefix=self.prefix,
                                 tags=self.tags,
