@@ -955,7 +955,7 @@ def transform(source: dict, lang: str, languages: Union[List, Tuple]) -> dict:
         "last_vintage": d.get("last_vintage"),
         "display_name": d.get("display_name"),
         "producer": f'{get_multilang(prod.get('producertitle'), "name", languages)} '
-                    f'{get_multilang(prod, "name", languages)}'.strip() if prod else None,
+        f'{get_multilang(prod, "name", languages)}'.strip() if prod else None,
         "anno": d.get("anno"),
         "classification": get_multilang(classification, "name", languages),
         "vintageconfig": get_multilang(vintageconfig, "name", languages),
@@ -1014,11 +1014,11 @@ def transform_api_list_view(source: dict, def_lang: str, languages: Union[List, 
         alc = f"{alcv}"
     else:
         alc = None
-    vol = d.get('vol', "")
+    vol = source.get('vol', None)
 
     main = {
         "id": source.get("id"),
-        "vol": source.get("vol"),
+        "vol": vol,
         "image_id": source.get("image_id"),
         "changed_at": source.get("updated_at"),
         "category": category,  # camel_to_enum(cat.get('name')),
@@ -1031,17 +1031,17 @@ def transform_api_list_view(source: dict, def_lang: str, languages: Union[List, 
             "alc": alc,
             "vol": vol,
             "title": f'{get_multilang(d, "title", languages).replace(des or "", "").replace(anno or "", "")} '
-                     f'{anno or ""}'
-                     f' {des or ""}'.strip(),
+            f'{anno or ""}'
+            f' {des or ""}'.strip(),
             "subtitle": get_multilang(d, "subtitle", languages),
             "description": get_multilang(d, "description", languages),
             "region": f'{get_multilang(reg, "name", languages)}. '
-                      f'{get_multilang(subreg, "name", languages)}. '
-                      f'{get_multilang(site, "name", languages)}'.strip(),
+            f'{get_multilang(subreg, "name", languages)}. '
+            f'{get_multilang(site, "name", languages)}'.strip(),
             "recommendation": get_multilang(d, "recommendation", languages),
             "madeof": get_multilang(d, "madeof", languages),
             "producer": f'{get_multilang(prod.get('producertitle'), "name", languages)} '
-                        f'{get_multilang(prod, "name", languages)}'.strip() if prod else None,
+            f'{get_multilang(prod, "name", languages)}'.strip() if prod else None,
             "type": f'{get_multilang(subcat, "name", languages)}' if subcat else None,
         })
         lng = def_lang if lang == '' else lang[1:]
