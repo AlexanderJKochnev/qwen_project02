@@ -891,13 +891,10 @@ def get_multilang(obj: dict, base_key: str, languages: Union[list, tuple, set]) 
     """
     if not obj:
         return ""
-    # Пробегаем по списку альтернатив
     for lng in languages:
         val = obj.get(f"{base_key}{lng}")
-        logger.warning(f"{base_key}{lng}: {val}")
         if val:
             return val
-    # logger.warning(f"{base_key}{lng}: ")
     return ""
 
 
@@ -975,8 +972,11 @@ def transform_list_view(source: dict, lang: str, languages: Union[List, Tuple]) 
     subreg = site.get("subregion") or {}
     reg = subreg.get("region") or {}
     country = reg.get("country") or {}
-
-    return {
+    keys = ("id", "vol", "image_id", "title", "category", "country")
+    values = (source.get("id"), source.get("vol"), source.get("image_id"),
+              get_multilang(d, "title", languages), get_multilang(country, "name", languages))
+    return {key: val for key, val in zip(keys, values) if val}
+    """return {
         "id": source.get("id"),
         "vol": source.get("vol"),
         "image_id": source.get("image_id"),
@@ -985,7 +985,7 @@ def transform_list_view(source: dict, lang: str, languages: Union[List, Tuple]) 
         # География и категории
         "category": get_multilang(cat, "name", languages),
         "country": get_multilang(country, "name", languages),
-    }
+    }"""
 
 
 def transform_api_list_view(source: dict, def_lang: str, languages: Union[List, Tuple]) -> dict:
@@ -1018,15 +1018,6 @@ def transform_api_list_view(source: dict, def_lang: str, languages: Union[List, 
         alc = None
     vol = source.get('vol', None)
 
-    """
-    main = {
-        "id": source.get("id"),
-        "vol": vol,
-        "image_id": source.get("image_id"),
-        "changed_at": source.get("updated_at"),
-        "category": category,  # camel_to_enum(cat.get('name')),
-        "country": camel_to_enum(country.get("name"))}
-    """
     keys = ("id", "vol", "image_id", "changed_at", "category", "country")
     vals = (source.get("id"), vol, source.get("image_id"), source.get("updated_at"), category, camel_to_enum(
             country.get("name")))
