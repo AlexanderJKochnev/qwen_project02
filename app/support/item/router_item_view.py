@@ -166,10 +166,6 @@ class ItemViewRouter:
             raise HTTPException(status_code=404, detail=f"Item with id {id} not found")
         # Create ItemDetailView instance
         # result = ItemDetailView.validate(item)
-        from app.core.utils.common_utils import jprint
-        from loguru import logger
-        jprint(item)
-        logger.warning('item is here')
         return item
 
     async def search_by_drink_title_subtitle_paginated(self,

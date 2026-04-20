@@ -213,6 +213,12 @@ class ItemService(Service):
         item_instance = await repository.get_detail_view(id, model, session)
         # item: dict = item_instance.to_dict()
         item: dict = inst_dict(item_instance)
+        # ---------- TBS -----------
+        from app.core.utils.common_utils import jprint
+        from loguru import logger
+        jprint(item)
+        logger.warning('item is here')
+        # -----------TBS ENDS --------
         if not item:    # если ничего нет
             return None
         # задаем порядок замещения пустых полей
