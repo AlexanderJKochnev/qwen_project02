@@ -1032,25 +1032,28 @@ def transform_api_list_view(source: dict, def_lang: str, languages: Union[List, 
     main = {key: val for key, val in zip(keys, vals) if val}
     lang_keys = ("alc", "vol", "title", "subtitle", "desription", "region", "recommendation",
                  "madeof", "producer", "type", "varietal", "pairing")
+    languages1 = languages
     for n, lang in enumerate(languages):
-        logger.success(f'{n=}, {lang=}, {languages=}')
-        des = get_multilang(designation, "name", languages)
+        languages1.pop(n)
+        languages1.insert(0, lang)
+        logger.success(f'{n=}, {lang=}, {languages1=}')
+        des = get_multilang(designation, "name", languages1)
         if not des:
             des = ''
         lang_vals = (alc, vol,
-                     f'{get_multilang(d, "title", languages).replace(des or "", "").replace(anno or "", "")} '
-                     f'{anno or ""} {des or ""}'.strip(), get_multilang(d, "subtitle", languages),
-                     get_multilang(d, "description", languages),
-                     f'{get_multilang(reg, "name", languages)}. '
-                     f'{get_multilang(subreg, "name", languages)}. '
-                     f'{get_multilang(site, "name", languages)}'.strip(),
-                     get_multilang(d, "recommendation", languages), get_multilang(d, "madeof", languages),
-                     f'{get_multilang(prod.get('producertitle'), "name", languages)} '
-                     f'{get_multilang(prod, "name", languages)}'.strip() if prod else None,
-                     f'{get_multilang(subcat, "name", languages)}' if subcat else None,
-                     [f"{get_multilang(va.get('varietal', {}), 'name', languages)} {va.get('percentage', 0)} %"
+                     f'{get_multilang(d, "title", languages1).replace(des or "", "").replace(anno or "", "")} '
+                     f'{anno or ""} {des or ""}'.strip(), get_multilang(d, "subtitle", languages1),
+                     get_multilang(d, "description", languages1),
+                     f'{get_multilang(reg, "name", languages1)}. '
+                     f'{get_multilang(subreg, "name", languages1)}. '
+                     f'{get_multilang(site, "name", languages1)}'.strip(),
+                     get_multilang(d, "recommendation", languages1), get_multilang(d, "madeof", languages1),
+                     f'{get_multilang(prod.get('producertitle'), "name", languages1)} '
+                     f'{get_multilang(prod, "name", languages1)}'.strip() if prod else None,
+                     f'{get_multilang(subcat, "name", languages1)}' if subcat else None,
+                     [f"{get_multilang(va.get('varietal', {}), 'name', languages1)} {va.get('percentage', 0)} %"
                       for va in d.get("varietal_associations", [])],
-                     [get_multilang(fa.get("food", {}), "name", languages) for fa in d.get("food_associations", [])]
+                     [get_multilang(fa.get("food", {}), "name", languages1) for fa in d.get("food_associations", [])]
                      )
         tmp = {key: val for key, val in zip(lang_keys, lang_vals) if val}
         """
@@ -1075,10 +1078,10 @@ def transform_api_list_view(source: dict, def_lang: str, languages: Union[List, 
 
         lng = def_lang if lang == '' else lang[1:]
         main[lng] = tmp
-        # ---------- TBS -----------
-        from app.core.utils.common_utils import jprint
-        jprint(main)
-        logger.warning('==================item is here==============')  # -----------TBS ENDS --------
+    # ---------- TBS -----------
+    from app.core.utils.common_utils import jprint
+    jprint(main)
+    logger.warning('==================item is here==============')  # -----------TBS ENDS --------
     return main
 
 
