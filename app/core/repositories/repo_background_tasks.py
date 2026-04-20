@@ -109,7 +109,9 @@ class Background:
             rel_key = cls._find_relationship(mapper, part)
 
             if not rel_key:
-                raise AttributeError(f"Связь {part} не найдена в {current.__name__}")
+                raise AttributeError(f"Связь {part} не найдена в {current.__name__} "
+                                     f"проверяй аргументы декоратора @registers_search_update над классом модели "
+                                     f"{part} и всех в цепочке до items")
 
             # Определяем следующий класс
             next_model = getattr(current, rel_key).property.mapper.class_
@@ -133,9 +135,7 @@ class Background:
         """Ищет relationship по имени"""
         part_lower = part_name.lower()
         for rel in mapper.relationships:
-            logger.warning(f'{rel.mapper.class_.__name__.lower()} == {part_lower=}')
             if rel.mapper.class_.__name__.lower() == part_lower:
-                logger.warning(f'{rel.key} MATCH')
                 return rel.key
         return None
 

@@ -59,7 +59,23 @@ export const apiClient = async <T,>(endpoint: string, options: ApiOptions = {}, 
       config.body = JSON.stringify(body);
     }
   }
-  
+  // БЛОК ЛОГИРОВАНИЯ - прямо перед fetch
+  console.log('=== API CLIENT DEBUG ===');
+  console.log('API Request URL:', endpoint);
+  console.log('API Request Options:', options);
+
+  // Проверяем, есть ли body и является ли он FormData
+  if (options?.body && options.body instanceof FormData) {
+    console.log('FormData contents:');
+    const formData = options.body as FormData;
+    for (let pair of formData.entries()) {
+      console.log(pair[0], pair[1]);
+    }
+  } else if (options?.body) {
+    console.log('Request body:', options.body);
+  }
+
+  console.log('========================');
   const response = await fetch(url, config);
   
   if (!response.ok) {
