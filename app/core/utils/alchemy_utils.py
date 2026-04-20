@@ -890,12 +890,12 @@ def get_multilang(obj: dict, base_key: str, languages: Union[list, tuple, set]) 
         выбор перевода: сначала текущий lang, потом остальные из кортежа
     """
     if not obj:
-        return None
+        return ""
     # Пробегаем по списку альтернатив
     for lng in languages:
         val = obj.get(f"{base_key}{lng}")
         return val
-    return None
+    return ""
 
 
 def transform(source: dict, lang: str, languages: Union[List, Tuple]) -> dict:
