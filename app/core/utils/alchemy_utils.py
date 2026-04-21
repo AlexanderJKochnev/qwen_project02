@@ -1058,7 +1058,7 @@ def transform_api_list_view(source: dict, def_lang: str, languages: Union[List, 
         languages1 = languages[:]
         languages1.pop(n)
         languages1.insert(0, lang)
-        logger.success(f'{n=}, {lang=}, {languages1=}, {languages=}')
+        # logger.success(f'{n=}, {lang=}, {languages1=}, {languages=}')
         des = get_multilang(designation, "name", languages1)
         if not des:
             des = ''
