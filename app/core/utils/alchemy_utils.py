@@ -1083,10 +1083,6 @@ def transform_api_list_view(source: dict, def_lang: str, languages: Union[List, 
     return main
 
 
-def transfom_handbook_list_view(source: dict, languages: Union[List, Tuple]):
-
-
-
 def api_mapping(cat_dict: dict, subcat_dict: dict) -> tuple:
     """
     RETURN MAPPED CATEGORY & TYPE
