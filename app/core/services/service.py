@@ -357,6 +357,7 @@ class Service(metaclass=ServiceMeta):
         """
         skip = (page - 1) * page_size
         items, total = await repository.search(search, skip, page_size, model, session)
+        logger.warning(f'seacrh {total=} {page=} {page_size=}')
         items = list_dict(items)
         result = make_paginated_response(items, total, page, page_size)
         return result
@@ -381,6 +382,7 @@ class Service(metaclass=ServiceMeta):
         skip = (page - 1) * page_size
         if search:
             items, total = await repository.search(search, skip, page_size, model, session)
+            logger.warning(f'get_list_view_page {total=} {page=} {page_size=}')
         else:
             items, total = await repository.get_list_paging(skip, page_size, model, session)
         list_fields = ['name']
