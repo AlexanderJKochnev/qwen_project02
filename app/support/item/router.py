@@ -14,7 +14,7 @@ from app.mongodb.service import ThumbnailImageService
 from app.support.item.model import Item
 from app.support.item.repository import ItemRepository
 from app.support.item.schemas import (FileUpload, ItemCreate, ItemCreatePreact, ItemCreateRelation,
-                                      ItemCreateResponseSchema, ItemRead, ItemUpdate, ItemUpdatePreact)
+                                      ItemCreateResponseSchema, ItemUpdate, ItemUpdatePreact)
 from app.core.enum import CliSearchMode
 
 paging = get_paging
@@ -27,7 +27,7 @@ class ItemRouter(BaseRouter):
         super().__init__(
             model=Item,
             prefix=prefix,
-            repo=ItemRepository,
+            # repo=ItemRepository,
             auth_dependency=auth_dependency,
             **kwargs
         )
@@ -70,8 +70,8 @@ class ItemRouter(BaseRouter):
     async def get_list_view(self, lang: str = Path(..., description="Язык локализации"),
                             session: AsyncSession = Depends(get_db)):
         """Получить список элементов с локализацией"""
-
-        items = await self.service.get_list_view(lang, ItemRepository, Item, session)
+        items = await self.service.get_list_view(lang, self.repo, self.model, session)
+        # items = await self.service.get_list_view(lang, ItemRepository, Item, session)
         return items
 
     async def get_list_view_paginated(self,
@@ -80,8 +80,8 @@ class ItemRouter(BaseRouter):
                                       page_size: int = Query(20, ge=1, le=100, description="Размер страницы"),
                                       session: AsyncSession = Depends(get_db)):
         """Получить список элементов с пагинацией и локализацией - нигде не вызывется"""
-
-        result = await self.service.get_list_view_page(lang, page, page_size, ItemRepository, Item, session)
+        result = await self.service.get_list_view_page(lang, page, page_size, self.repo, self.model, session)
+        # result = await self.service.get_list_view_page(lang, page, page_size, ItemRepository, Item, session)
         return result
 
     async def get_detail_view(self, lang: str = Path(..., description="Язык локализации"),

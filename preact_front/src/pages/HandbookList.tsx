@@ -1,4 +1,5 @@
 // src/pages/HandbookList.tsx
+// используется для общего списка всех справочников
 import { h, useState } from 'preact/hooks';
 import { Link } from '../components/Link';
 import { apiClient } from '../lib/apiClient';

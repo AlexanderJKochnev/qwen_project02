@@ -22,6 +22,7 @@ from app.core.services.click_service import FullTextSearch
 from app.core.types import ModelType
 from app.core.utils.alchemy_utils import formatted_query, has_column
 from app.core.utils.common_utils import flatten_dict_with_localized_fields, make_paging_dict
+from app.core.utils.converters import lang_sorted
 from app.core.utils.pydantic_utils import (get_data_for_search, get_repo, inst_dict, list_dict, make_paginated_response,
                                            prepare_search_string)
 from app.core.utils.reindexation import reindex_items
@@ -347,11 +348,9 @@ class Service(metaclass=ServiceMeta):
         # Запрос с загрузкой связей и пагинацией
         skip = (page - 1) * page_size
         items, total = await repository.get_list_paging(skip, page_size, model, session)
-
         list_fields = ['name']
         result = [flatten_dict_with_localized_fields(obj.to_dict_fast(), list_fields, lang) for obj in items]
-        items = list_dict(items)
-        result = make_paginated_response(items, total, page, page_size)
+        result = make_paginated_response(result, total, page, page_size)
         return result
 
     @classmethod

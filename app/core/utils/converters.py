@@ -655,15 +655,15 @@ def raw_image_response(result: dict, content: str = 'content', mime: str = "imag
         raise HTTPException(status_code=422, detail=f'error.raw_image_response: {e}')
 
 
-def lang_sorted(lang: str, source: list = []) -> tuple:
+def lang_sorted(lang: str) -> tuple:
     """
+    сортирует списки языков и возвращает список языковых суффиксов где на 1 месте lang
     lang - требуемый язык
     source - список языков
     """
-    source = source or settings.LANGUAGES
+    source = settings.LANGUAGES
     default_lang = settings.DEFAULT_LANG
-    tmp: list = source.copy()
+    tmp: list = source[:]
     tmp.remove(lang)
     tmp.insert(0, lang)
     return tuple('' if lang == default_lang else f'_{lang}' for lang in tmp)
-

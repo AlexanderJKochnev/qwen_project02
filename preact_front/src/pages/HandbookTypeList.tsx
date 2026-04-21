@@ -1,4 +1,5 @@
 // src/pages/HandbookTypeList.tsx
+// используется для отображения содержимого конкретного выбранного справочника
 import { h, useState } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
 import { Link } from '../components/Link';

@@ -888,6 +888,8 @@ def level_up(source: dict, key: str, rename: Set[str] = ['id']) -> dict:
 def get_multilang(obj: dict, base_key: str, languages: Union[list, tuple, set]) -> str:
     """
         выбор перевода: сначала текущий lang, потом остальные из кортежа
+        base_key - имя поля без суффикса
+        languages - список суффиксов языковых
     """
     if not obj:
         return ""
@@ -898,7 +900,10 @@ def get_multilang(obj: dict, base_key: str, languages: Union[list, tuple, set]) 
     return ""
 
 
-def transform(source: dict, lang: str, languages: Union[List, Tuple]) -> dict:
+def transform(source: dict, languages: Union[List, Tuple]) -> dict:
+    """
+         languages - суффиксы языковые отсортированные
+    """
     d = source.get("drink", {})
     subcat = d.get("subcategory", {})
     cat = subcat.get("category", {})
@@ -980,7 +985,10 @@ def transform(source: dict, lang: str, languages: Union[List, Tuple]) -> dict:
     }"""
 
 
-def transform_list_view(source: dict, lang: str, languages: Union[List, Tuple]) -> dict:
+def transform_list_view(source: dict, languages: Union[List, Tuple]) -> dict:
+    """
+        languages - суффиксы языковые отсортированные
+    """
     d = source.get("drink", {})
     subcat = d.get("subcategory", {})
     cat = subcat.get("category", {})
@@ -1073,6 +1081,10 @@ def transform_api_list_view(source: dict, def_lang: str, languages: Union[List, 
         lng = def_lang if lang == '' else lang[1:]
         main[lng] = tmp
     return main
+
+
+def transfom_handbook_list_view(source: dict, languages: Union[List, Tuple]):
+
 
 
 def api_mapping(cat_dict: dict, subcat_dict: dict) -> tuple:

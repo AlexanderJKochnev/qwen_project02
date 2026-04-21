@@ -186,14 +186,8 @@ class ItemService(Service):
         items: List[ModelType] = await repository.get_list_view(model, session, limit)
         items: List[Dict] = list_dict(items)
         language = lang_sorted(lang)
-        result = [transform_list_view(item, lang, tuple(language)) for item in items]
+        result = [transform_list_view(item, tuple(language)) for item in items]
         return result
-        """
-        result = ItemListViewAdapter.validate_python([transform_list_view(item,
-                                                      lang, tuple(language)) for
-                                                      item in items])
-        return result
-        """
 
     @classmethod
     async def get_list_view_page(cls, page: int, page_size: int,
@@ -204,7 +198,7 @@ class ItemService(Service):
         items, total = await repository.get_list_view_page(skip, page_size, model, session)
         items: List[Dict] = list_dict(items)
         language = lang_sorted(lang)
-        result = [transform_list_view(item, lang, tuple(language)) for item in items]
+        result = [transform_list_view(item, tuple(language)) for item in items]
         return make_paginated_response(result, total, page, page_size)
 
     @classmethod
@@ -217,7 +211,7 @@ class ItemService(Service):
             return None
         # задаем порядок замещения пустых полей
         language = lang_sorted(lang)
-        item = transform(item, lang, tuple(language))
+        item = transform(item, tuple(language))
         # список всех локализованных полей приложения
         return item
 
@@ -304,9 +298,7 @@ class ItemService(Service):
                                                                        page_size)
         items = list_dict(items)
         language = lang_sorted(lang)
-        # result = ItemListViewAdapter.validate_python([transform_list_view(item, lang, tuple(language))
-        #                                               for item in items])
-        result = [transform_list_view(item, lang, tuple(language)) for item in items]
+        result = [transform_list_view(item, tuple(language)) for item in items]
         return make_paginated_response(result, total, page, page_size)
 
     @classmethod
@@ -321,7 +313,7 @@ class ItemService(Service):
         skip = (page - 1) * page_size
         items, total = await repository.search_by_trigram_index(search_str, model, session, skip, page_size)
         language = lang_sorted(lang)
-        result = ItemListViewAdapter.validate_python([transform_list_view(item, lang, tuple(language))
+        result = ItemListViewAdapter.validate_python([transform_list_view(item, tuple(language))
                                                       for item in items])
         return make_paginated_response(result, total, page, page_size)
 
@@ -463,7 +455,7 @@ class ItemService(Service):
                 result = []
             else:
                 language = lang_sorted(lang)
-                result = ItemListViewAdapter.validate_python([transform_list_view(item, lang, tuple(language))
+                result = ItemListViewAdapter.validate_python([transform_list_view(item, tuple(language))
                                                               for item in items])
             response = make_paginated_response(result, total, page, page_size)
             return response
@@ -479,10 +471,10 @@ class ItemService(Service):
             # similarity_threshold = similarity_threshold or settings.SIMILARITY_THRESHOLD
             # items: list = await cls.search_geans_all(search, similarity_threshold,
             #                                          repository, model, session)
-            items = await cls.search_fts_all(search, repository, model, session)
+            items: list[dict] = await cls.search_fts_all(search, repository, model, session)
             language = lang_sorted(lang)
             result = ItemListViewAdapter.validate_python(
-                [transform_list_view(item.to_dict(), lang, tuple(language)) for item in items]
+                [transform_list_view(item, tuple(language)) for item in items]
             )
             return result
         except Exception as e:

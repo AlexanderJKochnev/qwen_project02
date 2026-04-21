@@ -268,5 +268,5 @@ class ApiService(ItemService):
                                    limit: int = 20,
                                    penalty: float = 0.1):
         # items = await super().execute_smart_search(query, session, boost, limit)
-        items = await super().search_by_hash(query, Item, ItemRepository, session, limit, boost, penalty)
+        items: List[dict] = await super().search_by_hash(query, Item, ItemRepository, session, limit, boost, penalty)
         return [transform_api_list_view(item, def_lang, lang_prefixes) for item in items]
