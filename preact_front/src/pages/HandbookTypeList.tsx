@@ -3,7 +3,7 @@
 import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { useRoute } from 'preact-iso';
-import { apiClient } from '../lib/apiClient';
+import { apiClient, getCurrentLanguage } from '../lib/apiClient'; // Импортируем getCurrentLanguage
 import { Link } from '../components/Link';
 
 interface HandbookItem {
@@ -23,6 +23,7 @@ interface ApiResponse {
 export const HandbookTypeList = () => {
   const { params } = useRoute();
   const type = params.type;
+  const lang = getCurrentLanguage(); // Получаем 'ru'
 
   const [data, setData] = useState<HandbookItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,8 +47,9 @@ export const HandbookTypeList = () => {
     const loadData = async () => {
       setLoading(true);
       try {
-        // ПРАВИЛЬНЫЙ URL: /handbooks/categories?page=...
-        const queryPath = `/handbooks/${type}?page=${page}&page_size=${pageSize}&search=${encodeURIComponent(appliedSearch)}`;
+        // Формируем URL строго по вашему образцу:
+        // /handbooks_page/categories/ru?page=1&page_size=20&search=win
+        const queryPath = `/handbooks_page/${type}/${lang}?page=${page}&page_size=${pageSize}&search=${encodeURIComponent(appliedSearch)}`;
 
         const response = await apiClient<ApiResponse>(queryPath);
 
@@ -64,7 +66,7 @@ export const HandbookTypeList = () => {
     };
 
     loadData();
-  }, [type, page, appliedSearch]);
+  }, [type, page, appliedSearch, lang]);
 
   const handleSearchClick = () => {
     setPage(1);
@@ -82,7 +84,7 @@ export const HandbookTypeList = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold uppercase">{type}</h1>
-          <p className="text-sm opacity-60">Записей: {total}</p>
+          <p className="text-sm opacity-60">Всего записей: {total}</p>
         </div>
 
         <div className="flex gap-2">
@@ -117,7 +119,7 @@ export const HandbookTypeList = () => {
           </thead>
           <tbody className="divide-y divide-gray-200">
             {loading ? (
-              <tr><td colSpan={3} className="p-10 text-center text-gray-400">Загрузка...</td></tr>
+              <tr><td colSpan={3} className="p-10 text-center text-gray-400">Загрузка данных...</td></tr>
             ) : data.length > 0 ? (
               data.map((item) => (
                 <tr key={item.id} className="hover:bg-gray-50 transition-colors">
@@ -131,7 +133,7 @@ export const HandbookTypeList = () => {
                 </tr>
               ))
             ) : (
-              <tr><td colSpan={3} className="p-10 text-center text-gray-400">Ничего не найдено</td></tr>
+              <tr><td colSpan={3} className="p-10 text-center text-gray-400">Справочник пуст или ничего не найдено</td></tr>
             )}
           </tbody>
         </table>
