@@ -52,6 +52,13 @@ class Repository(Background, metaclass=RepositoryMeta):
     model: ModelType
 
     @classmethod
+    async def get_count(cls, query, session: AsyncSession):
+        """ ПОДСЧЕТ ОБЩЕГО КОЛ-ВА ЗАПИСЕЙ В СЛОЖНЫХ ЗАПРОСАХ (С ФИЛЬТРАМИ)"""
+        return (await session.execute(
+                select(func.count()).select_from(query.subquery())
+                )).scalar()
+
+    @classmethod
     def get_query(cls, model: ModelType) -> Select:
         """
             Переопределяемый метод.
@@ -434,14 +441,6 @@ class Repository(Background, metaclass=RepositoryMeta):
             raise AppBaseException(message=str(e), status_code=404)
 
     @classmethod
-    async def get_count(cls, after_date: datetime, model: ModelType, session: AsyncSession) -> int:
-        """ подсчет количества записей после указанной даты"""
-        count_stmt = select(func.count()).select_from(model).where(model.updated_at > after_date)
-        count_result = await session.execute(count_stmt)
-        total = count_result.scalar()   # ok
-        return total
-
-    @classmethod
     async def get_all_count(cls, model: ModelType, session: AsyncSession) -> int:
         """ колитчество всех записей в таблице DELETE """
         count_stmt = select(func.count()).select_from(model)
@@ -506,17 +505,11 @@ class Repository(Background, metaclass=RepositoryMeta):
             kwargs: dict = {}
             kwargs['search_str'] = search
             query = cls.apply_search_filter(cls.get_query(model), **kwargs)
-            total = (await session.execute(
-                select(func.count()).select_from(query.subquery())
-            )).scalar()
-            # base_stmt = query.statement
-            # count_stmt = select(func.count()).select_from(base_stmt.subquery())
-            # total = 0
-            # общее кол-во записей удовлетворяющих условию
-            # count_stmt = cls.apply_search_filter(select(func.count()).select_from(cls.get_query(model)),
-            #                                      **kwargs)
-            # result = await session.execute(count_stmt)
-            # total = result.scalar()     # ok
+            # ЭТО ОПРЕДЕЛЕНИЕ КОЛИЧЕСТВА ЗАПИСЕЙ
+            # total = (await session.execute(
+            #     select(func.count()).select_from(query.subquery())
+            # )).scalar()
+            total = await cls.get_count(query, session)
             query = query.limit(limit).offset(skip)
             result = await session.execute(query)
             records = result.scalars().all()
