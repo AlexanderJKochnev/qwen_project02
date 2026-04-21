@@ -506,10 +506,9 @@ class Repository(Background, metaclass=RepositoryMeta):
             kwargs: dict = {}
             kwargs['search_str'] = search
             query = cls.apply_search_filter(cls.get_query(model), **kwargs)
-            total = await session.execute(
-                    query.statement.with_only_columns(func.count()).order_by(None)
-                    )
-            total = total.scalar()
+            total = (await session.execute(
+                select(func.count()).select_from(query.subquery())
+            )).scalar()
             # base_stmt = query.statement
             # count_stmt = select(func.count()).select_from(base_stmt.subquery())
             # total = 0
