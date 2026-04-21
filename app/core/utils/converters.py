@@ -8,8 +8,6 @@ from pydantic import ValidationError
 from fastapi import Response, HTTPException
 # from app.core.config.project_config import settings
 from app.core.utils.io_utils import get_filepath_from_dir_by_name
-from app.support.item.schemas import ItemCreateRelation
-from app.support.drink.schemas import DrinkCreateRelation
 
 
 def detect_json_structure(filename):
@@ -77,6 +75,8 @@ def convert_custom(dict1: Dict[str, Any]) -> Dict[str, Any]:
             back_item = pymodel.model_dump(exclude_unset=True)
             assert item == back_item
     """
+    from app.support.item.schemas import ItemCreateRelation
+    from app.support.drink.schemas import DrinkCreateRelation
     from app.core.config.project_config import settings
     source = deepcopy(dict1)
     # fields: madeof, recommendation, age
