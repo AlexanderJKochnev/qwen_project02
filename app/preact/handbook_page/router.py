@@ -1,4 +1,4 @@
-# app/preact/handbook/router.py
+# app/preact/handbook_page/router.py
 """
     роутер для справочников
     выводит только словари  id: name
