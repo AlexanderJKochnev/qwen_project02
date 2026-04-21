@@ -384,7 +384,7 @@ class Service(metaclass=ServiceMeta):
             items, total = await repository.search(search, skip, page_size, model, session)
             logger.warning(f'get_list_view_page {total=} {page=} {page_size=}')
         else:
-            items, total = await repository.get_list_paging(skip, page_size, model, session)
+            items, total = await repository.get_full_with_pagination(skip, page_size, model, session)
             logger.warning(f'get_list_view_page_get_list_paging {total=} {page=} {page_size=}')
         list_fields = ['name']
         result = [flatten_dict_with_localized_fields(obj.to_dict_fast(), list_fields, lang) for obj in items]
