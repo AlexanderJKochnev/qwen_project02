@@ -53,10 +53,15 @@ export const HandbookTypeList = () => {
 
         const response = await apiClient<ApiResponse>(queryPath);
 
+        // Логируем для проверки в консоли, если кнопки вдруг опять "залипнут"
+        console.log(`[Data Check] Type: ${type}, Total: ${response?.total}, Next: ${response?.has_next}`);
+
         setData(response?.items || []);
-        setTotal(response?.total || 0);
-        setHasNext(response?.has_next || false);
-        setHasPrev(response?.has_prev || false);
+        setTotal(Number(response?.total || 0));
+
+        // Явное приведение к boolean, чтобы исключить undefined/null
+        setHasNext(!!response?.has_next);
+        setHasPrev(!!response?.has_prev);
       } catch (error) {
         console.error("Fetch error:", error);
         setData([]);
@@ -126,6 +131,9 @@ export const HandbookTypeList = () => {
                   <td className="p-4 text-xs font-mono text-gray-400">{item.id}</td>
                   <td className="p-4 font-medium">{item.name}</td>
                   <td className="p-4 text-right">
+                    <Link href={`/handbooks/${type}/${item.id}`} className="text-gray-500 hover:text-gray-700 text-sm">
+                      Просмотр
+                    </Link>
                     <Link href={`/handbooks/${type}/edit/${item.id}`} className="text-blue-600 hover:underline text-sm font-medium">
                       Изменить
                     </Link>
@@ -144,7 +152,7 @@ export const HandbookTypeList = () => {
         <button
           className={`px-4 py-2 border rounded border-gray-300 ${!hasPrev || loading ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-100'}`}
           disabled={!hasPrev || loading}
-          onClick={() => setPage(p => p - 1)}
+          onClick={() => setPage(p => Math.max(1, p - 1))}
         >
           Назад
         </button>
