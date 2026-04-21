@@ -1,5 +1,5 @@
 # app.support.api.service.py
-from pydantic import TypeAdapter
+# from pydantic import TypeAdapter
 from decimal import Decimal
 from fastapi import HTTPException
 from typing import List, Dict, Any, Type
@@ -16,21 +16,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.support.item.repository import ItemRepository
 from app.support.item.model import Item
 from app.core.utils.common_utils import localized_field_with_replacement
-from app.core.utils.converters import lang_suffix_list, lang_suffix_dict
+# from app.core.utils.converters import lang_suffix_list, lang_suffix_dict
 from app.core.utils.alchemy_utils import formatted_query, transform_api_list_view
 from app.core.config.project_config import settings
 from app.core.schemas.base import PaginatedResponse
 from app.support.item.schemas import (ItemApiLangNonLocalized, ItemApi,
                                       ItemApiLangLocalizedInterim)
 
-ItemApiAdapter: TypeAdapter = TypeAdapter(List[ItemApi])
+# ItemApiAdapter: TypeAdapter = TypeAdapter(List[ItemApi])
 language: list = settings.LANGUAGES
 # список языковых суффиксов
-lang_prefixes: list = lang_suffix_list(language)
+# lang_prefixes: list = cls.lang_suffix_list(language)
 def_lang = settings.DEFAULT_LANG
 # словарь {'en': ['', '_ru': '_fr'],...}
 # списки языков отсортированы в порядке очередности замены для каждого языка
-lang_dict = lang_suffix_dict(language)
+# lang_dict = lang_suffix_dict(language)
 itemapilangnonlocalized = get_field_name(ItemApiLangNonLocalized)
 itemapilanglocalized = get_field_name(ItemApiLangLocalizedInterim)
 
@@ -45,7 +45,7 @@ class ApiService(ItemService):
         try:
             # задаем порядок замещения пустых полей
             # перенос вложенных словарей на верхний уровень (drink -> root)
-            item = cls._level_up_(lang_prefixes, item)
+            item = cls._level_up_(cls.lang_suffix_list(language), item)
             item['changed_at'] = item.pop('updated_at')
             result: dict = {}
             # добавление корневых не локализованных полей
@@ -67,6 +67,7 @@ class ApiService(ItemService):
                     result[key] = val
         # try:
             # add localized fields:
+            lang_dict = cls.lang_suffix_dict(language)
             for key, lang_suff in lang_dict.items():
                 dict_lang = {}
                 # add non-localized subfields to localized fields
@@ -112,6 +113,7 @@ class ApiService(ItemService):
             cnv
         """
         api_view = transform_api_list_view
+        lang_prefixes = cls.lang_suffix_list(language)
         if cnv:
             cleaned_list = [api_view(inst_dict(item), def_lang, lang_prefixes) for item in items]
         else:
@@ -154,7 +156,7 @@ class ApiService(ItemService):
             return None
         item: dict = inst_dict(item_instance)
         # result: dict = cls.__api_view__(item)
-        result: dict = transform_api_list_view(item, def_lang, lang_prefixes)
+        result: dict = transform_api_list_view(item, def_lang, cls.lang_suffix_list(language))
         return result
 
     @classmethod
@@ -269,4 +271,4 @@ class ApiService(ItemService):
                                    penalty: float = 0.1):
         # items = await super().execute_smart_search(query, session, boost, limit)
         items: List[dict] = await super().search_by_hash(query, Item, ItemRepository, session, limit, boost, penalty)
-        return [transform_api_list_view(item, def_lang, lang_prefixes) for item in items]
+        return [transform_api_list_view(item, def_lang, cls.lang_suffix_list(language)) for item in items]

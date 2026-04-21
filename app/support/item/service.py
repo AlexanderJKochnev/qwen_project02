@@ -21,7 +21,7 @@ from app.core.types import ModelType
 from app.core.utils.alchemy_utils import transform, transform_list_view
 from app.core.utils.common_utils import flatten_dict_with_localized_fields, jprint, \
     localized_field_with_replacement  # , delta_data
-from app.core.utils.converters import lang_sorted, lang_suffix_list, list_move, read_convert_json
+from app.core.utils.converters import list_move, read_convert_json
 from app.core.utils.pydantic_utils import get_field_name, make_paginated_response
 from app.core.utils.reindexation import extract_text_ultra_fast
 # from app.core.schemas.base import PaginatedResponse
@@ -151,7 +151,7 @@ class ItemService(Service):
         localized_fields = [v for v in get_field_name(ItemListView) if v not in result.keys()]
         # задаем порядок замещения пустых полей
         language: list = list_move(settings.LANGUAGES, lang)
-        lang_prefixes: list = lang_suffix_list(language)
+        lang_prefixes: list = cls.lang_suffix_list(language)
         drink_dict = item.get('drink')
         for key in localized_fields:
             match key:
@@ -185,7 +185,7 @@ class ItemService(Service):
         """Получение списка элементов для ListView с локализацией"""
         items: List[ModelType] = await repository.get_list_view(model, session, limit)
         items: List[Dict] = list_dict(items)
-        language = lang_sorted(lang)
+        language = cls.lang_sorted(lang)
         result = [transform_list_view(item, tuple(language)) for item in items]
         return result
 
@@ -197,7 +197,7 @@ class ItemService(Service):
         skip = (page - 1) * page_size
         items, total = await repository.get_list_view_page(skip, page_size, model, session)
         items: List[Dict] = list_dict(items)
-        language = lang_sorted(lang)
+        language = cls.lang_sorted(lang)
         result = [transform_list_view(item, tuple(language)) for item in items]
         return make_paginated_response(result, total, page, page_size)
 
@@ -210,7 +210,7 @@ class ItemService(Service):
         if not item:    # если ничего нет
             return None
         # задаем порядок замещения пустых полей
-        language = lang_sorted(lang)
+        language = cls.lang_sorted(lang)
         item = transform(item, tuple(language))
         # список всех локализованных полей приложения
         return item
@@ -297,7 +297,7 @@ class ItemService(Service):
                                                                        skip,
                                                                        page_size)
         items = list_dict(items)
-        language = lang_sorted(lang)
+        language = cls.lang_sorted(lang)
         result = [transform_list_view(item, tuple(language)) for item in items]
         return make_paginated_response(result, total, page, page_size)
 
@@ -312,7 +312,7 @@ class ItemService(Service):
         """
         skip = (page - 1) * page_size
         items, total = await repository.search_by_trigram_index(search_str, model, session, skip, page_size)
-        language = lang_sorted(lang)
+        language = cls.lang_sorted(lang)
         result = ItemListViewAdapter.validate_python([transform_list_view(item, tuple(language))
                                                       for item in items])
         return make_paginated_response(result, total, page, page_size)
@@ -454,7 +454,7 @@ class ItemService(Service):
             if total == 0:
                 result = []
             else:
-                language = lang_sorted(lang)
+                language = cls.lang_sorted(lang)
                 result = ItemListViewAdapter.validate_python([transform_list_view(item, tuple(language))
                                                               for item in items])
             response = make_paginated_response(result, total, page, page_size)
@@ -472,7 +472,7 @@ class ItemService(Service):
             # items: list = await cls.search_geans_all(search, similarity_threshold,
             #                                          repository, model, session)
             items: list[dict] = await cls.search_fts_all(search, repository, model, session)
-            language = lang_sorted(lang)
+            language = cls.lang_sorted(lang)
             result = ItemListViewAdapter.validate_python(
                 [transform_list_view(item, tuple(language)) for item in items]
             )

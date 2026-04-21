@@ -19,6 +19,7 @@ from app.core.models.base_model import Base, get_model_by_name
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.schemas.base import BaseModel, IndexFillResponse
 from app.core.services.click_service import FullTextSearch
+from app.core.utils.converters import list_move
 from app.core.types import ModelType
 from app.core.utils.alchemy_utils import formatted_query, has_column
 from app.core.utils.common_utils import flatten_dict_with_localized_fields, make_paging_dict
@@ -64,6 +65,38 @@ class Service(metaclass=ServiceMeta):
     skip_keys = {'id', 'created_at', 'updated_at', 'alc', 'sugar', 'age', 'sparkling', 'subcategory_id', 'sweetness_id',
                  'source_id', 'producer_id', 'vintageconfig_id', 'classification_id', 'designation_id', 'site_id',
                  'parcel_id', 'category_id', 'drink_id', 'food_id', 'superfood_id', 'varietal_id', 'percentage'}
+
+    @classmethod
+    def lang_sorted(cls, lang: str) -> tuple:
+        """
+        сортирует списки языков и возвращает список языковых суффиксов где на 1 месте lang
+        lang - требуемый язык
+        source - список языков
+        """
+        source = settings.LANGUAGES
+        default_lang = settings.DEFAULT_LANG
+        tmp: list = source[:]
+        tmp.remove(lang)
+        tmp.insert(0, lang)
+        return tuple('' if lang == default_lang else f'_{lang}' for lang in tmp)
+
+    @classmethod
+    def lang_suffix_list(cls, source: list) -> list:
+        """
+            конверирует лист вида ['en', 'ru', 'fr',...]
+            в ['', '_ru', '_fr', ...]
+        """
+        default_lang = settings.DEFAULT_LANG
+        return ['' if lang == default_lang else f'_{lang}' for lang in source]
+
+    @classmethod
+    def lang_suffix_dict(cls, source: list) -> Dict[str, tuple]:
+        """
+             комбинация lang_suffix_list и list_move
+             возвращает:
+             {'en': ('', ('en', 'ru', 'fr'), ),...}
+        """
+        return {key: (cls.lang_suffix_list(list_move(source, key))) for key in source}
 
     @classmethod
     async def get_instance(cls, data_dict: dict, repository: Type[Repository], model: ModelType,

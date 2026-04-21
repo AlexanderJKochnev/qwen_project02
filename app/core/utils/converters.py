@@ -6,7 +6,7 @@ from app.core.utils.morphology import to_nominative
 import ijson
 from pydantic import ValidationError
 from fastapi import Response, HTTPException
-from app.core.config.project_config import settings
+# from app.core.config.project_config import settings
 from app.core.utils.io_utils import get_filepath_from_dir_by_name
 from app.support.item.schemas import ItemCreateRelation
 from app.support.drink.schemas import DrinkCreateRelation
@@ -77,6 +77,7 @@ def convert_custom(dict1: Dict[str, Any]) -> Dict[str, Any]:
             back_item = pymodel.model_dump(exclude_unset=True)
             assert item == back_item
     """
+    from app.core.config.project_config import settings
     source = deepcopy(dict1)
     # fields: madeof, recommendation, age
     redundant_fields = settings.redundant
@@ -200,6 +201,7 @@ def get_pairing(drink_dict: dict, language_key: dict,
 
 def country_norm(country: str, delim: str = '_') -> str:
     """ United_states_of_america -> United States Of America"""
+    from app.core.config.project_config import settings
     if not country:
         return country
     dlm = settings.RE_DELIMITER
@@ -211,6 +213,7 @@ def get_subregion(drink_dict: dict, language_key: dict,
     """
         формируем subregion->region->country
     """
+    from app.core.config.project_config import settings
     try:
         dlm = settings.RE_DELIMITER
         country = dict_pop(drink_dict, 'country')
@@ -232,6 +235,7 @@ def get_subcategory(drink_dict: dict, language_key: dict,
     """
     формируем subcategory->category
     """
+    from app.core.config.project_config import settings
     try:
         delim = settings.RE_DELIMITER
         wine_category = settings.wine_category
@@ -422,6 +426,7 @@ def dict_pop(d, key):
 
 
 def split_outside_parentheses_multi(text: str, maxsplit: int = -1) -> list[str]:
+    from app.core.config.project_config import settings
     if not text:
         return []
 
@@ -612,7 +617,7 @@ def list_move(source: list, item: Any, pos: int = 0) -> list:
         перемещает элемент item со своей позиции на позицию pos (начиная с 0)
         при отсутствии item или pos > кол-ва элнингьла в списке возвращает исходный список
     """
-    result = source.copy()
+    result = source[:]
     try:
         result.remove(item)
         result.insert(pos, item)
@@ -627,6 +632,7 @@ def lang_suffix_list(source: list) -> list:
         конверирует лист вида ['en', 'ru', 'fr',...]
         в ['', '_ru', '_fr', ...]
     """
+    from app.core.config.project_config import settings
     default_lang = settings.DEFAULT_LANG
     return ['' if lang == default_lang else f'_{lang}' for lang in source]
 
@@ -657,10 +663,12 @@ def raw_image_response(result: dict, content: str = 'content', mime: str = "imag
 
 def lang_sorted(lang: str) -> tuple:
     """
+    НЕ ИСПОЛЬЗОВАТЬ
     сортирует списки языков и возвращает список языковых суффиксов где на 1 месте lang
     lang - требуемый язык
     source - список языков
     """
+    from app.core.config.project_config import settings
     source = settings.LANGUAGES
     default_lang = settings.DEFAULT_LANG
     tmp: list = source[:]
