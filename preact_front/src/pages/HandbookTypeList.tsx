@@ -130,7 +130,7 @@ export const HandbookTypeList = () => {
                 <tr key={item.id} className="hover:bg-gray-50 transition-colors">
                   <td className="p-4 text-xs font-mono text-gray-400">{item.id}</td>
                   <td className="p-4 font-medium">{item.name}</td>
-                  <td className="p-4 text-right">
+                  <td className="p-4 text-right space-x-3">
                     <Link href={`/handbooks/${type}/${item.id}`} className="text-gray-500 hover:text-gray-700 text-sm">
                       Просмотр
                     </Link>
