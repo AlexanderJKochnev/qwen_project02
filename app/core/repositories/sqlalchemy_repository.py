@@ -506,16 +506,18 @@ class Repository(Background, metaclass=RepositoryMeta):
             kwargs: dict = {}
             kwargs['search_str'] = search
             query = cls.apply_search_filter(cls.get_query(model), **kwargs)
-            total = 0
+            base_stmt = query.statement
+            count_stmt = select(func.count()).select_from(base_stmt.subquery())
+            # total = 0
             # общее кол-во записей удовлетворяющих условию
-            count_stmt = cls.apply_search_filter(select(func.count()).select_from(cls.get_query(model)),
-                                                 **kwargs)
+            # count_stmt = cls.apply_search_filter(select(func.count()).select_from(cls.get_query(model)),
+            #                                      **kwargs)
             result = await session.execute(count_stmt)
             total = result.scalar()     # ok
             query = query.limit(limit).offset(skip)
             result = await session.execute(query)
             records = result.scalars().all()
-            return (records if records else [], total)
+            return records if records else [], total
         except Exception as e:
             raise AppBaseException(message=str(e), status_code=404)
 
