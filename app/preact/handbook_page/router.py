@@ -28,6 +28,7 @@ class HandbookRouterPage(PreactRouter):
     async def endpoint(self, request: Request, lang: str,
                        page: int = Query(1, ge=1, description="Номер страницы"),
                        page_size: int = Query(20, ge=1, le=100, description="Размер страницы"),
+                       search: str = Query(None, description='поисковый запрос'),
                        session: AsyncSession = Depends(get_db)):
         current_path = request.url.path
         pref, lang = self.__path_decoder__(current_path)
@@ -36,7 +37,7 @@ class HandbookRouterPage(PreactRouter):
         repo = self.get_repo(model)
         service = self.get_service(model)
         # print(f'{route.response_model=}, {repo=}')
-        rows = await service.get_list_view_page(page, page_size, repo, model, session, lang)
+        rows = await service.get_list_view_page(search, page, page_size, repo, model, session, lang)
         content = orjson.dumps(rows)
         return Response(content=content, media_type="application/json")
         # return rows

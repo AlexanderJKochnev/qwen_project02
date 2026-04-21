@@ -465,6 +465,7 @@ class BaseRouter:
     async def get_list_view_page(
         self,
             lang: str = Query('en', description='язык для вывода данных'),
+            search: str = Query(None, description = 'поисковый запрос'),
             page: int = Query(1, ge=1),
             page_size: int = Query(paging.get('def', 20),
                                    ge=paging.get('min', 1),
@@ -477,7 +478,7 @@ class BaseRouter:
             input_valudation_chema None
             response_model PaginatedResponse[<>ReadRelation>]
         """
-        response = await self.service.get_list_view_page(page, page_size, self.repo, self.model, session, lang)
+        response = await self.service.get_list_view_page(search, page, page_size, self.repo, self.model, session, lang)
         if response is None:
             raise HTTPException(status_code=404, detail=f'Запрашиваемые данные не найдены на сервере')
         return orresponse(response)
