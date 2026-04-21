@@ -52,7 +52,7 @@ class Repository(Background, metaclass=RepositoryMeta):
     model: ModelType
 
     @classmethod
-    async def get_count(cls, query, session: AsyncSession):
+    async def get_count(cls, query: Select, session: AsyncSession):
         """ ПОДСЧЕТ ОБЩЕГО КОЛ-ВА ЗАПИСЕЙ В СЛОЖНЫХ ЗАПРОСАХ (С ФИЛЬТРАМИ)"""
         return (await session.execute(
                 select(func.count()).select_from(query.subquery())
@@ -83,10 +83,9 @@ class Repository(Background, metaclass=RepositoryMeta):
             получает запрос, сдвиг и размер страницы, сессию
             возвращает список instances и кол-во записей
         """
-        # from sqlalchemy.dialects import postgresql
-        count_stmt = select(func.count()).select_from(stmt)
-        # compiled_pg = count_stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
-        total = await session.scalar(count_stmt) or 0
+        # count_stmt = select(func.count()).select_from(stmt)
+        # total = await session.scalar(count_stmt) or 0
+        total = await cls.get_count(stmt, session)
         if total == 0:
             return None, total
         stmt = stmt.offset(skip).limit(limit)
@@ -443,7 +442,8 @@ class Repository(Background, metaclass=RepositoryMeta):
     @classmethod
     async def get_all_count(cls, model: ModelType, session: AsyncSession) -> int:
         """ колитчество всех записей в таблице DELETE """
-        count_stmt = select(func.count()).select_from(model)
+        # count_stmt = select(func.count()).select_from(model)
+        count_stmt = cls.get_count(select(model), session)
         result = await session.execute(count_stmt).scalar()
         return result
 
@@ -506,9 +506,6 @@ class Repository(Background, metaclass=RepositoryMeta):
             kwargs['search_str'] = search
             query = cls.apply_search_filter(cls.get_query(model), **kwargs)
             # ЭТО ОПРЕДЕЛЕНИЕ КОЛИЧЕСТВА ЗАПИСЕЙ
-            # total = (await session.execute(
-            #     select(func.count()).select_from(query.subquery())
-            # )).scalar()
             total = await cls.get_count(query, session)
             query = query.limit(limit).offset(skip)
             result = await session.execute(query)
@@ -613,7 +610,7 @@ class Repository(Background, metaclass=RepositoryMeta):
                            skip: int, limit: int,
                            model: ModelType, session: AsyncSession, ) -> tuple:
         """
-            Поисковый запрос
+            Поисковый запрос ПРОВЕРИТЬ ГДЕ ИСПОЛЬЗУЕТСЯ И ЕСЛИ ДА - ПЕРЕДЕЛАТЬ ПОДСЧЕТ TOTAL
         """
         try:
             total_count = 0
@@ -706,15 +703,17 @@ class Repository(Background, metaclass=RepositoryMeta):
             # condition = model.search_vector.bool_op("@@")(func.websearch_to_tsquery(
             #     literal_column("'simple'"), formatted_query)
             # )
-            count_stmt = select(func.count()).select_from(model).where(condition)
-            total = await session.execute(count_stmt)
-            total_count = total.scalar() or 0
+            total_query = select(model).where(condition)
+            total = await cls.get_count(total_query, session)
+            # count_stmt = select(func.count()).select_from(model).where(condition)
+            # total = await session.execute(count_stmt)
+            # total_count = total.scalar() or 0
             stmp = cls.get_query(model).where(condition).offset(skip).limit(limit)
             # compiled = stmp.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
             # logger.error(f'{compiled.string=}')
             result = await session.execute(stmp)
             items = result.scalars().all()
-            return items, total_count
+            return items, total
         except Exception as e:
             raise AppBaseException(message=f'search_fts.error; {str(e)}', status_code=404)
 
