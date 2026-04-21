@@ -212,6 +212,9 @@ class ItemService(Service):
         # задаем порядок замещения пустых полей
         language = cls.lang_sorted(lang)
         item = transform(item, tuple(language))
+        from app.core.utils.common_utils import jprint
+        jprint(item)
+        logger.warning('-------------------')
         # список всех локализованных полей приложения
         return item
 
