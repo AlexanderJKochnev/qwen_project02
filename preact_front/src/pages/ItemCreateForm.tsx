@@ -1,4 +1,5 @@
 // src/components/ItemCreateForm.tsx
+// СОЗДАНИЕ item
 import { h, useState, useEffect } from 'preact/hooks';
 import { apiClient } from '../lib/apiClient';
 import { useLanguage } from '../contexts/LanguageContext';

@@ -1,4 +1,5 @@
 // src/pages/ItemUpdateForm.tsx
+// ОБНОВЛЕНИЕ item
 import { h, useState, useEffect } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
 import { apiClient } from '../lib/apiClient';
