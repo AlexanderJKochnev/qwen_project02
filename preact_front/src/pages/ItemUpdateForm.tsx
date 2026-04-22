@@ -71,7 +71,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
     subtitle_de: '',
     subtitle_zh: '',
     subcategory_id: '',
-    sweetness_id: '',
+    source_id: '',
     site_id: '',
     alc: '',
     sugar: '',
@@ -115,7 +115,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
   const [error, setError] = useState<string | null>(null);
   const [handbooks, setHandbooks] = useState({
     subcategories: [],
-    sweetness: [],
+    source: [],
     sites: [],
     varietals: [],
     foods: []
@@ -129,13 +129,13 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
       try {
         const [
           subcategories,
-          sweetness,
+          source,
           sites,
           varietals,
           foods
         ] = await Promise.all([
           apiClient<any[]>(`/handbooks/subcategories/${language}`),
-          apiClient<any[]>(`/handbooks/sweetness/${language}`),
+          apiClient<any[]>(`/handbooks/source/${language}`),
           apiClient<any[]>(`/handbooks/sites/${language}`),
           apiClient<any[]>(`/handbooks/varietals/all`),
           apiClient<any[]>(`/handbooks/foods/all`)
@@ -149,7 +149,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
         const sortedSubcategories = [...subcategories].sort((a, b) =>
           getVisibleName(a).localeCompare(getVisibleName(b))
         );
-        const sortedSweetness = [...sweetness].sort((a, b) =>
+        const sortedSource = [...source].sort((a, b) =>
           getVisibleName(a).localeCompare(getVisibleName(b))
         );
         const sortedSites = [...sites].sort((a, b) =>
@@ -164,7 +164,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
 
         setHandbooks({
           subcategories: sortedSubcategories,
-          sweetness: sortedSweetness,
+          source: sortedSource,
           sites: sortedSites,
           varietals: sortedVarietals,
           foods: sortedFoods
@@ -229,7 +229,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
           subtitle_de: data.subtitle_de || null || '',
           subtitle_zh: data.subtitle_zh || null || '',
           subcategory_id: data.subcategory_id ? data.subcategory_id.toString() : '',
-          sweetness_id: data.sweetness_id ? data.sweetness_id.toString() : '',
+          source_id: data.source_id ? data.source_id.toString() : '',
           site_id: data.site_id ? data.site_id.toString() : '',
           alc: data.alc ? data.alc.toString() : '',
           sugar: data.sugar ? data.sugar.toString() : '',
@@ -370,7 +370,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
         price: formData.price ? parseFloat(formData.price) : null,
         subcategory_id: parseInt(formData.subcategory_id),
         site_id: parseInt(formData.site_id),
-        sweetness_id: formData.sweetness_id ? parseInt(formData.sweetness_id) : null,
+        source_id: formData.source_id ? parseInt(formData.source_id) : null,
         varietals: formData.varietals.map(v => {
           // Parse the "id:percentage" format and return in required format {id: id, percentage: percentage}
           const [id, percentage] = v.split(':');
@@ -843,16 +843,16 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
 
                 <div>
                   <label className="label">
-                    <span className="label-text">Sweetness</span>
+                    <span className="label-text">Source</span>
                   </label>
                   <select
-                    name="sweetness_id"
-                    value={formData.sweetness_id}
+                    name="source_id"
+                    value={formData.source_id}
                     onChange={handleChange as any}
                     className="select select-bordered w-full"
                   >
-                    <option value="">Select sweetness</option>
-                    {handbooks.sweetness.map(sweet => (
+                    <option value="">Select source</option>
+                    {handbooks.source.map(sweet => (
                       <option key={sweet.id} value={sweet.id}>
                         {sweet.name || sweet.name_en || sweet.name_ru || sweet.name_fr || sweet.name_es || sweet.name_it || sweet.name_de || sweet.name_zh}
                         {/* lang sweet */}
