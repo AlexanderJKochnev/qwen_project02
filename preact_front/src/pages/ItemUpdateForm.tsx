@@ -72,7 +72,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
     subtitle_zh: '',
     subcategory_id: '',
     sweetness_id: '',
-    subregion_id: '',
+    site_id: '',
     alc: '',
     sugar: '',
     age: '',
@@ -116,7 +116,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
   const [handbooks, setHandbooks] = useState({
     subcategories: [],
     sweetness: [],
-    subregions: [],
+    sites: [],
     varietals: [],
     foods: []
   });
@@ -130,13 +130,13 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
         const [
           subcategories,
           sweetness,
-          subregions,
+          sites,
           varietals,
           foods
         ] = await Promise.all([
           apiClient<any[]>(`/handbooks/subcategories/${language}`),
           apiClient<any[]>(`/handbooks/sweetness/${language}`),
-          apiClient<any[]>(`/handbooks/subregions/${language}`),
+          apiClient<any[]>(`/handbooks/sites/${language}`),
           apiClient<any[]>(`/handbooks/varietals/all`),
           apiClient<any[]>(`/handbooks/foods/all`)
         ]);
@@ -152,7 +152,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
         const sortedSweetness = [...sweetness].sort((a, b) =>
           getVisibleName(a).localeCompare(getVisibleName(b))
         );
-        const sortedSubregions = [...subregions].sort((a, b) =>
+        const sortedSubregions = [...sites].sort((a, b) =>
           getVisibleName(a).localeCompare(getVisibleName(b))
         );
         const sortedVarietals = [...varietals].sort((a, b) =>
@@ -165,7 +165,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
         setHandbooks({
           subcategories: sortedSubcategories,
           sweetness: sortedSweetness,
-          subregions: sortedSubregions,
+          sites: sortedSubregions,
           varietals: sortedVarietals,
           foods: sortedFoods
         });
@@ -230,7 +230,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
           subtitle_zh: data.subtitle_zh || null || '',
           subcategory_id: data.subcategory_id ? data.subcategory_id.toString() : '',
           sweetness_id: data.sweetness_id ? data.sweetness_id.toString() : '',
-          subregion_id: data.subregion_id ? data.subregion_id.toString() : '',
+          site_id: data.site_id ? data.site_id.toString() : '',
           alc: data.alc ? data.alc.toString() : '',
           sugar: data.sugar ? data.sugar.toString() : '',
           age: data.age || '',
@@ -369,7 +369,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
         vol: formData.vol ? parseFloat(formData.vol) : null,
         price: formData.price ? parseFloat(formData.price) : null,
         subcategory_id: parseInt(formData.subcategory_id),
-        subregion_id: parseInt(formData.subregion_id),
+        site_id: parseInt(formData.site_id),
         sweetness_id: formData.sweetness_id ? parseInt(formData.sweetness_id) : null,
         varietals: formData.varietals.map(v => {
           // Parse the "id:percentage" format and return in required format {id: id, percentage: percentage}
@@ -866,17 +866,17 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
                     <span className="label-text">Subregion *</span>
                   </label>
                   <select
-                    name="subregion_id"
-                    value={formData.subregion_id}
+                    name="site_id"
+                    value={formData.site_id}
                     onChange={handleChange as any}
                     className="select select-bordered w-full"
                     required
                   >
-                    <option value="">Select a subregion</option>
-                    {handbooks.subregions.map(subregion => (
-                      <option key={subregion.id} value={subregion.id}>
-                        {subregion.name || subregion.name_en || subregion.name_ru || subregion.name_fr || subregion.name_es || subregion.name_it || subregion.name_de || subregion.name_zh}
-                        {/* lang subregion*/}
+                    <option value="">Select a site</option>
+                    {handbooks.sites.map(site => (
+                      <option key={site.id} value={site.id}>
+                        {site.name || site.name_en || site.name_ru || site.name_fr || site.name_es || site.name_it || site.name_de || site.name_zh}
+                        {/* lang site*/}
                       </option>
                     ))}
                   </select>
