@@ -14,7 +14,7 @@ from app.auth.dependencies import get_active_user_or_internal
 from app.core.config.database.db_async import get_db
 # from app.core.config.project_config import settings
 from app.support import (Category, Country, Food, Region, Subcategory, Subregion,
-                         Superfood, Varietal, Sweetness, Producer, ProducerTitle,
+                         Superfood, Varietal, Sweetness, Producer, ProducerTitle, Source,
                          VintageConfig, Designation, Classification, Site, Parcel)
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.services.service import Service
@@ -41,7 +41,8 @@ class PreactRouter:
                        'designations': Designation,
                        'classifications': Classification,
                        'sites': Site,
-                       'parcels': Parcel
+                       'parcels': Parcel,
+                       'sources': Source
                        }
         self.router = APIRouter(prefix=self.prefix,
                                 tags=self.tags,
