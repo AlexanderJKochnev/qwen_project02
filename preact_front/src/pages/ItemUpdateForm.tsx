@@ -152,7 +152,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
         const sortedSweetness = [...sweetness].sort((a, b) =>
           getVisibleName(a).localeCompare(getVisibleName(b))
         );
-        const sortedSubregions = [...sites].sort((a, b) =>
+        const sortedSites = [...sites].sort((a, b) =>
           getVisibleName(a).localeCompare(getVisibleName(b))
         );
         const sortedVarietals = [...varietals].sort((a, b) =>
@@ -165,7 +165,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
         setHandbooks({
           subcategories: sortedSubcategories,
           sweetness: sortedSweetness,
-          sites: sortedSubregions,
+          sites: sortedSites,
           varietals: sortedVarietals,
           foods: sortedFoods
         });
@@ -863,7 +863,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
 
                 <div>
                   <label className="label">
-                    <span className="label-text">Subregion *</span>
+                    <span className="label-text">Site *</span>
                   </label>
                   <select
                     name="site_id"
