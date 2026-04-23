@@ -421,7 +421,7 @@ class ItemService(Service):
         # item_dict: dict = obj.to_dict()
         item_dict: dict = instance.to_dict_fast()
         drink: dict = item_dict.pop('drink')
-        item_dict['drink_id'] = drink.pop['id']
+        item_dict['drink_id'] = drink.pop('id')
         if varietal_associations := drink.pop('varietal_associations', None):
             varietals = [{'id': item.varietal_id, 'percentage': item.percentage}
                          for item in varietal_associations if item]
