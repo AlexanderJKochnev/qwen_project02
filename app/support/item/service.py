@@ -424,7 +424,11 @@ class ItemService(Service):
         # item_dict: dict = obj.to_dict()
         drink = instance.drink
         item_dict = instance.to_dict_fast()
-
+        from app.core.utils.common_utils import jprint
+        jprint(item_dict)
+        logger.warning('---------------------item_dict-------------------')
+        drink_dict = drink.to_dict_fast()
+        logger.warning('---------------------drink_dict-------------------')
         varietal_associations = drink.varietal_associations
         varietals = [{'id': item.varietal_id, 'percentage': item.percentage}
                      for item in varietal_associations if item]
