@@ -1,9 +1,10 @@
-// src/pages/ItemUpdateForm.tsx - ПОЛНОСТЬЮ ТОЛЬКО ТЕКСТОВЫЕ ПОЛЯ
+// src/pages/ItemUpdateForm.tsx - с select для subcategory
 import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
 import { apiClient } from '../lib/apiClient';
 import { FormBuilder } from '../forms/FormBuilder';
+import { LazySelect } from '../components/LazySelect';
 
 interface ItemUpdateFormProps {
   onClose: () => void;
@@ -20,7 +21,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
   const [loadingData, setLoadingData] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // ТОЛЬКО ЗАГРУЗКА ДАННЫХ ЭЛЕМЕНТА - БЕЗ ВСЯКИХ HANDBOOKS
+  // Загрузка данных элемента
   useEffect(() => {
     console.log('Loading item data for id:', id);
 
@@ -28,13 +29,13 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
       .then(data => {
         console.log('Item data received:', data);
 
-        // Конвертируем числа в строки для input fields
         setFormData({
           ...data,
           alc: data.alc?.toString() || '',
           vol: data.vol?.toString() || '',
           price: data.price?.toString() || '',
           sugar: data.sugar?.toString() || '',
+          subcategory_id: data.subcategory_id?.toString() || '',
         });
         setLoadingData(false);
       })
@@ -50,13 +51,27 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // Функция загрузки опций для subcategory с API
+  const loadSubcategories = async (search: string, page: number) => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      page_size: '50',
+      ...(search && { search })
+    });
+
+    const response = await apiClient(`/handbooks/subcategories?${params}`, { method: 'GET' });
+    return {
+      items: response.items || response,
+      total: response.total || response.length
+    };
+  };
+
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
     setLoading(true);
 
     try {
       console.log('Submit data:', formData);
-      // TODO: отправка на сервер
       alert('Submit - пока только лог');
       setLoading(false);
     } catch (error) {
@@ -109,23 +124,19 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
     );
   }
 
-  // СОЗДАЕМ ФОРМУ ТОЛЬКО ИЗ ТЕКСТОВЫХ ПОЛЕЙ
+  // СОЗДАЕМ ФОРМУ
   const form = new FormBuilder(formData, handleChange);
 
-  // ТОЛЬКО ТЕКСТОВЫЕ ПОЛЯ - НИКАКИХ SELECT, CHECKBOX, FILE
+  // Текстовые поля + один select с ленивой загрузкой
   form
     .text('title', 'Title')
     .text('title_ru', 'Title (Russian)')
     .text('title_fr', 'Title (French)')
-    .text('subtitle', 'Subtitle')
-    .text('subtitle_ru', 'Subtitle (Russian)')
-    .text('subtitle_fr', 'Subtitle (French)')
     .textarea('description', 'Description')
     .textarea('description_ru', 'Description (Russian)')
     .textarea('description_fr', 'Description (French)')
     .text('vol', 'Volume (L)', { type: 'number', step: '0.01' })
-    .text('alc', 'Alcohol (%)', { type: 'number', step: '0.1' })
-    .text('price', 'Price', { type: 'number', step: '0.01' });
+    .text('alc', 'Alcohol (%)', { type: 'number', step: '0.1' });
 
   return h('div', {
     style: {
@@ -152,7 +163,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
         overflowY: 'auto'
       }
     },
-      h('h2', {}, 'Update Item (TEST - Only text fields)'),
+      h('h2', {}, 'Update Item (Step 2 - With Lazy Select)'),
 
       // Drink Action
       h('div', { className: 'mb-4 p-4 border rounded-lg' },
@@ -179,7 +190,19 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
 
       // Форма
       h('form', { onSubmit: handleSubmit },
+        // Текстовые поля через FormBuilder
         form.build(),
+
+        // Lazy Select для subcategory (добавляем вручную так как FormBuilder пока его не поддерживает)
+        h(LazySelect, {
+          name: 'subcategory_id',
+          label: 'Subcategory',
+          value: formData.subcategory_id || '',
+          onChange: handleChange,
+          loadOptions: loadSubcategories,
+          required: true,
+          pageSize: 50
+        }),
 
         h('div', { className: 'flex justify-end gap-4 mt-6' },
           h('button', { type: 'button', onClick: onClose, className: 'btn btn-ghost', disabled: loading }, 'Cancel'),
@@ -189,9 +212,9 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
         )
       ),
 
-      // Debug: показываем полученные данные
+      // Debug
       h('details', { className: 'mt-4' },
-        h('summary', {}, 'Debug: Received Data'),
+        h('summary', {}, 'Debug: Form Data'),
         h('pre', { className: 'text-xs overflow-auto max-h-96' },
           JSON.stringify(formData, null, 2)
         )
