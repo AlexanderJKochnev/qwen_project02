@@ -180,8 +180,8 @@ class CustomCreateSchema(LangMixin, NewCreateSchema):
 
 
 class DrinkFoodVarietalSchema:
-    # foods: Optional[List[FoodCreateRelation]] = None
-    # varietals: Optional[List[DrinkVarietalRelation]] = None
+    foods: Optional[List[FoodCreateRelation]] = None
+    varietals: Optional[List[DrinkVarietalRelation]] = None
     pass
 
 

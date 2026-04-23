@@ -110,7 +110,7 @@ class ItemViewRouter:
             "/preact/{id}",
             self.get_one,
             methods=["GET"],
-            response_model=ItemReadPreactForUpdate,
+            # response_model=ItemReadPreactForUpdate,
             tags=self.tags,
             summary="Получить детальную информацию по элементу со всеми локализациями",
             openapi_extra={'x-request-schema': None}
