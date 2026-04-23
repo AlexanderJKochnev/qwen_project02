@@ -70,13 +70,14 @@ class ItemCreatePreact(DrinkCreate, ImageUrlMixin):
     price: Optional[float] = None
     count: Optional[int] = 0
 
+
 class Foods:
-    id: int
+    id: Optional[int] = None
 
 
-class  Varietals:
-    id: int
-    percentage: float
+class Varietals:
+    id: Optional[int] = None
+    percentage: Optional[float] = None
 
 
 class ItemReadPreactForUpdate(ItemCreatePreact):
