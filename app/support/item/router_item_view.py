@@ -14,7 +14,7 @@ from app.core.schemas.base import PaginatedResponse
 from app.dependencies import get_translator_func
 from app.support.item.model import Item
 from app.support.item.repository import ItemRepository
-from app.support.item.schemas import ItemDetailView, ItemListView, ItemReadPreactForUpdate
+from app.support.item.schemas import ItemDetailView, ItemListView
 from app.support.item.service import ItemService
 
 
@@ -126,7 +126,7 @@ class ItemViewRouter:
                       id: int,
                       translation: Annotated[Callable, Depends(get_translator_func)],
                       session: AsyncSession = Depends(get_db)
-                      ) -> ItemReadPreactForUpdate:
+                      ):
         """
             Получение одной записи по ID
             используется для загрузки данных в preact for update
