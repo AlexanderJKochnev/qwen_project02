@@ -1,10 +1,12 @@
 // src/pages/ItemUpdateForm.tsx - НОВАЯ ВЕРСИЯ (чистый код)
-import { h, useState, useEffect } from 'preact/hooks';
+import { h } from 'preact';  // h из preact
+import { useState, useEffect } from 'preact/hooks';  // хуки из preact/hooks
 import { useLocation } from 'preact-iso';
 import { apiClient } from '../lib/apiClient';
 import { useLanguage } from '../contexts/LanguageContext';
 import { ItemImage } from '../components/ItemImage';
 import { FormBuilder } from '../forms/FormBuilder';
+import { CheckboxGroupField } from '../forms/fields/CheckboxGroupField';
 
 export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
   const { url } = useLocation();
