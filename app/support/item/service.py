@@ -427,8 +427,6 @@ class ItemService(Service):
         from app.core.utils.common_utils import jprint
         jprint(item_dict)
         logger.warning('---------------------item_dict-------------------')
-        jprint(item_dict)
-        logger.warning('---------------------drink_dict-------------------')
         varietal_associations = drink.varietal_associations
         varietals = [{'id': item.varietal_id, 'percentage': item.percentage}
                      for item in varietal_associations if item]
@@ -436,7 +434,7 @@ class ItemService(Service):
         foods = [{'id': item.food_id} for item in food_associations if item]
         logger.warning(f'{varietals=}')
         logger.warning(f'{foods}')
-        
+
         drink_dict = drink.to_dict_fast()
         item_dict['drink_id'] = drink.id
         # if varietals:
@@ -445,9 +443,13 @@ class ItemService(Service):
         # if foods:
         # drink_dict.pop('foods', None)
         drink_dict['foods'] = foods
+        jprint(drink_dict)
+        logger.warning('---------------------drink_dict-------------------')
         # tmp = DrinkCreate(**drink_dict)
         # drink_dict = tmp.model_dump(exclude_unset=True, exclude_none=True)
         item_dict.update(drink_dict)
+        jprint(item_dict)
+        logger.warning('---------------------item_dict-------------------')
         return item_dict
 
     @classmethod
