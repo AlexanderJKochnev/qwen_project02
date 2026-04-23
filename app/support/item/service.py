@@ -419,32 +419,18 @@ class ItemService(Service):
         if instance is None:
             raise HTTPException(status_code=404, detail=f'Запрашиваемый файл {id} не найден на сервере')
         # item_dict: dict = obj.to_dict()
-        drink = instance.drink
-        item_dict = instance.to_dict_fast()
+        item_dict: dict = instance.to_dict_fast()
+        drink: dict = item_dict.pop('drink')
+        item_dict['drink_id'] = drink.pop['id']
+        if varietal_associations := drink.pop('varietal_associations', None):
+            varietals = [{'id': item.varietal_id, 'percentage': item.percentage}
+                         for item in varietal_associations if item]
+            drink['varietals'] = varietals
+        if food_associations := drink.pop('food_associations', None):
+            foods = [{'id': item.food_id} for item in food_associations if item]
+            drink['foods'] = foods
+        item_dict.update(drink)
         from app.core.utils.common_utils import jprint
-        jprint(item_dict)
-        logger.warning('---------------------item_dict-------------------')
-        varietal_associations = drink.varietal_associations
-        varietals = [{'id': item.varietal_id, 'percentage': item.percentage}
-                     for item in varietal_associations if item]
-        food_associations = drink.food_associations
-        foods = [{'id': item.food_id} for item in food_associations if item]
-        logger.warning(f'{varietals=}')
-        logger.warning(f'{foods}')
-
-        drink_dict = drink.to_dict_fast()
-        item_dict['drink_id'] = drink.id
-        # if varietals:
-        #     drink_dict.pop('varietals', None)
-        drink_dict['varietals'] = varietals
-        # if foods:
-        # drink_dict.pop('foods', None)
-        drink_dict['foods'] = foods
-        jprint(drink_dict)
-        logger.warning('---------------------drink_dict-------------------')
-        # tmp = DrinkCreate(**drink_dict)
-        # drink_dict = tmp.model_dump(exclude_unset=True, exclude_none=True)
-        item_dict.update(drink_dict)
         jprint(item_dict)
         logger.warning('---------------------item_dict-------------------')
         return item_dict
