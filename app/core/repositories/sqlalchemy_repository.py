@@ -490,7 +490,7 @@ class Repository(Background, metaclass=RepositoryMeta):
         try:
             stmt = (select(model).where(search_all_text_fields(model, search)).order_by(model.id))
             # Сортировка обязательна для корректной пагинации
-            total = cls.get_count(stmt, session)
+            total = await cls.get_count(stmt, session)
             stmt = stmt.offset(skip).limit(limit)
 
             # kwargs: dict = {}
