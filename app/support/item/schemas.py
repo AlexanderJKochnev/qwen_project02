@@ -1,6 +1,6 @@
 # app/support/item/schemas.py
 
-from typing import Optional, List, Tuple, Any
+from typing import Optional, List, Tuple, Any, Dict
 from datetime import datetime
 from pydantic import Field, model_serializer
 from app.core.schemas.image_mixin import ImageUrlMixin
@@ -70,11 +70,21 @@ class ItemCreatePreact(DrinkCreate, ImageUrlMixin):
     price: Optional[float] = None
     count: Optional[int] = 0
 
+class Foods:
+    id: int
+
+
+class  Varietals:
+    id: int
+    percentage: float
+
 
 class ItemReadPreactForUpdate(ItemCreatePreact):
     """ схема для получения данных для обновления в Preact"""
     id: int
     drink_id: int
+    foods: Optional[List[Foods]]
+    varietals: Optional[List[Varietals]]
 
 
 class ItemUpdate(BaseModel, CustomUpdSchema, ImageUrlMixin):
