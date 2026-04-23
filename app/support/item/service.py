@@ -432,10 +432,6 @@ class ItemService(Service):
             foods = [{'id': item.get('food_id')} for item in food_associations if item]
             drink['foods'] = foods
         item_dict.update(drink)
-        from app.core.utils.common_utils import jprint
-        jprint(item_dict)
-        logger.warning('---------------------item_dict-------------------')
-
         return item_dict
     
 
@@ -488,13 +484,11 @@ class ItemService(Service):
         async with session_factory() as session:
             # 1. Получаем СТРИМ всех ID и контента, которые нужно обновить
             # Это гарантирует, что мы пройдем по списку ОДИН РАЗ
-            logger.warning('start')
             stmt = select(Item).options(selectinload(Item.drink))
             if not force_all:
                 stmt = stmt.where(or_(Item.word_hashes == None, func.cardinality(Item.word_hashes) == 0))
 
             result_stream = await session.stream(stmt)
-            logger.warning('start2')
             batch_count = 0
             async for row in result_stream:
                 item = row[0]
