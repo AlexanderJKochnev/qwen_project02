@@ -280,7 +280,6 @@ class BaseRouter:
             response_model <>ReadRelatio
         """
         response = await self.service.get_by_id(id, self.repo, self.model, session)
-        logger.warning(type(response))
         return orresponse(response)
 
     async def get(self,

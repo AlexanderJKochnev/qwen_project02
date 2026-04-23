@@ -417,11 +417,13 @@ class ItemService(Service):
         """
         repo = ItemRepository
         model = Item
-        obj = await cls.get_by_id(id, repo, model, session)
-        if obj is None:
+        # item_dict: dict = await cls.get_by_id(id, repo, model, session)
+        instance = await repo.get_by_id(id, model, session)
+        if instance is None:
             raise HTTPException(status_code=404, detail=f'Запрашиваемый файл {id} не найден на сервере')
-        item_dict: dict = obj.to_dict()
-        drink = obj.drink
+        # item_dict: dict = obj.to_dict()
+        drink = instance.drink
+        item_dict = instance.to_dict_fast()
 
         varietal_associations = drink.varietal_associations
         varietals = [{'id': item.varietal_id, 'percentage': item.percentage}
