@@ -401,7 +401,7 @@ class ItemService(Service):
         return make_paginated_response(result, total, page, page_size)
 
     @classmethod
-    async def get_by_id(
+    async def get_by_idX(
             cls, id: int, repository: Type[ItemRepository], model: Type[Item], session: AsyncSession
     ) -> Optional[ItemRead]:
         """Получение записи по ID"""
