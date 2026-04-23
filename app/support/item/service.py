@@ -427,6 +427,9 @@ class ItemService(Service):
         drink: dict = item_dict.pop('drink')
         jprint(drink)
         logger.warning('---------------------drink-------------------')
+        jprint(drink.get('varietal_associations'))
+        jprint(drink.get('food_associations'))
+        
         item_dict['drink_id'] = drink.pop('id')
         if varietal_associations := drink.pop('varietal_associations', None):
             jprint(varietal_associations)
