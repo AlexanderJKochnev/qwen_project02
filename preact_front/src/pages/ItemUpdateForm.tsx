@@ -1,4 +1,4 @@
-// src/pages/ItemUpdateForm.tsx - с select для subcategory
+// src/pages/ItemUpdateForm.tsx
 import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
@@ -21,14 +21,13 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
   const [loadingData, setLoadingData] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Загрузка данных элемента
   useEffect(() => {
+    console.log('=== STEP 2 VERSION WITH LAZY SELECT ===');
     console.log('Loading item data for id:', id);
 
     apiClient(`/preact/${id}`, { method: 'GET' })
       .then(data => {
         console.log('Item data received:', data);
-
         setFormData({
           ...data,
           alc: data.alc?.toString() || '',
@@ -51,8 +50,8 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Функция загрузки опций для subcategory с API
   const loadSubcategories = async (search: string, page: number) => {
+    console.log('Loading subcategories:', { search, page });
     const params = new URLSearchParams({
       page: page.toString(),
       page_size: '50',
@@ -69,7 +68,6 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
     setLoading(true);
-
     try {
       console.log('Submit data:', formData);
       alert('Submit - пока только лог');
@@ -81,53 +79,24 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
   };
 
   if (loadingData) {
-    return h('div', {
-      style: {
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 1500
-      }
-    },
-      h('div', { style: { backgroundColor: 'white', padding: '20px', borderRadius: '8px' } },
-        'Loading...'
-      )
-    );
+    return h('div', { style: {
+      position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+      backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center',
+      alignItems: 'center', zIndex: 1500
+    }}, h('div', { style: { backgroundColor: 'white', padding: '20px', borderRadius: '8px' } }, 'Loading...'));
   }
 
   if (error) {
-    return h('div', {
-      style: {
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 1500
-      }
-    },
-      h('div', { style: { backgroundColor: 'white', padding: '20px', borderRadius: '8px' } },
-        h('h2', {}, 'Error'),
-        h('p', {}, error),
-        h('button', { onClick: onClose, className: 'btn btn-ghost' }, 'Close')
-      )
-    );
+    return h('div', { style: {
+      position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+      backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center',
+      alignItems: 'center', zIndex: 1500
+    }}, h('div', { style: { backgroundColor: 'white', padding: '20px', borderRadius: '8px' } },
+      h('h2', {}, 'Error'), h('p', {}, error), h('button', { onClick: onClose }, 'Close')));
   }
 
-  // СОЗДАЕМ ФОРМУ
   const form = new FormBuilder(formData, handleChange);
 
-  // Текстовые поля + один select с ленивой загрузкой
   form
     .text('title', 'Title')
     .text('title_ru', 'Title (Russian)')
@@ -138,87 +107,51 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
     .text('vol', 'Volume (L)', { type: 'number', step: '0.01' })
     .text('alc', 'Alcohol (%)', { type: 'number', step: '0.1' });
 
-  return h('div', {
-    style: {
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100%',
-      height: '100%',
-      backgroundColor: 'rgba(0,0,0,0.5)',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      zIndex: 1500
-    }
-  },
-    h('div', {
-      style: {
-        backgroundColor: 'white',
-        padding: '20px',
-        borderRadius: '8px',
-        maxWidth: '800px',
-        width: '90%',
-        maxHeight: '90vh',
-        overflowY: 'auto'
-      }
-    },
-      h('h2', {}, 'Update Item (Step 2 - With Lazy Select)'),
+  return h('div', { style: {
+    position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center',
+    alignItems: 'center', zIndex: 1500
+  }}, h('div', { style: {
+    backgroundColor: 'white', padding: '20px', borderRadius: '8px',
+    maxWidth: '800px', width: '90%', maxHeight: '90vh', overflowY: 'auto'
+  }},
+    h('h2', { style: { backgroundColor: 'yellow', padding: '5px' } }, 'STEP 2 - WITH LAZY SELECT'), // Желтый фон для проверки
 
-      // Drink Action
-      h('div', { className: 'mb-4 p-4 border rounded-lg' },
-        h('h3', { className: 'font-bold mb-2' }, 'Drink Action'),
-        h('div', { className: 'flex gap-4' },
-          h('label', { className: 'flex items-center' },
-            h('input', {
-              type: 'radio',
-              checked: drinkAction === 'update',
-              onChange: () => setDrinkAction('update')
-            }),
-            h('span', { className: 'ml-2' }, 'Update existing drink')
-          ),
-          h('label', { className: 'flex items-center' },
-            h('input', {
-              type: 'radio',
-              checked: drinkAction === 'create',
-              onChange: () => setDrinkAction('create')
-            }),
-            h('span', { className: 'ml-2' }, 'Save existing drink and create new')
-          )
-        )
-      ),
-
-      // Форма
-      h('form', { onSubmit: handleSubmit },
-        // Текстовые поля через FormBuilder
-        form.build(),
-
-        // Lazy Select для subcategory (добавляем вручную так как FormBuilder пока его не поддерживает)
-        h(LazySelect, {
-          name: 'subcategory_id',
-          label: 'Subcategory',
-          value: formData.subcategory_id || '',
-          onChange: handleChange,
-          loadOptions: loadSubcategories,
-          required: true,
-          pageSize: 50
-        }),
-
-        h('div', { className: 'flex justify-end gap-4 mt-6' },
-          h('button', { type: 'button', onClick: onClose, className: 'btn btn-ghost', disabled: loading }, 'Cancel'),
-          h('button', { type: 'submit', className: `btn btn-primary ${loading ? 'loading' : ''}`, disabled: loading },
-            loading ? 'Updating...' : 'Update Item'
-          )
-        )
-      ),
-
-      // Debug
-      h('details', { className: 'mt-4' },
-        h('summary', {}, 'Debug: Form Data'),
-        h('pre', { className: 'text-xs overflow-auto max-h-96' },
-          JSON.stringify(formData, null, 2)
+    h('div', { className: 'mb-4 p-4 border rounded-lg' },
+      h('h3', { className: 'font-bold mb-2' }, 'Drink Action'),
+      h('div', { className: 'flex gap-4' },
+        h('label', { className: 'flex items-center' },
+          h('input', { type: 'radio', checked: drinkAction === 'update', onChange: () => setDrinkAction('update') }),
+          h('span', { className: 'ml-2' }, 'Update existing drink')
+        ),
+        h('label', { className: 'flex items-center' },
+          h('input', { type: 'radio', checked: drinkAction === 'create', onChange: () => setDrinkAction('create') }),
+          h('span', { className: 'ml-2' }, 'Save existing drink and create new')
         )
       )
+    ),
+
+    h('form', { onSubmit: handleSubmit },
+      form.build(),
+      h(LazySelect, {
+        name: 'subcategory_id',
+        label: 'Subcategory',
+        value: formData.subcategory_id || '',
+        onChange: handleChange,
+        loadOptions: loadSubcategories,
+        required: true
+      }),
+      h('div', { className: 'flex justify-end gap-4 mt-6' },
+        h('button', { type: 'button', onClick: onClose, className: 'btn btn-ghost', disabled: loading }, 'Cancel'),
+        h('button', { type: 'submit', className: `btn btn-primary ${loading ? 'loading' : ''}`, disabled: loading },
+          loading ? 'Updating...' : 'Update Item'
+        )
+      )
+    ),
+
+    h('details', { className: 'mt-4' },
+      h('summary', {}, 'Debug: Form Data'),
+      h('pre', { className: 'text-xs overflow-auto max-h-96' }, JSON.stringify(formData, null, 2))
     )
-  );
+  ));
 };
