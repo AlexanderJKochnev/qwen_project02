@@ -431,13 +431,15 @@ class ItemService(Service):
         # jprint(drink.get('food_associations'))
 
         item_dict['drink_id'] = drink.pop('id')
-        if varietal_associations := drink.pop('varietal_associations', None):
+        varietal_associations = drink.pop('varietal_associations', None)
+        if varietal_associations:
             jprint(varietal_associations)
             logger.warning('varietal_associations')
             # varietals = [{'id': item.get('id'), 'percentage': item.get('percentage')}
             #              for item in varietal_associations if item]
             # drink['varietals'] = varietals
-        if food_associations := drink.pop('food_associations', None):
+        food_associations = drink.pop('food_associations', None)
+        if food_associations:
             jprint(food_associations)
             logger.warning('food_associations')
             # foods = [{'id': item.id} for item in food_associations if item]
