@@ -420,30 +420,26 @@ class ItemService(Service):
             raise HTTPException(status_code=404, detail=f'Запрашиваемый файл {id} не найден на сервере')
         # item_dict: dict = obj.to_dict()
         item_dict: dict = instance.to_dict_fast()
-
-        from app.core.utils.common_utils import jprint
-        jprint(item_dict)
-        logger.warning('---------------------item_dict-------------------')
         drink: dict = item_dict.pop('drink')
-        jprint(drink)
-        logger.warning('---------------------drink-------------------')
-        # jprint(drink.get('varietal_associations'))
-        # jprint(drink.get('food_associations'))
-
         item_dict['drink_id'] = drink.pop('id')
         varietal_associations = drink.pop('varietal_associations', [])
         if varietal_associations:
             logger.warning(f'{varietal_associations=}')
-            # varietals = [{'id': item.get('id'), 'percentage': item.get('percentage')}
-            #              for item in varietal_associations if item]
-            # drink['varietals'] = varietals
+            varietals = [{'id': item.get('id'), 'percentage': item.get('percentage')}
+                         for item in varietal_associations if item]
+            drink['varietals'] = varietals
         food_associations = drink.pop('food_associations', [])
         if food_associations:
             logger.warning(f'{food_associations=}')
-            # foods = [{'id': item.id} for item in food_associations if item]
-            # drink['foods'] = foods
+            foods = [{'id': item.id} for item in food_associations if item]
+            drink['foods'] = foods
         item_dict.update(drink)
+        from app.core.utils.common_utils import jprint
+        jprint(item_dict)
+        logger.warning('---------------------item_dict-------------------')
+
         return item_dict
+    
 
     @classmethod
     async def search_geans_items(cls, lang: str, search: str, similarity_threshold: float,
