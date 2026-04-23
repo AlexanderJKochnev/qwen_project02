@@ -20,6 +20,21 @@ from app.core.config.project_config import get_path_to_root
 function = {1: or_, 2: and_}
 
 
+def search_all_text_fields(model, search_term):
+    """
+        фильтр для поискового запроса по всем текстовым полям модели
+        Использование:
+        query = session.query(User).filter(search_all_text_fields(User, "искомое_слово"))
+    """
+
+    columns = inspect(model).c
+    # Фильтруем только текстовые (String, Text и их наследники)
+    text_filters = [getattr(model, col.key).ilike(f"%{search_term}%") for col in columns if
+                    isinstance(col.type, String)]
+    return or_(*text_filters)
+
+
+
 def get_field_list(model: Type[DeclarativeBase], starts: tuple = None, ends: tuple = None):
     """
          возвращает список полей sqlalchemy model

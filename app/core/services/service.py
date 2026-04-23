@@ -357,7 +357,8 @@ class Service(metaclass=ServiceMeta):
         """
         skip = (page - 1) * page_size
         items, total = await repository.search(search, skip, page_size, model, session)
-        logger.warning(f'seacrh {total=} {page=} {page_size=}')
+        if total == 0:
+            return {'result': 'Not found'}
         items = list_dict(items)
         result = make_paginated_response(items, total, page, page_size)
         return result
@@ -372,7 +373,10 @@ class Service(metaclass=ServiceMeta):
             базовый поиск без пагинации
         """
         result = await repository.search_all(search, model, session, limit)
-        return list_dict(result)
+        if result:
+            return list_dict(result)
+        else:
+            return {'result': 'Not found'}
 
     @classmethod
     async def get_list_view_page(cls, search: str, page: int, page_size: int,

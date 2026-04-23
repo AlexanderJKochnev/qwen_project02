@@ -359,7 +359,7 @@ class BaseRouter:
                                             ge=paging.get('min', 1),
                                             le=paging.get('max', 1000)),
                      session: AsyncSession = Depends(get_db),
-                     ) -> PaginatedResponse:
+                     ) -> dict:
         """
             Поиск по всем текстовым полям основной таблицы
             с постраничным выводом результата

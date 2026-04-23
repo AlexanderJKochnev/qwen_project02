@@ -26,7 +26,8 @@ from app.core.repositories.repo_background_tasks import Background
 from app.core.types import ModelType
 # from sqlalchemy.dialects import postgresql
 # from sqlalchemy.sql.elements import ColumnElement
-from app.core.utils.alchemy_utils import (create_enum_conditions, create_search_conditions2, get_field_list)
+from app.core.utils.alchemy_utils import (create_enum_conditions, create_search_conditions2, get_field_list,
+                                          search_all_text_fields)
 from app.core.utils.backgound_tasks import background
 from app.core.utils.reindexation import extract_text_ultra_fast
 from app.service_registry import register_repo
@@ -484,31 +485,21 @@ class Repository(Background, metaclass=RepositoryMeta):
                      skip: int, limit: int,
                      model: ModelType, session: AsyncSession, ) -> tuple:
         """
-        Поиск по всем заданным текстовым полям основной таблицы
-        если указана pagination - возвращвет pagination
-        :param search_str:  текстовое условие поиска
-        :type search_str:   str
-        :param model:       модель
-        :type model:        sqlalchemy model
-        :param session:     async session
-        :type session:      async session
-        :param skip:        сдвиг на кол-во записей (для пагинации)
-        :type skip:         int
-        :param limit:       кол-во записей
-        :type limit:        int
-        :param and_condition:   дополнительные условия _AND
-        :type and_condition:    dict
-        :return:                Optional[List[ModelType]]
-        :rtype:                 Optional[List[ModelType]]
+            Поиск по всем заданным текстовым полям основной таблицы
         """
         try:
-            kwargs: dict = {}
-            kwargs['search_str'] = search
-            query = cls.apply_search_filter(cls.get_query(model), **kwargs)
+            stmt = (select(model).where(search_all_text_fields(model, search)).order_by(model.id))
+            # Сортировка обязательна для корректной пагинации
+            total = cls.get_count(stmt, session)
+            stmt = stmt.offset(skip).limit(limit)
+
+            # kwargs: dict = {}
+            # kwargs['search_str'] = search
+            # query = cls.apply_search_filter(cls.get_query(model), **kwargs)
             # ЭТО ОПРЕДЕЛЕНИЕ КОЛИЧЕСТВА ЗАПИСЕЙ
-            total = await cls.get_count(query, session)
-            query = query.limit(limit).offset(skip)
-            result = await session.execute(query)
+            # total = await cls.get_count(query, session)
+            # query = query.limit(limit).offset(skip)
+            result = await session.execute(stmt)
             records = result.scalars().all()
             return records if records else [], total
         except Exception as e:
