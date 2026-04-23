@@ -424,14 +424,12 @@ class ItemService(Service):
         item_dict['drink_id'] = drink.pop('id')
         varietal_associations = drink.pop('varietal_associations', [])
         if varietal_associations:
-            logger.warning(f'{varietal_associations=}')
-            varietals = [{'id': item.get('id'), 'percentage': item.get('percentage')}
+            varietals = [{'id': item.get('varietal_id'), 'percentage': item.get('percentage')}
                          for item in varietal_associations if item]
             drink['varietals'] = varietals
         food_associations = drink.pop('food_associations', [])
         if food_associations:
-            logger.warning(f'{food_associations=}')
-            foods = [{'id': item.id} for item in food_associations if item]
+            foods = [{'id': item.get('food_id')} for item in food_associations if item]
             drink['foods'] = foods
         item_dict.update(drink)
         from app.core.utils.common_utils import jprint
