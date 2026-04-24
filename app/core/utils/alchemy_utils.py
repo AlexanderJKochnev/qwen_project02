@@ -29,7 +29,7 @@ def get_sql_search(query, search_str: str, limit: int = 100, offset: int = 0) ->
     raw_sql = str(
         query.compile(dialect=postgresql.dialect(), compile_kwargs={"render_postcompile_parameters": True})
     )
-
+    logger.critical(raw_sql)
     # 2. Парсим колонки между SELECT и FROM
     select_part = raw_sql[len("SELECT "):raw_sql.find("FROM")].strip()
     from_part = raw_sql[raw_sql.find("FROM"):].strip()
