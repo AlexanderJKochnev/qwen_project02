@@ -7,8 +7,9 @@ services:
         max-size: ${MAX_SIZE}
         max-file: ${MAX_FILE}
     restart: unless-stopped
+    image: postgres:local
     # image: postgres:17-alpine # based on this image
-    image: ghcr.io/alexanderjkochnev/postgres:17-alpine
+    # image: ghcr.io/alexanderjkochnev/postgres:17-alpine
     command: >
       postgres
       -c shared_buffers=16GB
@@ -137,7 +138,8 @@ services:
       options:
         max-size: ${MAX_SIZE}
         max-file: ${MAX_FILE}
-    image: ghcr.io/alexanderjkochnev/mongo:4.4.20
+    image: mongo:local
+    # image: ghcr.io/alexanderjkochnev/mongo:4.4.20
     hostname: ${MONGO_HOSTNAME}
     restart: unless-stopped
     environment:
@@ -210,7 +212,8 @@ services:
       options:
         max-size: ${MAX_SIZE}
         max-file: ${MAX_FILE}
-    image: edoburu/pgbouncer:latest
+    # image: edoburu/pgbouncer:latest
+    image: pgbouncer:local
     environment:
       DB_HOST: ${IP_POSTGRES}
       DB_PORT: 5432

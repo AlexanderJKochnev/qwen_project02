@@ -1,5 +1,6 @@
 # --- ЭТАП 1: Базовые зависимости (Base) ---
-FROM ghcr.io/alexanderjkochnev/node:20-alpine AS build-stage
+# FROM ghcr.io/alexanderjkochnev/node:20-alpine AS build-stage
+FROM node:local AS build-stage
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
@@ -8,8 +9,8 @@ RUN npm run build
 RUN apk add --no-cache certbot
 
 # Stage 2: Раздача статики через Nginx
-# FROM nginx:stable-alpine
-FROM ghcr.io/alexanderjkochnev/nginx1.28.1:stable-alpine
+# FROM ghcr.io/alexanderjkochnev/nginx1.28.1:stable-alpine
+FROM nginx:local
 
 # Устанавливаем envsubst для замены переменных (НОВОЕ)
 RUN apk add --no-cache gettext

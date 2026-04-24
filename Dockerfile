@@ -1,5 +1,6 @@
 # --- Этап 1: Сборка и установка зависимостей ---
-FROM ghcr.io/alexanderjkochnev/python:3.12 AS builder
+# FROM ghcr.io/alexanderjkochnev/python:3.12 AS builder
+FROM python:local AS builder
 WORKDIR /app
 COPY requirements.txt .
 
@@ -12,7 +13,7 @@ RUN apt-get update && \
 RUN pip install --user --no-cache-dir -r requirements.txt
 
 # --- Этап 2: Финальный образ (Runtime) ---
-FROM ghcr.io/alexanderjkochnev/python:3.12-slim AS runtime
+FROM python_slim:local AS runtime
 # Копируем системные библиотеки, если они были установлены на этапе сборки (например, libmagic-dev)
 RUN apt-get update && \
     apt-get install -y libmagic1 && \

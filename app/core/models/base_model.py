@@ -41,6 +41,7 @@ str_null_true = Annotated[Optional[str], mapped_column(nullable=True)]
 str_null_index = Annotated[Optional[str], mapped_column(nullable=True, index=True)]
 str_null_false = Annotated[str, mapped_column(nullable=False)]
 
+
 # 5. Числа с дефолтом
 nmbr = Annotated[int, mapped_column(server_default=text('0'))]
 
