@@ -27,7 +27,7 @@ from app.core.types import ModelType
 # from sqlalchemy.dialects import postgresql
 # from sqlalchemy.sql.elements import ColumnElement
 from app.core.utils.alchemy_utils import (create_enum_conditions, create_search_conditions2, get_field_list,
-                                          search_all_text_fields)
+                                          search_all_text_fields, apply_auto_filter)
 from app.core.utils.backgound_tasks import background
 from app.core.utils.reindexation import extract_text_ultra_fast
 from app.service_registry import register_repo
@@ -489,7 +489,8 @@ class Repository(Background, metaclass=RepositoryMeta):
         """
         try:
             stmt = (select(model).where(search_all_text_fields(model, search)).order_by(model.id))
-            stmt.where(get_auto_filter(stmt, "поиск"))
+
+            # stmt.where(get_auto_filter(stmt, "поиск"))
             # Сортировка обязательна для корректной пагинации
             total = await cls.get_count(stmt, session)
             stmt = stmt.offset(skip).limit(limit)
@@ -530,9 +531,10 @@ class Repository(Background, metaclass=RepositoryMeta):
         :rtype:                 Optional[List[ModelType]]
         """
         try:
-            kwargs: dict = {}
-            kwargs['search_str'] = search
-            query = cls.apply_search_filter(cls.get_query(model), **kwargs)
+            # kwargs: dict = {}
+            # kwargs['search_str'] = search
+            # query = cls.apply_search_filter(cls.get_query(model), **kwargs)
+            query = apply_auto_filter(cls.get_query(model), search)
             if limit:
                 query = query.limit(limit)
             result = await session.execute(query)
