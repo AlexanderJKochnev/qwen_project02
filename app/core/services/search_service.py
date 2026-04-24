@@ -5,7 +5,7 @@
 from collections.abc import Sequence
 from typing import Any, List, Optional, Set, Type, TypeVar
 
-from sqlalchemy import or_, select, String
+from sqlalchemy import or_, select, String, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import class_mapper, DeclarativeBase, selectinload
 
@@ -26,6 +26,16 @@ class DeepSearchBuilder:
             .eager_load(True)
             .execute(model)
         )
+    # Поиск с глубиной 3, пагинация, сортировка
+    results = await (
+            DeepSearchBuilder(session)
+            .search("war")
+            .depth(3)
+            .limit(20)
+            .offset(0)
+            .order_by(Book.published_date.desc())
+            .execute(Book)
+)
     возвращает result.scalars().all()
     """
 
@@ -150,6 +160,12 @@ class DeepSearchBuilder:
 
         return or_(*all_conditions) if all_conditions else None
 
+    async def get_count(self, query):
+        """ возврат общего кол-ва записей """
+        return (await self.session.execute(
+                select(func.count()).select_from(query.subquery())
+                )).scalar()
+
     async def execute(self, model: Type[T]) -> Sequence[T]:
         """Выполняет поиск и возвращает результаты"""
         if not self._search_term:
@@ -169,6 +185,7 @@ class DeepSearchBuilder:
             query = query.limit(self._limit)
         if self._offset:
             query = query.offset(self._offset)
+            total = self.get_count(query)
 
         # Добавляем сортировку
         if self._order_by:
@@ -180,7 +197,10 @@ class DeepSearchBuilder:
 
         # Выполняем запрос
         result = await self.session.execute(query)
-        return result.scalars().all()
+        if total:
+            return result.scalars().all(), total
+        else:
+            return result.scalars().all()
 
     def _add_selectinloads(self, query: Any, model: Type[T], depth: int, current: int = 0) -> Any:
         """Добавляет selectinload для оптимизации запросов"""

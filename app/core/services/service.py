@@ -28,6 +28,7 @@ from app.core.utils.pydantic_utils import (get_data_for_search, get_repo, inst_d
 from app.core.utils.reindexation import reindex_items
 from app.mongodb.service import ThumbnailImageService
 from app.service_registry import get_search_dependencies, register_service
+from app.core.services.search_service import DeepSearchBuilder
 
 # from app.core.utils.common_utils import jprint
 
@@ -350,13 +351,21 @@ class Service(metaclass=ServiceMeta):
     @classmethod
     async def search(cls, search: str, page: int, page_size: int,
                      repository: Type[Repository], model: ModelType,
-                     session: AsyncSession
+                     session: AsyncSession, depth: int = 4
                      ) -> Dict[str, Any]:
         """
             базовый поиск
         """
         skip = (page - 1) * page_size
-        items, total = await repository.search(search, skip, page_size, model, session)
+        total, items = await (DeepSearchBuilder(session)
+                              .search(search)
+                              .depth(depth)
+                              .limit(page_size)
+                              .offset(skip)
+                              .order_by(model.id.desc())
+                              .execute(model))
+
+        # items, total = await repository.search(search, skip, page_size, model, session)
         if total == 0:
             return {'result': 'Not found'}
         items = list_dict(items)
