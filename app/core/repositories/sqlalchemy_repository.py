@@ -500,8 +500,7 @@ class Repository(Background, metaclass=RepositoryMeta):
             total = response.scalar()
             logger.warning(f'{ids=}  {total=}')
             result = await cls.get_by_ids(ids, model, session)
-            records = result.scalars().all()
-            return records if records else [], total
+            return result if result else [], total
         except Exception as e:
             raise AppBaseException(message=str(e), status_code=404)
 
