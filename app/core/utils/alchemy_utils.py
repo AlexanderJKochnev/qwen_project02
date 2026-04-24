@@ -8,7 +8,7 @@ from typing import Dict, List, Optional, Tuple, Type, TypeVar, Union, Set
 from fastapi import Query
 from sqlalchemy.dialects import postgresql
 from pydantic import BaseModel, create_model, Field
-from sqlalchemy import and_, Column, ColumnElement, func, inspect, or_, String, Text, Unicode, UnicodeText
+from sqlalchemy import and_, Column, ColumnElement, func, inspect, or_, String, Text, Unicode, UnicodeText, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import DeclarativeBase, MapperProperty, joinedload
 from sqlalchemy.orm.attributes import QueryableAttribute
@@ -21,41 +21,44 @@ from app.core.config.project_config import get_path_to_root
 function = {1: or_, 2: and_}
 
 
-def apply_auto_filter(stmt, search_str: str):
-    search_term = f"%{search_str}%"
-    logger.warning('========1')
-    # 1. Собираем все модели: корень + все, что указано в .options
-    models = {stmt.column_descriptions[0]['entity']}
-    for opt in stmt._with_options:
-        if hasattr(opt, 'path'):
-            models.add(opt.path.mapper.class_)
-    logger.warning('========2')
-    # 2. Генерируем фильтры Name... для всех найденных моделей
-    conditions = []
-    for model in models:
-        conditions.extend(
-            [getattr(model, col.key).ilike(search_term) for col in inspect(model).mapper.column_attrs if
-             col.key.startswith('Name')]
-        )
-    logger.warning('========3')
-    # 3. Превращаем все подгрузки в JOIN-ы (чтобы WHERE по ним работал)
-    # и накладываем фильтр
-    return stmt.options(joinedload('*')).where(or_(*conditions)).distinct()
-
-
-def search_all_text_fields(model, search_term):
+def get_sql_search(query, search_str: str, limit: int = 100, offset: int = 0) -> Tuple:
     """
-        фильтр для поискового запроса по всем текстовым полям модели
-        Использование:
-        query = session.query(User).filter(search_all_text_fields(User, "искомое_слово"))
-        НЕ ИЩЕТ В СВЯЗАННЫХ ТАБЛИЦАХ
+        raw sql for the deep search in text 'Name' fields
+        return for select id and selec for total count
     """
+    raw_sql = str(
+        query.compile(dialect=postgresql.dialect(), compile_kwargs={"render_postcompile_parameters": True})
+    )
 
-    columns = inspect(model).c
-    # Фильтруем только текстовые (String, Text и их наследники)
-    text_filters = [getattr(model, col.key).ilike(f"%{search_term}%") for col in columns if
-                    isinstance(col.type, String)]
-    return or_(*text_filters)
+    # 2. Парсим колонки между SELECT и FROM
+    select_part = raw_sql[len("SELECT "):raw_sql.find("FROM")].strip()
+    from_part = raw_sql[raw_sql.find("FROM"):].strip()
+
+    # Разбиваем колонки по запятой и ищем те, где есть 'name' (без учета регистра)
+    all_columns = [col.strip().split(" AS ")[0] for col in select_part.split(",")]
+    name_cols = [col for col in all_columns if "name" in col.lower()]
+
+    # 3. Строим условие WHERE
+    search_val = f"'%{search_str}%'"
+    # Соединяем все найденные колонки через OR
+    where_clause = " OR ".join([f"{col} ILIKE {search_val}" for col in name_cols])
+
+    # Определяем главную таблицу (первое слово после FROM)
+    main_table = from_part.split()[1]
+
+    # РЕЗУЛЬТАТ 1: Запрос на ID (с пагинацией)
+    # id_sql = f"SELECT DISTINCT {main_table}.id {from_part} WHERE {where_clause} LIMIT {limit} OFFSET {offset}"
+    id_sql = f"SELECT DISTINCT {main_table}.id {from_part} WHERE {where_clause}"
+    if limit:
+        id_sql = f"{id_sql} LIMIT {limit}"
+    if offset:
+        id_sql = f"{id_sql} OFFSET {offset}"
+
+    # РЕЗУЛЬТАТ 2: Запрос на Общее количество
+    count_sql = f"SELECT COUNT(DISTINCT {main_table}.id) {from_part} WHERE {where_clause}"
+    logger.warning(f'{id_sql=}')
+    logger.warning(f'{count_sql=}')
+    return text(id_sql), text(count_sql)
 
 
 def get_field_list(model: Type[DeclarativeBase], starts: tuple = None, ends: tuple = None):

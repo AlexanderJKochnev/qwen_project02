@@ -28,7 +28,7 @@ from app.core.types import ModelType
 # from sqlalchemy.dialects import postgresql
 # from sqlalchemy.sql.elements import ColumnElement
 from app.core.utils.alchemy_utils import (create_enum_conditions, create_search_conditions2, get_field_list,
-                                          search_all_text_fields, apply_auto_filter)
+                                          get_sql_search)
 from app.core.utils.backgound_tasks import background
 from app.core.utils.reindexation import extract_text_ultra_fast
 from app.service_registry import register_repo
@@ -489,20 +489,14 @@ class Repository(Background, metaclass=RepositoryMeta):
             Поиск по всем заданным текстовым полям основной таблицы
         """
         try:
-            stmt = (select(model).where(search_all_text_fields(model, search)).order_by(model.id))
-
-            # stmt.where(get_auto_filter(stmt, "поиск"))
-            # Сортировка обязательна для корректной пагинации
-            total = await cls.get_count(stmt, session)
-            stmt = stmt.offset(skip).limit(limit)
-
-            # kwargs: dict = {}
-            # kwargs['search_str'] = search
-            # query = cls.apply_search_filter(cls.get_query(model), **kwargs)
-            # ЭТО ОПРЕДЕЛЕНИЕ КОЛИЧЕСТВА ЗАПИСЕЙ
-            # total = await cls.get_count(query, session)
-            # query = query.limit(limit).offset(skip)
-            result = await session.execute(stmt)
+            query = cls.get_query(model)
+            id_query, count_query = get_sql_search(query, search, limit=limit, offset=skip)
+            # 1. Получаем список ID:
+            ids = session.execute(id_query).scalars().all()
+            # 2. Получаем общее кол-во:
+            total = session.execute(count_query).scalar()
+            logger.warning(f'{ids=}  {total=}')
+            result = await cls.get_by_ids(ids, model, session)
             records = result.scalars().all()
             return records if records else [], total
         except Exception as e:
@@ -521,20 +515,15 @@ class Repository(Background, metaclass=RepositoryMeta):
             # kwargs['search_str'] = search
             # query = cls.apply_search_filter(cls.get_query(model), **kwargs)
             # stmt = (select(model).where(search_all_text_fields(model, search)).order_by(model.id))
-            logger.warning('========0')
             query = cls.get_query(model)
-            compiled_pg = query.compile(dialect = postgresql.dialect())
-            logger.warning(f"SQL: {compiled_pg.string}")
-            logger.warning('=============================================')
-            query = apply_auto_filter(query, search)
-            logger.warning('========5')
+            id_query, count_query = get_sql_search(query, search, limit=limit)
+            # 1. Получаем список ID:
+            # ids = session.execute(id_query).scalars().all()
+            # 2. Получаем общее кол-во:
+            # total_count = session.execute(count_query).scalar()
             if limit:
                 query = query.limit(limit)
-            compiled_pg = query.compile(dialect=postgresql.dialect())
-            logger.warning(f"SQL: {compiled_pg.string}")
-            logger.warning(f"Params: {compiled_pg.params}")
             result = await session.execute(query)
-            logger.warning('========6')
             records = result.scalars().all()
             return records
         except Exception as e:
