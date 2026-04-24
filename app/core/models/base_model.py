@@ -406,30 +406,17 @@ class FullTextSearchMixin:
     def __table_args__(cls):
         indexes = []
 
-        # Проверяем все классы в MRO
-        for base in cls.__mro__:
-            for name, attr in base.__dict__.items():
-                if name.startswith('_') or callable(attr):
-                    continue
+        for name, attr in cls.__dict__.items():
+            if hasattr(attr, 'type') and isinstance(attr.type, (String, Text)):
+                idx = Index(
+                    f"ix_{cls.__tablename__}_{name}_lower_prefix", func.lower(attr)
+                )
+                indexes.append(idx)
 
-                column = None
-                if isinstance(attr, Column):
-                    column = attr
-                elif hasattr(attr, "prop") and isinstance(attr.prop, ColumnProperty):
-                    column = attr.prop.columns[0]
-
-                if column and isinstance(column.type, (String, Text)):
-                    # Проверяем, не создавали ли уже индекс для этой колонки
-                    index_name = f"ix_{cls.__tablename__}_{name}_lower_prefix"
-                    if not any(getattr(idx, 'name', '') == index_name for idx in indexes):
-                        idx = Index(index_name, func.lower(column))
-                        indexes.append(idx)
-
-        # Объединяем с существующими table_args
-        existing = getattr(cls, '__table_args__', None)
-        if existing:
-            if isinstance(existing, (tuple, list)):
-                return existing + tuple(indexes)
-            return (existing,) + tuple(indexes)
+        existing_args = getattr(cls, '__table_args__', None)
+        if existing_args:
+            if isinstance(existing_args, tuple):
+                return existing_args + tuple(indexes)
+            return (existing_args,) + tuple(indexes)
 
         return tuple(indexes) if indexes else None
