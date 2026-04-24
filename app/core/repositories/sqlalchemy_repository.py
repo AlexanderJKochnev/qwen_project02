@@ -522,7 +522,11 @@ class Repository(Background, metaclass=RepositoryMeta):
             # query = cls.apply_search_filter(cls.get_query(model), **kwargs)
             # stmt = (select(model).where(search_all_text_fields(model, search)).order_by(model.id))
             logger.warning('========0')
-            query = apply_auto_filter(cls.get_query(model), search)
+            query = cls.get_query(model)
+            compiled_pg = query.compile(dialect = postgresql.dialect())
+            logger.warning(f"SQL: {compiled_pg.string}")
+            logger.warning('=============================================')
+            query = apply_auto_filter(query, search)
             logger.warning('========5')
             if limit:
                 query = query.limit(limit)
