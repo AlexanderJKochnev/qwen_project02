@@ -13,6 +13,7 @@ from loguru import logger
 from sqlalchemy import and_, cast, desc, func, inspect, literal, literal_column, or_, Row, RowMapping, select, Select, \
     Text, text, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased, load_only
@@ -513,31 +514,22 @@ class Repository(Background, metaclass=RepositoryMeta):
         limit: int = 20  # длина списка поисковой выдачи - что бы не уложить сервер
     ) -> Sequence[Row[Any] | RowMapping | Any]:
         """
-        Поиск по всем заданным текстовым полям основной таблицы
-        если указана pagination - возвращвет pagination
-        :param search_str:  текстовое условие поиска
-        :type search_str:   str
-        :param model:       модель
-        :type model:        sqlalchemy model
-        :param session:     async session
-        :type session:      async session
-        :param skip:        сдвиг на кол-во записей (для пагинации)
-        :type skip:         int
-        :param limit:       кол-во записей
-        :type limit:        int
-        :param and_condition:   дополнительные условия _AND
-        :type and_condition:    dict
-        :return:                Optional[List[ModelType]]
-        :rtype:                 Optional[List[ModelType]]
+
         """
         try:
             # kwargs: dict = {}
             # kwargs['search_str'] = search
             # query = cls.apply_search_filter(cls.get_query(model), **kwargs)
+            # stmt = (select(model).where(search_all_text_fields(model, search)).order_by(model.id))
+            logger.warning('========0')
             query = apply_auto_filter(cls.get_query(model), search)
+            logger.warning('========5')
             if limit:
                 query = query.limit(limit)
+            compiled_pg = query.compile(dialect=postgresql.dialect())
+            logger.warning(f'{compiled_pg=}')
             result = await session.execute(query)
+            logger.warning('========6')
             records = result.scalars().all()
             return records
         except Exception as e:

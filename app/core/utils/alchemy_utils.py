@@ -23,13 +23,13 @@ function = {1: or_, 2: and_}
 
 def apply_auto_filter(stmt, search_str: str):
     search_term = f"%{search_str}%"
-
+    logger.warning('========1')
     # 1. Собираем все модели: корень + все, что указано в .options
     models = {stmt.column_descriptions[0]['entity']}
     for opt in stmt._with_options:
         if hasattr(opt, 'path'):
             models.add(opt.path.mapper.class_)
-
+    logger.warning('========2')
     # 2. Генерируем фильтры Name... для всех найденных моделей
     conditions = []
     for model in models:
@@ -37,7 +37,7 @@ def apply_auto_filter(stmt, search_str: str):
             [getattr(model, col.key).ilike(search_term) for col in inspect(model).mapper.column_attrs if
              col.key.startswith('Name')]
         )
-
+    logger.warning('========3')
     # 3. Превращаем все подгрузки в JOIN-ы (чтобы WHERE по ним работал)
     # и накладываем фильтр
     return stmt.options(joinedload('*')).where(or_(*conditions)).distinct()
