@@ -402,34 +402,34 @@ def get_model_by_name_stable(model_name):
 
 
 class FullTextSearchMixin:
-    """
-    Автоматически создает префиксные B-tree индексы для всех
-    строковых полей модели (String, Text).
-    """
-
     @declared_attr
     def __table_args__(cls):
         indexes = []
 
-        # Перебираем все атрибуты класса
-        for name, attr in cls.__dict__.items():
-            column = None
+        # Проверяем все классы в MRO
+        for base in cls.__mro__:
+            for name, attr in base.__dict__.items():
+                if name.startswith('_') or callable(attr):
+                    continue
 
-            # 1. Проверяем классические Column
-            if isinstance(attr, Column):
-                column = attr
-            # 2. Проверяем современные Mapped колонки
-            elif hasattr(attr, "prop") and isinstance(attr.prop, ColumnProperty):
-                column = attr.prop.columns[0]
+                column = None
+                if isinstance(attr, Column):
+                    column = attr
+                elif hasattr(attr, "prop") and isinstance(attr.prop, ColumnProperty):
+                    column = attr.prop.columns[0]
 
-            # Если это текстовое поле — создаем индекс
-            if column is not None and isinstance(column.type, (String, Text)):
-                index_name = f"ix_{cls.__tablename__}_{name}_lower_prefix"
+                if column and isinstance(column.type, (String, Text)):
+                    # Проверяем, не создавали ли уже индекс для этой колонки
+                    index_name = f"ix_{cls.__tablename__}_{name}_lower_prefix"
+                    if not any(getattr(idx, 'name', '') == index_name for idx in indexes):
+                        idx = Index(index_name, func.lower(column))
+                        indexes.append(idx)
 
-                # Создаем индекс по func.lower(field) для поддержки LIKE 'term%'
-                idx = Index(
-                    index_name, func.lower(column), postgresql_ops={f"lower({name})": "text_pattern_ops"}
-                )
-                indexes.append(idx)
+        # Объединяем с существующими table_args
+        existing = getattr(cls, '__table_args__', None)
+        if existing:
+            if isinstance(existing, (tuple, list)):
+                return existing + tuple(indexes)
+            return (existing,) + tuple(indexes)
 
-        return tuple(indexes)
+        return tuple(indexes) if indexes else None
