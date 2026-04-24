@@ -492,10 +492,12 @@ class Repository(Background, metaclass=RepositoryMeta):
             query = cls.get_query(model)
             id_query, count_query = get_sql_search(query, search, limit=limit, offset=skip)
             # 1. Получаем список ID:
-            ids = await session.execute(id_query).scalars().all()
+            response = await session.execute(id_query)
+            ids = response.scalars().all()
             logger.critical('1--------')
             # 2. Получаем общее кол-во:
-            total = await session.execute(count_query).scalar()
+            response = await session.execute(count_query)
+            total = response.scalar()
             logger.warning(f'{ids=}  {total=}')
             result = await cls.get_by_ids(ids, model, session)
             records = result.scalars().all()
