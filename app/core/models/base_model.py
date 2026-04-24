@@ -4,12 +4,12 @@ from datetime import datetime, date
 from decimal import Decimal
 from typing import Annotated, Optional, Type, List
 # from sqlalchemy.dialects.postgresql import MONEY
-from sqlalchemy import DateTime, DECIMAL, func, text, Text, Computed, inspect, String, Index, Column
+from sqlalchemy import DateTime, DECIMAL, func, text, Text, Computed, inspect, String, Index
 from sqlalchemy.dialects.postgresql import ARRAY, BIGINT
 from sqlalchemy.dialects.postgresql import TSVECTOR
 # from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy.ext.asyncio import AsyncAttrs
-from sqlalchemy.orm import DeclarativeBase, declared_attr, Mapped, mapped_column, ColumnProperty
+from sqlalchemy.orm import DeclarativeBase, declared_attr, Mapped, mapped_column
 # from app.core.config.project_config import settings
 
 langs = ['en', 'ru', 'fr']
@@ -402,21 +402,29 @@ def get_model_by_name_stable(model_name):
 
 
 class FullTextSearchMixin:
-    @declared_attr
+    @declared_attr.directive
     def __table_args__(cls):
-        indexes = []
-
-        for name, attr in cls.__dict__.items():
-            if hasattr(attr, 'type') and isinstance(attr.type, (String, Text)):
-                idx = Index(
-                    f"ix_{cls.__tablename__}_{name}_lower_prefix", func.lower(attr)
+        # 1. Генерируем индексы.
+        # К этому моменту cls.__table__.columns уже доступны!
+        auto_indexes = []
+        for col in cls.__table__.columns:
+            if isinstance(col.type, (String, Text)):
+                auto_indexes.append(
+                    Index(
+                        f"ix_{cls.__tablename__}_{col.name}_lp", func.lower(col),
+                        postgresql_ops={f"lower({col.name})": "text_pattern_ops"}
+                    )
                 )
-                indexes.append(idx)
 
-        existing_args = getattr(cls, '__table_args__', None)
-        if existing_args:
-            if isinstance(existing_args, tuple):
-                return existing_args + tuple(indexes)
-            return (existing_args,) + tuple(indexes)
+        # 2. Получаем аргументы от других классов в цепочке наследования
+        # super() здесь работает корректно благодаря механизму директив
+        try:
+            parent_args = super().__table_args__
+        except AttributeError:
+            parent_args = ()
 
-        return tuple(indexes) if indexes else None
+        # 3. Слияние (Merging)
+        if isinstance(parent_args, dict):
+            return tuple(auto_indexes) + (parent_args,)
+
+        return tuple(auto_indexes) + parent_args
