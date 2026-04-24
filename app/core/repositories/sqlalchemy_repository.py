@@ -527,7 +527,8 @@ class Repository(Background, metaclass=RepositoryMeta):
             if limit:
                 query = query.limit(limit)
             compiled_pg = query.compile(dialect=postgresql.dialect())
-            logger.warning(f'{compiled_pg=}')
+            logger.warning(f"SQL: {compiled_pg.string}")
+            logger.warning(f"Params: {compiled_pg.params}")
             result = await session.execute(query)
             logger.warning('========6')
             records = result.scalars().all()
