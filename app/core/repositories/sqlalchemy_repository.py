@@ -13,7 +13,7 @@ from loguru import logger
 from sqlalchemy import and_, cast, desc, func, inspect, literal, literal_column, or_, Row, RowMapping, select, Select, \
     Text, text, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
-from sqlalchemy.dialects import postgresql
+# from sqlalchemy.dialects import postgresql
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased, load_only
@@ -494,11 +494,9 @@ class Repository(Background, metaclass=RepositoryMeta):
             # 1. Получаем список ID:
             response = await session.execute(id_query)
             ids = response.scalars().all()
-            logger.critical('1--------')
             # 2. Получаем общее кол-во:
             response = await session.execute(count_query)
             total = response.scalar()
-            logger.warning(f'{ids=}  {total=}')
             result = await cls.get_by_ids(ids, model, session)
             return result if result else [], total
         except Exception as e:
@@ -513,21 +511,13 @@ class Repository(Background, metaclass=RepositoryMeta):
 
         """
         try:
-            # kwargs: dict = {}
-            # kwargs['search_str'] = search
-            # query = cls.apply_search_filter(cls.get_query(model), **kwargs)
-            # stmt = (select(model).where(search_all_text_fields(model, search)).order_by(model.id))
             query = cls.get_query(model)
             id_query, count_query = get_sql_search(query, search, limit=limit)
             # 1. Получаем список ID:
-            # ids = session.execute(id_query).scalars().all()
-            # 2. Получаем общее кол-во:
-            # total_count = session.execute(count_query).scalar()
-            if limit:
-                query = query.limit(limit)
-            result = await session.execute(query)
-            records = result.scalars().all()
-            return records
+            response = await session.execute(id_query)
+            ids = response.scalars().all()
+            result = await cls.get_by_ids(ids, model, session)
+            return result if result else []
         except Exception as e:
             raise AppBaseException(message=str(e), status_code=404)
 

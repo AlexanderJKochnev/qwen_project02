@@ -56,8 +56,6 @@ def get_sql_search(query, search_str: str, limit: int = 100, offset: int = 0) ->
 
     # РЕЗУЛЬТАТ 2: Запрос на Общее количество
     count_sql = f"SELECT COUNT(DISTINCT {main_table}.id) {from_part} WHERE {where_clause}"
-    logger.warning(f'{id_sql=}')
-    logger.warning(f'{count_sql=}')
     return text(id_sql), text(count_sql)
 
 
