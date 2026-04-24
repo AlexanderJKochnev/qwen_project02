@@ -4,7 +4,7 @@ from datetime import datetime, date
 from decimal import Decimal
 from typing import Annotated, Optional, Type, List
 # from sqlalchemy.dialects.postgresql import MONEY
-from sqlalchemy import DateTime, DECIMAL, func, text, Text, Computed, inspect, String, Index
+from sqlalchemy import DateTime, DECIMAL, func, text, Text, Computed, inspect, String, Index, Column
 from sqlalchemy.dialects.postgresql import ARRAY, BIGINT
 from sqlalchemy.dialects.postgresql import TSVECTOR
 # from sqlalchemy_serializer import SerializerMixin
@@ -404,27 +404,44 @@ def get_model_by_name_stable(model_name):
 class FullTextSearchMixin:
     @declared_attr.directive
     def __table_args__(cls):
-        # 1. Генерируем индексы.
-        # К этому моменту cls.__table__.columns уже доступны!
         auto_indexes = []
-        for col in cls.__table__.columns:
-            if isinstance(col.type, (String, Text)):
+
+        # Инспектируем атрибуты класса напрямую
+        # Это работает и для Column, и для Mapped объектов
+        for name in dir(cls):
+            # Пропускаем служебные атрибуты
+            if name.startswith('_'):
+                continue
+
+            attr = getattr(cls, name, None)
+
+            # Нам нужны только объекты колонок
+            column = None
+            if isinstance(attr, Column):
+                column = attr
+            elif hasattr(attr, "prop") and hasattr(attr.prop, "columns"):
+                # Для Mapped[_] полей
+                column = attr.prop.columns[0]
+
+            # Если нашли текстовую колонку — создаем индекс
+            if column is not None and isinstance(column.type, (String, Text)):
+                index_name = f"ix_{cls.__tablename__}_{name}_lp"
                 auto_indexes.append(
                     Index(
-                        f"ix_{cls.__tablename__}_{col.name}_lp", func.lower(col),
-                        postgresql_ops={f"lower({col.name})": "text_pattern_ops"}
+                        index_name, func.lower(column), postgresql_ops={f"lower({name})": "text_pattern_ops"}
                     )
                 )
 
-        # 2. Получаем аргументы от других классов в цепочке наследования
-        # super() здесь работает корректно благодаря механизму директив
+        # Слияние с родительскими аргументами
         try:
-            parent_args = super().__table_args__
-        except AttributeError:
-            parent_args = ()
+            # Пытаемся вызвать родительский __table_args__
+            # Если SearchableMixin первый в списке наследования,
+            # super() уйдет в Base или другие миксины
+            parent_res = super().__table_args__
 
-        # 3. Слияние (Merging)
-        if isinstance(parent_args, dict):
-            return tuple(auto_indexes) + (parent_args,)
-
-        return tuple(auto_indexes) + parent_args
+            if isinstance(parent_res, dict):
+                return tuple(auto_indexes) + (parent_res,)
+            return tuple(auto_indexes) + parent_res
+        except (AttributeError, TypeError):
+            # Если родителей с __table_args__ нет
+            return tuple(auto_indexes)
