@@ -489,6 +489,7 @@ class Repository(Background, metaclass=RepositoryMeta):
         """
         try:
             stmt = (select(model).where(search_all_text_fields(model, search)).order_by(model.id))
+            stmt.where(get_auto_filter(stmt, "поиск"))
             # Сортировка обязательна для корректной пагинации
             total = await cls.get_count(stmt, session)
             stmt = stmt.offset(skip).limit(limit)

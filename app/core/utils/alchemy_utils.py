@@ -10,14 +10,37 @@ from sqlalchemy.dialects import postgresql
 from pydantic import BaseModel, create_model, Field
 from sqlalchemy import and_, Column, ColumnElement, func, inspect, or_, String, Text, Unicode, UnicodeText
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import DeclarativeBase, MapperProperty
+from sqlalchemy.orm import DeclarativeBase, MapperProperty, joinedload
 from sqlalchemy.orm.attributes import QueryableAttribute
 from app.core.types import ModelType
 from app.core.models.base_model import Base
 from app.core.utils.common_utils import camel_to_enum, clean_string, enum_to_camel
 from app.core.config.project_config import get_path_to_root
 
+
 function = {1: or_, 2: and_}
+
+
+def apply_auto_filter(stmt, search_str: str):
+    search_term = f"%{search_str}%"
+
+    # 1. Собираем все модели: корень + все, что указано в .options
+    models = {stmt.column_descriptions[0]['entity']}
+    for opt in stmt._with_options:
+        if hasattr(opt, 'path'):
+            models.add(opt.path.mapper.class_)
+
+    # 2. Генерируем фильтры Name... для всех найденных моделей
+    conditions = []
+    for model in models:
+        conditions.extend(
+            [getattr(model, col.key).ilike(search_term) for col in inspect(model).mapper.column_attrs if
+             col.key.startswith('Name')]
+        )
+
+    # 3. Превращаем все подгрузки в JOIN-ы (чтобы WHERE по ним работал)
+    # и накладываем фильтр
+    return stmt.options(joinedload('*')).where(or_(*conditions)).distinct()
 
 
 def search_all_text_fields(model, search_term):
@@ -25,6 +48,7 @@ def search_all_text_fields(model, search_term):
         фильтр для поискового запроса по всем текстовым полям модели
         Использование:
         query = session.query(User).filter(search_all_text_fields(User, "искомое_слово"))
+        НЕ ИЩЕТ В СВЯЗАННЫХ ТАБЛИЦАХ
     """
 
     columns = inspect(model).c
@@ -32,7 +56,6 @@ def search_all_text_fields(model, search_term):
     text_filters = [getattr(model, col.key).ilike(f"%{search_term}%") for col in columns if
                     isinstance(col.type, String)]
     return or_(*text_filters)
-
 
 
 def get_field_list(model: Type[DeclarativeBase], starts: tuple = None, ends: tuple = None):
