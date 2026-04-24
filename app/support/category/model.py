@@ -9,7 +9,7 @@ from app.service_registry import registers_search_update
 
 
 @registers_search_update("subcategory.drink.item")
-class Category(FullTextSearchMixin, BaseFull):
+class Category(BaseFull, FullTextSearchMixin):
     lazy = settings.LAZY
     single_name = 'category'
     plural_name = plural(single_name)
