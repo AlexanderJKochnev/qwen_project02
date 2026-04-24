@@ -4,12 +4,12 @@ from datetime import datetime, date
 from decimal import Decimal
 from typing import Annotated, Optional, Type, List
 # from sqlalchemy.dialects.postgresql import MONEY
-from sqlalchemy import DateTime, DECIMAL, func, text, Text, Computed, inspect
+from sqlalchemy import DateTime, DECIMAL, func, text, Text, Computed, inspect, String, Index, Column
 from sqlalchemy.dialects.postgresql import ARRAY, BIGINT
 from sqlalchemy.dialects.postgresql import TSVECTOR
 # from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy.ext.asyncio import AsyncAttrs
-from sqlalchemy.orm import DeclarativeBase, declared_attr, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, declared_attr, Mapped, mapped_column, ColumnProperty
 # from app.core.config.project_config import settings
 
 langs = ['en', 'ru', 'fr']
@@ -399,3 +399,37 @@ def get_model_by_name_stable(model_name):
         if mapper.class_.__name__ == model_name:
             return mapper.class_
     return None
+
+
+class FullTextSearchMixin:
+    """
+    Автоматически создает префиксные B-tree индексы для всех
+    строковых полей модели (String, Text).
+    """
+
+    @declared_attr
+    def __table_args__(cls):
+        indexes = []
+
+        # Перебираем все атрибуты класса
+        for name, attr in cls.__dict__.items():
+            column = None
+
+            # 1. Проверяем классические Column
+            if isinstance(attr, Column):
+                column = attr
+            # 2. Проверяем современные Mapped колонки
+            elif hasattr(attr, "prop") and isinstance(attr.prop, ColumnProperty):
+                column = attr.prop.columns[0]
+
+            # Если это текстовое поле — создаем индекс
+            if column is not None and isinstance(column.type, (String, Text)):
+                index_name = f"ix_{cls.__tablename__}_{name}_lower_prefix"
+
+                # Создаем индекс по func.lower(field) для поддержки LIKE 'term%'
+                idx = Index(
+                    index_name, func.lower(column), postgresql_ops={f"lower({name})": "text_pattern_ops"}
+                )
+                indexes.append(idx)
+
+        return tuple(indexes)
