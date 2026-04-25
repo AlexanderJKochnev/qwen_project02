@@ -33,9 +33,17 @@ export const ItemUpdateForm = ({ onClose }: { onClose: () => void }) => {
     const params = new URLSearchParams({
       page: page.toString(),
       page_size: '50',
-      ...(search && { search })
+      sort: 'name', // Добавляем сортировку по имени на сервере
+      order: 'asc'  // От А до Я
     });
+
+    // Если пользователь что-то ищет, добавляем поисковый запрос
+    if (search) {
+      params.append('search', search);
+    }
+
     const response = await apiClient(`/handbooks_page/${endpoint}/${lang}?${params}`, { method: 'GET' });
+
     return {
       items: response.items || response,
       total: response.total || response.length
