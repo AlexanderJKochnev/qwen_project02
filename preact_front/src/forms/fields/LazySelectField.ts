@@ -10,8 +10,10 @@ export interface LazySelectConfig extends FieldConfig {
 export class LazySelectField extends BaseField<string> {
   private loadOptions: (search: string, page: number) => Promise<{ items: any[], total: number }>;
 
-  constructor(config: LazySelectConfig, value: string, onChange: (name: string, value: any) => void) {
-    super(config, value, onChange);
+  constructor(config: LazySelectConfig, value: any, onChange: (name: string, value: any) => void) {
+    // Принудительно кастуем в строку, чтобы избежать багов с числами
+    const stringValue = (value !== null && value !== undefined) ? String(value) : '';
+    super(config, stringValue, onChange);
     this.loadOptions = config.loadOptions;
   }
 
@@ -49,14 +51,12 @@ const NativeLazySelect = ({ name, label, value, required, loadOptions, getDispla
 
   useEffect(() => {
     setLoading(true);
-    // Нативный селект не умеет дозагружать по скроллу,
-    // поэтому просто запрашиваем первую большую пачку (50 элементов)
     loadOptions('', 1)
       .then(result => {
         setOptions(result.items || []);
       })
       .catch(err => {
-        console.error('Failed to load options in LazySelect:', err);
+        console.error('Failed to load options:', err);
       })
       .finally(() => {
         setLoading(false);
@@ -72,14 +72,14 @@ const NativeLazySelect = ({ name, label, value, required, loadOptions, getDispla
     ),
     h('select', {
       name: name,
-      value: value || '',
+      value: value,
       onChange: (e: any) => onChange(e.target.value),
       className: 'select select-bordered w-full',
       required: required
     },
       h('option', { value: '' }, loading ? 'Loading...' : `Select ${label.toLowerCase()}`),
       options.map(option =>
-        h('option', { key: option.id, value: option.id.toString() }, getDisplayName(option))
+        h('option', { key: option.id, value: String(option.id) }, getDisplayName(option))
       )
     )
   );
