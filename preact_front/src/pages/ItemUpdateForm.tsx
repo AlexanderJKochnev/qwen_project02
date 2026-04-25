@@ -21,7 +21,7 @@ export const ItemUpdateForm = ({ onClose }: { onClose: () => void }) => {
           subcategory_id: data.subcategory_id?.toString() || '',
           source_id: data.source_id?.toString() || '',
           site_id: data.site_id?.toString() || '',
-          producer_id: data.producer_id?.tostring() || ''
+          producer_id: data.producer_id?.toString() || ''
         });
         setLoadingData(false);
       });
