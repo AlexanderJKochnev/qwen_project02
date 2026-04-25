@@ -115,7 +115,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
     backgroundColor: 'white', padding: '20px', borderRadius: '8px',
     maxWidth: '800px', width: '90%', maxHeight: '90vh', overflowY: 'auto'
   }},
-    h('h2', { style: { backgroundColor: 'yellow', padding: '5px' } }, 'STEP 2 - WITH LAZY SELECT'), // Желтый фон для проверки
+    h('h2', { style: { backgroundColor: 'yellow', padding: '5px' } }, 'STEP 2 - WITH LAZY SELECT22222'), // Желтый фон для проверки
 
     h('div', { className: 'mb-4 p-4 border rounded-lg' },
       h('h3', { className: 'font-bold mb-2' }, 'Drink Action'),
