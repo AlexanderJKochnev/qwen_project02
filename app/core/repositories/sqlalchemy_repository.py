@@ -489,7 +489,8 @@ class Repository(Background, metaclass=RepositoryMeta):
             Поиск по всем заданным текстовым полям основной таблицы
         """
         try:
-            query = cls.get_query(model)
+            # query = cls.get_query(model)
+            query = cls.get_short_query(model)
             id_query, count_query = get_sql_search(query, search, limit=limit, offset=skip)
             # 1. Получаем список ID:
             response = await session.execute(id_query)

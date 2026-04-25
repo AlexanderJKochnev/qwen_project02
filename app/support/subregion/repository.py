@@ -24,6 +24,9 @@ class SubregionRepository(Repository):
         # Добавляем загрузку связи с relationships
         return select(Subregion).options(selectinload(Subregion.region).
                                          selectinload(Region.country))
+        return select(Subregion).options(
+            selectinload(Subregion.region).selectinload(Region.country)
+            )
 
     @classmethod
     def get_short_query(cls, model: Subregion, field1: tuple = ('id', 'name', 'country_id', 'region_id')):
