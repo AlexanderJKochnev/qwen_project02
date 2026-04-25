@@ -19,8 +19,9 @@ export const ItemUpdateForm = ({ onClose }: { onClose: () => void }) => {
         setFormData({
           ...data,
           subcategory_id: data.subcategory_id?.toString() || '',
-          brand_id: data.brand_id?.toString() || '',
-          country_id: data.country_id?.toString() || '',
+          source_id: data.source_id?.toString() || '',
+          site_id: data.site_id?.toString() || '',
+          producer_id: data.producer_id?.tostring() || ''
         });
         setLoadingData(false);
       });
@@ -44,6 +45,7 @@ export const ItemUpdateForm = ({ onClose }: { onClose: () => void }) => {
   // 2. Построение формы в цепочку. Добавляйте новые селекты одной строкой!
   form
     .text('title', 'Title')
+    .text('subtitle', 'Subtitle')
     .lazySelect('subcategory_id', 'Subcategory', makeLoader('subcategories'), true)
     .lazySelect('source_id', 'Source', makeLoader('sources'))
     .lazySelect('site_id', 'Site', makeLoader('sites'))
