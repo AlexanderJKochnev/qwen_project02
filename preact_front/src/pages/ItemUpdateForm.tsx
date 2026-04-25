@@ -60,6 +60,7 @@ export const ItemUpdateForm = ({ onClose }: { onClose: () => void }) => {
   form
     .text('title', 'Title')
     .text('subtitle', 'Subtitle')
+    .text('lwin', 'lwin')
     .lazySelect('subcategory_id', 'Subcategory', makeLoader('subcategories'), true)
     .lazySelect('source_id', 'Source', makeLoader('sources'))
     .lazySelect('site_id', 'Site', makeLoader('sites'))
