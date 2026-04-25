@@ -25,15 +25,13 @@ export class LazySelectField extends BaseField<string> {
   }
 
   render() {
-    // Используем внутренний Preact-компонент для управления состоянием инпута и списка
-    return h(LazySelectInternal, {
+    // Внутренний компонент для управления загрузкой
+    return h(NativeLazySelect, {
       name: this.config.name,
       label: this.config.label,
-      value: this.value,
+      value: this.value || '',
       required: this.config.required,
       loadOptions: this.loadOptions,
-      pageSize: this.pageSize,
-      getDisplayName: this.getDisplayName,
       onChange: (val: string) => this.handleChange(val)
     });
   }
@@ -53,30 +51,44 @@ interface InternalProps {
   onChange: (value: string) => void;
 }
 
-const LazySelectInternal = ({ name, label, value, required, loadOptions, pageSize, getDisplayName, onChange }: InternalProps) => {
+const NativeLazySelect = ({ name, label, value, required, loadOptions, onChange }: any) => {
   const [options, setOptions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [isOpen, setIsOpen] = useState(false);
 
-  const containerRef = useRef<HTMLDivElement>(null);
-  const searchTimeoutRef = useRef<any>(null);
-
-  const load = async (searchTerm: string, pageNum: number, append = false) => {
+  // Загружаем только 1 раз при монтировании
+  useEffect(() => {
     setLoading(true);
-    try {
-      const result = await loadOptions(searchTerm, pageNum);
-      setHasMore(pageNum * pageSize < result.total);
-      setOptions(prev => append ? [...prev, ...result.items] : result.items);
-    } catch (err) {
-      console.error('Failed to load options:', err);
-    } finally {
-      setLoading(false);
-    }
+    loadOptions('', 1) // Грузим первую пачку (50 шт)
+      .then(result => setOptions(result.items))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const getDisplayName = (item: any) => {
+    return item.name || item.name_en || item.name_ru || '';
   };
 
+  return h('div', { className: 'mb-4', key: name },
+    h('label', { className: 'label' },
+      h('span', { className: 'label-text font-medium' },
+        label,
+        required && h('span', { className: 'text-red-500 ml-1' }, '*')
+      )
+    ),
+    // Используем НАСТОЯЩИЙ селект браузера
+    h('select', {
+      name: name,
+      value: value || '',
+      onChange: (e: any) => onChange(e.target.value),
+      className: 'select select-bordered w-full', // Стили вашей темы
+      required: required
+    },
+      h('option', { value: '' }, loading ? 'Loading...' : `Select ${label.toLowerCase()}`),
+      options.map(option =>
+        h('option', { key: option.id, value: option.id.toString() }, getDisplayName(option))
+      )
+    )
+  );
+};
   useEffect(() => { load('', 1, false); }, []);
 
   // Закрытие при клике вне селекта
