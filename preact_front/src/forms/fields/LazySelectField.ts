@@ -143,9 +143,12 @@ const LazySelectCore = ({ name, label, value, required, loadOptions, getDisplayN
 
       // Выпадающий список
       isOpen && h('div', {
-        className: 'absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto z-[1000]',
+        className: 'absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto z-50',
         onScroll: handleScroll,
-        style: { top: '100%' }
+        style: { top: '100%' ,
+          backgroundColor: 'white', // Жестко форсируем белый фон
+          color: '#374151' // и темный цвет текста (text-gray-700)
+        }
       },
         options.map(option => h('div', {
           key: option.id,
