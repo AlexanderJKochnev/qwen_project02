@@ -25,7 +25,7 @@ export const HandbookTypeList = () => {
   const { params } = useRoute();
   const type = params.type;
   // const lang = getCurrentLanguage(); // Получаем 'ru'
-  const { language } = useLanguage();
+  const lang = useLanguage().language;
   const [data, setData] = useState<HandbookItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -50,7 +50,7 @@ export const HandbookTypeList = () => {
       try {
         // Формируем URL строго по вашему образцу:
         // /handbooks_page/categories/ru?page=1&page_size=20&search=win
-        const queryPath = `/handbooks_page/${type}/${language}?page=${page}&page_size=${pageSize}&search=${encodeURIComponent(appliedSearch)}`;
+        const queryPath = `/handbooks_page/${type}/${lang}?page=${page}&page_size=${pageSize}&search=${encodeURIComponent(appliedSearch)}`;
 
         const response = await apiClient<ApiResponse>(queryPath);
 
@@ -72,7 +72,7 @@ export const HandbookTypeList = () => {
     };
 
     loadData();
-  }, [type, page, appliedSearch, language]);
+  }, [type, page, appliedSearch, lang]);
 
   const handleSearchClick = () => {
     setPage(1);
