@@ -45,9 +45,9 @@ export const ItemUpdateForm = ({ onClose }: { onClose: () => void }) => {
   form
     .text('title', 'Title')
     .lazySelect('subcategory_id', 'Subcategory', makeLoader('subcategories'), true)
-    .lazySelect('brand_id', 'Brand', makeLoader('brands'))
-    .lazySelect('country_id', 'Country', makeLoader('countries'))
-    .lazySelect('manufacturer_id', 'Manufacturer', makeLoader('manufacturers'));
+    .lazySelect('source_id', 'Source', makeLoader('sources'))
+    .lazySelect('site_id', 'Site', makeLoader('sites'))
+    .lazySelect('producer_id', 'Producer', makeLoader('producers'));
 
     return h('div', {
     style: {
