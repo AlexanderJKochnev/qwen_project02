@@ -58,7 +58,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
       ...(search && { search })
     });
 
-    const response = await apiClient(`/handbooks/subcategories?${params}`, { method: 'GET' });
+    const response = await apiClient(`/handbooks_page/subcategories?${params}`, { method: 'GET' });
     return {
       items: response.items || response,
       total: response.total || response.length
