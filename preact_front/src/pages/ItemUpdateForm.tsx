@@ -4,155 +4,61 @@ import { useState, useEffect } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
 import { apiClient } from '../lib/apiClient';
 import { FormBuilder } from '../forms/FormBuilder';
-import { LazySelect } from '../components/LazySelect';
 import { useLanguage } from '../contexts/LanguageContext';
 
-interface ItemUpdateFormProps {
-  onClose: () => void;
-  onUpdated?: () => void;
-}
-
-export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
+export const ItemUpdateForm = ({ onClose }: { onClose: () => void }) => {
   const { url } = useLocation();
   const id = parseInt(url.split('/').pop() || '0');
   const lang = useLanguage().language;
   const [formData, setFormData] = useState<any>({});
-  const [drinkAction, setDrinkAction] = useState<'update' | 'create'>('update');
-  const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log('=== STEP 2 VERSION WITH LAZY SELECT ===');
-    console.log('Loading item data for id:', id);
-
     apiClient(`/preact/${id}`, { method: 'GET' })
       .then(data => {
-        console.log('Item data received:', data);
         setFormData({
           ...data,
-          alc: data.alc?.toString() || '',
-          vol: data.vol?.toString() || '',
-          price: data.price?.toString() || '',
-          sugar: data.sugar?.toString() || '',
           subcategory_id: data.subcategory_id?.toString() || '',
+          brand_id: data.brand_id?.toString() || '',
+          country_id: data.country_id?.toString() || '',
         });
-        setLoadingData(false);
-      })
-      .catch(err => {
-        console.error('Error loading item:', err);
-        setError(err.message);
         setLoadingData(false);
       });
   }, [id]);
 
   const handleChange = (name: string, value: any) => {
-    console.log('Field change:', name, value);
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev: any) => ({ ...prev, [name]: value }));
   };
 
-  const loadSubcategories = async (search: string, page: number) => {
-    console.log('Loading subcategories:', { search, page });
-    const params = new URLSearchParams({
-      page: page.toString(),
-      page_size: '50',
-      ...(search && { search })
-    });
-
-    const response = await apiClient(`/handbooks_page/subcategories/${lang}?${params}`, { method: 'GET' });
-    return {
-      items: response.items || response,
-      total: response.total || response.length
-    };
+  // 1. Универсальный генератор загрузок, чтобы не дублировать код
+  const makeLoader = (endpoint: string) => async (search: string, page: number) => {
+    const params = new URLSearchParams({ page: page.toString(), page_size: '50', ...(search && { search }) });
+    const response = await apiClient(`/handbooks_page/${endpoint}/${lang}?${params}`, { method: 'GET' });
+    return { items: response.items || response, total: response.total || response.length };
   };
 
-  const handleSubmit = async (e: Event) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      console.log('Submit data:', formData);
-      alert('Submit - пока только лог');
-      setLoading(false);
-    } catch (error) {
-      console.error('Submit error:', error);
-      setLoading(false);
-    }
-  };
-
-  if (loadingData) {
-    return h('div', { style: {
-      position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-      backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center',
-      alignItems: 'center', zIndex: 1500
-    }}, h('div', { style: { backgroundColor: 'white', padding: '20px', borderRadius: '8px' } }, 'Loading...'));
-  }
-
-  if (error) {
-    return h('div', { style: {
-      position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-      backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center',
-      alignItems: 'center', zIndex: 1500
-    }}, h('div', { style: { backgroundColor: 'white', padding: '20px', borderRadius: '8px' } },
-      h('h2', {}, 'Error'), h('p', {}, error), h('button', { onClick: onClose }, 'Close')));
-  }
+  if (loadingData) return h('div', {}, 'Loading...');
 
   const form = new FormBuilder(formData, handleChange);
 
+  // 2. Построение формы в цепочку. Добавляйте новые селекты одной строкой!
   form
     .text('title', 'Title')
-    .text('title_ru', 'Title (Russian)')
-    .text('title_fr', 'Title (French)')
-    .textarea('description', 'Description')
-    .textarea('description_ru', 'Description (Russian)')
-    .textarea('description_fr', 'Description (French)')
-    .text('vol', 'Volume (L)', { type: 'number', step: '0.01' })
-    .text('alc', 'Alcohol (%)', { type: 'number', step: '0.1' });
+    .lazySelect('subcategory_id', 'Subcategory', makeLoader('subcategories'), true)
+    .lazySelect('brand_id', 'Brand', makeLoader('brands'))
+    .lazySelect('country_id', 'Country', makeLoader('countries'))
+    .lazySelect('manufacturer_id', 'Manufacturer', makeLoader('manufacturers'));
 
-  return h('div', { style: {
-    position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center',
-    alignItems: 'center', zIndex: 1500
-  }}, h('div', { style: {
-    backgroundColor: 'white', padding: '20px', borderRadius: '8px',
-    maxWidth: '800px', width: '90%', maxHeight: '90vh', overflowY: 'auto'
-  }},
-    h('h2', { style: { backgroundColor: 'yellow', padding: '5px' } }, 'STEP 2 - WITH LAZY SELECT22222'), // Желтый фон для проверки
-
-    h('div', { className: 'mb-4 p-4 border rounded-lg' },
-      h('h3', { className: 'font-bold mb-2' }, 'Drink Action'),
-      h('div', { className: 'flex gap-4' },
-        h('label', { className: 'flex items-center' },
-          h('input', { type: 'radio', checked: drinkAction === 'update', onChange: () => setDrinkAction('update') }),
-          h('span', { className: 'ml-2' }, 'Update existing drink')
-        ),
-        h('label', { className: 'flex items-center' },
-          h('input', { type: 'radio', checked: drinkAction === 'create', onChange: () => setDrinkAction('create') }),
-          h('span', { className: 'ml-2' }, 'Save existing drink and create new')
+  return h('div', { className: 'fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[1500]' },
+    h('div', { className: 'bg-white p-6 rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto' },
+      h('h2', { className: 'text-2xl font-bold mb-4' }, 'Update Item'),
+      h('form', { onSubmit: (e) => { e.preventDefault(); console.log(formData); } },
+        form.build(),
+        h('div', { className: 'flex justify-end gap-4 mt-6' },
+          h('button', { type: 'button', onClick: onClose, className: 'btn btn-ghost' }, 'Cancel'),
+          h('button', { type: 'submit', className: 'btn btn-primary' }, 'Save')
         )
       )
-    ),
-
-    h('form', { onSubmit: handleSubmit },
-      form.build(),
-      h(LazySelect, {
-        name: 'subcategory_id',
-        label: 'Subcategory',
-        value: formData.subcategory_id || '',
-        onChange: handleChange,
-        loadOptions: loadSubcategories,
-        required: true
-      }),
-      h('div', { className: 'flex justify-end gap-4 mt-6' },
-        h('button', { type: 'button', onClick: onClose, className: 'btn btn-ghost', disabled: loading }, 'Cancel'),
-        h('button', { type: 'submit', className: `btn btn-primary ${loading ? 'loading' : ''}`, disabled: loading },
-          loading ? 'Updating...' : 'Update Item'
-        )
-      )
-    ),
-
-    h('details', { className: 'mt-4' },
-      h('summary', {}, 'Debug: Form Data'),
-      h('pre', { className: 'text-xs overflow-auto max-h-96' }, JSON.stringify(formData, null, 2))
     )
-  ));
+  );
 };

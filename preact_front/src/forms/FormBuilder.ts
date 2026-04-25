@@ -6,6 +6,7 @@ import { SelectField } from './fields/SelectField';
 import { MultilingualFieldGroup } from './fields/MultilingualFieldGroup';
 import { CheckboxGroupField } from './fields/CheckboxGroupField';
 import { FileField } from './fields/FileField';
+import { LazySelectField } from './fields/LazySelectField'; // Добавленный импорт
 
 export class FormBuilder {
   private fields: h.JSX.Element[] = [];
@@ -17,7 +18,6 @@ export class FormBuilder {
     this.onChange = onChange;
   }
 
-  // ОДНА СТРОЧКА для создания поля
   text(name: string, label: string, options?: any) {
     this.fields.push(new TextField({ name, label, ...options }, this.formData[name] || '', this.onChange).render());
     return this;
@@ -30,6 +30,19 @@ export class FormBuilder {
 
   select(name: string, label: string, options: any[], required?: boolean) {
     this.fields.push(new SelectField({ name, label, required }, this.formData[name] || '', options, this.onChange).render());
+    return this;
+  }
+
+  // Наш ОДНОСТРОЧНЫЙ метод для ленивых селектов
+  lazySelect(
+    name: string,
+    label: string,
+    loadOptions: (search: string, page: number) => Promise<{ items: any[], total: number }>,
+    required?: boolean
+  ) {
+    this.fields.push(
+      new LazySelectField({ name, label, required, loadOptions }, this.formData[name] || '', this.onChange).render()
+    );
     return this;
   }
 
