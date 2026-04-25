@@ -59,7 +59,7 @@ export const ItemUpdateForm = ({ onClose }: { onClose: () => void }) => {
     h('div', {
       style: {
         backgroundColor: 'white', padding: '20px', borderRadius: '8px',
-        maxWidth: '800px', width: '90%', maxHeight: '90vh', overflowY: 'auto'
+        maxWidth: '1200px', width: '95%', maxHeight: '90vh', overflowY: 'auto'
       }
     },
       h('h2', { className: 'text-2xl font-bold mb-4' }, 'Update Item'),

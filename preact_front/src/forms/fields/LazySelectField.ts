@@ -117,17 +117,25 @@ const LazySelectInternal = ({ name, label, value, required, loadOptions, pageSiz
         required && h('span', { className: 'text-red-500 ml-1' }, '*')
       )
     ),
-    h('div', { className: 'relative' }, // Относительное позиционирование для инпута
+    h('div', { className: 'relative' },
       h('input', {
         type: 'text',
         value: isOpen ? search : (selectedOption ? getDisplayName(selectedOption) : ''),
         onInput: (e: any) => handleSearch(e.target.value),
         onFocus: () => { setIsOpen(true); setSearch(''); },
-        className: 'input input-bordered w-full',
-        placeholder: selectedOption ? getDisplayName(selectedOption) : `Search ${label.toLowerCase()}...`,
+        className: 'input input-bordered w-full pr-10', // pr-10 освобождает место под стрелку
+        placeholder: selectedOption ? getDisplayName(selectedOption) : `Select ${label.toLowerCase()}...`,
         required: required && !value
       }),
 
+      // Иконка стрелочки вниз (SVG)
+      h('div', {
+        className: 'absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400'
+      },
+        h('svg', { className: 'w-5 h-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
+          h('path', { strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: '2', d: 'M19 9l-7 7-7-7' })
+        )
+      ),
       // Выпадающий список теперь будет строго под инпутом благодаря z-50 и absolute
       isOpen && h('div', {
         className: 'absolute left-0 right-0 z-[100] mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto',
