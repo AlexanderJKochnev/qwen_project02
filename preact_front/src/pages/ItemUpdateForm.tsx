@@ -5,6 +5,7 @@ import { useLocation } from 'preact-iso';
 import { apiClient } from '../lib/apiClient';
 import { FormBuilder } from '../forms/FormBuilder';
 import { LazySelect } from '../components/LazySelect';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface ItemUpdateFormProps {
   onClose: () => void;
@@ -14,7 +15,7 @@ interface ItemUpdateFormProps {
 export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
   const { url } = useLocation();
   const id = parseInt(url.split('/').pop() || '0');
-
+  const lang = useLanguage().language;
   const [formData, setFormData] = useState<any>({});
   const [drinkAction, setDrinkAction] = useState<'update' | 'create'>('update');
   const [loading, setLoading] = useState(false);
@@ -58,7 +59,7 @@ export const ItemUpdateForm = ({ onClose, onUpdated }: ItemUpdateFormProps) => {
       ...(search && { search })
     });
 
-    const response = await apiClient(`/handbooks_page/subcategories?${params}`, { method: 'GET' });
+    const response = await apiClient(`/handbooks_page/subcategories/${lang}?${params}`, { method: 'GET' });
     return {
       items: response.items || response,
       total: response.total || response.length
