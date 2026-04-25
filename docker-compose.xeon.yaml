@@ -185,7 +185,7 @@ services:
         max-file: ${MAX_FILE}
     build:
       context: ./preact_front          # путь к папке с Preact
-      dockerfile: Dockerfile           # имя Dockerfile внутри ./preact_front
+      dockerfile: Dockerfile.dev           # имя Dockerfile внутри ./preact_front
     environment:
       - VITE_API_URL=${VITE_API_URL}  # Используется при старте
     env_file:
