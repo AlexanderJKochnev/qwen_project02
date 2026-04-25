@@ -110,14 +110,14 @@ const LazySelectInternal = ({ name, label, value, required, loadOptions, pageSiz
 
   const selectedOption = options.find(opt => opt.id.toString() === value);
 
-  return h('div', { className: 'mb-4', ref: containerRef, key: name },
+  return h('div', { className: 'mb-4 relative', ref: containerRef, key: name }, // Добавили relative сюда!
     h('label', { className: 'label' },
       h('span', { className: 'label-text' },
         label,
         required && h('span', { className: 'text-red-500 ml-1' }, '*')
       )
     ),
-    h('div', { className: 'relative' },
+    h('div', { className: 'relative' }, // Относительное позиционирование для инпута
       h('input', {
         type: 'text',
         value: isOpen ? search : (selectedOption ? getDisplayName(selectedOption) : ''),
@@ -127,17 +127,21 @@ const LazySelectInternal = ({ name, label, value, required, loadOptions, pageSiz
         placeholder: selectedOption ? getDisplayName(selectedOption) : `Search ${label.toLowerCase()}...`,
         required: required && !value
       }),
+
+      // Выпадающий список теперь будет строго под инпутом благодаря z-50 и absolute
       isOpen && h('div', {
-        className: 'absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-60 overflow-y-auto',
-        onScroll: handleScroll
+        className: 'absolute left-0 right-0 z-[100] mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto',
+        onScroll: handleScroll,
+        style: { top: '100%' } // Гарантируем появление строго под инпутом
       },
         options.map(option => h('div', {
           key: option.id,
-          className: `p-2 cursor-pointer hover:bg-gray-100 ${value === option.id.toString() ? 'bg-primary text-white' : ''}`,
+          className: `p-3 cursor-pointer hover:bg-gray-100 border-b border-gray-50 last:border-b-0 ${value === option.id.toString() ? 'bg-primary text-white hover:bg-primary' : 'text-gray-700'}`,
           onClick: () => { onChange(option.id.toString()); setIsOpen(false); }
         }, getDisplayName(option))),
-        loading && h('div', { className: 'p-2 text-center text-gray-500' }, 'Loading...'),
-        !hasMore && options.length > 0 && h('div', { className: 'p-2 text-center text-gray-400 text-sm' }, 'No more items')
+
+        loading && h('div', { className: 'p-3 text-center text-gray-500' }, 'Loading...'),
+        !hasMore && options.length > 0 && h('div', { className: 'p-3 text-center text-gray-400 text-sm' }, 'No more items')
       )
     )
   );

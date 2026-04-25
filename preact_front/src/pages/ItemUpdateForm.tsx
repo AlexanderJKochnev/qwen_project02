@@ -49,11 +49,24 @@ export const ItemUpdateForm = ({ onClose }: { onClose: () => void }) => {
     .lazySelect('country_id', 'Country', makeLoader('countries'))
     .lazySelect('manufacturer_id', 'Manufacturer', makeLoader('manufacturers'));
 
-  return h('div', { className: 'fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[1500]' },
-    h('div', { className: 'bg-white p-6 rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto' },
+    return h('div', {
+    style: {
+      position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+      backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center',
+      alignItems: 'center', zIndex: 1500
+    }
+  },
+    h('div', {
+      style: {
+        backgroundColor: 'white', padding: '20px', borderRadius: '8px',
+        maxWidth: '800px', width: '90%', maxHeight: '90vh', overflowY: 'auto'
+      }
+    },
       h('h2', { className: 'text-2xl font-bold mb-4' }, 'Update Item'),
+
       h('form', { onSubmit: (e) => { e.preventDefault(); console.log(formData); } },
         form.build(),
+
         h('div', { className: 'flex justify-end gap-4 mt-6' },
           h('button', { type: 'button', onClick: onClose, className: 'btn btn-ghost' }, 'Cancel'),
           h('button', { type: 'submit', className: 'btn btn-primary' }, 'Save')
@@ -61,4 +74,3 @@ export const ItemUpdateForm = ({ onClose }: { onClose: () => void }) => {
       )
     )
   );
-};
