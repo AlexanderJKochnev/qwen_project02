@@ -64,7 +64,7 @@ export const ItemUpdateForm = ({ onClose }: { onClose: () => void }) => {
     .lazySelect('subcategory_id', 'Subcategory', makeLoader('subcategories'), true)
     .lazySelect('source_id', 'Source', makeLoader('sources'))
     .lazySelect('site_id', 'Site', makeLoader('sites'))
-    .lazySelect('producer_id', 'Producer', makeLoader('producers'));
+    .lazySelect('producer_id', 'Producer', makeLoader('producers'))
     .lazyCheckbox('foods', 'Foods', makeLoader('foods'))
     .lazyCheckbox('varietals', 'Varietals', makeLoader('varietals'), (id, isChecked, currentValue, onChange) => {
       // Тут можно отрендерить инпут для процентов, если галочка стоит!
