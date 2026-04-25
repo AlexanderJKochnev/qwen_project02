@@ -4,6 +4,7 @@ import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { useRoute } from 'preact-iso';
 import { apiClient, getCurrentLanguage } from '../lib/apiClient'; // Импортируем getCurrentLanguage
+import { useLanguage } from '../contexts/LanguageContext';
 import { Link } from '../components/Link';
 
 interface HandbookItem {
@@ -23,8 +24,8 @@ interface ApiResponse {
 export const HandbookTypeList = () => {
   const { params } = useRoute();
   const type = params.type;
-  const lang = getCurrentLanguage(); // Получаем 'ru'
-
+  // const lang = getCurrentLanguage(); // Получаем 'ru'
+  const lang = useLanguage();
   const [data, setData] = useState<HandbookItem[]>([]);
   const [loading, setLoading] = useState(true);
 
