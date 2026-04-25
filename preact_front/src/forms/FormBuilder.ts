@@ -7,6 +7,7 @@ import { MultilingualFieldGroup } from './fields/MultilingualFieldGroup';
 import { CheckboxGroupField } from './fields/CheckboxGroupField';
 import { FileField } from './fields/FileField';
 import { LazySelectField } from './fields/LazySelectField'; // Добавленный импорт
+import { LazyCheckboxGroupField, LazyCheckboxConfig } from './fields/LazyCheckboxGroupField';
 
 export class FormBuilder {
   private fields: h.JSX.Element[] = [];
@@ -50,7 +51,18 @@ export class FormBuilder {
     this.fields.push(new MultilingualFieldGroup({ baseName, label, languages, isTextarea }, this.formData, this.onChange).render());
     return this;
   }
-
+  lazyCheckbox(
+    name: string,
+    label: string,
+    loadOptions: (search: string, page: number) => Promise<{ items: any[], total: number }>,
+    renderExtra?: LazyCheckboxConfig['renderExtra']
+  ) {
+    this.fields.push(
+      new LazyCheckboxGroupField({ name, label, loadOptions, renderExtra }, this.formData[name] || [], this.onChange).render()
+    );
+    return this;
+  }
+  // вместо checkboxGroup -> lazyCheckbox
   checkboxGroup(name: string, label: string, options: any[], renderExtra?: any) {
     this.fields.push(new CheckboxGroupField({ name, label, options, renderExtra }, this.formData[name] || [], this.onChange).render());
     return this;

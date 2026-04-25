@@ -1,4 +1,5 @@
 // src/forms/fields/CheckboxGroupField.ts
+// не используется можно удалить
 import { h } from 'preact';
 import { BaseField, FieldConfig } from './BaseField';
 
