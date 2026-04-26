@@ -19,22 +19,22 @@ export class ImageGalleryField extends BaseField<ImageItem[]> {
   private maxImages: number;
   private recordId: number;
 
-  constructor(config: ImageGalleryConfig, value: any, onChange: (name: string, value: any) => void) {
-    // Нормализуем входящее значение в массив
+    constructor(config: ImageGalleryConfig, value: any, onChange: (name: string, value: any) => void) {
     let normalizedValue: ImageItem[] = [];
-    if (Array.isArray(value)) {
-      normalizedValue = value.map((v, index) => ({
-        ...v,
-        order: v.order || index + 1
-      }));
-    } else if (value) {
-      normalizedValue = [{ id: value, isExisting: true, order: 1 }];
+
+    if (Array.isArray(value) && value.length > 0) {
+      normalizedValue = value;
+    } else {
+      // ПРИНУДИТЕЛЬНО создаем один виртуальный элемент,
+      // чтобы галерея всегда пыталась отрендерить главную картинку записи
+      normalizedValue = [{ id: 'current', isExisting: true }];
     }
 
     super(config, normalizedValue, onChange);
     this.maxImages = config.maxImages || 5;
     this.recordId = config.recordId;
   }
+
 
   render() {
     return h(GalleryCore, {
