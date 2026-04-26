@@ -2,18 +2,17 @@
 import { h } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { BaseField, FieldConfig } from './BaseField';
-import { getAuthToken } from '../../lib/apiClient'; // Импортируем получение токена
+import { getAuthToken } from '../../lib/apiClient'; // Наша авторизация
 
 export interface ImageGalleryConfig extends FieldConfig {
   maxImages?: number;
-  recordId: number; // ID основной записи для формирования URL
+  recordId: number; // Наш ID основной записи
 }
 
 interface ImageItem {
   id: string | number;
-  file?: File; // Для новых не сохраненных файлов
+  file?: File;
   isExisting: boolean;
-  order?: number; // Для будущего "один ко многим"
 }
 
 export class ImageGalleryField extends BaseField<ImageItem[]> {
@@ -24,13 +23,11 @@ export class ImageGalleryField extends BaseField<ImageItem[]> {
     let normalizedValue: ImageItem[] = [];
 
     if (Array.isArray(value) && value.length > 0) {
-      // Если передали массив строк/чисел (например, наш [image_id])
-      normalizedValue = value.map((item, index) => {
-        if (typeof item === 'string' || typeof item === 'number') {
-          return { id: item, isExisting: true, order: index + 1 };
-        }
-        return item;
-      });
+      normalizedValue = value;
+    } else {
+      // ГАРАНТИЯ ОТОБРАЖЕНИЯ: Если массива нет, создаем фейковый ID
+      // только для того, чтобы запустить .map() и отрендерить одну картинку
+      normalizedValue = [{ id: 'current_main', isExisting: true }];
     }
 
     super(config, normalizedValue, onChange);
@@ -72,8 +69,7 @@ const GalleryCore = ({ name, label, value, maxImages, recordId, onChange }: Core
       newItems.push({
         id: `new-${Math.random()}`,
         file: files[i],
-        isExisting: false,
-        order: newItems.length + 1
+        isExisting: false
       });
     }
 
@@ -92,7 +88,6 @@ const GalleryCore = ({ name, label, value, maxImages, recordId, onChange }: Core
 
     h('div', { className: 'flex flex-wrap gap-4 p-4 border rounded-lg bg-gray-50' },
 
-      // Отображаем картинки
       value.map((img) => h(SecureImageWrapper, {
         key: img.id,
         img,
@@ -100,7 +95,6 @@ const GalleryCore = ({ name, label, value, maxImages, recordId, onChange }: Core
         onRemove: () => removeImage(img.id)
       })),
 
-      // Кнопка добавления нового файла
       value.length < maxImages && h('div', { className: 'w-32 h-32 flex items-center justify-center' },
         h('button', {
           type: 'button',
@@ -130,7 +124,6 @@ const GalleryCore = ({ name, label, value, maxImages, recordId, onChange }: Core
   );
 };
 
-// Внутренний компонент для безопасной загрузки картинок
 const SecureImageWrapper = ({ img, recordId, onRemove }: { img: ImageItem, recordId: number, onRemove: () => void }) => {
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
 
@@ -139,7 +132,7 @@ const SecureImageWrapper = ({ img, recordId, onRemove }: { img: ImageItem, recor
     let isMounted = true;
 
     if (img.isExisting) {
-      // ИСПОЛЬЗУЕМ ВАШ ЭНДПОИНТ (с учетом ID основной записи)
+      // ТАК КАК ВЫ И СКАЗАЛИ: Роут принимает ID основной записи карточки!
       const imageUrl = `/item/thumbnail/${recordId}`;
       const token = getAuthToken();
 
@@ -163,7 +156,6 @@ const SecureImageWrapper = ({ img, recordId, onRemove }: { img: ImageItem, recor
         console.error('Failed to load image in gallery:', err);
       });
     } else if (img.file) {
-      // Для новых файлов читаем из памяти
       currentUrl = URL.createObjectURL(img.file);
       setBlobUrl(currentUrl);
     }
