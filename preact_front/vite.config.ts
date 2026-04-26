@@ -1,6 +1,8 @@
 // vite.config.ts
 import { defineConfig } from 'vite';
 import preact from '@preact/preset-vite';
+// Считываем порт из переменных окружения. Если его нет — берем 5173
+const PORT = process.env.VITE_PORT ? parseInt(process.env.VITE_PORT) : 5173;
 
 export default defineConfig({
   plugins: [preact()],
