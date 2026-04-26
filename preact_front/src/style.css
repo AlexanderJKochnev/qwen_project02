@@ -366,6 +366,14 @@ body {
   cursor: pointer;
 }
 
+.custom-checkbox {
+  margin-right: 0.5rem; /* Эквивалент mr-2 */
+  accent-color: #2563eb; /* Синий цвет */
+  width: 1.1rem;
+  height: 1.1rem;
+  cursor: pointer;
+}
+
 /* Card/grid styles for ListView */
 .card-grid {
   display: grid;
