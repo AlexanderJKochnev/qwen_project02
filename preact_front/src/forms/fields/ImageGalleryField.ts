@@ -2,13 +2,11 @@
 import { h } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { BaseField, FieldConfig } from './BaseField';
-import { IMAGE_BASE_URL } from '../../config/api'; // Используем ваш базовый URL
 import { getAuthToken } from '../../lib/apiClient'; // Импортируем получение токена
 
 export interface ImageGalleryConfig extends FieldConfig {
   maxImages?: number;
-  recordId: number;
-  imageId?: string | null; // Передаем текущий ID картинки из image_id
+  recordId: number; // ID основной записи для формирования URL
 }
 
 interface ImageItem {
@@ -21,24 +19,19 @@ interface ImageItem {
 export class ImageGalleryField extends BaseField<ImageItem[]> {
   private maxImages: number;
   private recordId: number;
-  private imageId: string | null;
 
   constructor(config: ImageGalleryConfig, value: any, onChange: (name: string, value: any) => void) {
+    // Возвращаем исходную чистую логику нормализации
     let normalizedValue: ImageItem[] = [];
-
-    // 1. Если бэкенд прислал массив картинок (будущее один ко многим)
     if (Array.isArray(value) && value.length > 0) {
       normalizedValue = value;
-    }
-    // 2. Если пока работает старая схема 1-к-1 и есть image_id
-    else if (config.imageId) {
-      normalizedValue = [{ id: config.imageId, isExisting: true, order: 1 }];
+    } else if (value) {
+      normalizedValue = [{ id: value, isExisting: true, order: 1 }];
     }
 
     super(config, normalizedValue, onChange);
     this.maxImages = config.maxImages || 5;
     this.recordId = config.recordId;
-    this.imageId = config.imageId || null;
   }
 
   render() {
@@ -95,7 +88,7 @@ const GalleryCore = ({ name, label, value, maxImages, recordId, onChange }: Core
 
     h('div', { className: 'flex flex-wrap gap-4 p-4 border rounded-lg bg-gray-50' },
 
-      // Отображаем картинки через защищенный враппер
+      // Отображаем картинки
       value.map((img) => h(SecureImageWrapper, {
         key: img.id,
         img,
@@ -133,39 +126,49 @@ const GalleryCore = ({ name, label, value, maxImages, recordId, onChange }: Core
   );
 };
 
-// Внутренний компонент для безопасной загрузки картинок через Blob
+// Внутренний компонент для безопасной загрузки картинок
 const SecureImageWrapper = ({ img, recordId, onRemove }: { img: ImageItem, recordId: number, onRemove: () => void }) => {
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
 
   useEffect(() => {
     let currentUrl: string | null = null;
+    let isMounted = true;
 
     if (img.isExisting) {
-      // 1. СТРУКТУРА ДЛЯ СТАРОЙ СХЕМЫ (1-к-1): берем id картинки как image_id
-      // В будущем, когда будет "один ко многим", вы сможете переписать URL на:
-      // `${IMAGE_BASE_URL}/mongodb/thumbnails/${recordId}?n=${img.order}`
-      const imageUrl = `${IMAGE_BASE_URL}/mongodb/thumbnails/${img.id}`;
+      // ИСПОЛЬЗУЕМ ВАШ ЭНДПОИНТ (с учетом ID основной записи)
+      const imageUrl = `/item/thumbnail/${recordId}`;
       const token = getAuthToken();
 
       fetch(imageUrl, {
-        headers: { 'Authorization': `Bearer ${token || ''}`, 'Accept': 'image/*' }
+        headers: {
+          'Authorization': `Bearer ${token || ''}`,
+          'Accept': 'image/*'
+        }
       })
-      .then(res => res.blob())
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.blob();
+      })
       .then(blob => {
-        currentUrl = URL.createObjectURL(blob);
-        setBlobUrl(currentUrl);
+        if (isMounted) {
+          currentUrl = URL.createObjectURL(blob);
+          setBlobUrl(currentUrl);
+        }
       })
-      .catch(err => console.error('Failed to load image in gallery:', err));
+      .catch(err => {
+        console.error('Failed to load image in gallery:', err);
+      });
     } else if (img.file) {
-      // 2. ДЛЯ НОВЫХ ФАЙЛОВ: просто читаем локально из памяти браузера
+      // Для новых файлов читаем из памяти
       currentUrl = URL.createObjectURL(img.file);
       setBlobUrl(currentUrl);
     }
 
     return () => {
+      isMounted = false;
       if (currentUrl) URL.revokeObjectURL(currentUrl);
     };
-  }, [img.id]);
+  }, [img.id, recordId]);
 
   return h('div', { className: 'relative w-32 h-32 bg-white border rounded-lg overflow-hidden group shadow-sm' },
     blobUrl ? h('img', {
