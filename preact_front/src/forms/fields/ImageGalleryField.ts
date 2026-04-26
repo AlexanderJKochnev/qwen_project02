@@ -98,7 +98,7 @@ const GalleryCore = ({ name, label, value, maxImages, recordId, onChange }: Core
         // URL будет просто /api/thumbnail/{id}.
         // Как только бэкенд будет готов к массиву, вы сможете раскомментировать order ниже!
         // отладка
-        const fullUrl = `/api/thumbnail/${recordId}`;
+        const fullUrl = `/api/thumbnail/1`;
         console.log(`[ImageGallery] Requesting image from: ${fullUrl}`);
         const imgSrc = img.isExisting
           ? fullUrl
