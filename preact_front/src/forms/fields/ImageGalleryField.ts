@@ -95,10 +95,10 @@ const GalleryCore = ({ name, label, value, maxImages, recordId, onChange }: Core
       // 1. Отображаем текущие картинки
       value.map((img) => {
         // Формируем URL. Пока это один ко многим не готов,
-        // URL будет просто /api/thumbnail/{id}.
+        // URL будет просто /item/thumbnail/{id}.
         // Как только бэкенд будет готов к массиву, вы сможете раскомментировать order ниже!
         // отладка
-        const fullUrl = `/api/thumbnail/${recordId}`;
+        const fullUrl = `/item/thumbnail/${recordId}`;
         console.log(`[ImageGallery] Requesting image from: ${fullUrl}`);
         const imgSrc = img.isExisting
           ? fullUrl
