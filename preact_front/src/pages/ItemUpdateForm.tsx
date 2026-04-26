@@ -66,14 +66,14 @@ export const ItemUpdateForm = ({ onClose }: { onClose: () => void }) => {
         .textarea('madeof', 'Made of', 3)
         .text('anno', 'Anno')
     )
-    .group('Category & Classication, (c) => c
+    .group('Category & Classication', (c) => c
         .lazySelect('subcategory_id', 'Category*', makeLoader('subcategories'), true)
         .lazySelect('classification_id', 'Classification', makeLoader('classifications'))
         .lazySelect('vintageconfig_id', 'Vintage configuration', makeLoader('vintageconfigs'))
         .lazySelect('designation_id', 'Designation', makeLoader('designations'))
         .lazySelect('producer_id', 'Producer', makeLoader('producers'))
     )
-    .group('Location , (e) => e
+    .group('Location', (e) => e
         .lazySelect('site_id', 'Country, Region, Subregion, Site*', makeLoader('sites'), true)
         .lazySelect('parcel_id', 'Parcel', makeLoader('parcels'))
 
