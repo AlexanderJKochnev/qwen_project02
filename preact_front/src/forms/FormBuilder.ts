@@ -81,7 +81,7 @@ export class FormBuilder {
     return this;
   }
 
-  // 🛡️ НАШ НОВЫЙ МЕТОД ДЛЯ ГРУППИРОВКИ
+  // 🛡️ НОВЫЙ МЕТОД ДЛЯ ГРУППИРОВКИ
   group(title: string, callback: (builder: FormBuilder) => void) {
     // 1. Сохраняем ссылку на оригинальный массив полей
     const originalFields = this.fields;
