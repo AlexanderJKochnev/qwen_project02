@@ -14,10 +14,10 @@ export default defineConfig({
   },
   server: {
     host: '0.0.0.0',
-    port: 5173,
+    port: PORT,
     strictPort: true,
     hmr: {
-      port: 5173,
+      port: PORT,
       host: '0.0.0.0',
     },
     proxy: {

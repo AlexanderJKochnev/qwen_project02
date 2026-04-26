@@ -193,8 +193,8 @@ services:
       - VITE_PORT=80
     env_file:
       - .env
-    ports:
-      - "80:5173"             # Открываем порт Vite наружу
+    expose:
+      - "80"             # Открываем порт Vite наружу
     volumes:
       - ./preact_front:/app     # 👈 Магия: пробрасываем ваш код в контейнер
       - /app/node_modules       # Защищаем зависимости контейнера от затирания
