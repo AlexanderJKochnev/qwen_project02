@@ -156,7 +156,7 @@ const LazyCheckboxCore = ({ name, label, value, loadOptions, getDisplayName, ren
                 id: `${name}-${optionId}`,
                 checked: isChecked,
                 onChange: (e: any) => handleToggle(optionId, e.target.checked),
-                className: 'mr-2 checkbox checkbox-sm checkbox-primary'
+                className: 'checkbox checkbox-primary checkbox-sm mr-2'
               }),
               h('label', {
                 htmlFor: `${name}-${optionId}`,
