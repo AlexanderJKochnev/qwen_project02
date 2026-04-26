@@ -1,6 +1,6 @@
 // src/forms/fields/LazyCheckboxGroupField.ts
 import { h } from 'preact';
-import { useState, useEffect, useRef } from 'preact/hooks';
+import { useState, useEffect, useRef, useMemo } from 'preact/hooks'; // 👈 Добавили useMemo
 import { BaseField, FieldConfig } from './BaseField';
 
 export interface LazyCheckboxConfig extends FieldConfig {
@@ -8,12 +8,12 @@ export interface LazyCheckboxConfig extends FieldConfig {
   renderExtra?: (id: string, isChecked: boolean, currentValue: any, onChange: (value: any) => void) => h.JSX.Element | null;
 }
 
-export class LazyCheckboxGroupField extends BaseField<string[]> {
+// Заменили string[] на any[], так как работаем с массивом объектов [{id: 1}]
+export class LazyCheckboxGroupField extends BaseField<any[]> {
   private loadOptions: (search: string, page: number) => Promise<{ items: any[], total: number }>;
   private renderExtra?: LazyCheckboxConfig['renderExtra'];
 
-  constructor(config: LazyCheckboxConfig, value: string[], onChange: (name: string, value: any) => void) {
-    // Гарантируем, что value всегда массив
+  constructor(config: LazyCheckboxConfig, value: any[], onChange: (name: string, value: any) => void) {
     super(config, Array.isArray(value) ? value : [], onChange);
     this.loadOptions = config.loadOptions;
     this.renderExtra = config.renderExtra;
@@ -31,7 +31,7 @@ export class LazyCheckboxGroupField extends BaseField<string[]> {
       loadOptions: this.loadOptions,
       getDisplayName: this.getDisplayName,
       renderExtra: this.renderExtra,
-      onChange: (val: string[]) => this.handleChange(val)
+      onChange: (val: any[]) => this.handleChange(val)
     });
   }
 }
@@ -39,11 +39,11 @@ export class LazyCheckboxGroupField extends BaseField<string[]> {
 interface CoreProps {
   name: string;
   label: string;
-  value: string[];
+  value: any[]; // 👈 Тут тоже any[]
   loadOptions: (search: string, page: number) => Promise<{ items: any[], total: number }>;
   getDisplayName: (item: any) => string;
   renderExtra?: LazyCheckboxConfig['renderExtra'];
-  onChange: (value: string[]) => void;
+  onChange: (value: any[]) => void;
 }
 
 const LazyCheckboxCore = ({ name, label, value, loadOptions, getDisplayName, renderExtra, onChange }: CoreProps) => {
@@ -79,16 +79,32 @@ const LazyCheckboxCore = ({ name, label, value, loadOptions, getDisplayName, ren
     }
   };
 
-  const handleToggle = (optionId: string, checked: boolean) => {
-    const newValue = checked ? [...value, optionId] : value.filter(id => id !== optionId);
+  // 🛠 ПРАВКА 1: Работаем с числами и объектами при переключении
+  const handleToggle = (optionId: number, checked: boolean) => {
+    let newValue: any[];
+    if (checked) {
+      newValue = [...value, { id: optionId }]; // Сохраняем объект с числовым ID
+    } else {
+      newValue = value.filter((v: any) => v.id !== optionId); // Фильтруем по числу
+    }
     onChange(newValue);
   };
+
+  // 🛠 ПРАВКА 2: Сортировка по числовым ID (выбранные наверх)
+  const sortedOptions = useMemo(() => {
+    return [...options].sort((a, b) => {
+      const aChecked = value.some((v: any) => v.id === a.id);
+      const bChecked = value.some((v: any) => v.id === b.id);
+      if (aChecked && !bChecked) return -1;
+      if (!aChecked && bChecked) return 1;
+      return 0;
+    });
+  }, [options, value]);
 
   return h('div', { className: 'card bg-base-100 shadow mb-4', key: name },
     h('details', {},
       h('summary', { className: 'p-4 font-bold cursor-pointer' }, label),
       h('div', { className: 'border rounded-lg p-2' },
-        // Поле поиска внутри списка
         h('input', {
           type: 'text',
           value: search,
@@ -100,15 +116,15 @@ const LazyCheckboxCore = ({ name, label, value, loadOptions, getDisplayName, ren
           className: 'input input-bordered input-sm w-full mb-2',
           placeholder: `Search ${label.toLowerCase()}...`
         }),
-        // Список с бесконечным скроллом
         h('div', {
           ref: scrollRef,
           className: 'max-h-60 overflow-y-auto',
           onScroll: handleScroll
         },
-          options.map(option => {
-            const optionId = option.id.toString();
-            const isChecked = value.includes(optionId);
+          // 🛠 ПРАВКА 3: Рендерим именно отсортированные опции
+          sortedOptions.map(option => {
+            const optionId = option.id; // 👈 Никаких toString()! Число как есть
+            const isChecked = value.some((v: any) => v.id === optionId); // Ищем числовой ID в массиве объектов
 
             return h('div', { key: optionId, className: 'flex items-center mb-2 p-1 hover:bg-gray-50' },
               h('input', {
@@ -122,7 +138,8 @@ const LazyCheckboxCore = ({ name, label, value, loadOptions, getDisplayName, ren
                 htmlFor: `${name}-${optionId}`,
                 className: renderExtra ? 'flex-1 cursor-pointer' : 'cursor-pointer'
               }, getDisplayName(option)),
-              renderExtra && renderExtra(optionId, isChecked, value, onChange)
+              // String(optionId) здесь нужен только для рендера строки-ключа в dom (внешний вид)
+              renderExtra && renderExtra(String(optionId), isChecked, value, onChange)
             );
           }),
           loading && h('div', { className: 'p-2 text-center text-gray-500 text-sm' }, 'Loading...')
