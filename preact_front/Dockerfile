@@ -34,3 +34,8 @@ EXPOSE 80
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]
 
+# Открываем порт (Vite default port)
+# EXPOSE 5173
+
+# Запускаем dev-сервер
+# CMD ["npm", "run", "dev"]
