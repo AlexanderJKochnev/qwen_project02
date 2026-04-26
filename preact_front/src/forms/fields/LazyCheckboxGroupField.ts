@@ -1,19 +1,20 @@
 // src/forms/fields/LazyCheckboxGroupField.ts
 import { h } from 'preact';
-import { useState, useEffect, useRef, useMemo } from 'preact/hooks'; // 👈 Добавили useMemo
+import { useState, useEffect, useRef, useMemo } from 'preact/hooks';
 import { BaseField, FieldConfig } from './BaseField';
 
 export interface LazyCheckboxConfig extends FieldConfig {
   loadOptions: (search: string, page: number) => Promise<{ items: any[], total: number }>;
+  // Расширили тип currentValue до any, чтобы прокидывать сложные объекты
   renderExtra?: (id: string, isChecked: boolean, currentValue: any, onChange: (value: any) => void) => h.JSX.Element | null;
 }
 
-// Заменили string[] на any[], так как работаем с массивом объектов [{id: 1}]
 export class LazyCheckboxGroupField extends BaseField<any[]> {
   private loadOptions: (search: string, page: number) => Promise<{ items: any[], total: number }>;
   private renderExtra?: LazyCheckboxConfig['renderExtra'];
 
   constructor(config: LazyCheckboxConfig, value: any[], onChange: (name: string, value: any) => void) {
+    // Гарантируем, что value всегда массив
     super(config, Array.isArray(value) ? value : [], onChange);
     this.loadOptions = config.loadOptions;
     this.renderExtra = config.renderExtra;
@@ -39,7 +40,7 @@ export class LazyCheckboxGroupField extends BaseField<any[]> {
 interface CoreProps {
   name: string;
   label: string;
-  value: any[]; // 👈 Тут тоже any[]
+  value: any[];
   loadOptions: (search: string, page: number) => Promise<{ items: any[], total: number }>;
   getDisplayName: (item: any) => string;
   renderExtra?: LazyCheckboxConfig['renderExtra'];
@@ -79,22 +80,46 @@ const LazyCheckboxCore = ({ name, label, value, loadOptions, getDisplayName, ren
     }
   };
 
-  // 🛠 ПРАВКА 1: Работаем с числами и объектами при переключении
-  const handleToggle = (optionId: number, checked: boolean) => {
+  // Метод проверки, выбран ли ID (поддерживает и строки, и объекты с бэкенда)
+  const isIdChecked = (id: string) => {
+    return value.some(val => {
+      if (typeof val === 'object' && val !== null) {
+        return String(val.id) === id;
+      }
+      return String(val) === id;
+    });
+  };
+
+  const handleToggle = (optionId: string, checked: boolean) => {
     let newValue: any[];
+
     if (checked) {
-      newValue = [...value, { id: optionId }]; // Сохраняем объект с числовым ID
+      // Если это сложный объект (например, varietals)
+      const isObjectMode = value.length > 0 && typeof value[0] === 'object';
+
+      if (isObjectMode || name === 'varietals') {
+        newValue = [...value, { id: Number(optionId) }];
+      } else if (name === 'foods') {
+        newValue = [...value, { id: Number(optionId) }];
+      } else {
+        newValue = [...value, optionId];
+      }
     } else {
-      newValue = value.filter((v: any) => v.id !== optionId); // Фильтруем по числу
+      newValue = value.filter(val => {
+        if (typeof val === 'object' && val !== null) {
+          return String(val.id) !== optionId;
+        }
+        return String(val) !== optionId;
+      });
     }
     onChange(newValue);
   };
 
-  // 🛠 ПРАВКА 2: Сортировка по числовым ID (выбранные наверх)
+  // 🔥 2. СОРТИРОВКА: Выбранные элементы поднимаем наверх
   const sortedOptions = useMemo(() => {
     return [...options].sort((a, b) => {
-      const aChecked = value.some((v: any) => v.id === a.id);
-      const bChecked = value.some((v: any) => v.id === b.id);
+      const aChecked = isIdChecked(String(a.id));
+      const bChecked = isIdChecked(String(b.id));
       if (aChecked && !bChecked) return -1;
       if (!aChecked && bChecked) return 1;
       return 0;
@@ -121,10 +146,9 @@ const LazyCheckboxCore = ({ name, label, value, loadOptions, getDisplayName, ren
           className: 'max-h-60 overflow-y-auto',
           onScroll: handleScroll
         },
-          // 🛠 ПРАВКА 3: Рендерим именно отсортированные опции
           sortedOptions.map(option => {
-            const optionId = option.id; // 👈 Никаких toString()! Число как есть
-            const isChecked = value.some((v: any) => v.id === optionId); // Ищем числовой ID в массиве объектов
+            const optionId = option.id.toString();
+            const isChecked = isIdChecked(optionId);
 
             return h('div', { key: optionId, className: 'flex items-center mb-2 p-1 hover:bg-gray-50' },
               h('input', {
@@ -132,14 +156,13 @@ const LazyCheckboxCore = ({ name, label, value, loadOptions, getDisplayName, ren
                 id: `${name}-${optionId}`,
                 checked: isChecked,
                 onChange: (e: any) => handleToggle(optionId, e.target.checked),
-                className: 'mr-2'
+                className: 'mr-2 checkbox checkbox-sm checkbox-primary'
               }),
               h('label', {
                 htmlFor: `${name}-${optionId}`,
-                className: renderExtra ? 'flex-1 cursor-pointer' : 'cursor-pointer'
+                className: renderExtra ? 'flex-1 cursor-pointer text-sm' : 'cursor-pointer text-sm'
               }, getDisplayName(option)),
-              // String(optionId) здесь нужен только для рендера строки-ключа в dom (внешний вид)
-              renderExtra && renderExtra(String(optionId), isChecked, value, onChange)
+              renderExtra && renderExtra(optionId, isChecked, value, onChange)
             );
           }),
           loading && h('div', { className: 'p-2 text-center text-gray-500 text-sm' }, 'Loading...')
