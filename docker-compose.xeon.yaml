@@ -186,6 +186,9 @@ services:
     build:
       context: ./preact_front          # путь к папке с Preact
       dockerfile: Dockerfile           # имя Dockerfile внутри ./preact_front
+    volumes:
+      - ./preact_fromnt/src:app/src
+      - /app/node_modules
     environment:
       - VITE_API_URL=${VITE_API_URL}  # Используется при старте
     env_file:
