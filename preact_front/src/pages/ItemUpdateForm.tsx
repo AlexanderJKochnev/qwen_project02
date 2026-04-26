@@ -66,7 +66,7 @@ export const ItemUpdateForm = ({ onClose }: { onClose: () => void }) => {
         .textarea('madeof', 'Made of', 3)
         .text('anno', 'Anno')
     )
-    .group('Category, Classication & Location') => b
+    .group('Category, Classication & Location' (b) => b
         .lazySelect('subcategory_id', 'Subcategory', makeLoader('subcategories'), true)
         .lazySelect('source_id', 'Source', makeLoader('sources'))
         .lazySelect('site_id', 'Site', makeLoader('sites'))
