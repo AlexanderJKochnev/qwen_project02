@@ -14,6 +14,9 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 5173,
     strictPort: true,
+    watch: {
+      usePolling: true, // ФОРСИРУЕТ слежение за файлами в контейнере
+      interval: 100,    // Интервал проверки в мс
     hmr: {
       port: 5173,
       host: '0.0.0.0',
