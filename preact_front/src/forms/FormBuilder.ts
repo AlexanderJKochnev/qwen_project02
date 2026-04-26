@@ -9,6 +9,7 @@ import { FileField } from './fields/FileField';
 import { LazySelectField } from './fields/LazySelectField'; // Добавленный импорт
 import { LazyCheckboxGroupField, LazyCheckboxConfig } from './fields/LazyCheckboxGroupField';
 import { ImageGalleryField } from './fields/ImageGalleryField';
+import { useSecureImage } from '../hooks/useSecureImage';
 
 export class FormBuilder {
   private fields: h.JSX.Element[] = [];
