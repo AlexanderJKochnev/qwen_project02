@@ -68,6 +68,9 @@ class ItemRouter(BaseRouter):
             response_model=dict,
             openapi_extra={'x-request-schema': None}
         )
+        self.router.add_api_route(
+            "/thumbnail/{id}", self.get_thumbnail_by_id, methods=["GET"],
+            openapi_extra={'x-request-schema': None}, )
 
     async def get_list_view(self, lang: str = Path(..., description="Язык локализации"),
                             session: AsyncSession = Depends(get_db)):
