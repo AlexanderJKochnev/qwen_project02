@@ -59,29 +59,42 @@ export const ItemUpdateForm = ({ onClose }: { onClose: () => void }) => {
   // ВОТ ТЕПЕРЬ ОДНОЙ СТРОКОЙ! Добавляйте или удаляйте только здесь:
   form
     .group('English', (b) => b
-        .text('title', 'Title')
+        .text('title', 'Title*')
         .text('subtitle', 'Subtitle')
         .textarea('description', 'Description', 5)
         .textarea('recommendation', 'Recommendation', 5)
         .textarea('madeof', 'Made of', 3)
         .text('anno', 'Anno')
     )
-    .group('Category, Classication & Location', (c) => c
-        .lazySelect('subcategory_id', 'Subcategory', makeLoader('subcategories'), true)
-        .lazySelect('source_id', 'Source', makeLoader('sources'))
-        .lazySelect('site_id', 'Site', makeLoader('sites'))
+    .group('Category & Classication, (c) => c
+        .lazySelect('subcategory_id', 'Category*', makeLoader('subcategories'), true)
+        .lazySelect('classification_id', 'Classification', makeLoader('classifications'))
+        .lazySelect('vintageconfig_id', 'Vintage configuration', makeLoader('vintageconfigs'))
+        .lazySelect('designation_id', 'Designation', makeLoader('designations'))
         .lazySelect('producer_id', 'Producer', makeLoader('producers'))
-        .lazyCheckbox('foods', 'Foods', makeLoader('foods'))
-        .lazyCheckbox('varietals', 'Varietals', makeLoader('varietals'), (id, isChecked, currentValue, onChange) => {
+    )
+    .group('Location , (e) => e
+        .lazySelect('site_id', 'Country, Region, Subregion, Site*', makeLoader('sites'), true)
+        .lazySelect('parcel_id', 'Parcel', makeLoader('parcels'))
+
+    )
+
+    .group('General data', (d) => d
+        .text('display_name', 'Display Name')
+        .text('lwin', 'Liv-ex Wine Identification Number')
+        .text('vol', 'Volume')
+        .text('alc', 'Alcohol')
+        .text('first_vintage', 'First vintage')
+        .text('last_vintage', 'Last vintage')
+        .lazySelect('source_id', 'Source', makeLoader('sources'))
+
+    )
+    .lazyCheckbox('foods', 'Foods', makeLoader('foods'))
+    .lazyCheckbox('varietals', 'Varietals', makeLoader('varietals'), (id, isChecked, currentValue, onChange) => {
           // Тут можно отрендерить инпут для процентов, если галочка стоит!
           if (!isChecked) return null;
           return h('input', { type: 'number', className: 'input input-xs input-bordered w-16 ml-2', placeholder: '%' });
         })
-    )
-    .text('display_name', 'Display Name')
-    .text('lwin', 'Liv-ex Wine Identification Number')
-    .text('vol', 'Volume')
-    .text('alc', 'Alcohol')
     .imageGallery('images', 'Item Images', id, 5); // Позволит загрузить до 5 штук
   return h('div', { style: { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1500 }},
     h('div', { style: { backgroundColor: 'white', padding: '20px', borderRadius: '8px', maxWidth: '1200px', width: '95%', maxHeight: '90vh', overflowY: 'auto' }},
