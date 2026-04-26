@@ -66,17 +66,39 @@ export const ItemUpdateForm = ({ onClose }: { onClose: () => void }) => {
         .textarea('madeof', 'Made of', 3)
         .text('anno', 'Anno')
     )
+    .group('Русский', (b) => b
+        .text('title_ru', 'Title*')
+        .text('subtitle_ru', 'Subtitle')
+        .textarea('description_ru', 'Description', 5)
+        .textarea('recommendation_ru', 'Recommendation', 5)
+        .textarea('madeof_ru', 'Made of', 3)
+        .text('anno', 'Anno')
+    )
+    .group('Fracaise', (b) => b
+        .text('title_fr', 'Title*')
+        .text('subtitle_fr', 'Subtitle')
+        .textarea('description_fr', 'Description', 5)
+        .textarea('recommendation_fr', 'Recommendation', 5)
+        .textarea('madeof_fr', 'Made of', 3)
+        .text('anno', 'Anno')
+    )
+    .group('Deutchland', (b) => b
+        .text('title_de', 'Title*')
+        .text('subtitle_de', 'Subtitle')
+        .textarea('description_de', 'Description', 5)
+        .textarea('recommendation_de', 'Recommendation', 5)
+        .textarea('madeof_de', 'Made of', 3)
+        .text('anno', 'Anno')
+    )
     .group('Category & Classication', (c) => c
-        .lazySelect('subcategory_id', 'Category*', makeLoader('subcategories'), true)
+        .lazySelect('subcategory_id', 'Category', makeLoader('subcategories'), true)
         .lazySelect('classification_id', 'Classification', makeLoader('classifications'))
         .lazySelect('vintageconfig_id', 'Vintage configuration', makeLoader('vintageconfigs'))
         .lazySelect('designation_id', 'Designation', makeLoader('designations'))
-        .lazySelect('producer_id', 'Producer', makeLoader('producers'))
     )
-    .group('Location', (e) => e
-        .lazySelect('site_id', 'Country, Region, Subregion, Site*', makeLoader('sites'), true)
+    .group('Locations & Producers', (e) => e
+        .lazySelect('site_id', 'Country, Region, Subregion, Site', makeLoader('sites'), true)
         .lazySelect('parcel_id', 'Parcel', makeLoader('parcels'))
-
     )
 
     .group('General data', (d) => d
