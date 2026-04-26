@@ -21,12 +21,16 @@ export class ImageGalleryField extends BaseField<ImageItem[]> {
   private recordId: number;
 
   constructor(config: ImageGalleryConfig, value: any, onChange: (name: string, value: any) => void) {
-    // Возвращаем исходную чистую логику нормализации
     let normalizedValue: ImageItem[] = [];
+
     if (Array.isArray(value) && value.length > 0) {
-      normalizedValue = value;
-    } else if (value) {
-      normalizedValue = [{ id: value, isExisting: true, order: 1 }];
+      // Если передали массив строк/чисел (например, наш [image_id])
+      normalizedValue = value.map((item, index) => {
+        if (typeof item === 'string' || typeof item === 'number') {
+          return { id: item, isExisting: true, order: index + 1 };
+        }
+        return item;
+      });
     }
 
     super(config, normalizedValue, onChange);
