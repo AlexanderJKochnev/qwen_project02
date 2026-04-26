@@ -7,6 +7,7 @@ from pydantic import ValidationError
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.responses import StreamingResponse
+from app.core.utils.io_utils import ResponseJust
 from app.auth.dependencies import get_active_user_or_internal
 from app.core.config.database.click_async import get_ch_client
 from app.core.config.database.db_async import get_db
@@ -322,12 +323,16 @@ class ItemRouter(BaseRouter):
             получение thumbnail по id напитка. Версия 1 (StreamingResponse)
         """
         image_data = await self.service.get_thumbnail_by_id(id, self.repo, self.model, session, image_service)
+
         headers = {"Content-Disposition": f"inline; filename={image_data['filename']}", "X-Image-Type": "thumbnail",
                    "X-File-Size": str(len(image_data["content"]))}
         if image_data.get("from_cache"):
             headers["X-Cache"] = "HIT"
         else:
             headers["X-Cache"] = "MISS"
-        return StreamingResponse(
-            io.BytesIO(image_data["content"]), media_type=image_data['content_type'], headers=headers
-        )
+        """
+        return StreamingResponse(io.BytesIO(image_data["content"]),
+                                 media_type=image_data['content_type'],
+                                 headers=headers)
+        """
+        return ResponseJust(image_data, headers)
