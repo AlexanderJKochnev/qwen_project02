@@ -25,6 +25,12 @@ export default defineConfig({
         target: 'http://app:8091',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/proxy-api/, ''),
+        // ДОБАВЬТЕ ЭТОТ БЛОК ДЛЯ ОТОБРАЖЕНИЯ ЛОГОВ В ТЕРМИНАЛЕ 👇
+        configure: (proxy, _options) => {
+          proxy.on('proxyReq', (proxyReq, req, _res) => {
+            console.log(`[Proxy] Отправка запроса: ${req.method} ${req.url}`);
+          });
+        },
       },
     },
   },
