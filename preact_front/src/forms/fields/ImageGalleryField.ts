@@ -12,6 +12,7 @@ interface ImageItem {
   id: string | number;
   file?: File; // Для новых не сохраненных файлов
   isExisting: boolean;
+  order?: number; // Порядковый номер для будущего many-to-many
 }
 
 export class ImageGalleryField extends BaseField<ImageItem[]> {
@@ -22,9 +23,12 @@ export class ImageGalleryField extends BaseField<ImageItem[]> {
     // Нормализуем входящее значение в массив
     let normalizedValue: ImageItem[] = [];
     if (Array.isArray(value)) {
-      normalizedValue = value;
+      normalizedValue = value.map((v, index) => ({
+        ...v,
+        order: v.order || index + 1
+      }));
     } else if (value) {
-      normalizedValue = [{ id: value, isExisting: true }];
+      normalizedValue = [{ id: value, isExisting: true, order: 1 }];
     }
 
     super(config, normalizedValue, onChange);
@@ -67,7 +71,8 @@ const GalleryCore = ({ name, label, value, maxImages, recordId, onChange }: Core
       newItems.push({
         id: `new-${Math.random()}`,
         file: files[i],
-        isExisting: false
+        isExisting: false,
+        order: newItems.length + 1
       });
     }
 
@@ -89,20 +94,20 @@ const GalleryCore = ({ name, label, value, maxImages, recordId, onChange }: Core
 
       // 1. Отображаем текущие картинки
       value.map((img) => {
-        // Если картинка уже есть на сервере — берем ваш эндпоинт thumbnail_png
-        // (Для one_to_many сюда можно будет дописывать порядковый номер)
+        // Формируем URL. Пока это один ко многим не готов,
+        // URL будет просто /api/thumbnail/{id}.
+        // Как только бэкенд будет готов к массиву, вы сможете раскомментировать order ниже!
         const imgSrc = img.isExisting
-          ? `/api/thumbnail_png/${recordId}`
+          ? `/api/thumbnail/${recordId}` // или `/api/thumbnails/${recordId}?n=${img.order}`
           : URL.createObjectURL(img.file as File);
 
         return h('div', { key: img.id, className: 'relative w-32 h-32 bg-white border rounded-lg overflow-hidden group shadow-sm' },
           h('img', {
             src: imgSrc,
             className: 'w-full h-full object-cover',
-            // Очищаем URL памяти при размонтировании
             onload: () => { if (!img.isExisting) URL.revokeObjectURL(imgSrc); }
           }),
-          // Кнопка удаления
+          // Кнопка удаления поверх превью
           h('button', {
             type: 'button',
             onClick: () => removeImage(img.id),
@@ -111,18 +116,24 @@ const GalleryCore = ({ name, label, value, maxImages, recordId, onChange }: Core
         );
       }),
 
-      // 2. Кнопка добавления нового файла (если лимит не исчерпан)
+      // 2. Кнопка добавления нового файла в виде аккуратной прямоугольной кнопки
       value.length < maxImages && h('div', {
-        className: 'w-32 h-32 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:bg-white transition-colors',
-        onClick: () => fileInputRef.current?.click()
+        className: 'w-32 h-32 flex items-center justify-center'
       },
-        h('svg', { className: 'w-8 h-8 text-gray-400', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
-          h('path', { strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: '2', d: 'M12 4v16m8-8H4' })
-        ),
-        h('span', { className: 'text-xs text-gray-500 mt-1' }, 'Upload')
+        h('button', {
+          type: 'button',
+          onClick: () => fileInputRef.current?.click(),
+          className: 'btn btn-outline btn-primary btn-sm flex items-center gap-1'
+        },
+          // Красивая иконка плюса
+          h('svg', { className: 'w-4 h-4', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
+            h('path', { strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: '2', d: 'M12 4v16m8-8H4' })
+          ),
+          h('span', {}, 'Add')
+        )
       ),
 
-      // Скрытый нативный инпут
+      // Скрытый нативный инпут для вызова диалогового окна ОС
       h('input', {
         ref: fileInputRef,
         type: 'file',
