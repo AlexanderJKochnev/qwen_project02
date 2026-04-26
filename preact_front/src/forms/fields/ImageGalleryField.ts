@@ -97,9 +97,16 @@ const GalleryCore = ({ name, label, value, maxImages, recordId, onChange }: Core
         // Формируем URL. Пока это один ко многим не готов,
         // URL будет просто /api/thumbnail/{id}.
         // Как только бэкенд будет готов к массиву, вы сможете раскомментировать order ниже!
+        // отладка
+        const fullUrl = `/api/thumbnail/${recordId}`;
+        console.log(`[ImageGallery] Requesting image from: ${fullUrl}`);
         const imgSrc = img.isExisting
-          ? `/api/thumbnail/${recordId}` // или `/api/thumbnails/${recordId}?n=${img.order}`
+          ? fullUrl
           : URL.createObjectURL(img.file as File);
+
+        // const imgSrc = img.isExisting
+        //  ? `/api/thumbnail/${recordId}` // или `/api/thumbnails/${recordId}?n=${img.order}`
+        //  : URL.createObjectURL(img.file as File);
 
         return h('div', { key: img.id, className: 'relative w-32 h-32 bg-white border rounded-lg overflow-hidden group shadow-sm' },
           h('img', {
