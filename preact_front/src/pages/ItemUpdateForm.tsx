@@ -70,7 +70,8 @@ export const ItemUpdateForm = ({ onClose }: { onClose: () => void }) => {
       // Тут можно отрендерить инпут для процентов, если галочка стоит!
       if (!isChecked) return null;
       return h('input', { type: 'number', className: 'input input-xs input-bordered w-16 ml-2', placeholder: '%' });
-    });
+    })
+    .imageGallery('images', 'Item Images', id, 5); // Позволит загрузить до 5 штук
   return h('div', { style: { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1500 }},
     h('div', { style: { backgroundColor: 'white', padding: '20px', borderRadius: '8px', maxWidth: '1200px', width: '95%', maxHeight: '90vh', overflowY: 'auto' }},
       h('h2', { className: 'text-2xl font-bold mb-4' }, 'Update Item'),

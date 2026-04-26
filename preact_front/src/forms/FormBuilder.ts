@@ -8,6 +8,7 @@ import { CheckboxGroupField } from './fields/CheckboxGroupField';
 import { FileField } from './fields/FileField';
 import { LazySelectField } from './fields/LazySelectField'; // Добавленный импорт
 import { LazyCheckboxGroupField, LazyCheckboxConfig } from './fields/LazyCheckboxGroupField';
+import { ImageGalleryField } from './fields/ImageGalleryField';
 
 export class FormBuilder {
   private fields: h.JSX.Element[] = [];
@@ -67,9 +68,16 @@ export class FormBuilder {
     this.fields.push(new CheckboxGroupField({ name, label, options, renderExtra }, this.formData[name] || [], this.onChange).render());
     return this;
   }
-
+  // неактивно - вмессто этого см imageGallery ниже
   file(name: string, label: string) {
     this.fields.push(new FileField({ name, label }, this.formData[name] || null, this.onChange).render());
+    return this;
+  }
+
+  imageGallery(name: string, label: string, recordId: number, maxImages = 5) {
+    this.fields.push(
+      new ImageGalleryField({ name, label, recordId, maxImages }, this.formData[name], this.onChange).render()
+    );
     return this;
   }
 
