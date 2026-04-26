@@ -93,7 +93,7 @@ export class FormBuilder {
     callback(this);
 
     // 4. Оборачиваем собранные элементы в красивую плашку
-    const groupElement = h('details', { className: 'card bg-base-100 shadow mb-4 border rounded-lg', open: true },
+    const groupElement = h('details', { className: 'card bg-base-100 shadow mb-4 border rounded-lg'},
       h('summary', { className: 'p-4 font-bold cursor-pointer bg-gray-50 border-b' }, title),
       h('div', { className: 'p-4 space-y-4' }, this.fields)
     );
