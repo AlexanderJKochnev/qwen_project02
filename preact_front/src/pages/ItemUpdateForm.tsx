@@ -58,8 +58,11 @@ export const ItemUpdateForm = ({ onClose }: { onClose: () => void }) => {
 
   // ВОТ ТЕПЕРЬ ОДНОЙ СТРОКОЙ! Добавляйте или удаляйте только здесь:
   form
-    .text('title', 'Title')
-    // .text('subtitle', 'Subtitle')
+    .group('English', (b) => b
+        .text('title', 'Title')
+        .text('subtitle', 'Subtitle')
+    )
+
     .text('lwin', 'lwin')
     .lazySelect('subcategory_id', 'Subcategory', makeLoader('subcategories'), true)
     .lazySelect('source_id', 'Source', makeLoader('sources'))

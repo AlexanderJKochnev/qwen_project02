@@ -200,7 +200,6 @@ class ItemRouter(BaseRouter):
         except json.JSONDecodeError as e:
             raise HTTPException(status_code=422, detail=f"Invalid JSON: {e}")
         except ValidationError as exc:
-            # ValidationError_handler(exc)
             detail = (f'ошибка создания записи {exc}, model = {self.model}, '
                       f'create_schema = {self.create_schema}, '
                       f'service = {self.service} ,'
@@ -223,7 +222,7 @@ class ItemRouter(BaseRouter):
                                 image_service: ThumbnailImageService = Depends()
                                 ):  # ItemCreateResponseSchema:
         """
-        Обновление записи Item & Drink и всеми связями
+        Обновление записи Item & Drink и всеми связями PREACT
         Принимает JSON строку и файл изображения
         Валидирует схемой ItemUpdatePreact
         Обновляет или создает Drink в зависимости от drink_action
