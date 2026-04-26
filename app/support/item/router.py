@@ -335,7 +335,5 @@ class ItemRouter(BaseRouter):
                                  media_type=image_data['content_type'],
                                  headers=headers)
         """
-        from app.core.utils.common_utils import jprint
-        jprint(headers)
-        logger.warning('===============================================')
+
         return ResponseJust(image_data, headers)
