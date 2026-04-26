@@ -62,9 +62,9 @@ export const ItemUpdateForm = ({ onClose }: { onClose: () => void }) => {
     .group('English', (b) => b
         .text('title', 'Title')
         .text('subtitle', 'Subtitle')
-        .textarea('description', 'Description')
-        .textarea('recommendation', 'Recommendation')
-        .textarea('madeof', 'Made of')
+        .textarea('description', 'Description', 5)
+        .textarea('recommendation', 'Recommendation', 5)
+        .textarea('madeof', 'Made of', 3)
         .text('anno', 'Anno')
     )
     .lazySelect('subcategory_id', 'Subcategory', makeLoader('subcategories'), true)
