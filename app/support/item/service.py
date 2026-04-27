@@ -262,7 +262,6 @@ class ItemService(Service):
             drink_id = res.scalar()
             data_dict['drink_id'] = drink_id
             drink = DrinkUpdate(**data_dict)
-            jprint(drink.model_dump())
             result = await DrinkService.patch(drink_id, drink, DrinkRepository, Drink, background_tasks,
                                               session)
             if not result.get('success'):
