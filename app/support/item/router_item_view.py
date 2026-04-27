@@ -108,7 +108,11 @@ class ItemViewRouter:
             summary="Поиск элементов по hash index + word..",
             openapi_extra={'x-request-schema': None}
         )
-
+        self.router.add_api_route(
+            "/update_item_drink/{id}", self.update_item_drink, methods=["PATH"],
+            # response_model=ItemCreateResponseSchema,
+            openapi_extra={'x-request-schema': None}
+        )
         self.router.add_api_route(
             "/preact/{id}",
             self.get_one,
@@ -124,10 +128,6 @@ class ItemViewRouter:
             tags=self.tags, summary="заполнить полнотекстовый индекс",
             openapi_extra={'x-request-schema': None}
         )
-        self.router.add_api_route(
-            "/update_item_drink/{id}", self.update_item_drink, methods=["PATH"],
-            # response_model=ItemCreateResponseSchema,
-            openapi_extra={'x-request-schema': None})
 
     async def get_one(self,
                       id: int,
