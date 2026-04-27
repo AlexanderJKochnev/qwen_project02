@@ -54,11 +54,12 @@ class ItemRouter(BaseRouter):
             response_model=ItemCreateResponseSchema,
             openapi_extra={'x-request-schema': None}
         )
+        """
         self.router.add_api_route(
             "/update_item_drink/{id}", self.update_item_drink, status_code=status.HTTP_200_OK, methods=["PATH"],
             # response_model=ItemCreateResponseSchema,
             openapi_extra={'x-request-schema': None}
-        )
+        )"""
         """ import from upload directory """
         self.router.add_api_route(
             "/direct", self.direct_import_data, status_code=status.HTTP_200_OK, methods=["POST"],
