@@ -255,7 +255,7 @@ class Settings(BaseSettings):
 
     @property
     def lang_suffixes(self) -> tuple:
-        return tuple(f'_{lang}' if lang not in self.DEFAULT_LANG else '' for lang in self.LANG)
+        return tuple(f'_{lang}' if lang not in self.DEFAULT_LANG else '' for lang in self.LANGS)
 
     @property
     def ext_delimiter(self) -> list:
