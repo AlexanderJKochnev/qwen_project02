@@ -1,22 +1,22 @@
 # app/support/drink/schemas.py
 from datetime import datetime
-from typing import List, Optional, Any
+from typing import List, Optional
 
 from pydantic import Field, field_serializer
 
 from app.core.schemas.base import (BaseModel, CreateNoNameSchema, CreateResponse, ReadNoNameSchema, UpdateNoNameSchema)
 from app.support.drink.drink_food_schema import DrinkFoodRelation
 from app.support.drink.drink_varietal_schema import (DrinkVarietalId, DrinkVarietalRelation, DrinkVarietalRelationFlat)
-from app.support.food.schemas import FoodCreateRelation, FoodId, FoodRead
-from app.support.parcel.schemas import SiteRead, SiteCreateRelation
-from app.support.producer.schemas import ProducerRead, ProducerCreateRelation
-from app.support.source.schemas import SourceRead, SourceCreateRelation
+from app.support.food.schemas import FoodCreateRelation
+from app.support.parcel.schemas import SiteCreateRelation, SiteRead
+from app.support.producer.schemas import ProducerCreateRelation, ProducerRead
+from app.support.source.schemas import SourceCreateRelation, SourceRead
 from app.support.subcategory.schemas import SubcategoryCreateRelation, SubcategoryRead, SubcategoryReadRelation
 # from app.support.subregion.schemas import SubregionCreateRelation, SubregionRead, SubregionReadRelation
 from app.support.sweetness.schemas import SweetnessCreateRelation, SweetnessRead, SweetnessReadRelation
 from app.support.varietal.schemas import VarietalRead
-from app.support.vintage.schemas import (ClassificationRead, DesignationRead, VintageConfigRead,
-                                         ClassificationCreateRelation, DesignationCreateRelation, VintageConfigCreateRelation)
+from app.support.vintage.schemas import (ClassificationCreateRelation, ClassificationRead, DesignationCreateRelation,
+                                         DesignationRead, VintageConfigCreateRelation, VintageConfigRead)
 
 
 class LangMixin:
@@ -114,8 +114,8 @@ class NewUpdSchema:
     classification_id: Optional[int] = None
     designation_id: Optional[int] = None
     site_id: Optional[int] = None
-    first_vintage: Optional[int] = Field(default=None, ge=1000, le=3000)
-    last_vintage: Optional[int] = Field(default=None, ge=1000, le=3000)
+    first_vintage: Optional[str] = Field(default=None)
+    last_vintage: Optional[str] = Field(default=None)
 
 
 class NewCreateSchema:
@@ -128,8 +128,8 @@ class NewCreateSchema:
     classification_id: Optional[int] = None
     designation_id: Optional[int] = None
     site_id: Optional[int] = None
-    first_vintage: Optional[int] = Field(default=None, ge=1000, le=3000)
-    last_vintage: Optional[int] = Field(default=None, ge=1000, le=3000)
+    first_vintage: Optional[str] = Field(default=None)
+    last_vintage: Optional[str] = Field(default=None)
 
 
 class NewReadSchema:
@@ -142,8 +142,8 @@ class NewReadSchema:
     vintageconfig: Optional[VintageConfigRead]
     designation: Optional[DesignationRead]
     site: SiteRead
-    first_vintage: Optional[int] = Field(default=None, ge=1000, le=3000)
-    last_vintage: Optional[int] = Field(default=None, ge=1000, le=3000)
+    first_vintage: Optional[str] = Field(default=None)
+    last_vintage: Optional[str] = Field(default=None)
 
 
 class NewCreateRelationsSchema:
