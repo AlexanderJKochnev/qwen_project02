@@ -184,7 +184,7 @@ export const ItemUpdateForm = ({ onClose }: { onClose: () => void }) => {
       h('form', { onSubmit: handleSave },
         form.build(),
         h('div', { className: 'flex justify-end gap-4 mt-6' },
-          h('button', { type: 'button', onClick: onClose, className: 'btn btn-ghost'
+          h('button', { type: 'button', onClick: onClose, className: 'btn btn-ghost',
                         disabled: isSubmitting // Блокируем кнопку отмены при отправке
           }, 'Cancel'),
           h('button', { type: 'submit',
