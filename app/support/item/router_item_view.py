@@ -99,7 +99,7 @@ class ItemViewRouter:
             openapi_extra={'x-request-schema': None}
         )
         # Маршрут для поиска элементов с использованием fts индекса
-        """self.router.add_api_route(
+        self.router.add_api_route(
             "/search_smart",
             self.search_smart,
             methods=["GET"],
@@ -107,9 +107,11 @@ class ItemViewRouter:
             tags=self.tags,
             summary="Поиск элементов по hash index + word..",
             openapi_extra={'x-request-schema': None}
-        )"""
+        )
         self.router.add_api_route(
             "/update_item_drink/{id}", self.update_item_drink, methods=["PATH"],
+            tags=self.tags,
+            summary="Поиск элементов по hash index + word..",
             # response_model=ItemCreateResponseSchema,
             openapi_extra={'x-request-schema': None}
         )
