@@ -44,7 +44,7 @@ class ItemViewRouter:
         )
         """
         self.router.add_api_route(
-            "/update_item_drink/{id}", self.update_item_drink, methods=["PATH"], tags=self.tags,
+            "/update_item_drink/{id}", self.update_item_drinS, methods=["PATH"], tags=self.tags,
             summary="Поиск элементов по hash index + word..",  # response_model=ItemCreateResponseSchema,
             openapi_extra={'x-request-schema': None}
         )
