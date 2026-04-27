@@ -261,7 +261,9 @@ class DrinkRepository(Repository):
             response = await session.execute(query)
             logger.critical(2222)
             ids = response.scalars().all()
+            logger.critical(f'{ids=}')
             result = await cls.get_by_ids(ids, model, session)
+            logger.critical('333')
             return result if result else [], total
         except Exception as e:
             raise AppBaseException(message=f'core.repository.error: {str(e)}', status_code=404)
