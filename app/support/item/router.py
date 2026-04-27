@@ -234,22 +234,17 @@ class ItemRouter(BaseRouter):
             jprint(data_dict)
 
             if file:
-                logger.warning('4 ======================')
                 image_dict = await image_service.upload_image(file, description=data_dict.get('title'))
                 jprint(image_dict)
                 data_dict['image_id'] = image_dict.get('id')
                 data_dict['image_path'] = image_dict.get('filename')
-            jprint(data_dict)
             item_drink_data = ItemUpdatePreact(**data_dict)
-            logger.warning(f'7 ========{id=}==================')
             result = await self.service.update_item_drink(id, item_drink_data,
                                                           ItemRepository, Item, background_tasks,
                                                           session)
-            logger.warning('8 ==========================')
             if not result.get('success'):
                 print(result, 'ошибка обновления')
                 raise HTTPException(status_code=500, detail=result.get('message', 'ошибка обновления'))
-            logger.warning('9 ==========================')
             return result.get('data')
         except json.JSONDecodeError as e:
             if file and image_dict:
