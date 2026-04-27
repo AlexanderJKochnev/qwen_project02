@@ -232,10 +232,10 @@ class ItemRouter(BaseRouter):
             data_dict['drink_action'] = 'update'
             from app.core.utils.common_utils import jprint
             jprint(data_dict)
-            isfile: bool = False
+
             if file:
                 logger.warning('4 ======================')
-                image_dict = await image_service.upload_image(file, description=item_drink_data.title)
+                image_dict = await image_service.upload_image(file, description=data_dict.get('title'))
                 jprint(image_dict)
                 data_dict['image_id'] = image_dict.get('id')
                 data_dict['image_path'] = image_dict.get('filename')
