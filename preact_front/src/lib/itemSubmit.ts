@@ -56,7 +56,7 @@ export async function submitItemForm(formData: Record<string, any>, recordId?: n
 
 
   const response = await fetch(url, {
-    method: recordId ? 'PATCH' : 'POST',
+    method: 'POST',  // recordId ? 'PATCH' : 'POST',
     headers: {
       'Authorization': `Bearer ${token || ''}`,
     },
