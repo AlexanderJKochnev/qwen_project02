@@ -1,4 +1,5 @@
 // src/lib/itemSubmit.ts
+import { getAuthToken } from './apiClient';
 
 // Список ключей, которые требует бэкенд для JSON
 const ALLOWED_KEYS = [
@@ -51,7 +52,8 @@ export async function submitItemForm(formData: Record<string, any>, recordId?: n
   // Если есть recordId -> POST (или PUT) на /update/{id}
   // Если нет recordId -> POST на эндпоинт создания (например, /create)
   const url = recordId ? `/items/update_item_drink/${recordId}` : `/items/create_item_drink/`;
-  const token = localStorage.getItem('token');
+  const token = getAuthToken(); // 👈 Используем оригинальный метод из apiClient
+
 
   const response = await fetch(url, {
     method: recordId ? 'PATCH' : 'POST',
