@@ -230,6 +230,7 @@ class ItemRouter(BaseRouter):
         try:
             logger.warning('update_item_drink =============================')
             data_dict = json.loads(data)
+            data_dict['drink_action'] = 'update'
             from app.core.utils.common_utils import jprint
             jprint(data_dict)
             logger.warning('2 ======================')
