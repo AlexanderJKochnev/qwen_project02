@@ -247,7 +247,7 @@ class DrinkRepository(Repository):
             logger.warning(langs)
             # query = cls.get_query(model)
             query = cls.get_short_query(model)
-            fields = ['title', 'subtitle', 'title_ru', 'subtitle']
+            fields = ['title', 'subtitle']
             conditions = [getattr(model, f'{key}{lang}').icontains(search) for key in fields for lang in langs]
             query = query.where(or_(*conditions))
             total = cls.get_count(query, session)
