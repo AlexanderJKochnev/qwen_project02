@@ -90,7 +90,7 @@ export const ItemUpdateForm = ({ onClose }: { onClose: () => void }) => {
   // ОДНОЙ СТРОКОЙ! только здесь:
   form
     .group('English', (b) => b
-        .text('title', 'Title*')
+        .text('title', 'Title**')
         .text('subtitle', 'Subtitle')
         .textarea('description', 'Description', 5)
         .textarea('recommendation', 'Recommendation', 5)
@@ -106,7 +106,7 @@ export const ItemUpdateForm = ({ onClose }: { onClose: () => void }) => {
         .text('anno', 'Anno')
     )
     .group('Fracaise', (b) => b
-        .text('title_fr', 'Title*')
+        .text('title_fr', 'Title')
         .text('subtitle_fr', 'Subtitle')
         .textarea('description_fr', 'Description', 5)
         .textarea('recommendation_fr', 'Recommendation', 5)
@@ -114,7 +114,7 @@ export const ItemUpdateForm = ({ onClose }: { onClose: () => void }) => {
         .text('anno', 'Anno')
     )
     .group('Deutchland', (b) => b
-        .text('title_de', 'Title*')
+        .text('title_de', 'Title')
         .text('subtitle_de', 'Subtitle')
         .textarea('description_de', 'Description', 5)
         .textarea('recommendation_de', 'Recommendation', 5)
