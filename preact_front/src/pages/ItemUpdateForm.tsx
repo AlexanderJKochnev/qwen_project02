@@ -6,6 +6,7 @@ import { apiClient } from '../lib/apiClient';
 import { FormBuilder } from '../forms/FormBuilder';
 import { useLanguage } from '../contexts/LanguageContext';
 import { submitItemForm } from '../lib/itemSubmit';
+import { useNotification } from '../hooks/useNotification';  // модуль уведомлений
 
 export const ItemUpdateForm = ({ onClose }: { onClose: () => void }) => {
   const { url } = useLocation();
@@ -13,6 +14,12 @@ export const ItemUpdateForm = ({ onClose }: { onClose: () => void }) => {
   const lang = useLanguage().language;
   const [formData, setFormData] = useState<any>({});
   const [loadingData, setLoadingData] = useState(true);
+
+  // 🔄 Стейт для анимации кнопки отправки
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // 🔔 Подключаем уведомления
+  const { showNotification, NotificationComponent } = useNotification();
 
   useEffect(() => {
     apiClient(`/preact/${id}`, { method: 'GET' })
@@ -58,19 +65,29 @@ export const ItemUpdateForm = ({ onClose }: { onClose: () => void }) => {
   // 👇 ОБРАБОТЧИК SAVE
   const handleSave = async (e: Event) => {
     e.preventDefault();
+    setIsSubmitting(true); // Включаем режим загрузки
+
     try {
       await submitItemForm(formData, id);
-      alert('Item updated successfully!');
-      onClose(); // Закрываем модалку
+      showNotification('Item updated successfully!', 'success');
+      setTimeout(() => {
+        onClose();
+      }, 500);
     } catch (err: any) {
-      console.error(err);
-      alert('Failed to save item: ' + err.message);
+      console.error('Save error:', err);
+      showNotification(`Failed to save item: ${err.message}`, 'error');
+    } finally {
+      setIsSubmitting(false); // Выключаем режим загрузки в любом случае
     }
   };
 
+  if (loadingData) {
+    return h('div', { style: { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1500 }}, h('div', { style: { backgroundColor: 'white', padding: '20px', borderRadius: '8px' } }, 'Loading...'));
+  }
+
   const form = new FormBuilder(formData, handleChange);
 
-  // ВОТ ТЕПЕРЬ ОДНОЙ СТРОКОЙ! Добавляйте или удаляйте только здесь:
+  // ОДНОЙ СТРОКОЙ! только здесь:
   form
     .group('English', (b) => b
         .text('title', 'Title*')
@@ -156,14 +173,24 @@ export const ItemUpdateForm = ({ onClose }: { onClose: () => void }) => {
           return h('input', { type: 'number', className: 'input input-xs input-bordered w-16 ml-2', placeholder: '%' });
         })
     .imageGallery('images', 'Item Images', id, 5); // Позволит загрузить до 5 штук
+
   return h('div', { style: { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1500 }},
     h('div', { style: { backgroundColor: 'white', padding: '20px', borderRadius: '8px', maxWidth: '1200px', width: '95%', maxHeight: '90vh', overflowY: 'auto' }},
       h('h2', { className: 'text-2xl font-bold mb-4' }, 'Update Item'),
+
+      // 🟢 Встраиваем всплывающее уведомление
+      h(NotificationComponent, {}),
+
       h('form', { onSubmit: handleSave },
         form.build(),
         h('div', { className: 'flex justify-end gap-4 mt-6' },
-          h('button', { type: 'button', onClick: onClose, className: 'btn btn-ghost' }, 'Cancel'),
-          h('button', { type: 'submit', className: 'btn btn-primary' }, 'Save')
+          h('button', { type: 'button', onClick: onClose, className: 'btn btn-ghost'
+                        disabled: isSubmitting // Блокируем кнопку отмены при отправке
+          }, 'Cancel'),
+          h('button', { type: 'submit',
+                        className: `btn btn-primary ${isSubmitting ? 'loading' : ''}`,
+                        disabled: isSubmitting // Защита от двойного клика
+                        }, isSubmitting ? 'Saving...' : 'Save')
         )
       )
     )
