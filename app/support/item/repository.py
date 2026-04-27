@@ -12,6 +12,7 @@ from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.types import ModelType
 from app.core.utils.alchemy_utils import build_search_condition, create_enum_conditions, create_search_conditions2, \
     exclude_field_list, SearchType
+from app.support import WordHash
 from app.support.category.model import Category
 from app.support.country.model import Country
 from app.support.drink.model import Drink
@@ -427,6 +428,17 @@ class ItemRepository(Repository):
 
         result = await session.execute(stmt)
         return result.all()
+
+    @staticmethod
+    async def get_hashes_by_prefix(session: AsyncSession, prefix: str, limit: int = 50) -> List[WordHash]:
+        """
+        Поиск хешей в словаре по префиксу последнего слова.
+        """
+        stmt = (select(WordHash.hash).where(WordHash.word.like(f"{prefix.lower()}%")).order_by(
+            WordHash.freq.desc()
+        ).limit(limit))
+        res = await session.execute(stmt)
+        return res.scalars().all()
 
 
 def get_drink_search_expression(cls):
