@@ -50,11 +50,11 @@ export async function submitItemForm(formData: Record<string, any>, recordId?: n
   // 5. Вычисляем URL и Метод запроса
   // Если есть recordId -> POST (или PUT) на /update/{id}
   // Если нет recordId -> POST на эндпоинт создания (например, /create)
-  const url = recordId ? `/items/update_item_drink/${recordId}` : `/items/create_item_drink`;
+  const url = recordId ? `/items/update_item_drink/${recordId}` : `/items/create_item_drink/`;
   const token = localStorage.getItem('token');
 
   const response = await fetch(url, {
-    method: 'POST', // или 'PUT' для обновления, если так в FastAPI
+    method: recordId ? 'PATCH' : 'POST',
     headers: {
       'Authorization': `Bearer ${token || ''}`,
     },
