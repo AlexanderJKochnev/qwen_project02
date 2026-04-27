@@ -248,9 +248,10 @@ class DrinkRepository(Repository):
             # query = cls.get_query(model)
             query = cls.get_short_query(model)
             fields = ['title', 'subtitle']
+            search = f'{search}'
             conditions = [getattr(model, f'{key}{lang}').icontains(search) for key in fields for lang in langs]
             query = query.where(or_(*conditions))
-            total = cls.get_count(query, session)
+            total = await cls.get_count(query, session)
             query = query.order_by('title').offset(skip).limit(limit)
             compiled = query.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
             logger.warning(str(compiled))
