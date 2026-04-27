@@ -49,14 +49,14 @@ export async function submitItemForm(formData: Record<string, any>, recordId?: n
   }
 
   // 5. Вычисляем URL и Метод запроса
-  // Если есть recordId -> POST (или PUT) на /update/{id}
+  // Если есть recordId -> PATH (или PUT) на /update/{id}
   // Если нет recordId -> POST на эндпоинт создания (например, /create)
   const url = recordId ? `/items/update_item_drink/${recordId}` : `/items/create_item_drink/`;
   const token = getAuthToken(); // 👈 Используем оригинальный метод из apiClient
 
 
   const response = await fetch(url, {
-    method: 'POST',  // recordId ? 'PATCH' : 'POST',
+    method: recordId ? 'PATCH' : 'POST',
     headers: {
       'Authorization': `Bearer ${token || ''}`,
     },

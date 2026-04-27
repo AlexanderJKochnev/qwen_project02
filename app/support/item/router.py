@@ -55,7 +55,7 @@ class ItemRouter(BaseRouter):
             openapi_extra={'x-request-schema': None}
         )
         self.router.add_api_route(
-            "/update_item_drink/{id}", self.update_item_drink, status_code=status.HTTP_200_OK, methods=["POST"],
+            "/update_item_drink/{id}", self.update_item_drink, status_code=status.HTTP_200_OK, methods=["PATH"],
             # response_model=ItemCreateResponseSchema,
             openapi_extra={'x-request-schema': None}
         )
