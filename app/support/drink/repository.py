@@ -1,7 +1,8 @@
 # app/support/drink/repository.py
 from typing import List, Optional, Type
-
-from sqlalchemy import func, select, exists
+from loguru import logger
+from sqlalchemy import func, select, exists, or_
+from sqlalchemy.dialects import postgresql  # NOQA: F401
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, joinedload, load_only
 from app.core.exceptions import AppBaseException
@@ -233,6 +234,31 @@ class DrinkRepository(Repository):
             return records, total
         except Exception as e:
             raise AppBaseException(message=f'search_by_trigramm_index.error; {str(e)}', status_code=404)
+
+    @classmethod
+    async def search(
+            cls, search: str, skip: int, limit: int, model: ModelType, session: AsyncSession, ) -> tuple:
+        """
+            Поиск по всем заданным текстовым полям основной таблицы
+        """
+        try:
+            from app.core.config.project_config import settings
+            langs = settings.lang_suffixes
+            # query = cls.get_query(model)
+            query = cls.get_short_query(model)
+            fields = ['title', 'subtitle', 'title_ru', 'subtitle']
+            conditions = [getattr(model, f'{key}{lang}').icontains(search) for key in fields for lang in langs]
+            query = query.where(or_(*conditions))
+            total = cls.get_count(query, session)
+            query = query.order_by('title').offset(skip).limit(limit)
+            compiled = query.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
+            logger.warning(str(compiled))
+            response = await session.execute(query)
+            ids = response.scalars().all()
+            result = await cls.get_by_ids(ids, model, session)
+            return result if result else [], total
+        except Exception as e:
+            raise AppBaseException(message=f'core.repository.error: {str(e)}', status_code=404)
 
 
 def get_drink_search_expression(cls):

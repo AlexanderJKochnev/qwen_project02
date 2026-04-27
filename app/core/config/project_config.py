@@ -254,6 +254,10 @@ class Settings(BaseSettings):
         return strtodict(self.LANGUAGE_KEY)
 
     @property
+    def lang_suffixes(self) -> tuple:
+        return tuple(f'_{lang}' if lang not in self.DEFAULT_LANG else '' for lang in self.LANG)
+
+    @property
     def ext_delimiter(self) -> list:
         return strtolist(self.EXT_DELIMITER)
 
