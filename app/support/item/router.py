@@ -253,7 +253,7 @@ class ItemRouter(BaseRouter):
                 isfile = True
             # item_drink_data.drink_action = drink_action
             # Find the existing item to update
-            logger.warning('7 ==========================')
+            logger.warning(f'7 ========{id=}==================')
             result = await self.service.update_item_drink(id, item_drink_data, isfile,
                                                           ItemRepository, Item, background_tasks,
                                                           session)
