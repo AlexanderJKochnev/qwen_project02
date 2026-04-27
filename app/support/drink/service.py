@@ -3,7 +3,7 @@ from typing import Optional, Type
 
 from fastapi import BackgroundTasks, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from loguru import logger
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.services.service import ModelType, Service
 from app.core.utils.alchemy_utils import model_to_dict
@@ -87,6 +87,9 @@ class DrinkService(Service):
             if not created:
                 raise Exception(f"запись '{obj}' существует. Если необходимо обновить ее, "
                                 f"воспользуйтесь формой 'Edit'")
+            from app.core.utils.common_utils import jprint
+            jprint(drink_instance.to_dict())
+            logger.warning('=================================================')
             drink_id = drink_instance.id
             # добавляем drink_foods & drink_varietals
             if isinstance(data.food_associations, list):
