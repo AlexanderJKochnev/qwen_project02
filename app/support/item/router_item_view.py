@@ -5,16 +5,19 @@
     по языкам
 """
 from typing import List, Annotated, Callable
-from fastapi import Depends, Path, Query, HTTPException, BackgroundTasks
+from fastapi import Depends, Path, Query, HTTPException, BackgroundTasks, Form, UploadFile, File
+import json
+from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.dependencies import get_active_user_or_internal
 from app.core.config.database.db_async import get_db, DatabaseManager
 from app.core.utils.pydantic_utils import orresponse
 from app.core.schemas.base import PaginatedResponse
 from app.dependencies import get_translator_func
+from app.mongodb.service import ThumbnailImageService
 from app.support.item.model import Item
 from app.support.item.repository import ItemRepository
-from app.support.item.schemas import ItemDetailView, ItemListView
+from app.support.item.schemas import ItemListView, ItemUpdatePreact
 from app.support.item.service import ItemService
 
 
@@ -121,6 +124,10 @@ class ItemViewRouter:
             tags=self.tags, summary="заполнить полнотекстовый индекс",
             openapi_extra={'x-request-schema': None}
         )
+        self.router.add_api_route(
+            "/update_item_drink/{id}", self.update_item_drink, methods=["PATH"],
+            # response_model=ItemCreateResponseSchema,
+            openapi_extra={'x-request-schema': None})
 
     async def get_one(self,
                       id: int,
@@ -247,3 +254,51 @@ class ItemViewRouter:
 
         result = await self.search_smart_keyset(search_str, page, page_size, session)
         return result
+
+    async def update_item_drink(self,
+                                id: int,
+                                background_tasks: BackgroundTasks,
+                                data: str = Form(..., description="JSON string of ItemUpdatePreact"),
+                                file: UploadFile = File(None),
+                                session: AsyncSession = Depends(get_db),
+                                image_service: ThumbnailImageService = Depends()
+                                ):  # ItemCreateResponseSchema:
+        """
+        Обновление записи Item & Drink и всеми связями PREACT
+        Принимает JSON строку и файл изображения
+        Валидирует схемой ItemUpdatePreact
+        Обновляет или создает Drink в зависимости от drink_action
+        """
+        try:
+            data_dict = json.loads(data)
+            data_dict['drink_action'] = 'update'
+            from app.core.utils.common_utils import jprint
+            jprint(data_dict)
+
+            if file:
+                image_dict = await image_service.upload_image(file, description=data_dict.get('title'))
+                jprint(image_dict)
+                data_dict['image_id'] = image_dict.get('id')
+                data_dict['image_path'] = image_dict.get('filename')
+            item_drink_data = ItemUpdatePreact(**data_dict)
+            result = await self.service.update_item_drink(id, item_drink_data,
+                                                          ItemRepository, Item, background_tasks,
+                                                          session)
+            if not result.get('success'):
+                print(result, 'ошибка обновления')
+                raise HTTPException(status_code=500, detail=result.get('message', 'ошибка обновления'))
+            return result.get('data')
+        except json.JSONDecodeError as e:
+            if file and image_dict:
+                image_id = image_dict.get('id')
+                await image_service.delete_image(image_id)
+            raise HTTPException(status_code=422, detail=f"Invalid JSON: {e}")
+        except ValidationError as exc:
+            raise HTTPException(status_code=501, detail=exc)
+        except Exception as e:
+            if file and image_dict:
+                image_id = image_dict.get('id')
+                await image_service.delete_image(image_id)
+            detail = f'{str(e)}, {data=}'
+            print('3rd error', detail)
+            raise HTTPException(status_code=500, detail=detail)
