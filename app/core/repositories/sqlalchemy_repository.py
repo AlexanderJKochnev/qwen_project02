@@ -8,7 +8,7 @@ from abc import ABCMeta
 from datetime import datetime
 from re import search as research
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
-
+from sqlalchemy.dialects import postgresql  # NOQA: F401
 from loguru import logger
 from sqlalchemy import and_, cast, desc, func, inspect, literal, literal_column, or_, Row, RowMapping, select, Select, \
     Text, text, update
@@ -493,6 +493,8 @@ class Repository(Background, metaclass=RepositoryMeta):
             query = cls.get_short_query(model)
             id_query, count_query = get_sql_search(query, search, limit=limit, offset=skip)
             # 1. Получаем список ID:
+            compiled = id_query.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
+            logger.warning(str(compiled))
             response = await session.execute(id_query)
             ids = response.scalars().all()
             # 2. Получаем общее кол-во:
@@ -501,7 +503,7 @@ class Repository(Background, metaclass=RepositoryMeta):
             result = await cls.get_by_ids(ids, model, session)
             return result if result else [], total
         except Exception as e:
-            raise AppBaseException(message=str(e), status_code=404)
+            raise AppBaseException(message=f'core.repository.error: {str(e)}', status_code=404)
 
     @classmethod
     async def search_all(
