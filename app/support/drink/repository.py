@@ -3,8 +3,9 @@ from typing import List, Optional, Type
 
 from sqlalchemy import func, select, exists
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload, joinedload
+from sqlalchemy.orm import selectinload, joinedload, load_only
 from app.core.exceptions import AppBaseException
+from app.core.utils.alchemy_utils import get_field_list
 from app.support.producer.model import Producer
 from app.core.repositories.sqlalchemy_repository import ModelType, Repository
 from app.support import Drink, Region, Subregion, Subcategory, Site
@@ -43,6 +44,16 @@ class DrinkRepository(Repository):
             параллельно запятая
         """
         return select(Drink).options(*cls.get_selectin())
+
+    @classmethod
+    def get_short_query(cls, model: Drink, field1: tuple = ('id', 'title', 'subtitle')):
+        """
+            Возвращает список модели только с нужными полями остальные None
+            - использовать для list_view и вообще где только можно.
+            для моделей с зависимостями - переопределить
+        """
+        fields = get_field_list(model, starts=field1)
+        return select(model).options(load_only(*fields))
 
     @classmethod
     def get_joined(cls, drink_ids):
