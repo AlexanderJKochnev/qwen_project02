@@ -244,6 +244,7 @@ class DrinkRepository(Repository):
         try:
             from app.core.config.project_config import settings
             langs = settings.lang_suffixes
+            logger.warning(langs)
             # query = cls.get_query(model)
             query = cls.get_short_query(model)
             fields = ['title', 'subtitle', 'title_ru', 'subtitle']
