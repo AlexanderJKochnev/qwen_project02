@@ -268,17 +268,6 @@ class ItemRouter(BaseRouter):
                 await image_service.delete_image(image_id)
             raise HTTPException(status_code=422, detail=f"Invalid JSON: {e}")
         except ValidationError as exc:
-            # ValidationError_handler(exc)
-            if file and image_dict:
-                image_id = image_dict.get('id')
-                await image_service.delete_image(image_id)
-            detail = (f'ошибка обновления записи {exc}, model = {self.model}, '
-                      f'create_schema = {self.create_schema}, '
-                      f'service = {self.service} ,'
-                      f'repository = {self.repo} ,'
-                      f'create_response_schema = {self.create_response_schema}, '
-                      f'{data=}')
-            print(detail)
             raise HTTPException(status_code=501, detail=exc)
         except Exception as e:
             if file and image_dict:
