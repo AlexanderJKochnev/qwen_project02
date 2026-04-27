@@ -5,6 +5,7 @@ import { useLocation } from 'preact-iso';
 import { apiClient } from '../lib/apiClient';
 import { FormBuilder } from '../forms/FormBuilder';
 import { useLanguage } from '../contexts/LanguageContext';
+import { submitItemForm } from '../lib/itemSubmit';
 
 export const ItemUpdateForm = ({ onClose }: { onClose: () => void }) => {
   const { url } = useLocation();
@@ -53,6 +54,19 @@ export const ItemUpdateForm = ({ onClose }: { onClose: () => void }) => {
   if (loadingData) {
     return h('div', { style: { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1500 }}, h('div', { style: { backgroundColor: 'white', padding: '20px', borderRadius: '8px' } }, 'Loading...'));
   }
+
+  // 👇 ОБРАБОТЧИК SAVE
+  const handleSave = async (e: Event) => {
+    e.preventDefault();
+    try {
+      await submitItemForm(formData, id);
+      alert('Item updated successfully!');
+      onClose(); // Закрываем модалку
+    } catch (err: any) {
+      console.error(err);
+      alert('Failed to save item: ' + err.message);
+    }
+  };
 
   const form = new FormBuilder(formData, handleChange);
 
@@ -145,7 +159,7 @@ export const ItemUpdateForm = ({ onClose }: { onClose: () => void }) => {
   return h('div', { style: { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1500 }},
     h('div', { style: { backgroundColor: 'white', padding: '20px', borderRadius: '8px', maxWidth: '1200px', width: '95%', maxHeight: '90vh', overflowY: 'auto' }},
       h('h2', { className: 'text-2xl font-bold mb-4' }, 'Update Item'),
-      h('form', { onSubmit: (e) => { e.preventDefault(); console.log('Submitting:', formData); } },
+      h('form', { onSubmit: handleSave },
         form.build(),
         h('div', { className: 'flex justify-end gap-4 mt-6' },
           h('button', { type: 'button', onClick: onClose, className: 'btn btn-ghost' }, 'Cancel'),
