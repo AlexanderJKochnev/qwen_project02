@@ -136,6 +136,7 @@ class Service(metaclass=ServiceMeta):
             возвращает instance и True (запись создана) или False (запись существует)
         """
         try:
+            inst = kwargs.get('inst')
             if default is None:
                 default = cls.default
             if not isinstance(data, dict):
@@ -144,6 +145,8 @@ class Service(metaclass=ServiceMeta):
             default_dict: dict = {key: val for key, val in data_dict.items() if key in default}
             instance: ModelType = await repository.get_by_fields(default_dict, model, session)
             if instance:
+                if inst:
+                    return instance, False
                 return inst_dict(instance), False
             # запись не найдена
             obj = model(**data_dict)
@@ -154,6 +157,8 @@ class Service(metaclass=ServiceMeta):
                 obj = await reindex_items(obj, drink_model, drink_repo, cls.skip_keys, session)
             instance = await repository.create(obj, model, session)
             await session.commit()
+            if inst:
+                return instance, True
             return inst_dict(instance), True
         except IntegrityError as e:
             await session.rollback()

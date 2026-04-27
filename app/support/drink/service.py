@@ -82,7 +82,7 @@ class DrinkService(Service):
                 "varietals": [{"varietal_id": 4,"percentage": null}, ...]
             """
             obj = DrinkCreate(**data_dict)
-            drink_instance, created = await cls.get_or_create(obj, DrinkRepository, Drink, session)
+            drink_instance, created = await cls.get_or_create(obj, DrinkRepository, Drink, session, inst=1)
 
             if not created:
                 raise Exception(f"запись '{obj}' существует. Если необходимо обновить ее, "
