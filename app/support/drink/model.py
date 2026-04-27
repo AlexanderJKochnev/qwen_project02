@@ -85,7 +85,7 @@ class Lwn:
 
     @validates("lwin")
     def validate_lwin(self, key, value):
-        if value is not None and isinstance(value. str):
+        if value is not None and isinstance(value, str):
             if not value.isdigit():
                 raise ValueError("Поле должно содержать только цифры")
             if len(value) < 7:
@@ -100,7 +100,7 @@ class Lwn:
 
     @validates("anno")
     def validate_anno(self, key, value):
-        if value is not None and isinstance(value. str):
+        if value is not None and isinstance(value, str):
             if not value.isdigit():
                 raise ValueError("Поле должно содержать только цифры")
             if len(value) < 4:
@@ -158,7 +158,7 @@ class Vintage:
 
     @validates("first_vintage")
     def validate_first_vintage(self, key, value):
-        if value is not None and isinstance(value. str):
+        if value is not None and isinstance(value, str):
             if not value.isdigit():
                 raise ValueError("Поле должно содержать только цифры")
             if len(value) < 4:
@@ -173,7 +173,7 @@ class Vintage:
 
     @validates("last_vintage")
     def validate_last_vintage(self, key, value):
-        if value is not None and isinstance(value. str):
+        if value is not None and isinstance(value, str):
             if not value.isdigit():
                 raise ValueError("Поле должно содержать только цифры")
             if len(value) < 4:
