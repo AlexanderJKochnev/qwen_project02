@@ -230,23 +230,34 @@ class ItemRouter(BaseRouter):
         try:
             logger.warning('update_item_drink =============================')
             data_dict = json.loads(data)
+            from app.core.utils.common_utils import jprint
+            jprint(data_dict)
+            logger.warning('2 ======================')
             # drink_action = data_dict.get('drink_action')
             item_drink_data = ItemUpdatePreact(**data_dict)
+            logger.warning('3 ======================')
             # load image to database, get image_id & image_path
             isfile: bool = False
             if file:
+                logger.warning('4 ======================')
                 image_dict = await image_service.upload_image(file, description=item_drink_data.title)
+                jprint(image_dict)
+                logger.warning('5 =====image_dict=======')
                 item_drink_data.image_path = image_dict.get('filename')
                 item_drink_data.image_id = image_dict.get('id')
+                logger.warning('6 =======================')
                 isfile = True
             # item_drink_data.drink_action = drink_action
             # Find the existing item to update
+            logger.warning('7 ==========================')
             result = await self.service.update_item_drink(id, item_drink_data, isfile,
                                                           ItemRepository, Item, background_tasks,
                                                           session)
+            logger.warning('8 ==========================')
             if not result.get('success'):
                 print(result, 'ошибка обновления')
                 raise HTTPException(status_code=500, detail=result.get('message', 'ошибка обновления'))
+            logger.warning('9 ==========================')
             return result.get('data')
         except json.JSONDecodeError as e:
             if file and image_dict:
