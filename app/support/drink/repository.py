@@ -254,16 +254,14 @@ class DrinkRepository(Repository):
             conditions = [getattr(model, f'{key}{lang}').ilike(search) for key in fields for lang in langs]
             query = query.where(or_(*conditions))
             total = await cls.get_count(query, session)
-            logger.critical(f'{total=}')
+            if total == 0:
+                return [], 0
             query = query.order_by('title').offset(skip).limit(limit)
             # compiled = query.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
             # logger.warning(str(compiled))
             response = await session.execute(query)
-            logger.critical(2222)
-            ids = response.scalars().all()
-            logger.critical(f'{ids=}')
+            ids = [instance.id for instance in response.scalars().all()]
             result = await cls.get_by_ids(ids, model, session)
-            logger.critical('333')
             return result if result else [], total
         except Exception as e:
             raise AppBaseException(message=f'core.repository.error: {str(e)}', status_code=404)
