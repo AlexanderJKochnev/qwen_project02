@@ -43,6 +43,11 @@ class ItemViewRouter:
             summary="Создание напитка в упаковке с этикеткой"
         )
         """
+        self.router.add_api_route(
+                "/update_item_drink/{id}", self.update_item_drink, methods = ["PATH"], tags = self.tags,
+                summary = "Поиск элементов по hash index + word..", # response_model=ItemCreateResponseSchema,
+                openapi_extra = {'x-request-schema': None}
+                )
         """Настройка маршрутов для ListView и DetailView"""
         # Маршрут для получения списка элементов без пагинации
         self.router.add_api_route(
@@ -106,13 +111,6 @@ class ItemViewRouter:
             # response_model=PaginatedResponse[ItemListView],
             tags=self.tags,
             summary="Поиск элементов по hash index + word..",
-            openapi_extra={'x-request-schema': None}
-        )
-        self.router.add_api_route(
-            "/update_item_drink/{id}", self.update_item_drink, methods=["PATH"],
-            tags=self.tags,
-            summary="Поиск элементов по hash index + word..",
-            # response_model=ItemCreateResponseSchema,
             openapi_extra={'x-request-schema': None}
         )
         self.router.add_api_route(
