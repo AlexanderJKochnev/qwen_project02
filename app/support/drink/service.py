@@ -91,6 +91,9 @@ class DrinkService(Service):
             jprint(drink_instance.to_dict())
             logger.warning('=================================================')
             drink_id = drink_instance.id
+            return drink_instance, created
+
+            """ foods & varietals  added in create_relations"""
             # добавляем drink_foods & drink_varietals
             if isinstance(data.food_associations, list):
                 food_ids = [item.id for item in data.food_associations]
