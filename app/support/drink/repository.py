@@ -248,7 +248,7 @@ class DrinkRepository(Repository):
             # query = cls.get_query(model)
             query = cls.get_short_query(model)
             fields = ['title', 'subtitle']
-            search = f'{search}'
+            search = f'%{search}%'
             conditions = [getattr(model, f'{key}{lang}').ilike(search) for key in fields for lang in langs]
             query = query.where(or_(*conditions))
             total = await cls.get_count(query, session)
