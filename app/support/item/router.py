@@ -228,33 +228,21 @@ class ItemRouter(BaseRouter):
         Обновляет или создает Drink в зависимости от drink_action
         """
         try:
-            logger.warning('update_item_drink =============================')
             data_dict = json.loads(data)
             data_dict['drink_action'] = 'update'
             from app.core.utils.common_utils import jprint
             jprint(data_dict)
-            logger.warning('2 ======================')
-            # drink_action = data_dict.get('drink_action')
-            tmp = ItemUpdatePreact.model_validate(data_dict)
-            jprint(tmp)
-            logger.warning('2.1 ======================')
-            item_drink_data = ItemUpdatePreact(**data_dict)
-            logger.warning('3 ======================')
-            # load image to database, get image_id & image_path
             isfile: bool = False
             if file:
                 logger.warning('4 ======================')
                 image_dict = await image_service.upload_image(file, description=item_drink_data.title)
                 jprint(image_dict)
-                logger.warning('5 =====image_dict=======')
-                item_drink_data.image_path = image_dict.get('filename')
-                item_drink_data.image_id = image_dict.get('id')
-                logger.warning('6 =======================')
-                isfile = True
-            # item_drink_data.drink_action = drink_action
-            # Find the existing item to update
+                data_dict['image_id'] = image_dict.get('id')
+                data_dict['image_path'] = image_dict.get('filename')
+            jprint(data_dict)
+            item_drink_data = ItemUpdatePreact(**data_dict)
             logger.warning(f'7 ========{id=}==================')
-            result = await self.service.update_item_drink(id, item_drink_data, isfile,
+            result = await self.service.update_item_drink(id, item_drink_data,
                                                           ItemRepository, Item, background_tasks,
                                                           session)
             logger.warning('8 ==========================')

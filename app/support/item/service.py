@@ -1,14 +1,14 @@
 # app.support.item.service.py
 import asyncio
 from functools import reduce
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type, Union
 
 from deepdiff import DeepDiff
 # from sqlalchemy.sql.elements import Label
 from fastapi import BackgroundTasks, HTTPException
 from loguru import logger
 from pydantic import TypeAdapter, ValidationError
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from app.core.utils.pydantic_utils import list_dict, inst_dict
@@ -244,45 +244,44 @@ class ItemService(Service):
 
     @classmethod
     async def update_item_drink(cls, id: int, data: ItemUpdatePreact,
-                                isfile: bool, repository: ItemRepository,
+                                repository: ItemRepository,
                                 model: Item, background_tasks: BackgroundTasks,
-                                session: AsyncSession) -> ItemRead:
+                                session: AsyncSession) -> Union[dict, None]:
         """
             обновление item, включая drink
         """
         data_dict = data.model_dump()
         item_id = id
+        logger.warning(f'service      {item_id=}===========')
         if data.drink_action == 'create':
             drink = DrinkCreate(**data_dict)
             result, created = await DrinkService.create(drink, DrinkRepository, Drink, session)
             data_dict["drink_id"] = result.id
         else:
-            drink_id = data_dict.get('drink_id')
+            query = text("SELECT drink_id FROM items WHERE id = :id")
+            res = await session.execute(query, {"id": item_id})
+            drink_id = res.scalar()
+            data_dict['drink_id'] = drink_id
+            logger.warning(f'service2      {drink_id=}===========')
             drink = DrinkUpdate(**data_dict)
+            jprint(drink.model_dump())
+            logger.warning(f'service3      {drink_id=}===========')
             result = await DrinkService.patch(drink_id, drink, DrinkRepository, Drink, background_tasks,
                                               session)
+            logger.warning(f'service4      {result.keys()=}===========')
             if not result.get('success'):
                 raise HTTPException(status_code=500, detail=f'Не удалось обновить запись Drink {drink_id=}')
+        # обновление item
         item = ItemUpdate(**data_dict)
-        if isfile:
-            item_dict = item.model_dump()
-        else:
-            item_dict = item.model_dump(exclude=['image_id', 'image_path'])
-        item_instance = await repository.get_by_id(item_id, Item, session)
+        jprint(item.model_dump())
+        logger.warning(f'service5      {drink_id=}===========')
+        item_dict = item.model_dump()
+        item_instance = await repository.get_by_id(item_id, model, session)
+        logger.warning('service6      ===========')
         if not item_instance:
-            raise HTTPException(f'Item records with {item_id=} not found')
+            raise HTTPException(status_code=404, detail=f'Item records with {item_id=} not found')
         result = await repository.patch(item_instance, item_dict, session)
-        # logger.error(f'run background tasks for update_item_drink {id}')
-        # await cls.run_backgound_task(id, background_tasks, True, repository, model, session)
-        """ will be return:
-                    {"success": True, "data": obj}
-                    or
-                    {"success": False,
-                     "error_type": "unique_constraint_violation",
-                     "message": f"Нарушение уникальности: {original_error_str}",
-                     "field_info": field_info... !this field is Optional
-                     }
-                """
+        logger.warning('service7===========')
         return result
 
     @classmethod
@@ -433,7 +432,6 @@ class ItemService(Service):
             drink['foods'] = foods
         item_dict.update(drink)
         return item_dict
-    
 
     @classmethod
     async def search_geans_items(cls, lang: str, search: str, similarity_threshold: float,
