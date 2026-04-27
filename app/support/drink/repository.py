@@ -247,6 +247,8 @@ class DrinkRepository(Repository):
             logger.warning(langs)
             # query = cls.get_query(model)
             query = cls.get_short_query(model)
+            compiled = query.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
+            logger.warning(str(compiled))
             fields = ['title', 'subtitle']
             search = f'%{search}%'
             conditions = [getattr(model, f'{key}{lang}').ilike(search) for key in fields for lang in langs]
