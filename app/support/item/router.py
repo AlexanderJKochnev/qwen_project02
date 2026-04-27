@@ -234,6 +234,9 @@ class ItemRouter(BaseRouter):
             jprint(data_dict)
             logger.warning('2 ======================')
             # drink_action = data_dict.get('drink_action')
+            tmp = ItemUpdatePreact.model_validate(data_dict)
+            jprint(tmp)
+            logger.warning('2.1 ======================')
             item_drink_data = ItemUpdatePreact(**data_dict)
             logger.warning('3 ======================')
             # load image to database, get image_id & image_path
