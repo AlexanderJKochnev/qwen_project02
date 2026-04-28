@@ -14,5 +14,5 @@ class ImageMixin:
     image_path: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     # image id - ИМЯ НЕ МЕНЯТЬ
     image_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    # ПРЕДЫДУЩИЕ ЗНАЧЕНИЯ DEPRECATED удалить после импорта данных в seaweeds 
-    seaweed_fids: Mapped[list[str]] = mapped_column(ARRAY(String), nullable=False, default=list)
+    # ПРЕДЫДУЩИЕ ЗНАЧЕНИЯ DEPRECATED удалить после импорта данных в seaweeds
+    seaweed_fids: Mapped[list[str]] = mapped_column(ARRAY(String), nullable=True)
