@@ -164,7 +164,7 @@ export const ItemUpdateForm = ({ onClose }: { onClose: () => void }) => {
         .text('first_vintage', 'First vintage')
         .text('last_vintage', 'Last vintage')
         .lazySelect('source_id', 'Source', makeLoader('sources'))
-        .test('image_id', 'Изображение')
+        .text('image_id', 'Изображение')
     )
     .lazyCheckbox('foods', 'Foods', makeLoader('foods'))
     .lazyCheckbox('varietals', 'Varietals', makeLoader('varietals'), (id, isChecked, currentValue, onChange) => {
