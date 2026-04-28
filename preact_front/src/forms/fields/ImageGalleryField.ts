@@ -181,9 +181,19 @@ const SecureImageWrapper = ({ img, recordId, onRemove }: { img: ImageItem, recor
         : h('div', { className: 'text-xs text-gray-400' }, 'Ошибка'),
 
     // Кнопка удаления (крестик)
-    h('button', {
+        h('button', {
       type: 'button',
-      onClick: onRemove,
+      onClick: (e: MouseEvent) => {
+        // 1. ОСТАНАВЛИВАЕМ ВСПОЛЫТИЕ (активируем кнопку, блокируя поведение label)
+        e.stopPropagation();
+        e.preventDefault();
+
+        // 2. ОБНУЛЯЕМ ПОЛЕ ДЛЯ БЭКЕНДА
+        onChange('image_id', null);
+
+        // 3. УДАЛЯЕМ ИЗ ВИЗУАЛЬНОГО СПИСКА
+        onRemove();
+      },
       className: 'absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow'
     }, '✕')
   );
