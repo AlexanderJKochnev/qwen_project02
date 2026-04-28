@@ -1,13 +1,14 @@
 # app/core/schemas/image_mixin.py
 from pydantic import BaseModel, computed_field, Field
-from typing import Optional
+from typing import Optional, List
 from app.core.config.project_config import settings
 
 
 class ImageUrlMixin(BaseModel):
     """ добавляет поле для image_id"""
-    image_id: Optional[str] = Field(default=None)
-    image_path: Optional[str] = Field(default=None)
+    image_id: Optional[str] = Field(default=None)  # DEPRECATED
+    image_path: Optional[str] = Field(default=None)  # DEPRECATED
+    seaweed_fids: Optional[List[str]] = Field(default=[] )
 
 
 class ImageUrlMixinPath(BaseModel):

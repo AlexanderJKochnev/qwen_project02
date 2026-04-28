@@ -1,6 +1,7 @@
 # app/core/models/image_mixin.py
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.dialects.postgresql import ARRAY
 from typing import Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -13,3 +14,5 @@ class ImageMixin:
     image_path: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     # image id - ИМЯ НЕ МЕНЯТЬ
     image_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    # ПРЕДЫДУЩИЕ ЗНАЧЕНИЯ DEPRECATED удалить после импорта данных в seaweeds 
+    seaweed_fids: Mapped[list[str]] = mapped_column(ARRAY(String), nullable=False, default=list)

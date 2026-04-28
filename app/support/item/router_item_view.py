@@ -264,6 +264,7 @@ class ItemViewRouter:
                                 image_service: ThumbnailImageService = Depends()
                                 ):  # ItemCreateResponseSchema:
         """
+        ЭТОТ МЕТОД ОСНОВНОЙ! update_item_drink в item.router.py ОТСТАЕТ И НЕ ИСПОЛЬЗУЕТСЯ
         Обновление записи Item & Drink и всеми связями PREACT
         Принимает JSON строку и файл изображения
         Валидирует схемой ItemUpdatePreact
@@ -274,13 +275,17 @@ class ItemViewRouter:
             data_dict['drink_action'] = 'update'
             from app.core.utils.common_utils import jprint
             jprint(data_dict)
-
-            if file:
-                image_dict = await image_service.upload_image(file, description=data_dict.get('title'))
-                jprint(image_dict)
-                data_dict['image_id'] = image_dict.get('id')
-                data_dict['image_path'] = image_dict.get('filename')
-            item_drink_data = ItemUpdatePreact(**data_dict)
+            # 0. обработка изображения.
+            if image_id := data_dict.get('image_id'):
+                pass
+                # пока ничего не делаем (one-to-one)
+            else:
+                if file:
+                    image_dict = await image_service.upload_image(file, description=data_dict.get('title'))
+                    # jprint(image_dict)
+                    data_dict['image_id'] = image_dict.get('id')
+                    # data_dict['image_path'] = image_dict.get('filename')
+                item_drink_data = ItemUpdatePreact(**data_dict)
             result = await self.service.update_item_drink(id, item_drink_data,
                                                           ItemRepository, Item, background_tasks,
                                                           session)

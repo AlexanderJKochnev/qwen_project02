@@ -12,7 +12,7 @@ const ALLOWED_KEYS = [
   'description_de', 'recommendation_de', 'madeof_de', 'title_zh', 'subtitle_zh',
   'description_zh', 'recommendation_zh', 'madeof_zh', 'source_id', 'producer_id',
   'vintageconfig_id', 'classification_id', 'designation_id', 'site_id', 'parcel_id',
-  'first_vintage', 'last_vintage', 'lwin', 'anno', 'display_name', 'vol',
+  'first_vintage', 'last_vintage', 'lwin', 'anno', 'display_name', 'vol', 'image_id',
   'price', 'count'
 ];
 
