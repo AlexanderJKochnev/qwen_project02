@@ -299,8 +299,8 @@ class ThumbnailImageService:
             # content = make_transparent_white_bg(content)
             content_type = "image/png"
             # content = remove_background_with_mask(content)
-            if len(content) > 8 * 1024 * 1024:
-                content = image_aligning(content)
+            # if len(content) > 8 * 1024 * 1024:
+            content = image_aligning(content)
             filename = file_name(file.filename, settings.LENGTH_RANDOM_NAME, '.png')
         except Exception as e:
             raise HTTPException(
