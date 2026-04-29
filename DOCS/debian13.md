@@ -94,5 +94,8 @@
    1. journalctl -b -1 -u NetworkManager -u networking -u wpa_supplicant -p err..notice --no-pager 
    2. journalctl -b -1 -i | grep -Ei 'eth0|wlan0|link down|reason|failed|disconnected'
 5. посмотреть монтирования findmnt | grep test
+6. ## ВХОД БЕЗ ПАРОЛЯ 
+    ssh-copy-id mydebby
+
 
 

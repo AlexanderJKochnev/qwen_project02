@@ -60,18 +60,19 @@ from app.core.config.database.click_async import ClickHouseManager  # , get_ch_c
 # from app.support.clickhouse.model import ensure_table_exists
 from app.support.clickhouse.router import router as click_router
 from app.support.wordhash.router import WordHashRouter
+from app.core.config.database.seaweed_async import init_seaweed, close_seaweed
 
+# CLICKHOUSE MANAGER INITIATE
 ch_manager = ClickHouseManager()
+# SEAWEEDMANAGER INITIATE (url/port вынести в .env после внедрения
+# seaweed_manager = SeaweedFSManager(master_url="http://seaweedfs_master:9333")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # limits = httpx.Limits(max_keepalive_connections=20, max_connections=100)
-    # timeout = httpx.Timeout(10.0, connect=5.0)
-    # app.state.http_client = httpx.AsyncClient(
-    #     http2=True, limits=limits, timeout=timeout, trust_env=False
-    #     Ускоряет работу, если не нужны системные прокси
-    # )
+    """
+        открытие асинхронных соединений с сервисами
+    """
     DatabaseManager.__init__()
     logger.info("Lifespan: Инициализация ресурсов...")
 
@@ -92,6 +93,9 @@ async def lifespan(app: FastAPI):
     app.state.ch_client = await ch_manager.connect()
     #  app.state.ch_client = global_ch_manager.client
     logger.success("✅ ClickHouse connected")
+    # seaweed
+    await init_seaweed(master_url="http://seaweedfs:9333")
+    logger.success("✅ Seaweed connected")
     # global _embedding_service
     # _embedding_service = EmbeddingService()
     # logger.success("✅ Query model loaded (Static, CPU, 50MB)")
@@ -108,6 +112,7 @@ async def lifespan(app: FastAPI):
     await DatabaseManager.engine.dispose()
     await MongoDBManager.disconnect()
     await ch_manager.close()
+    await close_seaweed()
     # await redis_manager.disconnect()
 
 app = FastAPI(title="Hybrid PostgreSQL-MongoDB API",
