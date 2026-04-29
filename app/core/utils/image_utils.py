@@ -7,35 +7,47 @@ from app.core.config.project_config import settings
 import io
 from PIL import Image, ImageOps
 from rembg import remove  # pip install rembg
+from logger import loguru
 
 
-def image_aligning(content):
-    width = settings.IMAGE_WIDTH
-    height = settings.IMAGE_HEIGH
-
+def image_aligning(content: bytes):
     try:
-        # 1. Открываем изображение
+        logger.info(f"Начало обработки. Размер входящих данных: {len(content)} байт")
+        
+        # 1. Загрузка
         image = Image.open(io.BytesIO(content))
-
-        # 2. Удаляем фон (интеллектуально)
-        # Если нужно сохранить прозрачность, итоговый формат должен быть PNG
-        image = remove(image)
-
-        # 3. Умное изменение размера (ImageOps.fit делает кроп под размер с сохранением пропорций)
-        # Если нужно просто вписать без обрезки, используйте ImageOps.contain
-        image = ImageOps.fit(image, (width, height), Image.Resampling.LANCZOS)
-
+        logger.info(f"Изображение открыто. Размер: {image.size}, Режим: {image.mode}")
+        
+        # 2. Удаление фона
+        # session лучше вынести в глобальную область, чтобы не загружать модель каждый раз
+        session = new_session("u2net")
+        result = remove(image, session = session)
+        
+        # ПРОВЕРКА: появился ли альфа-канал и есть ли в нем прозрачные пиксели
+        if result.mode != 'RGBA':
+            logger.warning("ВНИМАНИЕ: rembg не вернул RGBA режим. Фон точно не удален.")
+        else:
+            extrema = result.getextrema()
+            alpha_min = extrema[3][0]  # Минимальное значение в альфа-канале
+            logger.info(f"Альфа-канал проверен. Минимальное значение (0-прозрачно): {alpha_min}")
+            if alpha_min == 255:
+                logger.warning("Альфа-канал полностью залит (нет прозрачных зон).")
+        
+        # 3. Ресайз
+        target_size = (settings.IMAGE_WIDTH, settings.IMAGE_HEIGH)
+        result = ImageOps.fit(result, target_size, Image.Resampling.LANCZOS)
+        logger.info(f"Ресайз до {target_size} выполнен.")
+        
         # 4. Сохранение
         img_byte_arr = io.BytesIO()
-        # Если фон удален, лучше сохранять в PNG или конвертировать в RGB перед JPEG
-        save_format = 'PNG' if image.mode == 'RGBA' else 'JPEG'
-        image.save(img_byte_arr, format=save_format, optimize=True)
-
-        return img_byte_arr.getvalue()
-
+        result.save(img_byte_arr, format = 'PNG')
+        output_data = img_byte_arr.getvalue()
+        
+        logger.info(f"Обработка завершена успешно. Итоговый размер: {len(output_data)} байт")
+        return output_data
+    
     except Exception as e:
-        # Важно: return после raise не сработает. Оставляем что-то одно.
-        print(f"Ошибка: {e}")
+        logger.error(f"Критическая ошибка: {e}", exc_info = True)
         return content
 
 
