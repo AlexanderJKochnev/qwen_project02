@@ -17,7 +17,10 @@ from app.core.utils.io_utils import get_filepath_from_dir
 from app.mongodb.models import FileListResponse, FileResponse
 # from app.core.memcached_cache import cache_image_memcached
 from app.mongodb.repository import ImageRepository, ThumbnailImageRepository
-from app.mongodb.utils import (file_name, image_aligning, make_transparent_white_bg, read_image_generator, )
+from app.mongodb.utils import (file_name,
+                               # image_aligning,
+                               make_transparent_white_bg, read_image_generator, )
+from app.core.utils.image_utils import image_aligning
 
 # delta = (datetime.now(timezone.utc) - relativedelta(years=2)).isoformat()
 # delta = datetime.now(timezone.utc) - relativedelta(years=100)
@@ -28,6 +31,7 @@ class ImageService:
     """
     CHECK AND DELETE
     """
+
     def __init__(self, image_repository: ImageRepository = Depends()):
         self.image_repository = image_repository
 

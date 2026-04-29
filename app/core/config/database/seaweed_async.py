@@ -53,8 +53,8 @@ class SeaweedFSManager:
 
     async def delete(self, fid: str):
         url = await self.get_url(fid)
-        async with self._session.delete(url):
-            return True
+        async with self._session.delete(url) as r:
+            return r.status in (202, 204, 404)  # 404 тоже считаем успехом при удалении
 
     async def get_public_url(self, fid: str, internal: bool = False) -> str:
         """

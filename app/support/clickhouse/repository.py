@@ -1,6 +1,6 @@
 # app.support.clickhouse.repository
 import json
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Type
 from loguru import logger
 
 

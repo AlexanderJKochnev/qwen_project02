@@ -4,8 +4,39 @@ import uuid
 from typing import Tuple
 from fastapi import UploadFile
 from app.core.config.project_config import settings
-from PIL import Image
 import io
+from PIL import Image, ImageOps
+from rembg import remove  # pip install rembg
+
+
+def image_aligning(content):
+    width = settings.IMAGE_WIDTH
+    height = settings.IMAGE_HEIGH
+
+    try:
+        # 1. Открываем изображение
+        image = Image.open(io.BytesIO(content))
+
+        # 2. Удаляем фон (интеллектуально)
+        # Если нужно сохранить прозрачность, итоговый формат должен быть PNG
+        image = remove(image)
+
+        # 3. Умное изменение размера (ImageOps.fit делает кроп под размер с сохранением пропорций)
+        # Если нужно просто вписать без обрезки, используйте ImageOps.contain
+        image = ImageOps.fit(image, (width, height), Image.Resampling.LANCZOS)
+
+        # 4. Сохранение
+        img_byte_arr = io.BytesIO()
+        # Если фон удален, лучше сохранять в PNG или конвертировать в RGB перед JPEG
+        save_format = 'PNG' if image.mode == 'RGBA' else 'JPEG'
+        image.save(img_byte_arr, format=save_format, optimize=True)
+
+        return img_byte_arr.getvalue()
+
+    except Exception as e:
+        # Важно: return после raise не сработает. Оставляем что-то одно.
+        print(f"Ошибка: {e}")
+        return content
 
 
 class ImageService:
