@@ -6,8 +6,8 @@ from fastapi import UploadFile
 from app.core.config.project_config import settings
 import io
 from PIL import Image, ImageOps
-from rembg import remove  # pip install rembg
-from logger import loguru
+from rembg import remove, new_session  # pip install rembg
+from loguru import logger
 
 
 def image_aligning(content: bytes):
