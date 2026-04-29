@@ -19,54 +19,57 @@ except Exception as e:
 
 
 def image_aligning(content: bytes):
-    """
-    Интеллектуальное удаление фона, подгон под размер с сохранением пропорций
-    и оптимизация веса до 100 КБ.
-    """
-    if not content:
-        return content
-
-    # Параметры из настроек
     max_width = settings.IMAGE_WIDTH
     max_height = settings.IMAGE_HEIGH
-    MAX_FILE_SIZE = 100 * 1024  # 100 KB
+    MAX_FILE_SIZE = 100 * 1024
+    MARGIN_PERCENT = 0.05  # 5% от размера объекта
 
     try:
-        # 1. Открываем изображение
         image = Image.open(io.BytesIO(content))
 
-        # 2. Удаление фона (если модель загружена)
+        # 1. Удаление фона
         if SESSION:
-            # remove возвращает RGBA. convert("RGBA") для страховки.
             image = remove(image, session=SESSION).convert("RGBA")
 
-        # 3. Ресайз БЕЗ обрезки (твоя концепция)
-        # thumbnail уменьшает фото, чтобы оно вписалось в max_width/height,
-        # сохраняя оригинальное соотношение сторон.
+        # 2. Умная обрезка с процентным отступом
+        bbox = image.getbbox()
+        if bbox:
+            obj_w = bbox[2] - bbox[0]
+            obj_h = bbox[3] - bbox[1]
+
+            # Считаем отступ на основе самого длинного измерения объекта
+            margin = int(max(obj_w, obj_h) * MARGIN_PERCENT)
+
+            # Расширяем рамку с учетом границ холста
+            left = max(0, bbox[0] - margin)
+            upper = max(0, bbox[1] - margin)
+            right = min(image.width, bbox[2] + margin)
+            lower = min(image.height, bbox[3] + margin)
+
+            image = image.crop((left, upper, right, lower))
+
+        # 3. Ресайз (сохранение пропорций)
         image.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
 
-        # 4. Сохранение с контролем веса (цикл оптимизации)
-        # Для PNG "quality" не работает, поэтому уменьшаем разрешение, если файл тяжелый.
+        # 4. Оптимизация до 100 КБ
         attempt = 0
         while attempt < 5:
             img_byte_arr = io.BytesIO()
-            # Обязательно PNG, чтобы сохранить прозрачность после удаления фона
             image.save(img_byte_arr, format='PNG', optimize=True)
             output_data = img_byte_arr.getvalue()
 
             if len(output_data) <= MAX_FILE_SIZE:
                 return output_data
 
-            # Если файл > 100КБ, уменьшаем линейные размеры на 20%
+            # Если не влезли, уменьшаем разрешение
             new_size = tuple(int(dim * 0.8) for dim in image.size)
             image = image.resize(new_size, Image.Resampling.LANCZOS)
             attempt += 1
-            logger.info(f"Сжатие: итерация {attempt}, текущий вес {len(output_data)} байт")
 
         return output_data
 
     except Exception as e:
-        logger.error(f"Ошибка в image_aligning: {e}")
+        logger.error(f"Ошибка: {e}")
         return content
 
 
