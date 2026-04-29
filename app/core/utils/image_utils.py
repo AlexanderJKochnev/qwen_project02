@@ -10,44 +10,63 @@ from rembg import remove, new_session  # pip install rembg
 from loguru import logger
 
 
+try:
+    SESSION = new_session("u2net")
+    logger.info("Сессия rembg успешно инициализирована локально.")
+except Exception as e:
+    logger.error(f"Не удалось загрузить модель rembg: {e}")
+    SESSION = None
+
+
 def image_aligning(content: bytes):
+    """
+    Интеллектуальное удаление фона, подгон под размер с сохранением пропорций
+    и оптимизация веса до 100 КБ.
+    """
+    if not content:
+        return content
+
+    # Параметры из настроек
+    max_width = settings.IMAGE_WIDTH
+    max_height = settings.IMAGE_HEIGH
+    MAX_FILE_SIZE = 100 * 1024  # 100 KB
+
     try:
-        logger.info(f"Начало обработки. Размер входящих данных: {len(content)} байт")
-        
-        # 1. Загрузка
+        # 1. Открываем изображение
         image = Image.open(io.BytesIO(content))
-        logger.info(f"Изображение открыто. Размер: {image.size}, Режим: {image.mode}")
-        
-        # 2. Удаление фона
-        # session лучше вынести в глобальную область, чтобы не загружать модель каждый раз
-        session = new_session("u2net")
-        result = remove(image, session = session)
-        
-        # ПРОВЕРКА: появился ли альфа-канал и есть ли в нем прозрачные пиксели
-        if result.mode != 'RGBA':
-            logger.warning("ВНИМАНИЕ: rembg не вернул RGBA режим. Фон точно не удален.")
-        else:
-            extrema = result.getextrema()
-            alpha_min = extrema[3][0]  # Минимальное значение в альфа-канале
-            logger.info(f"Альфа-канал проверен. Минимальное значение (0-прозрачно): {alpha_min}")
-            if alpha_min == 255:
-                logger.warning("Альфа-канал полностью залит (нет прозрачных зон).")
-        
-        # 3. Ресайз
-        target_size = (settings.IMAGE_WIDTH, settings.IMAGE_HEIGH)
-        result = ImageOps.fit(result, target_size, Image.Resampling.LANCZOS)
-        logger.info(f"Ресайз до {target_size} выполнен.")
-        
-        # 4. Сохранение
-        img_byte_arr = io.BytesIO()
-        result.save(img_byte_arr, format = 'PNG')
-        output_data = img_byte_arr.getvalue()
-        
-        logger.info(f"Обработка завершена успешно. Итоговый размер: {len(output_data)} байт")
+
+        # 2. Удаление фона (если модель загружена)
+        if SESSION:
+            # remove возвращает RGBA. convert("RGBA") для страховки.
+            image = remove(image, session=SESSION).convert("RGBA")
+
+        # 3. Ресайз БЕЗ обрезки (твоя концепция)
+        # thumbnail уменьшает фото, чтобы оно вписалось в max_width/height,
+        # сохраняя оригинальное соотношение сторон.
+        image.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
+
+        # 4. Сохранение с контролем веса (цикл оптимизации)
+        # Для PNG "quality" не работает, поэтому уменьшаем разрешение, если файл тяжелый.
+        attempt = 0
+        while attempt < 5:
+            img_byte_arr = io.BytesIO()
+            # Обязательно PNG, чтобы сохранить прозрачность после удаления фона
+            image.save(img_byte_arr, format='PNG', optimize=True)
+            output_data = img_byte_arr.getvalue()
+
+            if len(output_data) <= MAX_FILE_SIZE:
+                return output_data
+
+            # Если файл > 100КБ, уменьшаем линейные размеры на 20%
+            new_size = tuple(int(dim * 0.8) for dim in image.size)
+            image = image.resize(new_size, Image.Resampling.LANCZOS)
+            attempt += 1
+            logger.info(f"Сжатие: итерация {attempt}, текущий вес {len(output_data)} байт")
+
         return output_data
-    
+
     except Exception as e:
-        logger.error(f"Критическая ошибка: {e}", exc_info = True)
+        logger.error(f"Ошибка в image_aligning: {e}")
         return content
 
 
