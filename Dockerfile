@@ -28,6 +28,10 @@ COPY --from=builder /root/.local /root/.local
 # Добавляем путь пользователя в PATH, чтобы приложения их видели
 ENV PATH="/root/.local/bin:$PATH"
 
+RUN mkdir -p /root/.u2net/
+# Копируем модель для удаоения фона, где его ищет rembg по умолчанию
+COPY u2net.onnx /root/.u2net/u2net.onnx
+
 # Копируем ваш код приложения и конфигурационные файлы
 COPY ./app ./app
 COPY alembic.ini .
