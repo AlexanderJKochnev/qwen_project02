@@ -6,6 +6,7 @@
 !/Dockerfile
 !/docker-compose.yaml
 !/.env
+!/u2net.onnx
 !/alembic.ini
 !/alembic.sh
 !/streamlit_app
