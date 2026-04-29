@@ -184,7 +184,7 @@ const SecureImageWrapper = ({ img, recordId, onRemove }: { img: ImageItem, recor
         h('button', {
       type: 'button',
       onClick: (e: MouseEvent) => {
-        // 1. ОСТАНАВЛИВАЕМ ВСПОЛЫТИЕ (активируем кнопку, блокируя поведение label)
+        // 1. ОСТАНАВЛИВАЕМ ВСПЛЫТИЕ (активируем кнопку, блокируя поведение label)
         e.stopPropagation();
         e.preventDefault();
 
