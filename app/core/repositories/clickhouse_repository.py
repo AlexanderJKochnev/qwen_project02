@@ -207,7 +207,7 @@ class ClickHouseRepository:
             OFFSET {offset}
         """
 
-        result = await self.client.query(query, params)
+        result = await self.client.query(query)
         if result.row_count == 0:
             return []
         data: List[dict] = [dict(zip(result.column_names, row)) for row in result.result_rows]
@@ -249,7 +249,7 @@ class ClickHouseRepository:
             OFFSET {offset}
         """
 
-        result = await self.client.query(query, params)
+        result = await self.client.query(query, parameters=params)
         return result.result_rows_as_dict
 
     # ============================================================
