@@ -1,7 +1,7 @@
 # app/dependencies.py
 from functools import lru_cache
 from typing import Any, Awaitable, Callable, Dict, Optional
-
+from app.core.repositories.clickhouse_repository import ClickHouseRepositoryFactory
 from clickhouse_connect.driver.asyncclient import AsyncClient as ClickAsyncClient
 from fastapi import Depends, Request
 
@@ -27,7 +27,6 @@ async def get_clickhouse_repository_factory(
         repo_factory: ClickHouseRepositoryFactory = Depends(get_clickhouse_repository_factory)
         repo = repo_factory.for_table('images_metadata')
     """
-    from app.core.repositories.clickhouse_repository import ClickHouseRepositoryFactory
     return ClickHouseRepositoryFactory(client)
 
 
