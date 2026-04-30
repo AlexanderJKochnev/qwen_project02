@@ -35,7 +35,7 @@ class SeaweedsRouter:
             openapi_extra={'x-request-schema': None}
         )
         self.router.add_api_route(
-            "", self.get_by_id, methods=["GET"],
+            "/{id}", self.get_by_id, methods=["GET"],
             openapi_extra={'x-request-schema': None}
         )
         self.router.add_api_route(
