@@ -19,15 +19,16 @@ async def get_ch_client(request: Request) -> ClickAsyncClient:
     return client  # ← это уже AsyncClient, не корутина!
 
 
-async def get_clickhouse_repository_factory(
-    client: ClickAsyncClient = Depends(get_ch_client)
-) -> ClickHouseRepositoryFactory:
+async def get_clickhouse_repository_factory(request: Request
+                                            # client: ClickAsyncClient = Depends(get_ch_client)
+                                            ) -> ClickHouseRepositoryFactory:
     """ Фабрика для работы с любыми таблицами.
         пример:
         repo_factory: ClickHouseRepositoryFactory = Depends(get_clickhouse_repository_factory)
         repo = repo_factory.for_table('images_metadata')
     """
-    return ClickHouseRepositoryFactory(client)
+    return request.app.state.ch_repo_factory
+    # return ClickHouseRepositoryFactory(client)
 
 
 def get_translator_func() -> Callable[[Dict[str, Any], Optional[bool]], Awaitable[Dict[str, Any]]]:
