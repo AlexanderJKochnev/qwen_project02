@@ -25,7 +25,7 @@ class SeaweedsRouter:
         self.router = APIRouter(
             prefix=self.prefix, tags=self.tags, dependencies=[Depends(get_active_user_or_internal)]
         )
-        self.service = SeaweedsService()
+        self.service = SeaweedsService(click_repo_factory=Depends(), fs=Depends())
         self.setup_routes()
         # super().__init__(prefix='/seaweeds')
 
