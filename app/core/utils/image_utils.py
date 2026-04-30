@@ -5,6 +5,7 @@ from typing import Tuple
 from fastapi import UploadFile
 from app.core.config.project_config import settings
 import io
+import magic
 from PIL import Image, ImageOps, ExifTags, IptcImagePlugin, TiffImagePlugin
 from rembg import remove, new_session  # это встает только на debian
 from loguru import logger
@@ -83,7 +84,9 @@ def image_aligning(content: bytes, remove_bg: bool = True):
             # Если не влезли — уменьшаем разрешение на 15%
             new_size = tuple(int(dim * 0.85) for dim in image.size)
             image = image.resize(new_size, Image.Resampling.LANCZOS)
-
+        metadata['mime_type'], metadata['size_bytes'] = get_file_info()
+        from app.core.utils.common_utils import jprint
+        jprint(metadata)
         return data
 
     except Exception as e:
@@ -133,6 +136,12 @@ def extract_metadata(image: Image.Image) -> dict:
         full_meta["xmp"] = image.getxmp()
 
     return full_meta
+
+
+def get_file_info(content: bytes):
+    """Возвращает MIME-тип и размер в байтах"""
+    mime = magic.from_buffer(content, mime=True)
+    return mime, len(content)
 
 
 class ImageService:

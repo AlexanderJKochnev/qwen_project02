@@ -96,8 +96,8 @@ def ResponseStreaming(image_data: dict, headers: dict):
 
 
 def ResponseJust(image_data: dict, headers: dict):
-    from app.core.utils.common_utils import jprint
-    jprint(headers)
+    # from app.core.utils.common_utils import jprint
+    # jprint(headers)
     return Response(content=image_data["content"],
                     media_type=image_data['content_type'],
                     headers=headers)
