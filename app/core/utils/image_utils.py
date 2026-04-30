@@ -5,8 +5,8 @@ from typing import Tuple
 from fastapi import UploadFile
 from app.core.config.project_config import settings
 import io
-from PIL import Image, ImageOps
-from rembg import remove, new_session  # pip install rembg
+from PIL import Image, ImageOps, ExifTags, IptcImagePlugin, TiffImagePlugin
+from rembg import remove, new_session  # это встает только на debian
 from loguru import logger
 
 
@@ -19,6 +19,9 @@ except Exception as e:
 
 
 def image_aligning(content: bytes):
+    """
+        удаление фона и обрезка изображения
+    """
     max_width = settings.IMAGE_WIDTH
     max_height = settings.IMAGE_HEIGH
     MAX_FILE_SIZE = 100 * 1024
@@ -26,7 +29,11 @@ def image_aligning(content: bytes):
 
     try:
         image = Image.open(io.BytesIO(content))
-
+        # 0. извлечение meta data
+        metadata = extract_full_metadata(image)
+        from app.core.utils.common_utils import jprint
+        logger.warning(f"Полная подноготная фото")
+        jprint(metadata)
         # 1. Удаление фона
         if SESSION:
             image = remove(image, session=SESSION).convert("RGBA")
@@ -71,6 +78,50 @@ def image_aligning(content: bytes):
     except Exception as e:
         logger.error(f"Ошибка: {e}")
         return content
+
+
+def extract_full_metadata(image: Image.Image) -> dict:
+    full_meta = {
+        "basic": {
+            "format": image.format,
+            "mode": image.mode,
+            "size": image.size,
+        },
+        "exif": {},
+        "gps": {},
+        "iptc": {},
+        "xmp": {}
+    }
+
+    # 1. Извлекаем EXIF и GPS
+    exif_data = image.getexif()
+    if exif_data:
+        for tag_id, value in exif_data.items():
+            tag = ExifTags.TAGS.get(tag_id, tag_id)
+            # GPS обычно лежит внутри EXIF под ID 34853
+            if tag == "GPSInfo":
+                gps_data = {}
+                for g_tag_id in value:
+                    g_tag = ExifTags.GPSTAGS.get(g_tag_id, g_tag_id)
+                    gps_data[g_tag] = value[g_tag_id]
+                full_meta["gps"] = gps_data
+            else:
+                full_meta["exif"][tag] = str(value)
+
+    # 2. Извлекаем IPTC (часто в JPEG/TIFF)
+    try:
+        iptc = IptcImagePlugin.getiptcinfo(image)
+        if iptc:
+            for tag, value in iptc.items():
+                full_meta["iptc"][str(tag)] = value.decode(errors='ignore')
+    except Exception as e:
+        logger.error(f'Извлекаем IPTC. {e}')
+
+    # 3. Извлекаем XMP (если есть)
+    if hasattr(image, "getxmp"):
+        full_meta["xmp"] = image.getxmp()
+
+    return full_meta
 
 
 class ImageService:
