@@ -65,13 +65,9 @@ class SeaweedsRouter:
         """
             удаление изображения
         """
-        try:
-            await service.delete_img(fid)
-            return {'fid': fid,
-                    'result': 'deleted'}
-        except Exception as e:
-            logger.error(e)
-            raise HTTPException(status_code=500, detail=e)
+        await service.delete_img(fid)
+        return {'fid': fid,
+                'result': 'deleted'}
 
     async def get(self,
                   page: int = Query(1, description='страница'),
@@ -83,12 +79,8 @@ class SeaweedsRouter:
         """
         получение списка  fid изображений по странично / только для тестирования
         """
-        try:
-            response = await service.get(page, page_size, None, include_deleted, order_by)
-            return response
-        except Exception as e:
-            logger.error(e)
-            raise HTTPException(status_code=500, detail=e)
+        response = await service.get(page, page_size, None, include_deleted, order_by)
+        return response
 
     async def get_by_id(self, fid: str, service: SeaweedsService = Depends()):
         """

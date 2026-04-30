@@ -9,6 +9,7 @@ class AppBaseException(Exception):
         self.message = message
         self.status_code = status_code
 
+
 """
     # repository.py
     def get_user(id: int):
