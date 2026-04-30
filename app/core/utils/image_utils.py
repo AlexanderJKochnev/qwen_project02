@@ -9,78 +9,89 @@ from PIL import Image, ImageOps, ExifTags, IptcImagePlugin, TiffImagePlugin
 from rembg import remove, new_session  # это встает только на debian
 from loguru import logger
 
-
+"""
 try:
     SESSION = new_session("u2net")
     logger.info("Сессия rembg успешно инициализирована локально.")
 except Exception as e:
     logger.error(f"Не удалось загрузить модель rembg: {e}")
     SESSION = None
+"""
+
+_REMBG_SESSION = None
 
 
-def image_aligning(content: bytes):
+def get_rembg_session():
+    """Ленивая загрузка модели при первом обращении"""
+    global _REMBG_SESSION
+    if _REMBG_SESSION is None:
+        try:
+            # rembg сам найдет файл в /root/.u2net/u2net.onnx
+            _REMBG_SESSION = new_session("u2net")
+            logger.info("Модель rembg успешно загружена в память.")
+        except Exception as e:
+            logger.error(f"Ошибка загрузки модели: {e}")
+    return _REMBG_SESSION
+
+
+def image_aligning(content: bytes, remove_bg: bool = True):
     """
-        удаление фона и обрезка изображения
+    Полный цикл: Метаданные -> Удаление фона -> Автокроп -> Ресайз -> Оптимизация
     """
-    max_width = settings.IMAGE_WIDTH
-    max_height = settings.IMAGE_HEIGH
+    if not content:
+        return content
+
+    max_w, max_h = settings.IMAGE_WIDTH, settings.IMAGE_HEIGH
     MAX_FILE_SIZE = 100 * 1024
-    MARGIN_PERCENT = 0.05  # 5% от размера объекта
+    MARGIN_PCT = 0.05
 
     try:
+        # 1. Открываем и фиксируем метаданные
         image = Image.open(io.BytesIO(content))
-        # 0. извлечение meta data
-        metadata = extract_full_metadata(image)
-        from app.core.utils.common_utils import jprint
-        logger.warning(f"Полная подноготная фото")
-        jprint(metadata)
-        # 1. Удаление фона
-        if SESSION:
-            image = remove(image, session=SESSION).convert("RGBA")
+        # Исправляем ориентацию (чтобы фото не было "на боку")
+        image = ImageOps.exif_transpose(image)
+        metadata = extract_metadata(image)
 
-        # 2. Умная обрезка с процентным отступом
-        bbox = image.getbbox()
-        if bbox:
-            obj_w = bbox[2] - bbox[0]
-            obj_h = bbox[3] - bbox[1]
+        # 2. Интеллектуальная обработка
+        if remove_bg:
+            session = get_rembg_session()
+            if session:
+                image = remove(image, session=session).convert("RGBA")
 
-            # Считаем отступ на основе самого длинного измерения объекта
-            margin = int(max(obj_w, obj_h) * MARGIN_PERCENT)
+            # Автокроп по границам объекта
+            bbox = image.getbbox()
+            if bbox:
+                obj_w, obj_h = bbox[2] - bbox[0], bbox[3] - bbox[1]
+                margin = int(max(obj_w, obj_h) * MARGIN_PCT)
+                image = image.crop(
+                    (max(0, bbox[0] - margin), max(0, bbox[1] - margin), min(image.width, bbox[2] + margin),
+                     min(image.height, bbox[3] + margin))
+                )
 
-            # Расширяем рамку с учетом границ холста
-            left = max(0, bbox[0] - margin)
-            upper = max(0, bbox[1] - margin)
-            right = min(image.width, bbox[2] + margin)
-            lower = min(image.height, bbox[3] + margin)
+        # 3. Ресайз (вписывание в границы без обрезки)
+        image.thumbnail((max_w, max_h), Image.Resampling.LANCZOS)
 
-            image = image.crop((left, upper, right, lower))
-
-        # 3. Ресайз (сохранение пропорций)
-        image.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
-
-        # 4. Оптимизация до 100 КБ
-        attempt = 0
-        while attempt < 5:
+        # 4. Оптимизация размера файла
+        for _ in range(5):
             img_byte_arr = io.BytesIO()
             image.save(img_byte_arr, format='PNG', optimize=True)
-            output_data = img_byte_arr.getvalue()
+            data = img_byte_arr.getvalue()
 
-            if len(output_data) <= MAX_FILE_SIZE:
-                return output_data
+            if len(data) <= MAX_FILE_SIZE:
+                return data
 
-            # Если не влезли, уменьшаем разрешение
-            new_size = tuple(int(dim * 0.8) for dim in image.size)
+            # Если не влезли — уменьшаем разрешение на 15%
+            new_size = tuple(int(dim * 0.85) for dim in image.size)
             image = image.resize(new_size, Image.Resampling.LANCZOS)
-            attempt += 1
 
-        return output_data
+        return data
 
     except Exception as e:
-        logger.error(f"Ошибка: {e}")
+        logger.error(f"Критическая ошибка обработки: {e}")
         return content
 
 
-def extract_full_metadata(image: Image.Image) -> dict:
+def extract_metadata(image: Image.Image) -> dict:
     full_meta = {
         "basic": {
             "format": image.format,
