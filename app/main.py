@@ -62,10 +62,10 @@ from app.support.clickhouse.router import router as click_router
 from app.support.wordhash.router import WordHashRouter
 from app.core.config.database.seaweed_async import init_seaweed, close_seaweed
 from app.support.seaweeds.router import SeaweedsRouter
+from app.core.repositories.clickhouse_repository import ClickHouseRepositoryFactory
 
 logger.info('start initialisation')
-# CLICKHOUSE MANAGER INITIATE
-ch_manager = ClickHouseManager()
+
 # SEAWEEDMANAGER INITIATE (url/port вынести в .env после внедрения
 # seaweed_manager = SeaweedFSManager(master_url="http://seaweedfs_master:9333")
 logger.success('CLICKHOUSE MANAGER INITIATEED')
@@ -93,7 +93,13 @@ async def lifespan(app: FastAPI):
     # await init_db_extensions()  # подключение расщирений Postgresql
     logger.success("Lifespan: расширения для PostgreSQL установлены")
     # CLICKHOUSE
-    app.state.ch_client = await ch_manager.connect()
+    # CLICKHOUSE MANAGER INITIATE
+    ch_manager = ClickHouseManager()
+    await ch_manager.connect()
+    app.state.ch_manager = ch_manager
+    app.state.ch_client = ch_manager.client
+    app.state.ch_repo_factory = ClickHouseRepositoryFactory(ch_manager.client)
+    # app.state.ch_client = await ch_manager.connect()
     #  app.state.ch_client = global_ch_manager.client
     logger.success("✅ ClickHouse connected")
     # seaweed
