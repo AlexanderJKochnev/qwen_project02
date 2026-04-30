@@ -30,7 +30,6 @@ class SeaweedsRouter:
         # super().__init__(prefix='/seaweeds')
 
     def setup_routes(self):
-        logger.warning('setup router =============================================')
         self.router.add_api_route(
             "", self.get, methods=["GET"],
             openapi_extra={'x-request-schema': None}

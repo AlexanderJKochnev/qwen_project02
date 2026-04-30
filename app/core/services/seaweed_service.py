@@ -32,9 +32,9 @@ class SeaweedsService:
     def __init__(self, fs: SeaweedFSManager = Depends(get_swfs),
                  click_repo_factory: ClickHouseRepositoryFactory = Depends(get_clickhouse_repository_factory),
                  ):
+        self.fs = fs
         self.click_repo = click_repo_factory.for_table('images_metadata')
         self.seaweed_repo = SeaweedRepository
-        self.fs = fs
 
     async def create_img(self, content: bytes, description: str, table: str) -> dict:
         """
