@@ -129,7 +129,7 @@ class SeaweedsService:
         except Exception as e:
             raise AppBaseException(message=f'SeaweedsService.get_thumbnail_id. {e}', status_code=500)
 
-    async def get_image(self, fid: str) -> bytes:
+    async def get_image(self, fid: str) -> dict:
         """
             получение изображения по fid (любого)
         """

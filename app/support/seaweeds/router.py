@@ -25,7 +25,7 @@ class SeaweedsRouter:
         self.router = APIRouter(
             prefix=self.prefix, tags=self.tags, dependencies=[Depends(get_active_user_or_internal)]
         )
-        self.service = SeaweedsService(click_repo_factory=Depends(), fs=Depends())
+        # self.service: SeaweedsService = Depends()
         self.setup_routes()
         # super().__init__(prefix='/seaweeds')
 
@@ -47,24 +47,26 @@ class SeaweedsRouter:
             openapi_extra={'x-request-schema': None}
         )
 
-    async def create_img(self, description: str = Query(..., description='ключывые слова по которым можно найти '
+    async def create_img(self,
+                         description: str = Query(..., description='ключывые слова по которым можно найти '
                                                                          'изображение'),
                          table_name: str = Query(..., description='имя таблицы ддля которой предназанчено изображение'),
-                         file: UploadFile = File(...)):
+                         file: UploadFile = File(...),
+                         service: SeaweedsService = Depends()):
         try:
             content = await file.read()
-            response: dict = await self.service.create_img(content, description)
+            response: dict = await service.create_img(content, description)
             return response
         except Exception as e:
             logger.error(e)
             raise HTTPException(status_code=500, detail=e)
 
-    async def delete_img(self, fid: str) -> dict:
+    async def delete_img(self, fid: str, service: SeaweedsService = Depends()) -> dict:
         """
             удаление изображения
         """
         try:
-            await self.service.delete_img(fid)
+            await service.delete_img(fid)
             return {'fid': fid,
                     'result': 'deleted'}
         except Exception as e:
@@ -75,21 +77,22 @@ class SeaweedsRouter:
                   page: int = Query(1, description='страница'),
                   page_size: int = Query(1, description='размер страницы страница'),
                   include_deleted: bool = Query(False, description='включить удаленные записи?'),
-                  order_by: str = Query('inserted_at DESC', description='порядок сортировки ')
+                  order_by: str = Query('inserted_at DESC', description='порядок сортировки '),
+                  service: SeaweedsService = Depends()
                   ) -> dict:
         """
         получение списка  fid изображений по странично / только для тестирования
         """
         try:
-            response = await self.service.get(page, page_size, None, include_deleted, order_by)
+            response = await service.get(page, page_size, None, include_deleted, order_by)
             return response
         except Exception as e:
             logger.error(e)
             raise HTTPException(status_code=500, detail=e)
 
-    async def get_by_id(self, fid: str):
+    async def get_by_id(self, fid: str, service: SeaweedsService = Depends()):
         """
         получение изображения
         """
-        image: dict = await self.service.get_image(fid)
+        image: dict = await service.get_image(fid)
         return StreamingResponse(**image)
