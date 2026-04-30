@@ -23,7 +23,7 @@ from app.core.config.database.seaweed_async import SeaweedFSManager, get_swfs
 from app.core.hash_norm import tokenize
 from app.core.repositories.seaweed_repository import SeaweedRepository
 from app.dependencies import ClickHouseRepositoryFactory, get_clickhouse_repository_factory
-from loguru import logger`
+from loguru import logger
 
 
 class SeaweedsService:
