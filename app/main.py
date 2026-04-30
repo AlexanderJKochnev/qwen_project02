@@ -63,10 +63,12 @@ from app.support.wordhash.router import WordHashRouter
 from app.core.config.database.seaweed_async import init_seaweed, close_seaweed
 from app.support.seaweeds.router import SeaweedsRouter
 
+logger.info('start initialisation')
 # CLICKHOUSE MANAGER INITIATE
 ch_manager = ClickHouseManager()
 # SEAWEEDMANAGER INITIATE (url/port вынести в .env после внедрения
 # seaweed_manager = SeaweedFSManager(master_url="http://seaweedfs_master:9333")
+logger.success('CLICKHOUSE MANAGER INITIATEED')
 
 
 @asynccontextmanager

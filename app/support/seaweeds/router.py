@@ -18,11 +18,11 @@ from app.core.services.seaweed_service import SeaweedsService
 
 class SeaweedsRouter(LightRouter):
     def __init__(self):
-        super().__init__(prefix='/seaweeds')
         self.service = SeaweedsService()
-        self.setup_routes()
+        super().__init__(prefix='/seaweeds')
 
     def setup_routes(self):
+        logger.warning('setup router =============================================')
         self.router.add_api_route(
             "", self.get, methods=["GET"],
             openapi_extra={'x-request-schema': None}
