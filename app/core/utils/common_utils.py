@@ -2,6 +2,8 @@
 # some useful utilits
 
 from datetime import datetime, timezone
+import random
+import string
 from fastapi import HTTPException
 from typing import Any, Dict, List, Optional, Set, Union
 from rich.pretty import pprint
@@ -919,3 +921,12 @@ def make_paging_dict(source: list | tuple, page: int, page_size: int, total: int
             "has_next": (page - 1) * page_size + len(items) < total if total > 0 else False,
             "has_prev": page > 1
             }
+
+
+def get_random_string(length) -> str:
+    """
+    генератор случайных строк
+    """
+    letters_and_digits = string.ascii_letters + string.digits
+    # Генерируем список символов и склеиваем в строку
+    return ''.join(random.choices(letters_and_digits, k=length)).lower()

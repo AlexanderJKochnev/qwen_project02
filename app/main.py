@@ -61,6 +61,7 @@ from app.core.config.database.click_async import ClickHouseManager  # , get_ch_c
 from app.support.clickhouse.router import router as click_router
 from app.support.wordhash.router import WordHashRouter
 from app.core.config.database.seaweed_async import init_seaweed, close_seaweed
+from app.support.seaweeds.router import SeaweedsRouter
 
 # CLICKHOUSE MANAGER INITIATE
 ch_manager = ClickHouseManager()
@@ -188,6 +189,7 @@ app.include_router(ProptionRouter().router)
 app.include_router(WriterRuleRouter().router)
 app.include_router(OllamaRouter().router)
 app.include_router(VllmRouter().router)
+app.include_router(SeaweedsRouter)
 app.include_router(MongoRouter)
 app.include_router(HandbookRouter().router)
 app.include_router(HandbookRouterPage().router)

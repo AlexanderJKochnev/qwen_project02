@@ -149,11 +149,11 @@ class ClickHouseRepository:
         """
 
         result = await self.client.query(query, {'id': id_value})
-        return result.first_row_as_dict if result.row_count > 0 else None
+        return result.first_item if result.row_count > 0 else None
 
-    async def get_all(
+    async def get(
             self, filters: Optional[Dict[str, Any]] = None, include_deleted: bool = False,
-            order_by: Optional[str] = None, limit: int = 1000, offset: int = 0
+            order_by: Optional[str] = None, limit: int = 30, page: int = 1
     ) -> List[Dict[str, Any]]:
         """
         Получение всех записей с фильтрацией и пагинацией.
@@ -165,6 +165,7 @@ class ClickHouseRepository:
             limit: Лимит записей
             offset: Смещение
         """
+        offset = limit * (page - 1)
         where_conditions = []
         params = {}
 
@@ -207,7 +208,10 @@ class ClickHouseRepository:
         """
 
         result = await self.client.query(query, params)
-        return result.result_rows_as_dict
+        if result.row_count == 0:
+            return []
+        data: List[dict] = [dict(zip(result.column_names, row)) for row in result.result_rows]
+        return data
 
     async def search(
             self, search_field: str, search_value: str, filters: Optional[Dict[str, Any]] = None,
@@ -313,8 +317,7 @@ class ClickHouseRepository:
             UPDATE {self.soft_delete_field} = now()
             WHERE {id_field} = %(id)s AND {self.soft_delete_field} IS NULL
         """
-
-        result = await self.client.command(query, {'id': id_value})
+        _ = await self.client.command(query, {'id': id_value})
         # ClickHouse ALTER UPDATE возвращает строку, извлечем количество обновленных строк
         return True  # Если нет ошибки - считаем успехом
 

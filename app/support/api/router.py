@@ -176,7 +176,7 @@ class ApiRouter(ItemRouter):
     async def get_image_by_id(self, id: int, session: AsyncSession = Depends(get_db),
                               image_service: ThumbnailImageService = Depends()):
         """
-            получение изображения по id напитка. Версия 1  (StreamingResponse)
+            получение изображения по id напитка. Версия 1  (StreamingResponse - лучше для тяжелых условий)
         """
         image_data = await self.service.get_image_by_id(id, self.repo, self.model, session, image_service)
         headers = {"Content-Disposition": f"inline; filename={image_data['filename']}", "X-Image-Type": "full",
@@ -208,7 +208,7 @@ class ApiRouter(ItemRouter):
     async def get_image_png_by_id(self, id: int, session: AsyncSession = Depends(get_db),
                                   image_service: ThumbnailImageService = Depends()):
         """
-        получение изображения по id напитка. Версия 2 (Response)
+        получение изображения по id напитка. Версия 2 (Response - не очень)
         """
         image_data = await self.service.get_image_by_id(id, self.repo, self.model, session, image_service)
         return raw_image_response(image_data)

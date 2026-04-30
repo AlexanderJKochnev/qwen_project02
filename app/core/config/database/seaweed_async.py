@@ -70,6 +70,15 @@ class SeaweedFSManager:
         base_url = await self._get_volume_base_url(vid)
         return f"{base_url}/{fid}"
 
+    async def _get_volume_base_url(self, vid: str) -> str:
+        if vid not in self._cache:
+            async with self._session.get(f"{self.master_url}/dir/lookup?volumeId={vid}") as r:
+                locs = (await r.json()).get("locations")
+                if not locs:
+                    raise RuntimeError(f"Volume {vid} not found")
+                self._cache[vid] = self._format_url(locs[0]["url"])
+        return self._cache[vid]
+
 
 _manager: Optional[SeaweedFSManager] = None
 

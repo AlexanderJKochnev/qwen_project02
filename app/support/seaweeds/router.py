@@ -1,10 +1,11 @@
 # app.core.support.seaweeds.router.py
-from fastapi import Depends
+from fastapi import File, HTTPException, Query, UploadFile
+from fastapi.responses import StreamingResponse
+from loguru import logger
+
 from app.core.routers.base import LightRouter
-from app.support.seaweeds.service import SeaweedsService
-from app.core.config.database.seaweed_async import SeaweedFSManager, get_swfs
-from app.dependencies import get_clickhouse_repository_factory, ClickHouseRepositoryFactory
-from fastapi import FastAPI, UploadFile, File, Depends, HTTPException, Response
+from app.core.services.seaweed_service import SeaweedsService
+
 """
     create
     search
@@ -15,13 +16,72 @@ from fastapi import FastAPI, UploadFile, File, Depends, HTTPException, Response
 """
 
 
-class SeaweedsRouterr(LightRouter):
+class SeaweedsRouter(LightRouter):
     def __init__(self):
         super().__init__(prefix='/seaweeds')
         self.service = SeaweedsService()
 
-    async def create_img(self, description: str, file: UploadFile = File(...)):
-        content = await file.read()
-        # return fid
-        response: dict = await self.service.create_img(content, description)
-        return response
+    def setup_routes(self):
+        self.router.add_api_route(
+            "", self.get, methods=["GET"],
+            openapi_extra={'x-request-schema': None}
+        )
+        self.router.add_api_route(
+            "", self.get_by_id, methods=["GET"],
+            openapi_extra={'x-request-schema': None}
+        )
+        self.router.add_api_route(
+            "", self.create_img, methods=["POST"],
+            openapi_extra={'x-request-schema': None}
+        )
+        self.router.add_api_route(
+            "", self.get, methods=["DELETE"],
+            openapi_extra={'x-request-schema': None}
+        )
+
+    async def create_img(self, description: str = Query(..., description='ключывые слова по которым можно найти '
+                                                                         'изображение'),
+                         table_name: str = Query(..., description='имя таблицы ддля которой предназанчено изображение'),
+                         file: UploadFile = File(...)):
+        try:
+            content = await file.read()
+            response: dict = await self.service.create_img(content, description)
+            return response
+        except Exception as e:
+            logger.error(e)
+            raise HTTPException(status_code=500, detail=e)
+
+    async def delete_img(self, fid: str) -> dict:
+        """
+            удаление изображения
+        """
+        try:
+            await self.service.delete_img(fid)
+            return {'fid': fid,
+                    'result': 'deleted'}
+        except Exception as e:
+            logger.error(e)
+            raise HTTPException(status_code=500, detail=e)
+
+    async def get(self,
+                  page: int = Query(1, description='страница'),
+                  page_size: int = Query(1, description='размер страницы страница'),
+                  include_deleted: bool = Query(False, description='включить удаленные записи?'),
+                  order_by: str = Query('inserted_at DESC', description='порядок сортировки ')
+                  ) -> dict:
+        """
+        получение списка  fid изображений по странично / только для тестирования
+        """
+        try:
+            response = await self.service.get(page, page_size, None, include_deleted, order_by)
+            return response
+        except Exception as e:
+            logger.error(e)
+            raise HTTPException(status_code=500, detail=e)
+
+    async def get_by_id(self, fid: str):
+        """
+        получение изображения
+        """
+        image: dict = await self.service.get_image(fid)
+        return StreamingResponse(**image)
