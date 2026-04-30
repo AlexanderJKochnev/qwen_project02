@@ -90,13 +90,11 @@ class SeaweedsService:
         await self.click_repo.soft_delete('fid', fid)
 
     async def get(self, page: int = 1, page_size: int = 20,
-                  filters: Dict[str, Any] = None,
                   order_by: str = None) -> dict:
         """
         получение списка изображений
         """
-        response = await self.click_repo.get(filters=filters,
-                                             order_by=order_by,
+        response = await self.click_repo.get(order_by=order_by,
                                              limit=page_size,
                                              page=page)
         fids = [{v.get('fid'): v.get('fid_thumb')} for v in response]
