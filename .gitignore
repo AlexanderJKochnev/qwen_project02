@@ -6,6 +6,7 @@ __pycache__/
 *$py.class
 *.so
 .Python
+*.onnx
 meili_data/
 nginx/conf.d/default.conf
 backup/

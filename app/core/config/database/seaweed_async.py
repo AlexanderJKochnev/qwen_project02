@@ -32,6 +32,7 @@ class SeaweedFSManager:
             return data["fid"], self._format_url(data["url"])
 
     async def upload(self, file_data: bytes) -> str:
+        """Create: Загрузка и возврат FID"""
         fid, vol_url = await self.assign()
         async with self._session.post(f"{vol_url}/{fid}", data=file_data):
             return fid
@@ -47,11 +48,13 @@ class SeaweedFSManager:
         return f"{self._cache[vid]}/{fid}"
 
     async def download(self, fid: str) -> bytes:
+        """Read: Получение бинарных данных"""
         url = await self.get_url(fid)
         async with self._session.get(url) as r:
             return await r.read()
 
     async def delete(self, fid: str):
+        """Delete: Удаление файла"""
         url = await self.get_url(fid)
         async with self._session.delete(url) as r:
             return r.status in (202, 204, 404)  # 404 тоже считаем успехом при удалении

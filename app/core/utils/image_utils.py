@@ -35,7 +35,7 @@ def get_rembg_session():
     return _REMBG_SESSION
 
 
-def image_aligning(content: bytes, remove_bg: bool = True):
+def image_aligning(content: bytes, remove_bg: bool = True) -> tuple:
     """
     Полный цикл: Метаданные -> Удаление фона -> Автокроп -> Ресайз -> Оптимизация
     """
@@ -43,14 +43,16 @@ def image_aligning(content: bytes, remove_bg: bool = True):
         return content
 
     max_w, max_h = settings.IMAGE_WIDTH, settings.IMAGE_HEIGH
-    MAX_FILE_SIZE = 100 * 1024
+    MAX_FILE_SIZE = 100 * 1024  # не более 100кб
     MARGIN_PCT = 0.05
+    thumb_w, thumb_h = 150, 150
 
     try:
         # 1. Открываем и фиксируем метаданные
         image = Image.open(io.BytesIO(content))
         # Исправляем ориентацию (чтобы фото не было "на боку")
         image = ImageOps.exif_transpose(image)
+        # Извлекаем метаданные (вдруг есть?)
         metadata = extract_metadata(image)
 
         # 2. Интеллектуальная обработка
@@ -69,29 +71,27 @@ def image_aligning(content: bytes, remove_bg: bool = True):
                      min(image.height, bbox[3] + margin))
                 )
 
-        # 3. Ресайз (вписывание в границы без обрезки)
-        image.thumbnail((max_w, max_h), Image.Resampling.LANCZOS)
-
-        # 4. Оптимизация размера файла
-        for _ in range(5):
-            img_byte_arr = io.BytesIO()
-            image.save(img_byte_arr, format='PNG', optimize=True)
-            data = img_byte_arr.getvalue()
-
-            if len(data) <= MAX_FILE_SIZE:
-                return data
-
-            # Если не влезли — уменьшаем разрешение на 15%
-            new_size = tuple(int(dim * 0.85) for dim in image.size)
-            image = image.resize(new_size, Image.Resampling.LANCZOS)
-        metadata['mime_type'], metadata['size_bytes'] = get_file_info(data)
+        # 3. ОПТИМИЗАЦИЯ РАЗМЕРА ИЗОБРАЖЕНИЯ
+        # А. Основное изображение (Full)
+        full_image = image.copy()
+        full_image.thumbnail((max_w, max_h), Image.Resampling.LANCZOS)
+        # Оптимизация Full до 100 КБ
+        full_data = _optimize_to_size(full_image, MAX_FILE_SIZE)
+        # Б. Thumbnail (для ListView)
+        thumb_image = image.copy()
+        thumb_image.thumbnail((thumb_w, thumb_h), Image.Resampling.LANCZOS)
+        thumb_io = io.BytesIO()
+        thumb_image.save(thumb_io, format = 'PNG', optimize = True)
+        thumb_data = thumb_io.getvalue()
+        metadata['mime_type'], metadata['size_bytes'] = get_file_info(full_data)
+        _, metadata['thumbnail_size_bytes'] = get_file_info(full_data)
         from app.core.utils.common_utils import jprint
         jprint(metadata)
-        return data
+        return full_data, thumb_data, metadata
 
     except Exception as e:
         logger.error(f"Критическая ошибка обработки: {e}")
-        return content
+        return None, None, None
 
 
 def extract_metadata(image: Image.Image) -> dict:
@@ -142,6 +142,22 @@ def get_file_info(content: bytes):
     """Возвращает MIME-тип и размер в байтах"""
     mime = magic.from_buffer(content, mime=True)
     return mime, len(content)
+
+
+def _optimize_to_size(img, max_size):
+    """Вспомогательный метод сжатия до лимита"""
+    temp_img = img.copy()
+    for _ in range(7):
+        buf = io.BytesIO()
+        temp_img.save(buf, format='PNG', optimize=True, compress_level=9)
+        data = buf.getvalue()
+        if len(data) <= max_size:
+            logger.warning(f'{len(data)=} {max_size=}')
+            return data
+        new_size = tuple(int(dim * 0.8) for dim in temp_img.size)
+        temp_img = temp_img.resize(new_size, Image.Resampling.LANCZOS)
+    return data
+
 
 
 class ImageService:

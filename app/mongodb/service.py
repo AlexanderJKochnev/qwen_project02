@@ -18,7 +18,6 @@ from app.mongodb.models import FileListResponse, FileResponse
 # from app.core.memcached_cache import cache_image_memcached
 from app.mongodb.repository import ImageRepository, ThumbnailImageRepository
 from app.mongodb.utils import (file_name,
-                               # image_aligning,
                                make_transparent_white_bg, read_image_generator, )
 from app.core.utils.image_utils import image_aligning
 
@@ -50,7 +49,7 @@ class ImageService:
             content_type = "image/png"
             # content = remove_background_with_mask(content)
             if len(content) > 8 * 1024 * 1024:
-                content = image_aligning(content)
+                content, _ = image_aligning(content)
             filename = file_name(file.filename, settings.LENGTH_RANDOM_NAME, '.png')
         except Exception as e:
             raise HTTPException(
@@ -93,7 +92,7 @@ class ImageService:
                 # подгоняем размер
                 try:
                     if len(content) > 8 * 1024 * 1024:
-                        content = image_aligning(content)
+                        content, _ = image_aligning(content)
                 except Exception as e:
                     HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
@@ -300,7 +299,7 @@ class ThumbnailImageService:
             content_type = "image/png"
             # content = remove_background_with_mask(content)
             # if len(content) > 8 * 1024 * 1024:
-            content = image_aligning(content)
+            content, _ = image_aligning(content)
             filename = file_name(file.filename, settings.LENGTH_RANDOM_NAME, '.png')
         except Exception as e:
             raise HTTPException(
@@ -373,7 +372,7 @@ class ThumbnailImageService:
                 try:
                     if len(content) > 8 * 1024 * 1024:
                         # уменьшениие размера до приемлемого
-                        content = image_aligning(content)
+                        content, _ = image_aligning(content)
                 except Exception as e:
                     HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
