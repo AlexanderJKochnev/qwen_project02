@@ -43,13 +43,13 @@ class SeaweedsRouter:
             openapi_extra={'x-request-schema': None}
         )
         self.router.add_api_route(
-            "", self.get, methods=["DELETE"],
+            "", self.delete_img, methods=["DELETE"],
             openapi_extra={'x-request-schema': None}
         )
 
     async def create_img(self,
                          description: str = Query(..., description='ключывые слова по которым можно найти '
-                                                                         'изображение'),
+                                                  'изображение'),
                          table_name: str = Query(..., description='имя таблицы ддля которой предназанчено изображение'),
                          file: UploadFile = File(...),
                          service: SeaweedsService = Depends()):
