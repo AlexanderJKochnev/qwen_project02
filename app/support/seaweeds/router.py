@@ -79,7 +79,7 @@ class SeaweedsRouter:
         """
         получение списка  fid изображений по странично / только для тестирования
         """
-        response = await service.get(page, page_size, None, order_by)
+        response = await service.get(page, page_size, order_by)
         return response
 
     async def get_by_id(self, fid: str, service: SeaweedsService = Depends()):
