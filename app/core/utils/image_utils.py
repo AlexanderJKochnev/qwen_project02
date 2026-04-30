@@ -84,7 +84,7 @@ def image_aligning(content: bytes, remove_bg: bool = True):
             # Если не влезли — уменьшаем разрешение на 15%
             new_size = tuple(int(dim * 0.85) for dim in image.size)
             image = image.resize(new_size, Image.Resampling.LANCZOS)
-        metadata['mime_type'], metadata['size_bytes'] = get_file_info()
+        metadata['mime_type'], metadata['size_bytes'] = get_file_info(data)
         from app.core.utils.common_utils import jprint
         jprint(metadata)
         return data
@@ -132,8 +132,8 @@ def extract_metadata(image: Image.Image) -> dict:
         logger.error(f'Извлекаем IPTC. {e}')
 
     # 3. Извлекаем XMP (если есть)
-    if hasattr(image, "getxmp"):
-        full_meta["xmp"] = image.getxmp()
+    # if hasattr(image, "getxmp"):
+    #     full_meta["xmp"] = image.getxmp()
 
     return full_meta
 
