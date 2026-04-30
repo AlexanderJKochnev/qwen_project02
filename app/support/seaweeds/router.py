@@ -1,8 +1,10 @@
 # app.core.support.seaweeds.router.py
 from fastapi import File, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from loguru import logger
 
+from app.auth.dependencies import get_active_user_or_internal
 from app.core.routers.base import LightRouter
 from app.core.services.seaweed_service import SeaweedsService
 
@@ -16,10 +18,16 @@ from app.core.services.seaweed_service import SeaweedsService
 """
 
 
-class SeaweedsRouter(LightRouter):
+class SeaweedsRouter:
     def __init__(self):
+        prefix = 'seaweeds'
+        self.tags, self.prefix = [f'{prefix}'], f'/{prefix}'
+        self.router = APIRouter(
+            prefix=self.prefix, tags=self.tags, dependencies=[Depends(get_active_user_or_internal)]
+        )
         self.service = SeaweedsService()
-        super().__init__(prefix='/seaweeds')
+        self.setup_routes()
+        # super().__init__(prefix='/seaweeds')
 
     def setup_routes(self):
         logger.warning('setup router =============================================')
