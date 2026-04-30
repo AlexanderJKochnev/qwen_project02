@@ -128,7 +128,7 @@ class ClickHouseRepository:
     # ============================================================
 
     async def get_by_id(
-            self, id_field: str, id_value: Any, include_deleted: bool = False
+            self, id_field: str, id_value: Any
     ) -> Optional[Dict[str, Any]]:
         """
         Получение записи по ID.
@@ -138,12 +138,10 @@ class ClickHouseRepository:
             id_value: Значение ID
             include_deleted: Включать мягко удаленные записи
         """
-        deleted_condition = '' if include_deleted else f'AND {self.soft_delete_field} IS NULL'
 
         query = f"""
             SELECT * FROM {self.table_name}
             WHERE {id_field} = %(id)s
-            {deleted_condition}
             ORDER BY version DESC
             LIMIT 1
         """
@@ -152,7 +150,7 @@ class ClickHouseRepository:
         return result.first_item if result.row_count > 0 else None
 
     async def get(
-            self, filters: Optional[Dict[str, Any]] = None, include_deleted: bool = False,
+            self,
             order_by: Optional[str] = None, limit: int = 30, page: int = 1
     ) -> List[Dict[str, Any]]:
         """
@@ -166,42 +164,11 @@ class ClickHouseRepository:
             offset: Смещение
         """
         offset = limit * (page - 1)
-        where_conditions = []
-        params = {}
-
-        # Фильтр по мягкому удалению
-        if not include_deleted:
-            where_conditions.append(f"{self.soft_delete_field} IS NULL")
-
         # Пользовательские фильтры
-        if filters:
-            for key, value in filters.items():
-                if isinstance(value, (list, tuple)):
-                    # IN условие
-                    placeholders = [f"__{key}_{i}" for i in range(len(value))]
-                    where_conditions.append(f"{key} IN ({', '.join(['%(' + p + ')s' for p in placeholders])})")
-                    for i, v in enumerate(value):
-                        params[f"{key}_{i}"] = v
-                elif isinstance(value, dict):
-                    # Диапазон (gt, gte, lt, lte, like)
-                    op = value.get('op', '=')
-                    param_name = f"__{key}"
-                    if op == 'like':
-                        where_conditions.append(f"{key} LIKE %({param_name})s")
-                        params[param_name] = value['value']
-                    else:
-                        where_conditions.append(f"{key} {op} %({param_name})s")
-                        params[param_name] = value['value']
-                else:
-                    where_conditions.append(f"{key} = %(__{key})s")
-                    params[f"__{key}"] = value
-
-        where_clause = f"WHERE {' AND '.join(where_conditions)}" if where_conditions else ""
         order_clause = f"ORDER BY {order_by}" if order_by else ""
 
         query = f"""
             SELECT * FROM {self.table_name}
-            {where_clause}
             {order_clause}
             LIMIT {limit}
             OFFSET {offset}
@@ -215,7 +182,7 @@ class ClickHouseRepository:
 
     async def search(
             self, search_field: str, search_value: str, filters: Optional[Dict[str, Any]] = None,
-            include_deleted: bool = False, limit: int = 100, offset: int = 0
+            limit: int = 100, offset: int = 0
     ) -> List[Dict[str, Any]]:
         """
         Текстовый поиск по полю.
@@ -230,9 +197,6 @@ class ClickHouseRepository:
         """
         where_conditions = [f"has({search_field}, %(search)s)"]
         params = {'search': search_value}
-
-        if not include_deleted:
-            where_conditions.append(f"{self.soft_delete_field} IS NULL")
 
         if filters:
             for key, value in filters.items():
@@ -312,13 +276,8 @@ class ClickHouseRepository:
         Returns:
             True если удалили хотя бы одну запись
         """
-        query = f"""
-            ALTER TABLE {self.table_name}
-            UPDATE {self.soft_delete_field} = now()
-            WHERE {id_field} = %(id)s AND {self.soft_delete_field} IS NULL
-        """
-        _ = await self.client.command(query, {'id': id_value})
-        # ClickHouse ALTER UPDATE возвращает строку, извлечем количество обновленных строк
+        query = f""" DELETE FROM {self.table_name} WHERE {id_field} = {id_value};"""
+        _ = await self.client.command(query)
         return True  # Если нет ошибки - считаем успехом
 
     async def soft_delete_batch(
@@ -349,7 +308,7 @@ class ClickHouseRepository:
     async def cleanup_deleted(
             self, older_than_days: int = 30
     ) -> int:
-        """
+        """  ПЕРЕДЕЛАТЬ
         Физическое удаление записей, помеченных как удаленные и старых версий.
 
         Args:

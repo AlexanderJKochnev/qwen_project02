@@ -91,13 +91,11 @@ class SeaweedsService:
 
     async def get(self, page: int = 1, page_size: int = 20,
                   filters: Dict[str, Any] = None,
-                  include_deleted: bool = False,
                   order_by: str = None) -> dict:
         """
         получение списка изображений
         """
         response = await self.click_repo.get(filters=filters,
-                                             include_deleted=include_deleted,
                                              order_by=order_by,
                                              limit=page_size,
                                              page=page)
@@ -108,11 +106,11 @@ class SeaweedsService:
                   }
         return result
 
-    async def get_thumbnail_id(self, fid: str, include_deleted: bool = False) -> str:
+    async def get_thumbnail_id(self, fid: str) -> str:
         """
             получение thumbnail: url_thumbnail
         """
-        result = await self.click_repo.get_by_id('fid', fid, include_deleted)
+        result = await self.click_repo.get_by_id('fid', fid)
         return result.get('fid_thumb')
 
     async def get_image(self, fid: str) -> dict:

@@ -72,14 +72,14 @@ class SeaweedsRouter:
     async def get(self,
                   page: int = Query(1, description='страница'),
                   page_size: int = Query(1, description='размер страницы страница'),
-                  include_deleted: bool = Query(False, description='включить удаленные записи?'),
+                  # include_deleted: bool = Query(False, description='включить удаленные записи?'),
                   order_by: str = Query('inserted_at DESC', description='порядок сортировки '),
                   service: SeaweedsService = Depends()
                   ) -> dict:
         """
         получение списка  fid изображений по странично / только для тестирования
         """
-        response = await service.get(page, page_size, None, include_deleted, order_by)
+        response = await service.get(page, page_size, None, order_by)
         return response
 
     async def get_by_id(self, fid: str, service: SeaweedsService = Depends()):
