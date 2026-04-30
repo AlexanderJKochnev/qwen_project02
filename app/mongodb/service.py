@@ -49,7 +49,8 @@ class ImageService:
             content_type = "image/png"
             # content = remove_background_with_mask(content)
             if len(content) > 8 * 1024 * 1024:
-                content, _ = image_aligning(content)
+                result = image_aligning(content)
+                content = result[0]
             filename = file_name(file.filename, settings.LENGTH_RANDOM_NAME, '.png')
         except Exception as e:
             raise HTTPException(
@@ -92,7 +93,8 @@ class ImageService:
                 # подгоняем размер
                 try:
                     if len(content) > 8 * 1024 * 1024:
-                        content, _ = image_aligning(content)
+                        result = image_aligning(content)
+                        content = result[0]
                 except Exception as e:
                     HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
@@ -299,7 +301,8 @@ class ThumbnailImageService:
             content_type = "image/png"
             # content = remove_background_with_mask(content)
             # if len(content) > 8 * 1024 * 1024:
-            content, _ = image_aligning(content)
+            result = image_aligning(content)
+            content = result[0]
             filename = file_name(file.filename, settings.LENGTH_RANDOM_NAME, '.png')
         except Exception as e:
             raise HTTPException(
@@ -372,7 +375,8 @@ class ThumbnailImageService:
                 try:
                     if len(content) > 8 * 1024 * 1024:
                         # уменьшениие размера до приемлемого
-                        content, _ = image_aligning(content)
+                        result = image_aligning(content)
+                        content = result[0]
                 except Exception as e:
                     HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
