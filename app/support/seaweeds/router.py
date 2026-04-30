@@ -20,6 +20,7 @@ class SeaweedsRouter(LightRouter):
     def __init__(self):
         super().__init__(prefix='/seaweeds')
         self.service = SeaweedsService()
+        self.setup_routes()
 
     def setup_routes(self):
         self.router.add_api_route(
