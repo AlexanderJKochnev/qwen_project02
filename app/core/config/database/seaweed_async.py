@@ -28,10 +28,18 @@ class SeaweedFSManager:
 
     # @retry(stop=stop_after_attempt(3), wait=wait_exponential(0.5))
     async def assign(self) -> Tuple[str, str]:
-        async with self._session.get(f"{self.master_url}/dir/assign") as r:
-            data = await r.json()
-            logger.warning(f'seaweed_async.py assign {data}')
-            return data["fid"], self._format_url(data["url"])
+        if not self._session:
+            # Если здесь упадет — значит старт не был вызван!
+            logger.error("SESSION IS NONE! You forgot to call .start()")
+            await self.start()
+        url = f"{self.master_url}/dir/assign"
+        try:
+            async with self._session.get(url) as r:
+                data = await r.json()
+                logger.warning(f'seaweed_async.py assign {data}')
+                return data["fid"], self._format_url(data["url"])
+        except Exception as e:
+            logger.error(f'assign. {e}')
 
     async def upload(self, file_data: bytes) -> str:
         """Create: Загрузка и возврат FID"""
