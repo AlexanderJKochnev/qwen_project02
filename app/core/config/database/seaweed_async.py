@@ -3,6 +3,7 @@ import aiohttp
 from fastapi import HTTPException
 from typing import Optional, Tuple
 from tenacity import retry, stop_after_attempt, wait_exponential
+from loguru import logger
 
 
 class SeaweedFSManager:
@@ -29,11 +30,14 @@ class SeaweedFSManager:
     async def assign(self) -> Tuple[str, str]:
         async with self._session.get(f"{self.master_url}/dir/assign") as r:
             data = await r.json()
+            logger.warning(f'seaweed_async.py assign {data}')
             return data["fid"], self._format_url(data["url"])
 
     async def upload(self, file_data: bytes) -> str:
         """Create: Загрузка и возврат FID"""
+        logger.critical(f'seaweed_async.py {type(file_data)=}')
         fid, vol_url = await self.assign()
+        logger.critical(f'{fid=} {vol_url=}')
         async with self._session.post(f"{vol_url}/{fid}", data=file_data):
             return fid
 
