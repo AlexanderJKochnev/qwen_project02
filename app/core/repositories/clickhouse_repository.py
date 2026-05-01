@@ -142,7 +142,7 @@ class ClickHouseRepository:
 
     async def get(
             self,
-            order_by: Optional[str] = None, limit: int = 30, page: int = 1, fields: list = []
+            order_by: Optional[str] = None, limit: int = 30, page: int = 1, fields: list = None
     ) -> List[Dict[str, Any]]:
         """
         Получение всех записей с фильтрацией и пагинацией.

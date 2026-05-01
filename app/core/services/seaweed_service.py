@@ -95,7 +95,8 @@ class SeaweedsService:
         """
         response = await self.click_repo.get(order_by=order_by,
                                              limit=page_size,
-                                             page=page)
+                                             page=page,
+                                             fields=('fid', 'fid_thumb'))
         fids = [{v.get('fid'): v.get('fid_thumb')} for v in response]
         result = {'page': page,
                   'page_size': page_size,
