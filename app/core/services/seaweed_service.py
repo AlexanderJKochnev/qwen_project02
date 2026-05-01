@@ -54,7 +54,7 @@ class SeaweedsService:
         tags = tokenize(f'{tmp} {description}')
         meta: dict = {}
         meta['table'] = table
-        meta['uploaded_at'] = datetime.now(timezone.utc)
+        # meta['uploaded_at'] = datetime.now(timezone.utc)
         meta['size_bytes'] = meta_data['size_bytes']
         meta['mime_type'] = meta_data['mime_type']
         meta['thumb_size_bytes'] = meta_data['thumbnail_size_bytes']

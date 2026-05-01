@@ -52,7 +52,7 @@ class SeaweedsRouter:
         )
 
     async def create_img(self,
-                         description: str = Query(..., description='ключывые слова по которым можно найти '
+                         description: str = Query(..., description='ключевые слова по которым можно найти '
                                                   'изображение'),
                          table_name: str = Query(..., description='имя таблицы ддля которой предназанчено изображение'),
                          file: UploadFile = File(...),

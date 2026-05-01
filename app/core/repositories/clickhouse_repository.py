@@ -12,7 +12,7 @@
     cleanup_deleted()	Физическое удаление старых записей
     cleanup_old_versions()	Очистка старых версий
 """
-
+from fastapi import HTTPException
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 from clickhouse_connect.driver.asyncclient import AsyncClient
@@ -23,13 +23,13 @@ from loguru import logger
 class ClickHouseRepository:
     """
     Универсальный асинхронный репозиторий для работы с ClickHouse.
-
-    Поддерживает:
-    - Soft delete (помечает записи как удаленные)
-    - Версионирование для UPDATE
-    - Batch insert
-    - Пагинацию
-    - Очистку удаленных и старых версий
+    ОСОБЕННОСТИ - НЕ ЗАБЫВАТЬ:
+    CREATE = INSERT
+    UPDATE = INSERT (точно указать уникальные ключи! если предполагается и их изименение - тогда DELETE + INSERT)
+    DELETE = INSERT (deleted_at=1, остальные поля оставить пустые)
+    ПОКА ЖЕСТКО ЗАШИТА ПОД ТАБЛИЦУ images_metadata
+    НУЖНО ОБЕСПЕЧИТЬ ЧТО БЫ В WHERE подставлялись поля из ORDER BY (это уникальные индексы по ним идентифицируется
+    запись и ее версия
     """
 
     def __init__(self, client: AsyncClient, table_name: str):
@@ -40,36 +40,30 @@ class ClickHouseRepository:
             soft_delete_field: Имя поля для хранения времени мягкого удаления
         """
         self.client = client
-        self.table_name = table_name
-
-    # ============================================================
-    # CREATE
-    # ============================================================
+        self.table_name = table_name  # таблица для create/update/delete (можно также посмотреть/восстановить
+        # удаленные записи
+        self.select_table = f'{table_name}_active'
+        self.deleted_at = 'deleted_at'
+        self.orderby = ['fid', 'table']
 
     async def create(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Создание одной записи с поддержкой версионирования.
-
-        Args:
-            data: Словарь с данными для вставки
-        Returns:
-            Вставленные данные с добавленной версией
+        Создание одной записи
+        Args: data: Словарь с данными для вставки
+        Returns: Вставленные данные
         """
-        # Добавляем версию если поле существует
         columns = list(data.keys())
         values = list(data.values())
         events = Table(self.table_name)
-        
-        query = f"""
-            INSERT INTO {self.table_name} ({', '.join(columns)})
-            VALUES ({', '.join(['%s'] * len(columns))})
-        """
-
-        # await self.client.execute(query, values)
+        q = Query.into(events).columns(*columns).insert(*values)
+        print(q.get_sql())
+        logger.critical('-----------------')
+        await self.client.execute(q.get_sql())
         return data
 
-    async def bulk_insert(self, records: List[Dict[str, Any]], version_field: str = 'version') -> int:
+    async def bulk_insert(self, records: List[Dict[str, Any]]) -> int:
         """
+        ПЕРЕДЕЛАТЬ
         Массовая вставка записей.
 
         Args:
@@ -86,13 +80,6 @@ class ClickHouseRepository:
         prepared_records = []
         for record in records:
             record = record.copy()
-            record.pop(self.soft_delete_field, None)
-
-            if version_field not in record:
-                record[version_field] = 1
-            else:
-                record[version_field] = int(record.get(version_field, 0)) + 1
-
             prepared_records.append(record)
 
         # Получаем все уникальные колонки
@@ -130,7 +117,8 @@ class ClickHouseRepository:
             id_field: Имя поля ID
             id_value: Значение ID
         """
-        events = Table(self.table_name)
+        # events = Table(self.table_name)
+        events = Table(self.select_table)
         if fields:
             q = Query.from_(events).select(*(events[k] for k in fields))
         else:
@@ -162,7 +150,8 @@ class ClickHouseRepository:
             offset: Смещение
             fields - возвращаемые поля
         """
-        events = Table(self.table_name)
+        # events = Table(self.table_name)
+        events = Table(self.select_table)
         if fields:
             q = Query.from_(events).select(*(events[k] for k in fields))
         else:
@@ -189,8 +178,12 @@ class ClickHouseRepository:
             limit: int = 100, offset: int = 0
     ) -> List[Dict[str, Any]]:
         """
-        Текстовый поиск по полю.
-
+        Текстовый поиск по полю. ПЕРЕДЕЛАТЬ
+        SELECT * FROM images_metadata_active WHERE has(tags, 'my_tag') для поиска по тэгам
+        has_tag = CustomFunction("has", ["array", "value"])
+        target_tag = "nature"
+        if target_tag:
+            q = q.where(has_tag(images.tags, target_tag))
         Args:
             search_field: Поле для поиска (массив строк)
             search_value: Значение для поиска (токен)
@@ -225,54 +218,43 @@ class ClickHouseRepository:
     # ============================================================
 
     async def update(
-            self, id_field: str, id_value: Any, data: Dict[str, Any], version_field: str = 'version'
+            self, id_field: str, id_value: Any, data: Dict[str, Any]
     ) -> Optional[Dict[str, Any]]:
         """
-        Обновление записи (создается новая версия, старая помечается удаленной).
-
+        Обновление записи (создается новая версия, старая "удаляется").
+        если обновляется ключевое поле (id_field) - это delete + insert
+        если любые другие это insert поверх прежней записи
         Args:
             id_field: Имя поля ID
             id_value: Значение ID
             data: Новые данные
-            version_field: Имя поля версии
 
         Returns:
             Новая версия записи
         """
-        # Получаем текущую версию
-        current = await self.get_by_id(id_field, id_value, include_deleted=True)
-        if not current:
-            return None
-
-        # Помечаем старую как удаленную
-        await self.soft_delete(id_field, id_value)
-
-        # Создаем новую с увеличенной версией
-        new_data = {**current, **data}
-        new_data.pop(self.soft_delete_field, None)
-        new_data[version_field] = current.get(version_field, 0) + 1
-        new_data.pop(id_field, None)  # ID не меняем
-
-        # Вставляем новую версию
-        columns = [id_field] + list(new_data.keys())
-        values = [id_value] + list(new_data.values())
-
-        query = f"""
-            INSERT INTO {self.table_name} ({', '.join(columns)})
-            VALUES ({', '.join(['%s'] * len(columns))})
-        """
-
-        await self.client.execute(query, values)
-
-        # Возвращаем новую запись
-        return await self.get_by_id(id_field, id_value)
+        if data.get(id_field) is None:
+            data[id_field] = id_value
+        if data.get[id_field] != id_value:
+            # DELETE PREV VERSION
+            table_name = data.get['table']
+            try:
+                events = Table(self.table_name)
+                # events = Table(self.select_table)
+                q = (Query.into(events).columns(
+                    events[id_field], events['table'], events[self.deleted_at]
+                ).insert(id_value, table_name, 1))
+                _ = await self.client.command(q.get_sql())
+            except Exception as e:
+                pass  # на сулчай если запись не существует - пропускаем ошибку и создаем новую
+        result = await self.create(data)
+        return result
 
     # ============================================================
     # DELETE (soft delete)
     # ============================================================
 
     async def soft_delete(
-            self, id_field: str, id_value: Any
+            self, id_field: str, id_value: Any, table_name: str
     ) -> bool:
         """
         Мягкое удаление записи (заполняется deleted_at).
@@ -280,14 +262,21 @@ class ClickHouseRepository:
         Returns:
             True если удалили хотя бы одну запись
         """
-        query = f""" DELETE FROM {self.table_name} WHERE {id_field} = {id_value};"""
-        _ = await self.client.command(query)
+        events = Table(self.table_name)
+        # events = Table(self.select_table)
+
+        q = (Query.into(events).columns(events[id_field],
+                                        events['table'],
+                                        events[self.deleted_at])
+             .insert(id_value, table_name, 1))
+        _ = await self.client.command(q.get_sql())
         return True  # Если нет ошибки - считаем успехом
 
     async def soft_delete_batch(
             self, id_field: str, id_values: List[Any]
     ) -> int:
         """
+        ПЕРЕДЕЛАТЬ
         Массовое мягкое удаление записей.
 
         Returns:
@@ -306,65 +295,8 @@ class ClickHouseRepository:
         return len(id_values)
 
     # ============================================================
-    # ОЧИСТКА (удаление физическое)
+    # ОЧИСТКА (удаление физическое) автоматически через 30 дней
     # ============================================================
-
-    async def cleanup_deleted(
-            self, older_than_days: int = 30
-    ) -> int:
-        """  ПЕРЕДЕЛАТЬ
-        Физическое удаление записей, помеченных как удаленные и старых версий.
-
-        Args:
-            older_than_days: Удалять записи старше N дней после мягкого удаления
-
-        Returns:
-            Количество удаленных записей
-        """
-        cutoff_date = datetime.now() - timedelta(days=older_than_days)
-
-        query = f"""
-            ALTER TABLE {self.table_name}
-            DELETE WHERE {self.soft_delete_field} IS NOT NULL
-            AND {self.soft_delete_field} < %(cutoff)s
-        """
-
-        await self.client.command(query, {'cutoff': cutoff_date})
-        # Возвращаем примерное количество (ClickHouse не возвращает точное число при DELETE)
-        return -1  # Индикатор успеха
-
-    async def cleanup_old_versions(
-            self, id_field: str, keep_last_n: int = 1, older_than_days: Optional[int] = None
-    ) -> int:
-        """
-        Очистка старых версий записей (для освобождения места).
-
-        Args:
-            id_field: Имя поля ID
-            keep_last_n: Сколько последних версий оставить
-            older_than_days: Дополнительное ограничение по возрасту
-
-        Returns:
-            Количество удаленных записей
-        """
-        # Сложный запрос для удаления старых версий
-        # Для каждой группы по id оставляем только top N по версии + свежие
-        age_filter = f"AND {self.soft_delete_field} < now() - INTERVAL {older_than_days} DAY" if older_than_days else ""
-
-        query = f"""
-            ALTER TABLE {self.table_name}
-            DELETE WHERE ({id_field}, version) NOT IN (
-                SELECT {id_field}, version FROM (
-                    SELECT {id_field}, version,
-                           row_number() OVER (PARTITION BY {id_field} ORDER BY version DESC, inserted_at DESC) as rn
-                    FROM {self.table_name}
-                    WHERE {self.soft_delete_field} IS NOT NULL {age_filter}
-                ) WHERE rn <= {keep_last_n}
-            ) AND {self.soft_delete_field} IS NOT NULL
-        """
-
-        await self.client.command(query)
-        return -1  # Индикатор успеха
 
 
 # ============================================================
