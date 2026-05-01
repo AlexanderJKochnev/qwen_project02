@@ -38,8 +38,13 @@ class SeaweedFSManager:
                 data = await r.json()
                 logger.warning(f'seaweed_async.py assign {data}')
                 return data["fid"], self._format_url(data["url"])
+                except aiohttp.ClientResponseError as e:
+                # ТУТ БУДЕТ ОТВЕТ: 404, 406 или 500
+                logger.error(f"Seaweed Error: Status={e.status}, Method={e.method}, URL={e.url}")
+                raise
         except Exception as e:
-            logger.error(f'assign. {e}')
+            logger.error(f"Unexpected error in assign: {type(e)} - {e}")
+            raise
 
     async def upload(self, file_data: bytes) -> str:
         """Create: Загрузка и возврат FID"""
