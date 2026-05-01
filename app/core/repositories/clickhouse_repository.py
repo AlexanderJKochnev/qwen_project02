@@ -164,7 +164,11 @@ class ClickHouseRepository:
         if page:
             q = q.offset((page - 1) * limit)
         if order_by:
-            q = q.orderby(order_by)
+            if 'DESC' in order_by:
+                order_by = order_by.replace('DESC', '').strip()
+                q = q.orderby(events[order_by], order=Order.desc)
+            else:
+                q = q.orderby(order_by)
         print(q.get_sql())
 
         order_clause = f"ORDER BY {order_by}" if order_by else ""
