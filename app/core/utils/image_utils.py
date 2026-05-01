@@ -10,15 +10,6 @@ from PIL import Image, ImageOps, ExifTags, IptcImagePlugin, TiffImagePlugin
 from rembg import remove, new_session  # это встает только на debian
 from loguru import logger
 
-"""
-try:
-    SESSION = new_session("u2net")
-    logger.info("Сессия rembg успешно инициализирована локально.")
-except Exception as e:
-    logger.error(f"Не удалось загрузить модель rembg: {e}")
-    SESSION = None
-"""
-
 _REMBG_SESSION = None
 
 

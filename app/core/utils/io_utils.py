@@ -90,8 +90,12 @@ def get_filepath_from_dir_by_name(filename: str = None, upload_dir: str = None) 
 
 
 def ResponseStreaming(image_data: dict, headers: dict):
+    # media_type, content_type, mime_type
     return StreamingResponse(
-        BytesIO(image_data["content"]), media_type=image_data['content_type'], headers=headers
+        BytesIO(image_data.get("content")),
+        # media_type=image_data.get('content_type'),
+        media_type='image/png',
+        # headers=headers
     )
 
 
@@ -99,5 +103,7 @@ def ResponseJust(image_data: dict, headers: dict):
     # from app.core.utils.common_utils import jprint
     # jprint(headers)
     return Response(content=image_data["content"],
-                    media_type=image_data['content_type'],
-                    headers=headers)
+                    # media_type=image_data['content_type'],
+                    media_type='image/png',
+                    # headers=headers
+                    )
