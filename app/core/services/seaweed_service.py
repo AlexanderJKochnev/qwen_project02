@@ -115,7 +115,7 @@ class SeaweedsService:
         """
             получение изображения по fid (любого)
         """
-        content = await self.seaweed_repo.get_by_fid(fid, self.sf)
+        content = await self.seaweed_repo.get_by_fid(fid, self.fs)
         file_name = f'{get_random_string(8)}.png'
         headers = {"Content-Disposition": f"inline; filename={file_name}", "X-Image-Type": "none",
                    "X-File-Size": str(len(content))}
