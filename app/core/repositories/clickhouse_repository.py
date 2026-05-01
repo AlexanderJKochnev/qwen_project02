@@ -177,7 +177,7 @@ class ClickHouseRepository:
         """
         logger.warning('------------------------')
         logger.warning(query)
-        result = await self.client.query(q)
+        result = await self.client.query(q.get_sql())
         if result.row_count == 0:
             return []
         data: List[dict] = [dict(zip(result.column_names, row)) for row in result.result_rows]
