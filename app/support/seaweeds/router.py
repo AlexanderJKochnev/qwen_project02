@@ -46,6 +46,10 @@ class SeaweedsRouter:
             "", self.delete_img, methods=["DELETE"],
             openapi_extra={'x-request-schema': None}
         )
+        self.router.add_api_route(
+            "/thumb/{id}",
+            self.get_thumb, methods=["GET"], openapi_extra={'x-request-schema': None}
+        )
 
     async def create_img(self,
                          description: str = Query(..., description='ключывые слова по которым можно найти '
@@ -88,3 +92,10 @@ class SeaweedsRouter:
         """
         image: dict = await service.get_image(fid)
         return StreamingResponse(**image)
+
+    async def get_thumb(self, fid: str, service: SeaweedsService = Depends()):
+        """
+        получение fid, fid_thumb by fid
+        """
+        response = await service.get_fid_thumb(fid)
+        return response

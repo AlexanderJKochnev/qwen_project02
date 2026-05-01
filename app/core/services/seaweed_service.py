@@ -124,3 +124,10 @@ class SeaweedsService:
                   'headers': headers,
                   'status_code': 200}
         return result
+
+    async def get_fid_thumb(self, fid: str) -> tuple:
+        """
+             получение fid_thumb by fid
+        """
+        result = await self.click_repo.get_by_id('fid', fid, ['fid', 'fid_thumb'])
+        return result

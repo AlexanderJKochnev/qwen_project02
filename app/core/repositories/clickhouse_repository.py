@@ -58,7 +58,8 @@ class ClickHouseRepository:
         # Добавляем версию если поле существует
         columns = list(data.keys())
         values = list(data.values())
-
+        events = Table(self.table_name)
+        
         query = f"""
             INSERT INTO {self.table_name} ({', '.join(columns)})
             VALUES ({', '.join(['%s'] * len(columns))})
@@ -128,13 +129,6 @@ class ClickHouseRepository:
         Args:
             id_field: Имя поля ID
             id_value: Значение ID
-        """
-
-        query = f"""
-            SELECT * FROM {self.table_name}
-            WHERE {id_field} = %(id)s
-            ORDER BY version DESC
-            LIMIT 1
         """
         events = Table(self.table_name)
         if fields:
