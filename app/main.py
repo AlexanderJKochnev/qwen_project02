@@ -103,8 +103,8 @@ async def lifespan(app: FastAPI):
     #  app.state.ch_client = global_ch_manager.client
     logger.success("✅ ClickHouse connected")
     # seaweed
-    await init_seaweed(master_url="")
-    logger.success("✅ Seaweed connected")
+    await init_seaweed(master_url="http://seaweedfs_master:9333")
+    logger.success('✅ Seaweed connected with url "http://seaweedfs_master:9333"')
     # global _embedding_service
     # _embedding_service = EmbeddingService()
     # logger.success("✅ Query model loaded (Static, CPU, 50MB)")
