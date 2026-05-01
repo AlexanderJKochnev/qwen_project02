@@ -85,8 +85,8 @@ def image_aligning(content: bytes, remove_bg: bool = True) -> tuple:
         thumb_data = thumb_io.getvalue()
         metadata['mime_type'], metadata['size_bytes'] = get_file_info(full_data)
         _, metadata['thumbnail_size_bytes'] = get_file_info(thumb_data)
-        from app.core.utils.common_utils import jprint
-        jprint(metadata)
+        # from app.core.utils.common_utils import jprint
+        # jprint(metadata)
         return full_data, thumb_data, metadata
 
     except Exception as e:

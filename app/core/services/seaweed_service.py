@@ -14,7 +14,6 @@
     update
 
 """
-from datetime import datetime, timezone
 from fastapi import Depends
 from app.core.utils.common_utils import get_random_string
 from app.core.utils.image_utils import image_aligning
@@ -43,6 +42,7 @@ class SeaweedsService:
             4. сохранение метаданных в clickhouse (fid thumbnail и full fid в одной записи)
             5. возврат fid
         """
+        from app.core.utils.common_utils import jprint
         # 1. обработка (удаление фона, уменьшение размера, создание thumbnail, получение метаданных)
         full_data, thumb_data, meta_data = image_aligning(content)
 
@@ -59,12 +59,18 @@ class SeaweedsService:
         meta['mime_type'] = meta_data['mime_type']
         meta['thumb_size_bytes'] = meta_data['thumbnail_size_bytes']
         meta['tags'] = tags
+        jprint(meta)
+        logger.warning(f'{type(full_data)=}')
         # 3. сохранение 2-х файлов в seaweed, получение 2-х FID
         fid = await self.fs.upload(full_data)
+        logger.warning(f'{fid=}')
+        logger.warning(f'{type(thumb_data)=}')
         fid_thumb = await self.fs.upload(thumb_data)
+        logger.warning(f'{fid_thumb=}')
         # 4. сохранение метаданных в clickhouse (fid thumbnail и full fid в одной записи)
         meta['fid'] = fid
         meta['fid_thumd'] = fid_thumb
+        jprint(meta)
         await self.click_repo.create(meta)
         # 5. результат {fid: str, url: str}
         result = {"fid": fid, "fir_thumb": fid_thumb}
