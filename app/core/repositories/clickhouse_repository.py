@@ -175,7 +175,7 @@ class ClickHouseRepository:
             LIMIT {limit}
             OFFSET {offset}
         """
-        logger('------------------------')
+        logger.warning('------------------------')
         print(query)
         result = await self.client.query(query)
         if result.row_count == 0:
