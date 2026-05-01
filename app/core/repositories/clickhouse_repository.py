@@ -58,7 +58,7 @@ class ClickHouseRepository:
         q = Query.into(events).columns(*columns).insert(*values)
         print(q.get_sql())
         logger.critical('-----------------')
-        await self.client.execute(q.get_sql())
+        await self.client.query(q.get_sql())
         return data
 
     async def bulk_insert(self, records: List[Dict[str, Any]]) -> int:
