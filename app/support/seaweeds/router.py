@@ -34,7 +34,7 @@ class SeaweedsRouter:
             openapi_extra={'x-request-schema': None}
         )
         self.router.add_api_route(
-            "/{id}", self.get_by_id, methods=["GET"],
+            "/{id}", self.get_by_fid, methods=["GET"],
             openapi_extra={'x-request-schema': None}
         )
         self.router.add_api_route(
@@ -86,7 +86,7 @@ class SeaweedsRouter:
         response = await service.get(page, page_size, order_by)
         return response
 
-    async def get_by_id(self, fid: str, service: SeaweedsService = Depends()):
+    async def get_by_fid(self, fid: str, service: SeaweedsService = Depends()):
         """
         получение изображения
         """
@@ -94,7 +94,17 @@ class SeaweedsRouter:
         headers = image_data.pop('headers')
         return ResponseStreaming(image_data, headers)
         # return StreamingResponse(**image_data)
-        
+
+    async def get_thumb_by_fid(self, fid: str, service: SeaweedsService = Depends()):
+        """
+        получение изображения
+        """
+        image_data: dict = await service.get_thumb_by_fid(fid)
+        headers = image_data.pop('headers')
+        return ResponseStreaming(image_data, headers)
+        # return StreamingResponse(**image_data)
+
+
 
     async def get_thumb(self, fid: str, service: SeaweedsService = Depends()):
         """

@@ -128,12 +128,31 @@ class SeaweedsService:
         result = {'content': content,
                   'media_type': 'image/png',
                   'headers': headers,
-                  'status_code': 200}
+                  'status_code': 200,
+                  "Content-Disposition": f"inline; filename={file_name}",
+                  "X-Image-Type": "none",
+                  "X-File-Size": str(len(content))
+                  }
         return result
 
     async def get_fid_thumb(self, fid: str) -> tuple:
         """
-             получение fid_thumb by fid
+            получение fid_thumb by fid
+            {
+                "fid": "4,08f358d709",
+                "fid_thumb": "1,09f5d17a2b"
+            }
         """
-        result = await self.click_repo.get_by_id('fid', fid, ['fid', 'fid_thumb'])
+        result: dict = await self.click_repo.get_by_id('fid', fid, ['fid', 'fid_thumb'])
+        return result
+
+    async def get_thumb_by_fid(self, fid: str) -> dict:
+        """
+        получение thumbnail
+        """
+        # 1. получение fid_thumb
+        result: dict = await self.click_repo.get_by_id('fid', fid, ['fid', 'fid_thumb'])
+        fid_thumb = result.get('fid_dict')
+        # 2. получение изображения
+        result = await self.get_image(fid_thumb)
         return result

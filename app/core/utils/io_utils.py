@@ -95,7 +95,7 @@ def ResponseStreaming(image_data: dict, headers: dict):
         BytesIO(image_data.get("content")),
         # media_type=image_data.get('content_type'),
         media_type='image/png',
-        # headers=headers
+        headers=headers
     )
 
 
@@ -105,5 +105,5 @@ def ResponseJust(image_data: dict, headers: dict):
     return Response(content=image_data["content"],
                     # media_type=image_data['content_type'],
                     media_type='image/png',
-                    # headers=headers
+                    headers=headers
                     )
