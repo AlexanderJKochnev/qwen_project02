@@ -165,7 +165,7 @@ class ClickHouseRepository:
             q.offset((page - 1) * limit)
         if order_by:
             q.orderby(order_by)
-        print(f'{q.get_sql}')
+        print(q.get_sql())
 
         order_clause = f"ORDER BY {order_by}" if order_by else ""
         offset = (page - 1) * limit
