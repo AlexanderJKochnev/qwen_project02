@@ -3,7 +3,7 @@ from fastapi import File, HTTPException, Query, UploadFile
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from loguru import logger
-
+from app.core.utils.io_utils import ResponseStreaming, ResponseJust
 from app.auth.dependencies import get_active_user_or_internal
 from app.core.services.seaweed_service import SeaweedsService
 
@@ -90,8 +90,11 @@ class SeaweedsRouter:
         """
         получение изображения
         """
-        image: dict = await service.get_image(fid)
-        return StreamingResponse(**image)
+        image_data: dict = await service.get_image(fid)
+        headers = image_data.pop('headers')
+        return ResponseStreaming(image_data, headers)
+        # return StreamingResponse(**image_data)
+        
 
     async def get_thumb(self, fid: str, service: SeaweedsService = Depends()):
         """
