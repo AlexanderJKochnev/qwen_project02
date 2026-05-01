@@ -69,7 +69,7 @@ class SeaweedsService:
         logger.warning(f'{fid_thumb=}')
         # 4. сохранение метаданных в clickhouse (fid thumbnail и full fid в одной записи)
         meta['fid'] = fid
-        meta['fid_thumd'] = fid_thumb
+        meta['fid_thumb'] = fid_thumb
         jprint(meta)
         await self.click_repo.create(meta)
         # 5. результат {fid: str, url: str}
