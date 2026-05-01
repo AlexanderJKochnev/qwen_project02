@@ -49,6 +49,10 @@ class SeaweedsRouter:
             "/thumb/{id}",
             self.get_thumb, methods=["GET"], openapi_extra={'x-request-schema': None}
         )
+        self.router.add_api_route(
+            "/thumb_image/{id}", self.get_thumb_by_fid, methods=["GET"],
+            openapi_extra={'x-request-schema': None}
+        )
 
     async def create_img(self,
                          description: str = Query(..., description='ключевые слова по которым можно найти '
@@ -103,7 +107,6 @@ class SeaweedsRouter:
         headers = image_data.pop('headers')
         return ResponseStreaming(image_data, headers)
         # return StreamingResponse(**image_data)
-
 
 
     async def get_thumb(self, fid: str, service: SeaweedsService = Depends()):
