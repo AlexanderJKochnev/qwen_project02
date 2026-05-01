@@ -5,7 +5,6 @@ from fastapi.responses import StreamingResponse
 from loguru import logger
 
 from app.auth.dependencies import get_active_user_or_internal
-from app.core.routers.base import LightRouter
 from app.core.services.seaweed_service import SeaweedsService
 
 """
@@ -54,12 +53,13 @@ class SeaweedsRouter:
     async def create_img(self,
                          description: str = Query(..., description='ключевые слова по которым можно найти '
                                                   'изображение'),
-                         table_name: str = Query(..., description='имя таблицы ддля которой предназанчено изображение'),
+                         table_name: str = Query(..., description='имя таблицы для которой '
+                                                                  'предназначено изображение. items/...'),
                          file: UploadFile = File(...),
                          service: SeaweedsService = Depends()):
         try:
             content = await file.read()
-            response: dict = await service.create_img(content, description)
+            response: dict = await service.create_img(content, description, table_name)
             return response
         except Exception as e:
             logger.error(e)
