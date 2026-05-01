@@ -65,3 +65,4 @@ model2vec>=0.1.0
 cityhash
 rembg[cpu, cli]
 cachetools
+pypika

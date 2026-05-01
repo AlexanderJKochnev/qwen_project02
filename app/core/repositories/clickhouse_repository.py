@@ -16,6 +16,8 @@
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 from clickhouse_connect.driver.asyncclient import AsyncClient
+from pypika import Table, Query, Order, functions as fn, CustomFunction
+from loguru import logger
 
 
 class ClickHouseRepository:
@@ -30,7 +32,7 @@ class ClickHouseRepository:
     - Очистку удаленных и старых версий
     """
 
-    def __init__(self, client: AsyncClient, table_name: str, soft_delete_field: str = 'deleted_at'):
+    def __init__(self, client: AsyncClient, table_name: str):
         """
         Args:
             client: ClickHouse async client
@@ -39,32 +41,21 @@ class ClickHouseRepository:
         """
         self.client = client
         self.table_name = table_name
-        self.soft_delete_field = soft_delete_field
 
     # ============================================================
     # CREATE
     # ============================================================
 
-    async def create(self, data: Dict[str, Any], version_field: str = 'version') -> Dict[str, Any]:
+    async def create(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Создание одной записи с поддержкой версионирования.
 
         Args:
             data: Словарь с данными для вставки
-            version_field: Имя поля версии
-
         Returns:
             Вставленные данные с добавленной версией
         """
         # Добавляем версию если поле существует
-        if version_field not in data:
-            data[version_field] = 1
-        else:
-            data[version_field] = int(data.get(version_field, 0)) + 1
-
-        # Убираем soft delete поле если оно было передано
-        data.pop(self.soft_delete_field, None)
-
         columns = list(data.keys())
         values = list(data.values())
 
@@ -73,7 +64,7 @@ class ClickHouseRepository:
             VALUES ({', '.join(['%s'] * len(columns))})
         """
 
-        await self.client.execute(query, values)
+        # await self.client.execute(query, values)
         return data
 
     async def bulk_insert(self, records: List[Dict[str, Any]], version_field: str = 'version') -> int:
@@ -151,29 +142,41 @@ class ClickHouseRepository:
 
     async def get(
             self,
-            order_by: Optional[str] = None, limit: int = 30, page: int = 1
+            order_by: Optional[str] = None, limit: int = 30, page: int = 1, fields: list = []
     ) -> List[Dict[str, Any]]:
         """
         Получение всех записей с фильтрацией и пагинацией.
-
         Args:
             filters: Словарь фильтров {поле: значение}
             include_deleted: Включать мягко удаленные записи
             order_by: Сортировка (например, 'created_at DESC')
             limit: Лимит записей
             offset: Смещение
+            fields - возвращаемые поля
         """
-        offset = limit * (page - 1)
-        # Пользовательские фильтры
-        order_clause = f"ORDER BY {order_by}" if order_by else ""
+        events = Table(self.table_name)
+        if fields:
+            q = Query.from_(events).select(*(events[k] for k in fields))
+        else:
+            q = Query.from_(events)
+        if limit:
+            q.limit(limit)
+        if page:
+            q.offset((page - 1) * limit)
+        if order_by:
+            q.orderby(order_by)
+        print(f'{q.get_sql}')
 
+        order_clause = f"ORDER BY {order_by}" if order_by else ""
+        offset = (page - 1) * limit
         query = f"""
             SELECT * FROM {self.table_name}
             {order_clause}
             LIMIT {limit}
             OFFSET {offset}
         """
-
+        logger('------------------------')
+        print(query)
         result = await self.client.query(query)
         if result.row_count == 0:
             return []
