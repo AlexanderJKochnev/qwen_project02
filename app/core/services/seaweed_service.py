@@ -152,7 +152,8 @@ class SeaweedsService:
         """
         # 1. получение fid_thumb
         result: dict = await self.click_repo.get_by_id('fid', fid, ['fid', 'fid_thumb'])
-        fid_thumb = result.get('fid_dict')
+        logger.warning(result)
+        fid_thumb = result.get('fid_thumb')
         # 2. получение изображения
         result = await self.get_image(fid_thumb)
         return result
