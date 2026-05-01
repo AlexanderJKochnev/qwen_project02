@@ -26,7 +26,7 @@ class SeaweedFSManager:
     def _format_url(self, url: str) -> str:
         return f"http://{url}" if not url.startswith('http') else url
 
-    @retry(stop=stop_after_attempt(3), wait=wait_exponential(0.5))
+    # @retry(stop=stop_after_attempt(3), wait=wait_exponential(0.5))
     async def assign(self) -> Tuple[str, str]:
         async with self._session.get(f"{self.master_url}/dir/assign") as r:
             data = await r.json()
