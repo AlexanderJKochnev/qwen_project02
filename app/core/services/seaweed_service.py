@@ -126,7 +126,7 @@ class SeaweedsService:
         headers = {"Content-Disposition": f"inline; filename={file_name}", "X-Image-Type": "none",
                    "X-File-Size": str(len(content))}
         result = {'content': content,
-                  'media-type': 'image/png',
+                  'media_type': 'image/png',
                   'headers': headers,
                   'status_code': 200}
         return result

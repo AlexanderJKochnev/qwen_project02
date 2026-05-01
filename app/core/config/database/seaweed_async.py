@@ -30,13 +30,11 @@ class SeaweedFSManager:
     async def assign(self) -> Tuple[str, str]:
         if not self._session:
             # Если здесь упадет — значит старт не был вызван!
-            logger.error("SESSION IS NONE! You forgot to call .start()")
             await self.start()
         url = f"{self.master_url}/dir/assign"
         try:
             async with self._session.get(url) as r:
                 data = await r.json()
-                logger.warning(f'seaweed_async.py assign {data}')
                 return data["fid"], self._format_url(data["url"])
         except aiohttp.ClientResponseError as e:
             # ТУТ БУДЕТ ОТВЕТ: 404, 406 или 500
@@ -48,9 +46,7 @@ class SeaweedFSManager:
 
     async def upload(self, file_data: bytes) -> str:
         """Create: Загрузка и возврат FID"""
-        logger.critical(f'seaweed_async.py {type(file_data)=}')
         fid, vol_url = await self.assign()
-        logger.critical(f'{fid=} {vol_url=}')
         async with self._session.post(f"{vol_url}/{fid}", data=file_data):
             return fid
 

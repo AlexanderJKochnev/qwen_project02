@@ -99,7 +99,7 @@ class ClickHouseRepository:
             VALUES ({', '.join(['%s'] * len(columns))})
         """
 
-        await self.client.execute(query, values)
+        await self.client.query(query, values)
         return len(prepared_records)
 
     # ============================================================
