@@ -176,8 +176,8 @@ class ClickHouseRepository:
             OFFSET {offset}
         """
         logger.warning('------------------------')
-        print(query)
-        result = await self.client.query(query)
+        logger.warning(query)
+        result = await self.client.query(q)
         if result.row_count == 0:
             return []
         data: List[dict] = [dict(zip(result.column_names, row)) for row in result.result_rows]

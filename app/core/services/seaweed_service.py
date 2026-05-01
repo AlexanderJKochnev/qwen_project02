@@ -14,7 +14,6 @@
     update
 
 """
-from typing import Dict, Any
 from datetime import datetime, timezone
 from fastapi import Depends
 from app.core.utils.common_utils import get_random_string
@@ -23,7 +22,7 @@ from app.core.config.database.seaweed_async import SeaweedFSManager, get_swfs
 from app.core.hash_norm import tokenize
 from app.core.repositories.seaweed_repository import SeaweedRepository
 from app.dependencies import ClickHouseRepositoryFactory, get_clickhouse_repository_factory
-from loguru import logger
+from loguru import logger  # NOQA: F401
 
 
 class SeaweedsService:
@@ -32,7 +31,7 @@ class SeaweedsService:
                  ):
         self.fs = fs
         self.click_repo = click_repo_factory.for_table('images_metadata')
-        logger.warning(f"DEBUG: repo.client type = {type(self.click_repo.client)}")  # Должно быть AsyncClient
+        # logger.warning(f"DEBUG: repo.client type = {type(self.click_repo.client)}")  # Должно быть AsyncClient
         self.seaweed_repo = SeaweedRepository
 
     async def create_img(self, content: bytes, description: str, table: str) -> dict:
