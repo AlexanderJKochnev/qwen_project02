@@ -513,12 +513,14 @@ class ItemService(Service):
         # Для простоты считаем все слова полными + ищем префиксы для последнего
         search_hashes = [get_cached_hash(t) for t in tokens]
         last_word_prefixes = await repo.get_hashes_by_prefix(session, tokens[-1])
+        # список хэшей в запросе
         all_target_hashes = list(set(search_hashes) | set(last_word_prefixes))
 
         # 2. Получаем статистику частотности для весов
         stats_stmt = select(WordHash.hash, WordHash.freq).where(WordHash.hash.in_(all_target_hashes))
         stats_res = await session.execute(stats_stmt)
-        word_stats = [{"hash": r[0], "freq": r[1]} for r in stats_res.all()]
-
+        # [{hash: frew}...]
+        # word_stats = [{"hash": r[0], "freq": r[1]} for r in stats_res.all()]
+        word_stats = [(r[0], r[1]) for r in stats_res.all()]
         # 3. Финальный поиск
         return await repo.find_items_weighted_v2(session, word_stats, boost, limit)

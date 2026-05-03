@@ -34,6 +34,7 @@ class ItemRepository(Repository):
 
     @classmethod
     def get_query(cls, model: ModelType):
+        """ создание запроса со связанными полями """
         excl = exclude_field_list(Item, ('search_vector', 'drink', 'search_content', 'word_hashes'))
         subquery = DrinkRepository.get_selectin()
         query = select(Item).options(load_only(*excl), selectinload(Item.drink).options(*subquery))
@@ -363,7 +364,7 @@ class ItemRepository(Repository):
     ) -> List[dict]:
         """
             поиск по хэш индексу с учетом частотности слов
-            word_stats:
+            word_stats:  [{hash: val, freq: val}, ...]
             boost: коэффициент редкости - чем выше тем значимее редкое слово в ранжировании
             limit:
         """
@@ -376,7 +377,8 @@ class ItemRepository(Repository):
         hashes_list = []
         # вычисление скоринга
         for item in word_stats:
-            h, freq = item['hash'], item['freq']
+            # h, freq = item['hash'], item['freq']
+            h, freq = item
             weight = (1.0 / math.log(freq + 1.5)) * boost
             # CASE проверяет вхождение каждого хеша из запроса в массив word_hashes записи
             case_parts.append(f"CASE WHEN word_hashes @> ARRAY[{h}::bigint] THEN {weight:.4f} ELSE 0 END")
