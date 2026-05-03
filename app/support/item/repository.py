@@ -359,7 +359,7 @@ class ItemRepository(Repository):
     @classmethod
     async def find_items_weighted_v2(
             cls,
-            session: AsyncSession, word_stats: list[dict],  # [{'hash': int, 'freq': int}]
+            session: AsyncSession, word_stats: list[tuple],  # [{'hash': int, 'freq': int}]
             boost: float = 10.0, limit: int = 15
     ) -> List[dict]:
         """
@@ -394,7 +394,7 @@ class ItemRepository(Repository):
 
     @classmethod
     async def find_items_keyset(cls,
-                                session: AsyncSession, word_stats: list[dict], last_score: float = None,
+                                session: AsyncSession, word_stats: list[tuple], last_score: float = None,
                                 last_id: int = None,
                                 limit: int = 15, boost: float = 15.0
                                 ):
@@ -406,10 +406,11 @@ class ItemRepository(Repository):
 
         # Формируем веса для CASE
         case_parts = [
-            f"CASE WHEN word_hashes @> ARRAY[{d['hash']}::bigint] THEN {(1.0 / math.log(d['freq'] + 1.5)) * boost:.4f} ELSE 0 END"
+            (f"CASE WHEN word_hashes @> ARRAY[{d[0]}::bigint] THEN {(1.0 / math.log(d[1] + 1.5)) * boost:.4f} "
+             f"ELSE 0 END")
             for d in word_stats]
         score_sql = f"({' + '.join(case_parts)})"
-        hashes_list = [d['hash'] for d in word_stats]
+        hashes_list = [d[0] for d in word_stats]
 
         # Базовый запрос
         stmt = select(Item, text(f"{score_sql} AS score")).where(Item.word_hashes.overlap(hashes_list))
