@@ -65,16 +65,20 @@
 18. открывем порты:
     1. ufw allow 80/tcp 
     2. ufw allow 443/tcp
-19. УСТАНОВКА ДРАЙВЕРОВ НА nvidia rtx3060
+19. ## для выполнения устновки ДРАЙВЕРОВ НА nvidia rtx3060 Включите non-free репозитории
+    # Скачиваем и устанавливаем пакет с ключом репозитория
+    wget https://developer.download.nvidia.com/compute/cuda/repos/debian12/x86_64/cuda-keyring_1.1-1_all.deb
+    sudo dpkg -i cuda-keyring_1.1-1_all.deb
+20. УСТАНОВКА ДРАЙВЕРОВ НА nvidia rtx3060
     1. cat /etc/apt/sources.list | grep -E "deb.*trixie"
-    2. uname -r
+    2. uname -r  # 6.12.73+deb13-amd64
     3. sudo apt install linux-headers-$(uname -r) build-essential
     4. sudo apt install --reinstall nvidia-driver nvidia-kernel-dkms
     5. sudo modprobe nvidia
     6. lsmod | grep nvidia
     7. nvidia-smi
-20. ПРЕДОСТАЛВЕНИЕ ПРАВ НА ЗАПИСЬ / ЧТЕНИЕ ДИРЕКТОРИИ
-21. commands информация о железе
+21. ПРЕДОСТАЛВЕНИЕ ПРАВ НА ЗАПИСЬ / ЧТЕНИЕ ДИРЕКТОРИИ
+22. commands информация о железе
     1. sudo dmidecode -s baseboard-product-name
     2. sudo dmidecode -t baseboard
     3. sudo inxi -M

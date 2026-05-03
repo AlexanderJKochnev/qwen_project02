@@ -50,6 +50,6 @@ echo "Синхронизация изменений..."
 rsync -rc --inplace "$NOCOW_DIR/" "$COW_DIR/"
 rsync -rc --inplace "$SEAWEED_BACKUP_DIR/" "$COW_DIR/"
 
-rm -rf "$NOCOW_TMP"/*
+# ЭТО НЕ ЗАПУСКАТЬ НИКОГДА !!!!!!!!! rm -rf "$NOCOW_TMP"/*
 
 echo "Готово. Актуальные дампы лежат в $COW_DIR"

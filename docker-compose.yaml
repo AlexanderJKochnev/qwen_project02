@@ -1,0 +1,323 @@
+# docker-compose.xeon.yaml - основной файл для запуска и тест и prod
+services:
+  wine_host: # this is the name of the service and name of the host (POSTGRES_HOST)
+    logging:
+      driver: ${LOGGER_DRIVER}
+      options:
+        max-size: ${MAX_SIZE}
+        max-file: ${MAX_FILE}
+    restart: unless-stopped
+    image: postgres:local
+    # image: postgres:17-alpine # based on this image
+    # image: ghcr.io/alexanderjkochnev/postgres:17-alpine
+    command: >
+      postgres
+      -c shared_buffers=16GB
+      -c effective_cache_size=48GB
+      -c maintenance_work_mem=2GB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c work_mem=32MB
+      -c min_wal_size=1GB
+      -c max_wal_size=8GB
+      -c max_worker_processes=14
+      -c max_parallel_workers_per_gather=2
+      -c max_connections=400
+      -c wal_level=logical
+      -c max_replication_slots=5
+      -c max_wal_senders=5
+      -c statement_timeout='300s'
+      -c idle_in_transaction_session_timeout='60s'
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      # POSTGRES_LOG_MIN_MESSAGES: warning
+      # POSTGRES_LOG_REPLICATION_COMMANDS: "off"
+      # POSTGRES_LOG_STATEMENT: "none"
+    expose:
+      - "${POSTGRES_PORT}"
+    volumes:
+      - ${BIND_VOLUMES}/${COMPOSE_PROJECT_NAME}_pg_data:/var/lib/postgresql/data
+      # - ./pg_data:/var/lib/postgresql/data
+      # - ./pg_dump:/tmp
+    healthcheck:
+      test: |
+        sh -c 'pg_isready -h localhost -p ${POSTGRES_PORT} -U ${POSTGRES_USER} -d ${POSTGRES_DB}'
+      # минимальная конфигурация для того что бы не было проблем с role root doesnnot exists
+      interval: 10s # 1m30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+      start_interval: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: '8'
+          memory: ${POSTGRES_MEM_LIMIT}
+        reservations:
+          cpus: '2'
+          memory: ${POSTGRES_MEM_RESERVATION}
+    networks:
+      postgres_network:
+        ipv4_address: ${IP_POSTGRES}
+      clickhousepg_network:
+      
+  
+  app:
+    logging:
+      driver: ${LOGGER_DRIVER}
+      options:
+        max-size: ${MAX_SIZE}
+        max-file: ${MAX_FILE}
+    build: .
+    restart: unless-stopped
+    # command: uvicorn app.main:app --host 0.0.0.0 --port ${API_PORT} --loop auto --workers ${APP_WORKERS} --backlog 2048
+    command: uvicorn app.main:app --host 0.0.0.0 --port ${API_PORT} --reload
+    depends_on:
+      pgbouncer:
+        condition: service_healthy
+      wine_host:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    expose:
+      - ${API_PORT}
+    environment:
+      POSTGRES_HOST: ${PGBOUNCER_CONTAINER_NAME}
+      WEB_PORT: 6432
+      WEB_HOST: pgbouncer
+      BASE_URL: ${BASE_URL}
+      SEARXNG_URL: "http://searxng:8080"
+      # OLLAMA_HOST: "http://ollama:11434"
+      # REDIS_HOST: redis
+      CH_HOST: clickhouse
+      CH_PORT: 8123
+    volumes:
+      - ${BIND_VOLUMES}/${COMPOSE_PROJECT_NAME}_templates:/app/templates
+      - ${BIND_VOLUMES}/${COMPOSE_PROJECT_NAME}_migration_volume:/app/app/migration/versions
+      - ${BIND_VOLUMES}/${COMPOSE_PROJECT_NAME}_upload_volume:/app/upload_volume
+      # CSV файлы
+      - ${BIND_VOLUMES}/distill/models:/app/models
+      - ${BIND_VOLUMES}/distill/onnx:/app/onnx
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    extra_hosts:
+      # - "redis:${IP_REDIS}"
+      # - "searxng:${IP_SEARXNG}"
+      # - "ollama:${IP_OLLAMA}"
+      - "postgres:${IP_POSTGRES}"
+    deploy:
+      resources:
+        limits:
+          cpus: '${APP_CPU_LIMIT}'
+          memory: '${APP_MEM_LIMIT}'
+        reservations:
+          cpus: '${APP_CPU_RESERVATION}'
+          memory: '${APP_MEM_RESERVATION}'
+    networks:
+      # - postgres_network  # расскомментировать для теста
+      - pgbouncer_network # Для связи с pgbouncer
+      # - redis_network    # Для связи с redis
+      # - ollama_network
+      # - searxng_network
+      - mongodb_network
+      - preact_network
+      - nginx_gateway_shared_network
+      - vllm_network
+      - clickhouse_network
+
+  mongo:
+    logging:
+      driver: ${LOGGER_DRIVER}
+      options:
+        max-size: ${MAX_SIZE}
+        max-file: ${MAX_FILE}
+    image: mongo:local
+    # image: ghcr.io/alexanderjkochnev/mongo:4.4.20
+    hostname: ${MONGO_HOSTNAME}
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+      MONGO_INITDB_DATABASE: admin
+    expose:
+      - "${MONGO_INN_PORT}"
+    volumes:
+      - ${BIND_VOLUMES}/${COMPOSE_PROJECT_NAME}_mongodb_data:/data/db
+      - ${BIND_VOLUMES}/${COMPOSE_PROJECT_NAME}_mongo/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    command: >
+      mongod
+      --bind_ip_all
+      --wiredTigerCacheSizeGB 4
+      --storageEngine wiredTiger
+      --journalCommitInterval 500
+      --syncdelay 300
+      --nojournal
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo localhost:${MONGO_INN_PORT}/admin --quiet --username admin --password admin
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 8G
+        reservations:
+          cpus: '1'
+          memory: 2G
+    networks:
+      mongodb_network:
+        # ipv4_address: ${IP_MONGO}
+
+  preact_front:
+    logging:
+      driver: ${LOGGER_DRIVER}
+      options:
+        max-size: ${MAX_SIZE}
+        max-file: ${MAX_FILE}
+    build:
+      context: ./preact_front          # путь к папке с Preact
+      dockerfile: Dockerfile           # имя Dockerfile внутри ./preact_front
+    volumes:
+      - ./preact_front/src:/app/src
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=${VITE_API_URL}  # Используется при старте
+    env_file:
+      - .env
+    expose:
+      - "80"
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_started
+    networks:
+      preact_network:
+        ipv4_address: ${IP_PREACT}
+      nginx_gateway_shared_network:
+  
+  pgbouncer:
+    logging:
+      driver: ${LOGGER_DRIVER}
+      options:
+        max-size: ${MAX_SIZE}
+        max-file: ${MAX_FILE}
+    # image: edoburu/pgbouncer:latest
+    image: pgbouncer:local
+    environment:
+      DB_HOST: ${IP_POSTGRES}
+      DB_PORT: 5432
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB}
+      AUTH_TYPE: scram-sha-256
+      # POOL_MODE: session
+      POOL_MODE: transaction
+      SERVER_RESET_QUERY: DISCARD ALL
+      SERVER_CHECK_QUERY: select 1
+      MAX_CLIENT_CONN: 500
+      SERVER_IDLE_TIMEOUT: 60
+      QUERY_TIMEOUT: 300
+      DEFAULT_POOL_SIZE: 40
+      MIN_POOL_SIZE: 10
+      RESERVE_POOL_SIZE: 5
+      LISTEN_PORT: 6432
+      ADMIN_USERS: wine
+      # ВАЖНО: Явно создаем userlist через переменные
+      AUTH_FILE: /etc/pgbouncer/userlist.txt
+      # Дополнительные пользователи (если нужны)
+      USERS: "${POSTGRES_USER} ${POSTGRES_PASSWORD}"
+    expose:
+      - "6432"  # Порт для приложения
+    restart: unless-stopped
+    healthcheck:
+      # Официальный способ проверки pgbouncer (внутри образа есть psql-client)
+      test: ["CMD", "pg_isready", "-h", "localhost", "-p", "6432", "-U", "${POSTGRES_USER}", "-d", "wine_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      wine_host:
+        condition: service_healthy
+    deploy:
+      replicas: ${PGBOUNCER_REPLICAS}
+      resources:
+        limits:
+          cpus: '0.75'
+          memory: 256M
+    networks:
+      postgres_network:
+      pgbouncer_network:
+        # ipv4_address: ${IP_PGBOUNCER}
+      
+
+volumes:
+  migration_volume: # alembic migrations
+  pg_data: # postgresql data
+  pg_dump: # postgres dump/restore
+  mongodb_data:
+  upload_volume:
+  # certs_data:
+  # certbot_www:
+
+networks:
+  postgres_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${SUBNET_POSTGRES}
+  pgbouncer_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${SUBNET_PGBOUNCER}
+  mongodb_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${SUBNET_MONGO}
+  preact_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${SUBNET_PREACT}
+  nginx_gateway_shared_network:
+    driver: bridge
+    external: true
+  # ollama_network:
+  #   driver: bridge
+  #   external: true
+  #   name: ollama_ollama_network
+  # redis_network:
+  #   driver: bridge
+  #   external: true
+  #  name: ollama_redis_network
+  # searxng_network:
+  #   driver: bridge
+  #   external: true
+  #   name: ollama_searxng_network
+  vllm_network:
+    name: vllm_network
+    driver: bridge
+    external: true
+  clickhouse_network:
+    name: clickhouse_network
+    driver: bridge
+    external: true
+  clickhousepg_network:
+    name: clickhousepg_network
+    driver: bridge
+    external: true
