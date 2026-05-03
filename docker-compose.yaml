@@ -1,4 +1,4 @@
-# docker-compose.xeon.yaml - основной файл для запуска и тест и prod
+# docker-compose.yaml - основной файл для запуска и тест и prod
 services:
   wine_host: # this is the name of the service and name of the host (POSTGRES_HOST)
     logging:
@@ -100,9 +100,10 @@ services:
       - ${BIND_VOLUMES}/${COMPOSE_PROJECT_NAME}_templates:/app/templates
       - ${BIND_VOLUMES}/${COMPOSE_PROJECT_NAME}_migration_volume:/app/app/migration/versions
       - ${BIND_VOLUMES}/${COMPOSE_PROJECT_NAME}_upload_volume:/app/upload_volume
-      # CSV файлы
-      - ${BIND_VOLUMES}/distill/models:/app/models
-      - ${BIND_VOLUMES}/distill/onnx:/app/onnx
+      # llm models
+      # - ${BIND_VOLUMES}/distill/models:/app/models
+      # - ${BIND_VOLUMES}/distill/onnx:/app/onnx
+      - ./onnx:/app/onnx
     ulimits:
       nofile:
         soft: 65535
