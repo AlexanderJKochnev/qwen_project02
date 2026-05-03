@@ -241,16 +241,37 @@ class ApiRouter(ItemRouter):
                                search: str = Query(None, description="Поисковый запрос"
                                                    ),
                                session: AsyncSession = Depends(get_db),
-                               boost: float = Query(15, description="Премия за редкие слова"
-                                                    ),
-                               limit: int = 20):
+                               # boost: float = Query(15, description="Премия за редкие слова"
+                               #                      ),
+                               # limit: int = 20
+                               ):
         """
             поисковый запрос по хэш индексу
         """
         try:
+            boost = 15
+            limit = 20
             service = ApiService
             # repository = ItemRepository
             response = await service.execute_smart_search(search, session, boost, limit)
             return orresponse(response)
         except Exception as e:
             raise HTTPException(status_code=500, detail=f'{e}')
+
+        async def smart_search_all_with_boost(
+                self, search: str = Query(
+                    None, description="Поисковый запрос"
+                ), session: AsyncSession = Depends(get_db), boost: float = Query(
+                    15, description="Премия за редкие слова"
+                ), limit: int = 20
+        ):
+            """
+                поисковый запрос по хэш индексу
+            """
+            try:
+                service = ApiService
+                # repository = ItemRepository
+                response = await service.execute_smart_search(search, session, boost, limit)
+                return orresponse(response)
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f'{e}')
