@@ -30,7 +30,7 @@ ENV PATH="/root/.local/bin:$PATH"
 
 RUN mkdir -p /root/.u2net/
 # Копируем модель для удаоения фона, где его ищет rembg по умолчанию
-COPY u2net.onnx /root/.u2net/u2net.onnx
+COPY /onnx/u2net.onnx /root/.u2net/u2net.onnx
 
 # Копируем ваш код приложения и конфигурационные файлы
 COPY ./app ./app
