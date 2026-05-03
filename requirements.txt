@@ -31,8 +31,8 @@ python-dateutil~=2.9.0.post0
 ijson~=3.4.0.post0
 # morphology
 setuptools<81
-pymorphy2~=0.9.1
-pymorphy2-dicts-ru
+# pymorphy2~=0.9.1
+# pymorphy2-dicts-ru
 deepdiff~=8.6.1
 # loger loguru
 loguru

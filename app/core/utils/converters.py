@@ -2,7 +2,6 @@
 import re
 from copy import deepcopy
 from typing import Any, Dict, List, Union
-from app.core.utils.morphology import to_nominative
 import ijson
 from pydantic import ValidationError
 from fastapi import Response, HTTPException
@@ -172,8 +171,6 @@ def get_pairing(drink_dict: dict, language_key: dict,
             err = f'1: {foods=}'
             foods = split_outside_parentheses_multi(foods)
             err = f'2: {foods=}'
-            if lang == '_ru':
-                foods = [to_nominative(food) for food in foods]
             foods = [food.capitalize() if food else food for food in foods]
             err = f'3: {foods=}'
             if foods:
