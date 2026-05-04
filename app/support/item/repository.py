@@ -479,7 +479,7 @@ class ItemRepository(Repository):
                     ),
                     filtered_items AS (
                         SELECT * FROM scored_items
-                        WHERE (:ls IS NULL OR (
+                        WHERE (CAST(:ls AS numeric) IS NULL OR (
                             -- При score=1 пагинация идет чисто по ID
                             score < CAST(:ls AS numeric) OR
                             (score = CAST(:ls AS numeric) AND id <= CAST(:li AS bigint))
@@ -513,7 +513,7 @@ class ItemRepository(Repository):
                     ),
                     filtered_items AS (
                         SELECT * FROM scored_items
-                        WHERE (:ls IS NULL OR (
+                        WHERE (CAST(:ls AS numeric) IS NULL OR (
                             score < CAST(:ls AS numeric) OR
                             (score = CAST(:ls AS numeric) AND id <= CAST(:li AS bigint))
                         ))
