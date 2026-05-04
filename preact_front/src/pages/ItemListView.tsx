@@ -31,7 +31,7 @@ export const ItemListView = () => {
 
   // ЗАПРОС К SMART_SEARCH
   const { data, loading, error, refetch } = useApi<PaginatedResponse<ItemRead>>(
-    `/items/search_smart_page/${language}`,
+    `/search_smart_page/${language}`,
     'GET',
     undefined,
     { query: searchQuery, last_score: cursor.score, last_id: cursor.id, limit: pageSize }
