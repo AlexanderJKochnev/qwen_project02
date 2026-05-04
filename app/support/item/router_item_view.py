@@ -255,9 +255,11 @@ class ItemViewRouter:
                                   search_str: str = Query(
                                       None, description="Поисковый запрос "
                                       "(при отсутствии значения - выдает все записи)"),
+                                  last_score: Optional[Union[Decimal, str, float]] = Query(None,
+                                                                                           description='similarity '
+                                                                                                       'rate'),
+                                  last_id: Optional[int] = Query(None, description='last id (for preact)'),
                                   session: AsyncSession = Depends(get_db),
-                                  last_score: Optional[Union[Decimal, str, float]] = Query(),
-                                  last_id: Optional[int] = None,
                                   limit: int = Query(20, description='количество записей на страницу'),
                                   boost: float = Query(15.0, description="Премия за редкое слово "
                                                        "(записи с редким словом из запроса попадают наверх выборки)"
