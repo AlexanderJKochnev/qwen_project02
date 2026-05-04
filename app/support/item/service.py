@@ -547,8 +547,7 @@ class ItemService(Service):
             all_target_hashes = list(set(search_hashes) | set(last_word_prefixes))
         # 3. Финальный поиск
         # возвращает список instances первой/запрошенной страницы и список якорей
-        
-        
+
         items, anchors = await repo.find_items_smart_page(session,
                                                           all_target_hashes,
                                                           last_score,
@@ -558,4 +557,4 @@ class ItemService(Service):
         logger.warning(f'{language}')
         result = [transform_list_view(item, tuple(language)) for item in items]
         logger.warning('result')
-        return result, anchors
+        return {'items': result, 'anchors': anchors}
