@@ -97,8 +97,8 @@ class ItemViewRouter:
         # Маршрут для поиска элементов с использованием fts индекса
         self.router.add_api_route(
             "/search_trigram/{lang}",  # путь не менять - используется preact
-            # self.search_by_geans_items,
-            self.search_smart_keyset,
+            self.search_by_geans_items,
+            # self.search_smart_keyset,
             methods=["GET"],
             # response_model=PaginatedResponse[ItemListView],
             tags=self.tags,
@@ -217,8 +217,6 @@ class ItemViewRouter:
                                                                         description=("Толерантность поиска")),
                                     session: AsyncSession = Depends(get_db)):
         """ новый поиск вместо триграмного  индекса ONLY FOR ITEMS_PREACT        """
-        # result = await self.service.search_by_trigram_index(search_str, lang, ItemRepository,
-        #                                                     Item, session, page, page_size)
         result = await self.service.search_geans_items(lang, search_str, similarity_thershold,
                                                        page, page_size, ItemRepository,
                                                        Item, session)
