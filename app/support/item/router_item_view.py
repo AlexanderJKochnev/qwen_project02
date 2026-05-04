@@ -4,7 +4,8 @@
     выводит плоские словари с локализованными полями
     по языкам
 """
-from typing import List, Annotated, Callable
+from decimal import Decimal
+from typing import List, Annotated, Callable, Optional, Union
 from fastapi import Depends, Path, Query, HTTPException, BackgroundTasks, Form, UploadFile, File
 import json
 from pydantic import ValidationError
@@ -103,10 +104,20 @@ class ItemViewRouter:
             summary="Поиск элементов по fts index",
             openapi_extra={'x-request-schema': None}
         )
-        # Маршрут для поиска элементов с использованием fts индекса
+        # Маршрут для поиска элементов с использованием хэш индекса
         self.router.add_api_route(
             "/search_smart",
             self.search_smart,
+            methods=["GET"],
+            # response_model=PaginatedResponse[ItemListView],
+            tags=self.tags,
+            summary="Поиск элементов по hash index + word..",
+            openapi_extra={'x-request-schema': None}
+        )
+        # Маршрут для поиска элементов с использованием хэш индекса
+        self.router.add_api_route(
+            "/search_smart",
+            self.search_smart_keyset,
             methods=["GET"],
             # response_model=PaginatedResponse[ItemListView],
             tags=self.tags,
@@ -223,7 +234,6 @@ class ItemViewRouter:
         return {'result': True}
 
     async def search_smart(self,
-                           # lang: str = Path(..., description="Язык локализации"),
                            search_str: str = Query(
                                None, description="Поисковый запрос "
                                "(при отсутствии значения - выдает все записи)"),
@@ -241,18 +251,21 @@ class ItemViewRouter:
         return orresponse(result)
 
     async def search_smart_keyset(self,
-                                  # lang: str = Path(..., description="Язык локализации"),
+                                  # lang (добавить потом что бы не качать все языки сразу)
                                   search_str: str = Query(
                                       None, description="Поисковый запрос "
                                       "(при отсутствии значения - выдает все записи)"),
-                                  page: int = Query(1, ge=1, description="Номер страницы"),
-                                  page_size: int = Query(15, ge=1, le=100, description="Размер страницы"),
-                                  session: AsyncSession = Depends(get_db)):
+                                  session: AsyncSession = Depends(get_db),
+                                  last_score: Optional[Union[Decimal, str, float]] = Query(),
+                                  last_id: Optional[int] = None,
+                                  limit: int = Query(20, description='количество записей на страницу'),
+                                  boost: float = Query(15.0, description="Премия за редкое слово "
+                                                       "(записи с редким словом из запроса попадают наверх выборки)"
+                                                       ),
+                                  ):
         """ поиск по хэшам вместо триграмного  индекса ONLY FOR ITEMS_PREACT        """
-        # result = await self.service.search_by_trigram_index(search_str, lang, ItemRepository,
-        #                                                     Item, session, page, page_size)
 
-        result = await self.search_smart_keyset(search_str, page, page_size, session)
+        result = await self.service.execute_smart_search_page(search_str, session, boost, limit, last_score, last_id)
         return result
 
     async def update_item_drinS(self,
@@ -285,7 +298,7 @@ class ItemViewRouter:
                     # jprint(image_dict)
                     data_dict['image_id'] = image_dict.get('id')
                     # data_dict['image_path'] = image_dict.get('filename')
-                item_drink_data = ItemUpdatePreact(**data_dict)
+            item_drink_data = ItemUpdatePreact(**data_dict)
             result = await self.service.update_item_drink(id, item_drink_data,
                                                           ItemRepository, Item, background_tasks,
                                                           session)

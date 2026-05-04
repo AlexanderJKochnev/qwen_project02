@@ -1,5 +1,5 @@
 # app/core/utils/morphology.py
-import re
+#  НЕ ИСПОЛЬЗУЕТСЯ !!!
 
 # Совместимость pymorphy2 с Python 3.11+
 import inspect

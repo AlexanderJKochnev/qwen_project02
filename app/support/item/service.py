@@ -1,8 +1,8 @@
 # app.support.item.service.py
 import asyncio
 from functools import reduce
-from typing import Any, Dict, List, Optional, Type, Union
-
+from typing import Any, Dict, List, Optional, Tuple, Type, Union
+from decimal import Decimal
 from deepdiff import DeepDiff
 # from sqlalchemy.sql.elements import Label
 from fastapi import BackgroundTasks, HTTPException
@@ -428,7 +428,7 @@ class ItemService(Service):
     async def search_geans_items(cls, lang: str, search: str, similarity_threshold: float,
                                  page: int, page_size: int,
                                  repository: Type[Repository], model: Type[Item], session: AsyncSession) -> List[dict]:
-        """ новый поиск вместо триграмного  индекса ONLY FOR ITEMS_PREACT """
+        """ fts поиск вместо триграмного  индекса ONLY FOR ITEMS_PREACT заменить на хэш поиск"""
         try:
             # значение similarity_thresholfd настраивается в .env
             # similarity_threshold = similarity_threshold or settings.SIMILARITY_THRESHOLD
@@ -524,3 +524,25 @@ class ItemService(Service):
         word_stats = [(r[0], r[1]) for r in stats_res.all()]
         # 3. Финальный поиск
         return await repo.find_items_weighted_v2(session, word_stats, boost, limit)
+
+    @staticmethod
+    async def execute_smart_search_page(query: str, session: AsyncSession,
+                                        # lang (добавить потом что бы не качать все языки сразу)
+                                        boost: float = 15.0, limit: int = 20,
+                                        last_score: Optional[Union[Decimal, str, float]] = None,
+                                        last_id: Optional[int] = None,
+                                        ) -> Tuple[List[dict], List[dict]] | None:
+        # 1. Токенизация и сбор хешей (включая префикс последнего слова)
+        repo = ItemRepository
+        tokens = tokenize(query)
+        if not tokens:
+            return None
+
+        # Для простоты считаем все слова полными + ищем префиксы для последнего
+        search_hashes = [get_cached_hash(t) for t in tokens]
+        last_word_prefixes = await repo.get_hashes_by_prefix(session, tokens[-1])
+        # список хэшей в запросе
+        all_target_hashes = list(set(search_hashes) | set(last_word_prefixes))
+
+        # 3. Финальный поиск
+        return await repo.find_items_smart_page(session, all_target_hashes, last_score, last_id, boost, limit)

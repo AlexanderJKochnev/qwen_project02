@@ -1,5 +1,6 @@
 # app/support/Item/repository.py
 import math
+from decimal import Decimal
 from typing import List, Optional, Tuple, Type, Union
 from sqlalchemy import func, literal_column, or_, select, Select, desc, text, and_
 # from sqlalchemy.dialects.postgresql import ARRAY, BIGINT
@@ -442,6 +443,83 @@ class ItemRepository(Repository):
         ).limit(limit))
         res = await session.execute(stmt)
         return res.scalars().all()
+
+    @classmethod
+    async def find_items_smart_page(
+            cls, session: AsyncSession, all_target_hashes: List[int],
+            last_score: Optional[Union[Decimal, str, float]] = None,
+            last_id: Optional[int] = None, boost: float = 15.0, limit: int = 20, jump_pages: int = 5
+    ) -> Tuple[List[dict], List[dict]]:
+        """
+        Универсальный поиск:
+        1. Считает веса слов внутри БД.
+        2. Реализует Keyset пагинацию (стабильно даже при коллизиях float).
+        3. Возвращает данные текущей страницы + якоря для быстрых прыжков.
+        """
+
+        # total_needed = записи для текущей страницы + 5 якорей для будущих страниц
+        total_needed = (limit * jump_pages) + 1
+        # float не точное число
+        ls_param = Decimal(str(last_score)) if last_score is not None else None
+        query_sql = text(
+            """
+                WITH weights AS (
+                    -- Считаем веса один раз
+                    SELECT hash,
+                           ((1.0 / log(freq + 1.5)) * :boost) as weight
+                    FROM word_hashes
+                    WHERE hash = ANY(:hashes)
+                ),
+                scored_items AS (
+                    -- Считаем score с принудительным округлением до 8 знаков
+                    SELECT i.*,
+                           ROUND((
+                               SELECT SUM(w.weight)
+                               FROM weights w
+                               WHERE i.word_hashes @> ARRAY[w.hash]
+                           )::numeric, 8) as score
+                    FROM items i
+                    WHERE i.word_hashes && :hashes
+                ),
+                filtered_items AS (
+                    -- Применяем Keyset фильтрацию
+                    SELECT *
+                    FROM scored_items
+                    WHERE (:ls IS NULL OR (
+                        score < :ls OR (score = :ls AND id < :li)
+                    ))
+                ),
+                ranked_items AS (
+                    -- Нумеруем строки, чтобы найти границы страниц (якоря)
+                    SELECT *,
+                           row_number() OVER (ORDER BY score DESC, id DESC) as rn
+                    FROM filtered_items
+                    ORDER BY score DESC, id DESC
+                    LIMIT :total_needed
+                )
+                -- Берем данные 1-й страницы
+                SELECT * FROM ranked_items WHERE rn <= :limit
+                UNION ALL
+                -- Берем только первую строку каждой последующей страницы как "якорь"
+                SELECT * FROM ranked_items WHERE rn % :limit = 1 AND rn > 1
+                ORDER BY score DESC, id DESC
+            """
+        )
+
+        params = {"hashes": all_target_hashes, "boost": boost, "limit": limit, "total_needed": total_needed,
+                  "ls": ls_param, "li": last_id}
+
+        result = await session.execute(query_sql, params)
+        rows = result.mappings().all()
+        # Текущая пачка данных
+        items = [dict(r) for r in rows if r['rn'] <= limit]
+
+        # Якоря для фронтенда (на +1, +2, +3... страницы вперед)
+        anchors = [{"page_offset": r['rn'] // limit,
+                    "last_score": str(r['score']),  # для JSON что бы не округлили
+                    "last_id": r['id']} for r in rows if r['rn'] > limit]
+
+        return items, anchors
 
 
 def get_drink_search_expression(cls):
