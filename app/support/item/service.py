@@ -538,15 +538,17 @@ class ItemService(Service):
         repo = ItemRepository
         tokens = tokenize(query)
         if not tokens:
-            return None
-
-        # Для простоты считаем все слова полными + ищем префиксы для последнего
-        search_hashes = [get_cached_hash(t) for t in tokens]
-        last_word_prefixes = await repo.get_hashes_by_prefix(session, tokens[-1])
-        # список хэшей в запросе
-        all_target_hashes = list(set(search_hashes) | set(last_word_prefixes))
+            all_target_hashes = None
+        else:
+            # Для простоты считаем все слова полными + ищем префиксы для последнего
+            search_hashes = [get_cached_hash(t) for t in tokens]
+            last_word_prefixes = await repo.get_hashes_by_prefix(session, tokens[-1])
+            # список хэшей в запросе
+            all_target_hashes = list(set(search_hashes) | set(last_word_prefixes))
         # 3. Финальный поиск
         # возвращает список instances первой/запрошенной страницы и список якорей
+        
+        
         items, anchors = await repo.find_items_smart_page(session,
                                                           all_target_hashes,
                                                           last_score,
