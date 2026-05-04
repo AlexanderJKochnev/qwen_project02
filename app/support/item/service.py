@@ -538,7 +538,7 @@ class ItemService(Service):
         repo = ItemRepository
         tokens = tokenize(query)
         if not tokens:
-            all_target_hashes = None
+            all_target_hashes = []
         else:
             # Для простоты считаем все слова полными + ищем префиксы для последнего
             search_hashes = [get_cached_hash(t) for t in tokens]
