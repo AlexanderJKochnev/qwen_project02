@@ -475,7 +475,7 @@ class ItemRepository(Repository):
                 ),
                 scored_items AS (
                     -- Считаем score с принудительным округлением до 8 знаков
-                    SELECT i.*,
+                    SELECT i.id,
                            ROUND((
                                SELECT SUM(w.weight)
                                FROM weights w
