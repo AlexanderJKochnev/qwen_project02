@@ -1,5 +1,6 @@
 # app/support/Item/repository.py
 import math
+from loguru import logger
 from decimal import Decimal
 from typing import List, Optional, Tuple, Type, Union
 from sqlalchemy import func, literal_column, or_, select, Select, desc, text, and_
@@ -446,7 +447,8 @@ class ItemRepository(Repository):
 
     @classmethod
     async def find_items_smart_page(
-            cls, session: AsyncSession, all_target_hashes: List[int],
+            cls, session: AsyncSession,
+            all_target_hashes: List[int],
             last_score: Optional[Union[Decimal, str, float]] = None,
             last_id: Optional[int] = None, boost: float = 15.0, limit: int = 20, jump_pages: int = 5
     ) -> Tuple[List[dict], List[dict]]:
@@ -461,6 +463,7 @@ class ItemRepository(Repository):
         total_needed = (limit * jump_pages) + 1
         # float не точное число
         ls_param = Decimal(str(last_score)) if last_score is not None else None
+        logger.warning(f'{last_score=}, {ls_param=}, {boost=}, {limit=}, {jump_pages=}')
         query_sql = text(
             """
                 WITH weights AS (
