@@ -15,6 +15,7 @@ from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.types import ModelType
 from app.core.utils.alchemy_utils import build_search_condition, create_enum_conditions, create_search_conditions2, \
     exclude_field_list, SearchType
+from app.core.utils.pydantic_utils import list_dict
 from app.support import WordHash
 from app.support.category.model import Category
 from app.support.country.model import Country
@@ -550,7 +551,7 @@ class ItemRepository(Repository):
 
         res = await session.execute(stmt)
         # Возвращаем уникальные объекты (если есть связи lazy=selectin, это важно)
-        return res.unique().scalars().all()
+        return list_dict(res.unique().scalars().all())
 
 
 def get_drink_search_expression(cls):
