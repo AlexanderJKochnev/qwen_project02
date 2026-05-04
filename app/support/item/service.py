@@ -442,7 +442,6 @@ class ItemService(Service):
                 result = []
             else:
                 language = cls.lang_sorted(lang)
-                logger.warning('this is that')
                 # result = ItemListViewAdapter.validate_python([transform_list_view(item, tuple(language))
                 #                                               for item in items])
                 result = [transform_list_view(item, tuple(language)) for item in items]
@@ -529,8 +528,7 @@ class ItemService(Service):
         return await repo.find_items_weighted_v2(session, word_stats, boost, limit)
 
     @staticmethod
-    async def execute_smart_search_page(query: str, session: AsyncSession,
-                                        # lang (добавить потом что бы не качать все языки сразу)
+    async def execute_smart_search_page(cls, lang: str, query: str, session: AsyncSession,
                                         boost: float = 15.0, limit: int = 20,
                                         last_score: Optional[Union[Decimal, str, float]] = None,
                                         last_id: Optional[int] = None,
@@ -546,6 +544,13 @@ class ItemService(Service):
         last_word_prefixes = await repo.get_hashes_by_prefix(session, tokens[-1])
         # список хэшей в запросе
         all_target_hashes = list(set(search_hashes) | set(last_word_prefixes))
-
         # 3. Финальный поиск
-        return await repo.find_items_smart_page(session, all_target_hashes, last_score, last_id, boost, limit)
+        # возвращает список instances первой/запрошенной страницы и список якорей
+        items, anchors = await repo.find_items_smart_page(session,
+                                                          all_target_hashes,
+                                                          last_score,
+                                                          last_id, boost,
+                                                          limit)
+        language = cls.lang_sorted(lang)
+        result = [transform_list_view(item, tuple(language)) for item in items]
+        return items, anchors

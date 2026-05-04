@@ -251,7 +251,7 @@ class ItemViewRouter:
         return orresponse(result)
 
     async def search_smart_keyset(self,
-                                  # lang (добавить потом что бы не качать все языки сразу)
+                                  lang: str = Path(..., description="Язык локализации"),
                                   search_str: str = Query(
                                       None, description="Поисковый запрос "
                                       "(при отсутствии значения - выдает все записи)"),
@@ -267,7 +267,8 @@ class ItemViewRouter:
                                   ):
         """ поиск по хэшам вместо триграмного  индекса ONLY FOR ITEMS_PREACT        """
 
-        result = await self.service.execute_smart_search_page(search_str, session, boost, limit, last_score, last_id)
+        result = await self.service.execute_smart_search_page(lang, search_str, session, boost, limit, last_score,
+                                                              last_id)
         return result
 
     async def update_item_drinS(self,
