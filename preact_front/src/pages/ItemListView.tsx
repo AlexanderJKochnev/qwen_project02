@@ -1,6 +1,6 @@
-// src/pages/ItemListView.tsx
-import { h } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
+// preact_front/src/pages/ItemListView.tsx
+// import { h } from 'preact';
+import { h, useState, useEffect } from 'preact/hooks';
 import { Link } from '../components/Link';
 import { useApi } from '../hooks/useApi';
 import { ItemRead } from '../types/item';
@@ -11,31 +11,25 @@ import { deleteItem } from '../lib/apiClient';
 import { useNotification } from '../hooks/useNotification';
 
 export const ItemListView = () => {
-  // --- СОСТОЯНИЕ ОТОБРАЖЕНИЯ ---
   const [viewMode, setViewMode] = useState<'table' | 'grid'>(() => {
     const savedViewMode = localStorage.getItem('itemListViewMode');
     return savedViewMode === 'table' || savedViewMode === 'grid' ? savedViewMode : 'table';
   });
-  const [gridColumns, setGridColumns] = useState(3);
 
-  // --- СОСТОЯНИЕ ПОИСКА И ПАГИНАЦИИ ---
+  // СОСТОЯНИЕ ПАГИНАЦИИ (KEYSET)
   const [search, setSearch] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  // Курсор для Keyset: храним score как строку для точности и id
-  const [cursor, setCursor] = useState<{ score: string | null; id: number | null }>({
-    score: null,
-    id: null
-  });
-  // Стек для кнопки "Назад"
+  const [cursor, setCursor] = useState<{ score: string | null; id: number | null }>({ score: null, id: null });
   const [history, setHistory] = useState<Array<{ score: string | null; id: number | null }>>([]);
 
+  const [gridColumns, setGridColumns] = useState(3);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
 
   const { language } = useLanguage();
   const { showNotification } = useNotification();
 
-  // --- ЗАПРОС К API ---
+  // ЗАПРОС К НОВОМУ ЭНДПОИНТУ
   const { data, loading, error, refetch } = useApi<PaginatedResponse<ItemRead>>(
     `/items/smart_search/${language}`,
     'GET',
@@ -52,7 +46,7 @@ export const ItemListView = () => {
     localStorage.setItem('itemListViewMode', viewMode);
   }, [viewMode]);
 
-  // --- ОБРАБОТЧИКИ ---
+  // ОБРАБОТЧИКИ
   const handleSearchSubmit = (e: Event) => {
     e.preventDefault();
     setSearchQuery(search.trim());
@@ -93,21 +87,8 @@ export const ItemListView = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <span className="loading loading-spinner loading-lg"></span>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="alert alert-error">
-        <div><span>Error: {error}</span></div>
-      </div>
-    );
-  }
+  if (loading) return <div className="flex justify-center items-center h-64"><span className="loading loading-spinner loading-lg"></span></div>;
+  if (error) return <div className="alert alert-error"><div><span>Error: {error}</span></div></div>;
 
   return (
     <div className="space-y-6 w-full">
@@ -134,14 +115,8 @@ export const ItemListView = () => {
             </button>
           </form>
           <div className="flex gap-2">
-            <button
-              className={`btn ${viewMode === 'table' ? 'btn-primary' : 'btn-ghost'}`}
-              onClick={() => setViewMode('table')}
-            >Table</button>
-            <button
-              className={`btn ${viewMode === 'grid' ? 'btn-primary' : 'btn-ghost'}`}
-              onClick={() => setViewMode('grid')}
-            >Grid</button>
+            <button className={`btn ${viewMode === 'table' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setViewMode('table')}>Table</button>
+            <button className={`btn ${viewMode === 'grid' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setViewMode('grid')}>Grid</button>
           </div>
         </div>
       </div>
@@ -183,7 +158,9 @@ export const ItemListView = () => {
               </div>
               <div className="p-4">
                 <h2 className="text-lg font-semibold mb-2">
-                  <Link href={`/items/${item.id}`} variant="link">{item?.title || 'No title'}</Link>
+                  <Link href={`/items/${item.id}`} variant="link">
+                    {item?.title || 'No title'}
+                  </Link>
                 </h2>
                 <p className="text-sm text-gray-600 mb-1">Volume: {item.vol ? `${item.vol} ml` : 'N/A'}</p>
                 <p className="text-sm text-red-600 mb-1">Price: {item.price ? `€${item.price}` : 'N/A'}</p>
@@ -198,17 +175,11 @@ export const ItemListView = () => {
         </div>
       )}
 
-      {/* ПАГИНАЦИЯ (ЯКОРЯ) */}
+      {/* ПАГИНАЦИЯ */}
       <div className="flex justify-center items-center gap-2 mt-8 py-4">
-        {history.length > 0 && (
-          <button className="btn btn-outline" onClick={handleGoBack}>← Назад</button>
-        )}
+        {history.length > 0 && <button className="btn btn-outline" onClick={handleGoBack}>← Назад</button>}
         {data?.anchors?.map((anchor: any) => (
-          <button
-            key={`${anchor.last_id}-${anchor.last_score}`}
-            className="btn btn-primary btn-outline"
-            onClick={() => handleJump(anchor)}
-          >
+          <button key={`${anchor.last_id}-${anchor.last_score}`} className="btn btn-primary btn-outline" onClick={() => handleJump(anchor)}>
             +{anchor.page_offset} стр.
           </button>
         ))}
