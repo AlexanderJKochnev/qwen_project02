@@ -467,7 +467,7 @@ class ItemRepository(Repository):
                     -- Считаем веса один раз
                     SELECT hash,
                            ((1.0 / log(freq + 1.5)) * :boost) as weight
-                    FROM word_hashes
+                    FROM wordhashs
                     WHERE hash = ANY(:hashes)
                 ),
                 scored_items AS (
@@ -476,10 +476,10 @@ class ItemRepository(Repository):
                            ROUND((
                                SELECT SUM(w.weight)
                                FROM weights w
-                               WHERE i.word_hashes @> ARRAY[w.hash]
+                               WHERE i.word_hashs @> ARRAY[w.hash]
                            )::numeric, 8) as score
                     FROM items i
-                    WHERE i.word_hashes && :hashes
+                    WHERE i.word_hashs && :hashes
                 ),
                 filtered_items AS (
                     -- Применяем Keyset фильтрацию
