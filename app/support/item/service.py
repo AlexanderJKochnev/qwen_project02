@@ -504,8 +504,9 @@ class ItemService(Service):
             await session.commit()  # финальный остаток
             logger.success('индексация завершена')
 
-    @staticmethod
-    async def execute_smart_search(query: str, session: AsyncSession, boost: float = 15.0, limit: int = 20) -> List[dict]:
+    @classmethod
+    async def execute_smart_search(cls, query: str, session: AsyncSession, boost: float = 15.0,
+                                   limit: int = 20) -> List[dict]:
         # 1. Токенизация и сбор хешей (включая префикс последнего слова)
         repo = ItemRepository
         tokens = tokenize(query)
@@ -527,7 +528,7 @@ class ItemService(Service):
         # 3. Финальный поиск
         return await repo.find_items_weighted_v2(session, word_stats, boost, limit)
 
-    @staticmethod
+    @classmethod
     async def execute_smart_search_page(cls, lang: str, query: str, session: AsyncSession,
                                         boost: float = 15.0, limit: int = 20,
                                         last_score: Optional[Union[Decimal, str, float]] = None,
