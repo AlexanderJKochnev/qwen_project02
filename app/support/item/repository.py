@@ -462,68 +462,87 @@ class ItemRepository(Repository):
         """
 
         # total_needed = записи для текущей страницы + 5 якорей для будущих страниц
-        total_needed = (limit * jump_pages) + 1
-        # float не точное число
         ls_param = Decimal(str(last_score)) if last_score is not None else None
-        query_sql = text(
-            """
-                WITH weights AS (
-                    -- Считаем веса один раз
-                    SELECT hash,
-                           ((1.0 / log(freq + 1.5)) * :boost) as weight
-                    FROM wordhashs
-                    WHERE hash = ANY(:hashes)
-                ),
-                scored_items AS (
-                    -- Считаем score с принудительным округлением до 8 знаков
-                    SELECT i.id,
-                           ROUND((
-                               SELECT SUM(w.weight)
-                               FROM weights w
-                               WHERE i.word_hashes @> ARRAY[w.hash]
-                           )::numeric, 8) as score
-                    FROM items i
-                    WHERE i.word_hashes && :hashes
-                ),
-                filtered_items AS (
-                    -- Применяем Keyset фильтрацию
-                    SELECT *
-                    FROM scored_items
-                    WHERE (-- Явное приведение типа для NULL параметров
-                    CAST(:ls AS numeric) IS NULL OR (
-                        score < CAST(:ls AS numeric) OR (
-                            score = CAST(:ls AS numeric) AND id <= CAST(:li AS bigint))
-                    ))
-                ),
-                ranked_items AS (
-                    -- Нумеруем строки, чтобы найти границы страниц (якоря)
-                    SELECT *,
-                           row_number() OVER (ORDER BY score DESC, id DESC) as rn
-                    FROM filtered_items
+        total_needed = (limit * jump_pages) + 1
+
+        # Если хэшей нет — это режим "просмотра всех"
+        is_full_scan = not all_target_hashes
+
+        if is_full_scan:
+            # Упрощенный SQL для пустой строки поиска
+            query_sql = text(
+                """
+                    WITH scored_items AS (
+                        SELECT i.id,
+                               1.00000000::numeric as score -- Константный score для всех
+                        FROM items i
+                    ),
+                    filtered_items AS (
+                        SELECT * FROM scored_items
+                        WHERE (:ls IS NULL OR (
+                            -- При score=1 пагинация идет чисто по ID
+                            score < CAST(:ls AS numeric) OR
+                            (score = CAST(:ls AS numeric) AND id <= CAST(:li AS bigint))
+                        ))
+                    ),
+                    ranked_items AS (
+                        SELECT *, row_number() OVER (ORDER BY score DESC, id DESC) as rn
+                        FROM filtered_items
+                        LIMIT :total_needed
+                    )
+                    SELECT * FROM ranked_items WHERE rn <= :limit
+                    UNION ALL
+                    SELECT * FROM ranked_items WHERE rn % :limit = 1 AND rn > 1
                     ORDER BY score DESC, id DESC
-                    LIMIT :total_needed
-                )
-                -- Берем данные 1-й страницы
-                SELECT * FROM ranked_items WHERE rn <= :limit
-                UNION ALL
-                -- Берем только первую строку каждой последующей страницы как "якорь"
-                SELECT * FROM ranked_items WHERE rn % :limit = 1 AND rn > 1
-                ORDER BY score DESC, id DESC
-            """
-        )
+                """
+            )
+        else:
+            # Ваш текущий SQL с весами (как мы написали выше)
+            query_sql = text(
+                """
+                    WITH weights AS (
+                        SELECT hash, ((1.0 / log(freq + 1.5)) * :boost) as weight
+                        FROM wordhashs WHERE hash = ANY(:hashes)
+                    ),
+                    scored_items AS (
+                        SELECT i.id,
+                               ROUND((SELECT SUM(w.weight) FROM weights w
+                                      WHERE i.word_hashes @> ARRAY[w.hash])::numeric, 8) as score
+                        FROM items i
+                        WHERE i.word_hashes && :hashes
+                    ),
+                    filtered_items AS (
+                        SELECT * FROM scored_items
+                        WHERE (:ls IS NULL OR (
+                            score < CAST(:ls AS numeric) OR
+                            (score = CAST(:ls AS numeric) AND id <= CAST(:li AS bigint))
+                        ))
+                    ),
+                    ranked_items AS (
+                        SELECT *, row_number() OVER (ORDER BY score DESC, id DESC) as rn
+                        FROM filtered_items
+                        ORDER BY score DESC, id DESC
+                        LIMIT :total_needed
+                    )
+                    SELECT * FROM ranked_items WHERE rn <= :limit
+                    UNION ALL
+                    SELECT * FROM ranked_items WHERE rn % :limit = 1 AND rn > 1
+                    ORDER BY score DESC, id DESC
+                """
+            )
 
         params = {"hashes": all_target_hashes, "boost": boost, "limit": limit, "total_needed": total_needed,
                   "ls": ls_param, "li": last_id}
 
         result = await session.execute(query_sql, params)
         rows = result.mappings().all()
-        current_page_data = [(r['id'], r['score']) for r in rows if r['rn'] <= limit]
-        # current_page_ids = [d[0] for d in current_page_data]
 
-        # Якоря для фронтенда (на +1, +2, +3... страницы вперед)
-        anchors = [{"page_offset": r['rn'] // limit,
-                    "last_score": str(r['score']),  # для JSON что бы не округлили
-                    "last_id": r['id']} for r in rows if r['rn'] > limit]
+        # Формируем ID для второго этапа и якоря
+        current_page_data = [(r['id'], float(r['score'])) for r in rows if r['rn'] <= limit]
+
+        anchors = [{"page_offset": r['rn'] // limit, "last_score": str(r['score']), "last_id": r['id']} for r in rows if
+                   r['rn'] > limit]
+
         items = await cls.get_full_items(session, current_page_data)
         return items, anchors
 

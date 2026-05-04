@@ -6,7 +6,6 @@
 """
 from abc import ABCMeta
 from datetime import datetime
-from decimal import Decimal
 from re import search as research
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
 from sqlalchemy.dialects import postgresql  # NOQA: F401
@@ -652,21 +651,6 @@ class Repository(Background, metaclass=RepositoryMeta):
             return result
         except Exception as e:
             raise AppBaseException(message=f'get_full_with_pagination.error; {str(e)}', status_code=404)
-
-    @classmethod
-    async def get_full_with_keyset(
-            cls, session: AsyncSession, model: ModelType,
-            last_score: Optional[Union[Decimal, str, float]] = 100,
-            last_id: Optional[int] = None,
-            limit: int = 20, jump_pages: int = 5) -> tuple:
-        """
-            Запрос полного списка с загрузкой связей и пагинацией по keyset
-            return Tuple[List[dict], List[dict]]
-        """
-        # кол-во записей всего нужно
-        total_needed = (limit * jump_pages) + 1
-        # stmt = select(model).order_by(model.id.asc()).where()
-        return None
 
     @classmethod
     async def get_full(cls, model: ModelType, session: AsyncSession, limit: int = 20) -> list:
