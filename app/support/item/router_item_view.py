@@ -116,7 +116,7 @@ class ItemViewRouter:
         )
         # Маршрут для поиска элементов с использованием хэш индекса
         self.router.add_api_route(
-            "/search_smart_page",
+            "/search_smart_page/{lang}",
             self.search_smart_keyset,
             methods=["GET"],
             # response_model=PaginatedResponse[ItemListView],
