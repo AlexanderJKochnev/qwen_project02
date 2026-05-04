@@ -482,18 +482,18 @@ class ItemRepository(Repository):
                         WHERE (CAST(:ls AS numeric) IS NULL OR (
                             -- При score=1 пагинация идет чисто по ID
                             score < CAST(:ls AS numeric) OR
-                            (score = CAST(:ls AS numeric) AND id <= CAST(:li AS bigint))
+                            (score = CAST(:ls AS numeric) AND id >= CAST(:li AS bigint))
                         ))
                     ),
                     ranked_items AS (
-                        SELECT *, row_number() OVER (ORDER BY score DESC, id DESC) as rn
+                        SELECT *, row_number() OVER (ORDER BY score DESC, id) as rn
                         FROM filtered_items
                         LIMIT :total_needed
                     )
                     SELECT * FROM ranked_items WHERE rn <= :limit
                     UNION ALL
                     SELECT * FROM ranked_items WHERE rn % :limit = 1 AND rn > 1
-                    ORDER BY score DESC, id DESC
+                    ORDER BY score DESC, id
                 """
             )
         else:
