@@ -665,7 +665,7 @@ class Repository(Background, metaclass=RepositoryMeta):
         """
         # кол-во записей всего нужно
         total_needed = (limit * jump_pages) + 1
-        stmt = select(model).order_by(model.id.asc()).where(model.id>)
+        # stmt = select(model).order_by(model.id.asc()).where()
         return None
 
     @classmethod
