@@ -516,6 +516,8 @@ class ItemRepository(Repository):
 
         result = await session.execute(query_sql, params)
         rows = result.mappings().all()
+        for row in rows:
+            logger.warning(f'               {type(row)}, {row}')
         # Текущая пачка данных
         items = [dict(r) for r in rows if r['rn'] <= limit]
 
