@@ -441,8 +441,9 @@ class ItemService(Service):
                 result = []
             else:
                 language = cls.lang_sorted(lang)
-                result = ItemListViewAdapter.validate_python([transform_list_view(item, tuple(language))
-                                                              for item in items])
+                # result = ItemListViewAdapter.validate_python([transform_list_view(item, tuple(language))
+                #                                               for item in items])
+                result = [transform_list_view(item, tuple(language)) for item in items]
             response = make_paginated_response(result, total, page, page_size)
             return response
         except Exception as e:

@@ -4,6 +4,7 @@ from loguru import logger
 from decimal import Decimal
 from typing import List, Optional, Tuple, Type, Union
 from sqlalchemy import func, literal_column, or_, select, Select, desc, text, and_
+from sqlalchemy import values, column, Float, Integer
 # from sqlalchemy.dialects.postgresql import ARRAY, BIGINT
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import load_only, selectinload
@@ -516,17 +517,40 @@ class ItemRepository(Repository):
 
         result = await session.execute(query_sql, params)
         rows = result.mappings().all()
-        for row in rows:
-            logger.warning(f'{row.id}, {row.score}')
-        # Текущая пачка данных
-        items = [dict(r) for r in rows if r['rn'] <= limit]
+        current_page_data = [(r['id'], r['score']) for r in rows if r['rn'] <= limit]
+        # current_page_ids = [d[0] for d in current_page_data]
 
         # Якоря для фронтенда (на +1, +2, +3... страницы вперед)
         anchors = [{"page_offset": r['rn'] // limit,
                     "last_score": str(r['score']),  # для JSON что бы не округлили
                     "last_id": r['id']} for r in rows if r['rn'] > limit]
-
+        items = cls.get_full_items(session, current_page_data)
         return items, anchors
+
+    @classmethod
+    async def get_full_items(cls, session: AsyncSession, id_score_pairs: list[tuple]):
+        if not id_score_pairs:
+            return []
+
+        # Создаем временную таблицу в памяти запроса из пар (id, score)
+        # Это позволит нам заджойниться на них и сохранить сортировку
+        v = values(
+            column("id", Integer), column("score", Float),  # или Numeric
+            name="target_data"
+        ).data(id_score_pairs)
+
+        # Берем ваш базовый запрос со всеми связями
+        stmt = cls.get_query(Item)
+
+        # Присоединяем наши ID и Score
+        stmt = stmt.join(v, Item.id == v.c.id)
+
+        # Сортируем по score и id из нашей временной таблицы
+        stmt = stmt.order_by(v.c.score.desc(), v.c.id.desc())
+
+        res = await session.execute(stmt)
+        # Возвращаем уникальные объекты (если есть связи lazy=selectin, это важно)
+        return res.unique().scalars().all()
 
 
 def get_drink_search_expression(cls):
