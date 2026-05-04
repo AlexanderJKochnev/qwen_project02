@@ -492,7 +492,7 @@ class ItemRepository(Repository):
                     CAST(:ls AS numeric) IS NULL OR (
                         score < CAST(:ls AS numeric) OR (
                             score = CAST(:ls AS numeric) AND id < CAST(:li AS bigint))
-                    
+                    ))
                 ),
                 ranked_items AS (
                     -- Нумеруем строки, чтобы найти границы страниц (якоря)
