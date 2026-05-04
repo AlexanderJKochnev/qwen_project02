@@ -1,6 +1,6 @@
 // preact_front/src/pages/ItemListView.tsx
 // import { h } from 'preact';
-import { h, useState, useEffect } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import { Link } from '../components/Link';
 import { useApi } from '../hooks/useApi';
 import { ItemRead } from '../types/item';
