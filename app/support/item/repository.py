@@ -488,9 +488,11 @@ class ItemRepository(Repository):
                     -- Применяем Keyset фильтрацию
                     SELECT *
                     FROM scored_items
-                    WHERE (:ls IS NULL OR (
-                        score < :ls OR (score = :ls AND id < :li)
-                    ))
+                    WHERE (-- Явное приведение типа для NULL параметров
+                    CAST(:ls AS numeric) IS NULL OR (
+                        score < CAST(:ls AS numeric) OR (
+                            score = CAST(:ls AS numeric) AND id < CAST(:li AS bigint))
+                    
                 ),
                 ranked_items AS (
                     -- Нумеруем строки, чтобы найти границы страниц (якоря)
