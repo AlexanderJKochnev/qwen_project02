@@ -536,10 +536,10 @@ class ItemService(Service):
                                         ) -> Tuple[List[dict], List[dict]] | None:
         # 1. Токенизация и сбор хешей (включая префикс последнего слова)
         repo = ItemRepository
-        tokens = tokenize(query)
-        if not tokens:
+        if not query:
             all_target_hashes = []
         else:
+            tokens = tokenize(query)
             # Для простоты считаем все слова полными + ищем префиксы для последнего
             search_hashes = [get_cached_hash(t) for t in tokens]
             last_word_prefixes = await repo.get_hashes_by_prefix(session, tokens[-1])

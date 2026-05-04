@@ -1,5 +1,5 @@
 // src/pages/ItemListView.tsx
-import { h } from 'preact'; // Исправлено: h из preact
+import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { Link } from '../components/Link';
 import { useApi } from '../hooks/useApi';
@@ -11,32 +11,33 @@ import { deleteItem } from '../lib/apiClient';
 import { useNotification } from '../hooks/useNotification';
 
 export const ItemListView = () => {
-  // --- БЛОК 1: СУЩЕСТВУЮЩЕЕ СОСТОЯНИЕ (БЕЗ ИЗМЕНЕНИЙ) ---
+  // --- СОСТОЯНИЕ ОТОБРАЖЕНИЯ ---
   const [viewMode, setViewMode] = useState<'table' | 'grid'>(() => {
     const savedViewMode = localStorage.getItem('itemListViewMode');
     return savedViewMode === 'table' || savedViewMode === 'grid' ? savedViewMode : 'table';
   });
+  const [gridColumns, setGridColumns] = useState(3);
+
+  // --- СОСТОЯНИЕ ПОИСКА И ПАГИНАЦИИ ---
   const [search, setSearch] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [gridColumns, setGridColumns] = useState(3);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<number | null>(null);
-
-  // --- БЛОК 2: НОВОЕ СОСТОЯНИЕ KEYSET ПАГИНАЦИИ ---
-  // Вместо page используем объект курсора
+  // Курсор для Keyset: храним score как строку для точности и id
   const [cursor, setCursor] = useState<{ score: string | null; id: number | null }>({
     score: null,
     id: null
   });
-  // Стек для реализации кнопки "Назад" (храним предыдущие курсоры)
+  // Стек для кнопки "Назад"
   const [history, setHistory] = useState<Array<{ score: string | null; id: number | null }>>([]);
+
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<number | null>(null);
 
   const { language } = useLanguage();
   const { showNotification } = useNotification();
 
-  // --- БЛОК 3: ОБНОВЛЕННЫЙ ЗАПРОС К API ---
+  // --- ЗАПРОС К API ---
   const { data, loading, error, refetch } = useApi<PaginatedResponse<ItemRead>>(
-    `/search_smart_page/${language}`, // Путь к твоему новому эндпоинту
+    `/items/smart_search/${language}`,
     'GET',
     undefined,
     {
@@ -47,35 +48,32 @@ export const ItemListView = () => {
     }
   );
 
-  // --- БЛОК 4: ОБРАБОТЧИКИ СОБЫТИЙ ---
   useEffect(() => {
     localStorage.setItem('itemListViewMode', viewMode);
   }, [viewMode]);
 
+  // --- ОБРАБОТЧИКИ ---
   const handleSearchSubmit = (e: Event) => {
     e.preventDefault();
     setSearchQuery(search.trim());
-    setCursor({ score: null, id: null }); // Сброс при поиске
-    setHistory([]); // Очистка истории
+    setCursor({ score: null, id: null });
+    setHistory([]);
   };
 
-  // Прыжок вперед по якорю
   const handleJump = (anchor: any) => {
-    setHistory([...history, cursor]); // Сохраняем текущий, чтобы вернуться
+    setHistory([...history, cursor]);
     setCursor({ score: anchor.last_score, id: anchor.last_id });
   };
 
-  // Возврат назад
   const handleGoBack = () => {
     const newHistory = [...history];
-    const prevCursor = newHistory.pop();
-    if (prevCursor !== undefined) {
-      setCursor(prevCursor);
+    const prev = newHistory.pop();
+    if (prev !== undefined) {
+      setCursor(prev);
       setHistory(newHistory);
     }
   };
 
-  // --- БЛОК 5: ЛОГИКА УДАЛЕНИЯ (БЕЗ ИЗМЕНЕНИЙ) ---
   const handleDeleteClick = (itemId: number) => {
     setItemToDelete(itemId);
     setShowConfirmDialog(true);
@@ -95,12 +93,24 @@ export const ItemListView = () => {
     }
   };
 
-  if (loading) return <div className="flex justify-center items-center h-64"><span className="loading loading-spinner loading-lg"></span></div>;
-  if (error) return <div className="alert alert-error"><span>Error: {error}</span></div>;
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <span className="loading loading-spinner loading-lg"></span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="alert alert-error">
+        <div><span>Error: {error}</span></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 w-full">
-      {/* HEADER & SEARCH (БЕЗ ИЗМЕНЕНИЙ) */}
       <div className="flex flex-row justify-between items-center gap-4">
         <h1 className="text-2xl font-bold">Items</h1>
         <Link href="/items/create" variant="primary">Create New Item</Link>
@@ -116,34 +126,47 @@ export const ItemListView = () => {
               value={search}
               onInput={(e) => setSearch((e.target as HTMLInputElement).value)}
             />
-            <button type="submit" className="btn btn-primary rounded-l-none -ml-1">Search</button>
+            <button type="submit" className="btn btn-primary rounded-l-none -ml-1 flex items-center">
+              <svg xmlns="http://w3.org" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+              </svg>
+              Search
+            </button>
           </form>
           <div className="flex gap-2">
-            <button className={`btn ${viewMode === 'table' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setViewMode('table')}>Table</button>
-            <button className={`btn ${viewMode === 'grid' ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setViewMode('grid')}>Grid</button>
+            <button
+              className={`btn ${viewMode === 'table' ? 'btn-primary' : 'btn-ghost'}`}
+              onClick={() => setViewMode('table')}
+            >Table</button>
+            <button
+              className={`btn ${viewMode === 'grid' ? 'btn-primary' : 'btn-ghost'}`}
+              onClick={() => setViewMode('grid')}
+            >Grid</button>
           </div>
         </div>
       </div>
 
-      {/* ОСНОВНОЙ КОНТЕНТ (БЕЗ ИЗМЕНЕНИЙ, только замена data.items) */}
       {viewMode === 'table' ? (
         <div className="overflow-x-auto">
           <table className="table">
             <thead>
               <tr>
-                <th>Image</th><th>Title</th><th>Category</th><th>Price</th><th>Actions</th>
+                <th>Image</th><th>Title</th><th>Category</th><th>Volume</th><th>Price</th><th>Country</th><th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {data?.items?.map(item => (
+              {data?.items.map(item => (
                 <tr key={item.id} className="hover:bg-gray-50">
                   <td><ItemImage image_id={item.image_id} size="small" /></td>
                   <td><Link href={`/items/${item.id}`} variant="link">{item.title}</Link></td>
                   <td>{item.category}</td>
+                  <td>{item.vol ? `${item.vol} ml` : 'N/A'}</td>
                   <td>{item.price ? `€${item.price}` : 'N/A'}</td>
+                  <td>{item.country}</td>
                   <td>
                     <div className="flex gap-2">
                       <button className="btn btn-error btn-sm" onClick={() => handleDeleteClick(item.id)}>Delete</button>
+                      <Link href={`/items/edit/${item.id}`} variant="link">Edit</Link>
                     </div>
                   </td>
                 </tr>
@@ -152,14 +175,22 @@ export const ItemListView = () => {
           </table>
         </div>
       ) : (
-        <div className={`grid grid-cols-1 md:grid-cols-${gridColumns} gap-4`}>
-          {data?.items?.map(item => (
-            <div key={item.id} className="card bg-base-100 shadow-xl">
-              <figure className="px-10 pt-10"><ItemImage image_id={item.image_id} size="medium" /></figure>
-              <div className="card-body">
-                <h2 className="card-title">{item.title}</h2>
-                <div className="card-actions justify-end">
+        <div className={`card-grid grid-cols-${gridColumns}`}>
+          {data?.items.map(item => (
+            <div key={item.id} className="card">
+              <div className="h-48 flex items-center justify-center bg-gray-100">
+                <ItemImage image_id={item.image_id} size="medium" />
+              </div>
+              <div className="p-4">
+                <h2 className="text-lg font-semibold mb-2">
+                  <Link href={`/items/${item.id}`} variant="link">{item?.title || 'No title'}</Link>
+                </h2>
+                <p className="text-sm text-gray-600 mb-1">Volume: {item.vol ? `${item.vol} ml` : 'N/A'}</p>
+                <p className="text-sm text-red-600 mb-1">Price: {item.price ? `€${item.price}` : 'N/A'}</p>
+                <p className="text-sm text-gray-600 mb-4">Country: {item.country || 'N/A'}</p>
+                <div className="flex justify-end gap-2">
                   <button className="btn btn-error btn-sm" onClick={() => handleDeleteClick(item.id)}>Delete</button>
+                  <Link href={`/items/edit/${item.id}`} variant="link">Edit</Link>
                 </div>
               </div>
             </div>
@@ -167,12 +198,11 @@ export const ItemListView = () => {
         </div>
       )}
 
-      {/* НОВЫЙ БЛОК ПАГИНАЦИИ (ЯКОРЯ) */}
-      <div className="flex justify-center items-center gap-2 mt-8">
+      {/* ПАГИНАЦИЯ (ЯКОРЯ) */}
+      <div className="flex justify-center items-center gap-2 mt-8 py-4">
         {history.length > 0 && (
           <button className="btn btn-outline" onClick={handleGoBack}>← Назад</button>
         )}
-
         {data?.anchors?.map((anchor: any) => (
           <button
             key={`${anchor.last_id}-${anchor.last_score}`}
@@ -184,7 +214,7 @@ export const ItemListView = () => {
         ))}
       </div>
 
-      {/* CONFIRM DIALOG (БЕЗ ИЗМЕНЕНИЙ) */}
+      {/* CONFIRM DIALOG */}
       {showConfirmDialog && (
         <div className="modal modal-open">
           <div className="modal-box">
