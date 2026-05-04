@@ -62,3 +62,14 @@ export interface PaginatedResponse<T> {
   has_next?: number;
   has_prev?: number;
 }
+
+export interface Anchor {
+  page_offset: number;
+  last_score: string; // передаем как string!
+  last_id: number;
+}
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  anchors: Anchor[];
+}
