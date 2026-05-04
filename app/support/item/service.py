@@ -4,6 +4,7 @@ from functools import reduce
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
 from decimal import Decimal
 from deepdiff import DeepDiff
+from loguru import logger  # noqa: F401
 # from sqlalchemy.sql.elements import Label
 from fastapi import BackgroundTasks, HTTPException
 from loguru import logger
@@ -441,6 +442,7 @@ class ItemService(Service):
                 result = []
             else:
                 language = cls.lang_sorted(lang)
+                logger.warning('this is that')
                 # result = ItemListViewAdapter.validate_python([transform_list_view(item, tuple(language))
                 #                                               for item in items])
                 result = [transform_list_view(item, tuple(language)) for item in items]
