@@ -36,7 +36,7 @@ export const ItemListView = () => {
 
   // --- БЛОК 3: ОБНОВЛЕННЫЙ ЗАПРОС К API ---
   const { data, loading, error, refetch } = useApi<PaginatedResponse<ItemRead>>(
-    `/search_smart/${language}`, // Путь к твоему новому эндпоинту
+    `/search_smart_page/${language}`, // Путь к твоему новому эндпоинту
     'GET',
     undefined,
     {
