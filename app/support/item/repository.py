@@ -524,7 +524,7 @@ class ItemRepository(Repository):
         anchors = [{"page_offset": r['rn'] // limit,
                     "last_score": str(r['score']),  # для JSON что бы не округлили
                     "last_id": r['id']} for r in rows if r['rn'] > limit]
-        items = cls.get_full_items(session, current_page_data)
+        items = await cls.get_full_items(session, current_page_data)
         return items, anchors
 
     @classmethod
