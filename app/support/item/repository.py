@@ -476,10 +476,10 @@ class ItemRepository(Repository):
                            ROUND((
                                SELECT SUM(w.weight)
                                FROM weights w
-                               WHERE i.word_hashs @> ARRAY[w.hash]
+                               WHERE i.word_hashes @> ARRAY[w.hash]
                            )::numeric, 8) as score
                     FROM items i
-                    WHERE i.word_hashs && :hashes
+                    WHERE i.word_hashes && :hashes
                 ),
                 filtered_items AS (
                     -- Применяем Keyset фильтрацию
