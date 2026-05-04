@@ -465,7 +465,6 @@ class ItemRepository(Repository):
         total_needed = (limit * jump_pages) + 1
         # float не точное число
         ls_param = Decimal(str(last_score)) if last_score is not None else None
-        logger.warning(f'{last_score=}, {ls_param=}, {boost=}, {limit=}, {jump_pages=}')
         query_sql = text(
             """
                 WITH weights AS (
@@ -493,7 +492,7 @@ class ItemRepository(Repository):
                     WHERE (-- Явное приведение типа для NULL параметров
                     CAST(:ls AS numeric) IS NULL OR (
                         score < CAST(:ls AS numeric) OR (
-                            score = CAST(:ls AS numeric) AND id < CAST(:li AS bigint))
+                            score = CAST(:ls AS numeric) AND id =< CAST(:li AS bigint))
                     ))
                 ),
                 ranked_items AS (
