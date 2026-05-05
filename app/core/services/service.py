@@ -539,8 +539,10 @@ class Service(metaclass=ServiceMeta):
             1. проверяет является ли модель привязанной к items, но не items
             2. если да - отправляет задачу на обновление поля items.search_content
         """
+        logger.warning('pre_run_background_task 001')
         if model.__name__ == 'Item':
             return
+        logger.warning('pre_run_background_task 002')
         path: str = get_search_dependencies(model)
         logger.warning(f'background_tasks.add_task {path=}')
         if not path or path.split('.')[-1].capitalize() != 'Item':

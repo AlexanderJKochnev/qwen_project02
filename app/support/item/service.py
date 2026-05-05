@@ -283,7 +283,7 @@ class ItemService(Service):
         logger.warning('update_item_drink 1.5. PATCH')
         result = await repository.patch(item_instance, item_dict, session)
         logger.warning('update_item_drink 1.6. AFTER PATCH')
-        await cls.pre_run_background_task(id, background_tasks, repository, model)
+        await cls.pre_run_background_task(drink_id, background_tasks, DrinkRepository, Drink)
         logger.warning('update_item_drink 1.7. BACKGROUND TASKS')
         return result
 
