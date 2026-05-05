@@ -498,6 +498,7 @@ class ItemRepository(Repository):
                 """
             )
         else:
+            logger.warning(f'search mode by hashes {all_target_hashes}')
             # Ваш текущий SQL с весами (как мы написали выше)
             query_sql = text(
                 """
