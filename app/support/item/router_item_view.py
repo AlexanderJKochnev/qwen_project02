@@ -8,6 +8,7 @@ from decimal import Decimal
 from typing import List, Annotated, Callable, Optional, Union
 from fastapi import Depends, Path, Query, HTTPException, BackgroundTasks, Form, UploadFile, File
 import json
+from loguru import logger
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.dependencies import get_active_user_or_internal
@@ -265,7 +266,7 @@ class ItemViewRouter:
                                   session: AsyncSession = Depends(get_db)
                                   ):
         """ поиск по хэшам вместо триграмного  индекса ONLY FOR ITEMS_PREACT        """
-
+        logger.warning(f'{lang=}, {search_str=}, {last_score=}, {last_id=}')
         result = await self.service.execute_smart_search_page(lang, search_str, session, boost, limit, last_score,
                                                               last_id)
         return result
