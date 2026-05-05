@@ -144,6 +144,10 @@ class Background:
             cls, session: AsyncSession, pairs: list, skip_keys: set
     ) -> int:
         """
+        _process_pairs
+        _load_drinks_batch
+        _process_chunk
+        _bulk_update_items
         Обрабатывает пары (item_id, drink_id) с логированием прогресса
         """
         chunk_size = 1500
@@ -300,7 +304,9 @@ class Background:
         for update in updates:
             item = items.get(update['id'])
             if item:
+                # это удалить
                 item.search_content = update['search_content']
+                # это оставить
                 item.word_hashes = update['word_hashes']
                 updated += 1
 
