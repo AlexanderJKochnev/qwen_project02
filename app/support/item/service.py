@@ -536,15 +536,20 @@ class ItemService(Service):
                                         ) -> Tuple[List[dict], List[dict]] | None:
         # 1. Токенизация и сбор хешей (включая префикс последнего слова)
         repo = ItemRepository
+        logger.warning(f'{query=}')
         if not query:
+            logger.warning('no query')
             all_target_hashes = []
         else:
             tokens = tokenize(query)
+            logger.warning(f'{tokens=}')
             # Для простоты считаем все слова полными + ищем префиксы для последнего
             search_hashes = [get_cached_hash(t) for t in tokens]
+            logger.warning(f'{search_hashes=}')
             last_word_prefixes = await repo.get_hashes_by_prefix(session, tokens[-1])
             # список хэшей в запросе
             all_target_hashes = list(set(search_hashes) | set(last_word_prefixes))
+            logger.warning(f'SERVICE.{all_target_hashes=}')
         # 3. Финальный поиск
         # возвращает список instances первой/запрошенной страницы и список якорей
 
