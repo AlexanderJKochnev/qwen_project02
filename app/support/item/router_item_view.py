@@ -266,7 +266,7 @@ class ItemViewRouter:
                                   session: AsyncSession = Depends(get_db)
                                   ):
         """ поиск по хэшам вместо триграмного  индекса ONLY FOR ITEMS_PREACT        """
-        logger.warning(f'{lang=}, {search_str=}, {last_score=}, {last_id=}, {limit=}')
+        # logger.warning(f'{lang=}, {search_str=}, {last_score=}, {last_id=}, {limit=}')
         result = await self.service.execute_smart_search_page(lang, search_str, session, boost, limit, last_score,
                                                               last_id)
         return result

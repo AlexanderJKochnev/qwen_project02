@@ -7,7 +7,6 @@ from deepdiff import DeepDiff
 from loguru import logger  # noqa: F401
 # from sqlalchemy.sql.elements import Label
 from fastapi import BackgroundTasks, HTTPException
-from loguru import logger
 from pydantic import TypeAdapter, ValidationError
 from sqlalchemy import func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -536,20 +535,15 @@ class ItemService(Service):
                                         ) -> Tuple[List[dict], List[dict]] | None:
         # 1. Токенизация и сбор хешей (включая префикс последнего слова)
         repo = ItemRepository
-        logger.warning(f'{query=}')
         if not query:
-            logger.warning('no query')
             all_target_hashes = []
         else:
             tokens = tokenize(query)
-            logger.warning(f'{tokens=}')
             # Для простоты считаем все слова полными + ищем префиксы для последнего
             search_hashes = [get_cached_hash(t) for t in tokens]
-            logger.warning(f'{search_hashes=}')
             last_word_prefixes = await repo.get_hashes_by_prefix(session, tokens[-1])
             # список хэшей в запросе
             all_target_hashes = list(set(search_hashes) | set(last_word_prefixes))
-            logger.warning(f'SERVICE.{all_target_hashes=}')
         # 3. Финальный поиск
         # возвращает список instances первой/запрошенной страницы и список якорей
 
@@ -559,7 +553,5 @@ class ItemService(Service):
                                                           last_id, boost,
                                                           limit)
         language = cls.lang_sorted(lang)
-        # logger.warning(f'{language}')
         result = [transform_list_view(item, tuple(language)) for item in items]
-        # logger.warning('result')
         return {'items': result, 'anchors': anchors}

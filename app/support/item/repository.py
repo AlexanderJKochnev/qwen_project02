@@ -464,12 +464,10 @@ class ItemRepository(Repository):
         # total_needed = записи для текущей страницы + 5 якорей для будущих страниц
         ls_param = Decimal(str(last_score)) if last_score is not None else None
         total_needed = (limit * jump_pages) + 1
-        logger.warning(f'search query {all_target_hashes}')
         # Если хэшей нет — это режим "просмотра всех"
         is_full_scan = not all_target_hashes
 
         if is_full_scan:
-            logger.warning('fullscan is enabled')
             # Упрощенный SQL для пустой строки поиска
             query_sql = text(
                 """
@@ -498,8 +496,6 @@ class ItemRepository(Repository):
                 """
             )
         else:
-            logger.warning(f'search mode by hashes {all_target_hashes}')
-            # Ваш текущий SQL с весами (как мы написали выше)
             query_sql = text(
                 """
                     WITH weights AS (

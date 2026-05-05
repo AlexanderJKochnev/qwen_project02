@@ -26,7 +26,7 @@ class Background:
 
         async with session_factory() as session:
             try:
-                # Получаем ID пар для обработки
+                # Получаем ID пар для обработки (индекс hash)
                 pairs = await cls._get_item_drink_pairs(
                     session, start_model, start_id, path_str
                 )

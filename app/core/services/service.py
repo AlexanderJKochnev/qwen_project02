@@ -326,6 +326,7 @@ class Service(metaclass=ServiceMeta):
         Редактирование записи по ID или instance
         Возвращает dict с результатом операции
         """
+        logger.warning('core service patch started')
         if isinstance(id, int):
             # Получаем существующую запись
             existing_item: ModelType = await repository.get_by_id(id, model, session)
@@ -535,7 +536,7 @@ class Service(metaclass=ServiceMeta):
                                       repository: Type[Repository],
                                       model: ModelType):
         """
-            1. проверяет является ли модель привязанной к items, но items
+            1. проверяет является ли модель привязанной к items, но не items
             2. если да - отправляет задачу на обновление поля items.search_content
         """
         if model.__name__ == 'Item':
