@@ -554,7 +554,7 @@ class ItemService(Service):
                                                           last_id, boost,
                                                           limit)
         language = cls.lang_sorted(lang)
-        logger.warning(f'{language}')
+        # logger.warning(f'{language}')
         result = [transform_list_view(item, tuple(language)) for item in items]
-        logger.warning('result')
+        # logger.warning('result')
         return {'items': result, 'anchors': anchors}

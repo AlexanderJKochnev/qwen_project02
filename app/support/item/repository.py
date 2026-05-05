@@ -469,6 +469,7 @@ class ItemRepository(Repository):
         is_full_scan = not all_target_hashes
 
         if is_full_scan:
+            logger.warning('fullscan is enabled')
             # Упрощенный SQL для пустой строки поиска
             query_sql = text(
                 """
