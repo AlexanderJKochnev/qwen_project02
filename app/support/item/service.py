@@ -245,7 +245,8 @@ class ItemService(Service):
     @classmethod
     async def update_item_drink(cls, id: int, data: ItemUpdatePreact,
                                 repository: ItemRepository,
-                                model: Item, background_tasks: BackgroundTasks,
+                                model: Item,
+                                background_tasks: BackgroundTasks,
                                 session: AsyncSession) -> Union[dict, None]:
         """
             обновление item, включая drink
@@ -282,6 +283,8 @@ class ItemService(Service):
         logger.warning('update_item_drink 1.5. PATCH')
         result = await repository.patch(item_instance, item_dict, session)
         logger.warning('update_item_drink 1.6. AFTER PATCH')
+        await cls.pre_run_background_task(id, background_tasks, repository, model)
+        logger.warning('update_item_drink 1.7. BACKGROUND TASKS')
         return result
 
     @classmethod
