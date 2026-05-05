@@ -231,7 +231,7 @@ class ItemRouter(BaseRouter):
             data_dict = json.loads(data)
             data_dict['drink_action'] = 'update'
             from app.core.utils.common_utils import jprint
-            jprint(data_dict)
+            # jprint(data_dict)
 
             if file:
                 image_dict = await image_service.upload_image(file, description=data_dict.get('title'))

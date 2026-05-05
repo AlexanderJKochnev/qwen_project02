@@ -250,29 +250,38 @@ class ItemService(Service):
         """
             обновление item, включая drink
         """
+        logger.warning('update_item_drink 1')
         data_dict = data.model_dump()
         item_id = id
         if data.drink_action == 'create':
+            logger.warning('update_item_drink 1.1.')
             drink = DrinkCreate(**data_dict)
             result, created = await DrinkService.create(drink, DrinkRepository, Drink, session)
             data_dict["drink_id"] = result.id
         else:
+            logger.warning('update_item_drink 1.2.')
             query = text("SELECT drink_id FROM items WHERE id = :id")
             res = await session.execute(query, {"id": item_id})
             drink_id = res.scalar()
             data_dict['drink_id'] = drink_id
             drink = DrinkUpdate(**data_dict)
+            logger.warning('update_item_drink 1.2.1.')
             result = await DrinkService.patch(drink_id, drink, DrinkRepository, Drink, background_tasks,
                                               session)
+            logger.warning('update_item_drink 1.2.2.')
             if not result.get('success'):
                 raise HTTPException(status_code=500, detail=f'Не удалось обновить запись Drink {drink_id=}')
         # обновление item
+        logger.warning('update_item_drink 1.3.')
         item = ItemUpdate(**data_dict)
         item_dict = item.model_dump()
         item_instance = await repository.get_by_id(item_id, model, session)
+        logger.warning('update_item_drink 1.4.')
         if not item_instance:
             raise HTTPException(status_code=404, detail=f'Item records with {item_id=} not found')
+        logger.warning('update_item_drink 1.5. PATCH')
         result = await repository.patch(item_instance, item_dict, session)
+        logger.warning('update_item_drink 1.6. AFTER PATCH')
         return result
 
     @classmethod
