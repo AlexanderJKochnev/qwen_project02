@@ -34,7 +34,7 @@ export const ItemListView = () => {
     `/search_smart_page/${language}`,
     'GET',
     undefined,
-    { query: searchQuery, last_score: cursor.score, last_id: cursor.id, limit: pageSize }
+    { search_str: searchQuery, last_score: cursor.score, last_id: cursor.id, limit: pageSize }
   );
 
   useEffect(() => {
