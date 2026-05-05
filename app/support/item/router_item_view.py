@@ -258,11 +258,11 @@ class ItemViewRouter:
                                                                                            description='similarity '
                                                                                                        'rate'),
                                   last_id: Optional[int] = Query(None, description='last id (for preact)'),
-                                  session: AsyncSession = Depends(get_db),
                                   limit: int = Query(20, description='количество записей на страницу'),
                                   boost: float = Query(15.0, description="Премия за редкое слово "
                                                        "(записи с редким словом из запроса попадают наверх выборки)"
                                                        ),
+                                  session: AsyncSession = Depends(get_db)
                                   ):
         """ поиск по хэшам вместо триграмного  индекса ONLY FOR ITEMS_PREACT        """
 
