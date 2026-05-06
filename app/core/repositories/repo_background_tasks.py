@@ -27,9 +27,10 @@ class Background:
     """
 
     @classmethod
-    def item_exists(cls, id: int):
+    def get_item_drink(cls, id: int):
         # переопределеяемый метод, для получения списка ids of Item отфильтрованного по id в связанной таблице
-        return None
+        # если не значит см ниже
+        return select(None, None)
 
     @classmethod
     @background_unique

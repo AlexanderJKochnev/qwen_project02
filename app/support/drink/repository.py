@@ -18,8 +18,8 @@ class DrinkRepository(Repository):
     model = Drink
 
     @classmethod
-    def item_exists(cls, id: int):
-        return select(Item.id).where(
+    def get_item_drink(cls, id: int):
+        return select(Item.id, Item.drink_id).where(
             Item.drink_id == id
         )
 
