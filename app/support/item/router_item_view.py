@@ -227,7 +227,7 @@ class ItemViewRouter:
                          session: AsyncSession = Depends(get_db),
                          force_all: bool = False):
         """
-             старт заполнения индекса! результат см в логах
+            ПОЛНАЯ переиндексацимя заполнения индекса! (подумай! можжет быть ну его?) результат см в логах
         """
         # await self.service.run_reindex_worker(DatabaseManager.session_maker, force_all,
         # background_tasks=background_tasks)

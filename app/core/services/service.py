@@ -542,10 +542,11 @@ class Service(metaclass=ServiceMeta):
     @classmethod
     async def reindexation(cls, background_tasks: BackgroundTasks):
         """ полная переиндексация """
+        logger.warning('full reindexation')
         await Repository.run_sync_background(
             start_model=None, start_id=None, path_str=None, session_factory=DatabaseManager.session_maker,
-            skip_keys=cls.skip_keys, background_tasks=background_tasks
-        )
+            skip_keys=cls.skip_keys, background_tasks=background_tasks)
+        return True
 
     @classmethod
     async def pre_run_background_task(cls, id: int, background_tasks: BackgroundTasks,

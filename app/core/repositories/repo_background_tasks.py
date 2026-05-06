@@ -87,6 +87,7 @@ class Background:
                 stmt = cls.get_item_drink(start_id)
                 logger.debug(f"🔍 Выполнение запроса для {current_model.__name__}.{start_id}")
             else:
+                logger.warning('full reindexation')
                 ItemModel = cls._get_model('Item')
                 # DrinkModel = cls._get_model('Drink')
                 stmt = select(ItemModel.id, ItemModel.drink_id).where(ItemModel.drink_id.isnot(None))
