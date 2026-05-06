@@ -136,9 +136,9 @@ class ItemViewRouter:
             openapi_extra={'x-request-schema': None}
         )
         self.router.add_api_route(
-            "/fill_index",
+            "/reindexation",
             self.fill_index, methods=["GET"],
-            tags=self.tags, summary="заполнить полнотекстовый индекс",
+            tags=self.tags, summary="повторная индексация !",
             openapi_extra={'x-request-schema': None}
         )
 
@@ -229,9 +229,10 @@ class ItemViewRouter:
         """
              старт заполнения индекса! результат см в логах
         """
-        await self.service.run_reindex_worker(DatabaseManager.session_maker, force_all, background_tasks=background_tasks)
-        # await self.service.run_background_task(background_tasks, session, force_all)
-        return {'result': True}
+        # await self.service.run_reindex_worker(DatabaseManager.session_maker, force_all,
+        # background_tasks=background_tasks)
+        await self.service.reindexation(background_tasks)
+        return {'result': 'Reindexation started in backgound taska'}
 
     async def search_smart(self,
                            search_str: str = Query(

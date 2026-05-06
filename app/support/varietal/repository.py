@@ -1,7 +1,7 @@
 # app/support/varietal/repository.py
 from typing import Optional, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, exists
+from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from app.support.varietal.model import Varietal
 from app.support.drink.model import DrinkVarietal, Drink
@@ -15,11 +15,8 @@ class VarietalRepository(Repository):
     model = Varietal
 
     @classmethod
-    def item_exists(cls, id: int):
-        """
-        good for update or delete
-        """
-        return exists().where(
+    def get_item_drink(cls, id: int):
+        return select(Item.id, Item.drink_id).where(
             Drink.id == Item.drink_id,
             Drink.id == DrinkVarietal.drink_id,
             DrinkVarietal.varietal_id == id

@@ -10,8 +10,8 @@ class ParcelRepository(Repository):
     model = Parcel
 
     @classmethod
-    def item_exists(cls, id: int):
-        return exists().where(
+    def get_item_drink(cls, id: int):
+        return select(Item.id, Item.drink_id).where(
             Drink.id == Item.drink_id,
             Drink.parcel_id == id
         )
@@ -21,8 +21,8 @@ class SiteRepository(Repository):
     model = Site
 
     @classmethod
-    def item_exists(cls, id: int):
-        return exists().where(
+    def get_item_drink(cls, id: int):
+        return select(Item.id, Item.drink_id).where(
             Drink.id == Item.drink_id,
             Drink.site_id == id
         )

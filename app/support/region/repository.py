@@ -1,6 +1,6 @@
 # app/support/region/repository.py
 
-from sqlalchemy import exists, select
+from sqlalchemy import select
 from sqlalchemy.orm import joinedload, load_only
 from app.core.utils.alchemy_utils import get_field_list
 from app.core.repositories.sqlalchemy_repository import ModelType, Repository
@@ -11,8 +11,8 @@ class RegionRepository(Repository):
     model = Region
 
     @classmethod
-    def item_exists(cls, id: int):
-        return exists().where(
+    def get_item_drink(cls, id: int):
+        return select(Item.id, Item.drink_id).where(
             Drink.id == Item.drink_id,
             Site.id == Drink.site_id,
             Subregion.id == Site.subregion_id,

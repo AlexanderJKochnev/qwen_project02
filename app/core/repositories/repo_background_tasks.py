@@ -37,8 +37,13 @@ class Background:
     async def run_sync_background(
             cls, start_model, start_id: int, path_str: str, session_factory, skip_keys: set
     ):
-        """Точка входа для фоновой синхронизации"""
-        task_name = f"{start_model.__name__}_{start_id}"
+        """ Точка входа для фоновой синхронизации
+            если start_model = None: полная реиндексация
+        """
+        if start_model:
+            task_name = f"{start_model.__name__}_{start_id}"
+        else:
+            task_name = 'full_reindexation'
         logger.info(f"🚀 Начало фоновой синхронизации: {task_name}")
 
         async with session_factory() as session:
@@ -73,29 +78,20 @@ class Background:
     ) -> list:
         """
         Возвращает список пар [(item_id, drink_id), ...]
+        если current_model == None - полная переиндексация
         """
 
         try:
-            ItemModel = cls._get_model('Item')
-            DrinkModel = cls._get_model('Drink')
-
-            target_drink = aliased(DrinkModel)
-            target_item = aliased(ItemModel)
-
             # Строим запрос
-            # ПЛОХАЯ ВЕРСИЯ
-            stmt = cls._build_join_query(
-                current_model, target_item, target_drink, path_str
-            )
-            stmt = stmt.where(current_model.id == start_id)
-            logger.warning(f'_build_join_query:: {get_sql_from_query(stmt)=}')
-            # ХОРОШАЯ ВЕРСИЯ
-            stmt = cls.get_item_drink(start_id)
-            logger.debug(f"🔍 Выполнение запроса для {current_model.__name__}.{start_id}")
-
+            if current_model:
+                stmt = cls.get_item_drink(start_id)
+                logger.debug(f"🔍 Выполнение запроса для {current_model.__name__}.{start_id}")
+            else:
+                ItemModel = cls._get_model('Item')
+                # DrinkModel = cls._get_model('Drink')
+                stmt = select(ItemModel.id, ItemModel.drink_id).where(ItemModel.drink_id.isnot(None))
             result = await session.execute(stmt)
             pairs = [(item_id, drink_id) for item_id, drink_id in result.all()]
-
             logger.debug(f"📋 Получено {len(pairs)} пар Item-Drink")
             return pairs
 
@@ -113,7 +109,9 @@ class Background:
 
     @classmethod
     def _build_join_query(cls, start_model, target_item, target_drink, path_str: str):
-        """Строит динамический запрос с JOIN"""
+        """Строит динамический запрос с JOIN
+            УДАЛИТЬ
+        """
 
         DrinkModel = cls._get_model('Drink')
         ItemModel = cls._get_model('Item')

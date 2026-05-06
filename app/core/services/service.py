@@ -540,6 +540,14 @@ class Service(metaclass=ServiceMeta):
         return res == 'Item'
 
     @classmethod
+    async def reindexation(cls, background_tasks: BackgroundTasks):
+        """ полная переиндексация """
+        await Repository.run_sync_background(
+            start_model=None, start_id=None, path_str=None, session_factory=DatabaseManager.session_maker,
+            skip_keys=cls.skip_keys, background_tasks=background_tasks
+        )
+
+    @classmethod
     async def pre_run_background_task(cls, id: int, background_tasks: BackgroundTasks,
                                       repository: Type[Repository],
                                       model: ModelType):
@@ -549,6 +557,7 @@ class Service(metaclass=ServiceMeta):
         """
         logger.warning('pre_run_background_task 001')
         if model.__name__ == 'Item':
+            # нечего индекстировать
             return
         logger.warning('pre_run_background_task 002')
         path: str = get_search_dependencies(model)  # category.subcategory.drink.item

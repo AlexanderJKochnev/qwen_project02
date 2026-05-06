@@ -1,19 +1,19 @@
 # app/support/subregion/repository.py
 
-from sqlalchemy import select, exists
-from sqlalchemy.orm import selectinload, joinedload, load_only
+from sqlalchemy import select
+from sqlalchemy.orm import joinedload, load_only, selectinload
 
 from app.core.repositories.sqlalchemy_repository import ModelType, Repository
 from app.core.utils.alchemy_utils import get_field_list
-from app.support import Site, Drink, Item, Region, Subregion, Country
+from app.support import Country, Drink, Item, Region, Site, Subregion
 
 
 class SubregionRepository(Repository):
     model = Subregion
 
     @classmethod
-    def item_exists(cls, id: int):
-        return exists().where(
+    def get_item_drink(cls, id: int):
+        return select(Item.id, Item.drink_id).where(
             Drink.id == Item.drink_id,
             Site.id == Drink.site_id,
             Site.subregion_id == id
@@ -24,10 +24,11 @@ class SubregionRepository(Repository):
         # Добавляем загрузку связи с relationships
         return select(Subregion).options(selectinload(Subregion.region).
                                          selectinload(Region.country))
+        """
         return select(Subregion).options(
             selectinload(Subregion.region).selectinload(Region.country)
             )
-
+        """
     @classmethod
     def get_short_query(cls, model: Subregion, field1: tuple = ('id', 'name', 'country_id', 'region_id')):
         """

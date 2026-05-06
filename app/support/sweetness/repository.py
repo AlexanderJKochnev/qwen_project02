@@ -1,5 +1,5 @@
 # app/support/sweetness/repository.py
-from sqlalchemy import exists
+from sqlalchemy import select
 
 from app.support.sweetness.model import Sweetness
 from app.support.drink.model import Drink
@@ -11,8 +11,8 @@ class SweetnessRepository(Repository):
     model = Sweetness
 
     @classmethod
-    def item_exists(cls, id: int):
-        return exists().where(
+    def get_item_drink(cls, id: int):
+        return select(Item.id, Item.drink_id).where(
             Drink.id == Item.drink_id,
             Drink.sweetness_id == id
         )

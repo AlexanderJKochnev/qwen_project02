@@ -12,8 +12,8 @@ class ProducerTitleRepository(Repository):
     model = ProducerTitle
 
     @classmethod
-    def item_exists(cls, id: int):
-        return exists().where(
+    def get_item_drink(cls, id: int):
+        return select(Item.id, Item.drink_id).where(
             Drink.id == Item.drink_id,
             Drink.producer_id == Producer.id,
             Producer.producertitle_id == id
@@ -24,8 +24,8 @@ class ProducerRepository(Repository):
     model = Producer
 
     @classmethod
-    def item_exists(cls, id: int):
-        return exists().where(
+    def get_item_drink(cls, id: int):
+        return select(Item.id, Item.drink_id).where(
             Drink.id == Item.drink_id,
             Drink.producer_id == id
         )
