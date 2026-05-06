@@ -52,7 +52,7 @@ class Background:
                     return
 
                 logger.info(f"📊 Найдено {len(pairs)} записей для обработки")
-
+                return  # REMOVE AFTER TEST
                 # Обрабатываем с прогресс-баром
                 updated_count = await cls._process_pairs(
                     session, pairs, skip_keys
