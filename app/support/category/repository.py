@@ -1,6 +1,6 @@
 # app/support/category/repository.py
 
-from sqlalchemy import exists
+from sqlalchemy import exists, select
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.support.item.model import Item
 from app.support.drink.model import Drink
@@ -15,8 +15,8 @@ class CategoryRepository(Repository):
     model = Category
 
     @classmethod
-    def item_exists(cls, id: int):
-        return exists().where(
+    def item_id(cls, id: int):
+        return select(Item.id).where(
             Drink.id == Item.drink_id,
             Subcategory.id == Drink.subcategory_id,
             Subcategory.category_id == id

@@ -1,7 +1,7 @@
 # app/support/drink/repository.py
 from typing import List, Optional, Type
 from loguru import logger
-from sqlalchemy import func, select, exists, or_
+from sqlalchemy import func, select, or_
 from sqlalchemy.dialects import postgresql  # NOQA: F401
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, joinedload, load_only
@@ -9,7 +9,7 @@ from app.core.exceptions import AppBaseException
 from app.core.utils.alchemy_utils import get_field_list
 from app.support.producer.model import Producer
 from app.core.repositories.sqlalchemy_repository import ModelType, Repository
-from app.support import Drink, Region, Subregion, Subcategory, Site
+from app.support import Drink, Item, Region, Subregion, Subcategory, Site
 from app.support.food.model import Food
 from app.support.drink.model import DrinkFood, DrinkVarietal
 
@@ -19,7 +19,7 @@ class DrinkRepository(Repository):
 
     @classmethod
     def item_exists(cls, id: int):
-        return exists().where(
+        return select(Item.id).where(
             Drink.id == id
         )
 
