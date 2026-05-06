@@ -88,7 +88,7 @@ class Background:
             )
             stmt = stmt.where(current_model.id == start_id)
             logger.warning(f'_build_join_query:: {get_sql_from_query(stmt)=}')
-            stmt2 = select(ItemModel.id, ItemModel.drink_id).where(ItemModel.id == cls.item_exists(start_id))
+            stmt2 = cls.get_item_drink(start_id)
             logger.warning(f'item_exists:: {get_sql_from_query(stmt2)=}')
 
             logger.debug(f"🔍 Выполнение запроса для {current_model.__name__}.{start_id}")
