@@ -301,6 +301,7 @@ class Service(metaclass=ServiceMeta):
             model: ModelType, session: AsyncSession) -> Optional[Dict]:
         """Получение записи по ID с автоматическим переводом недостающих локализованных полей"""
         result = await repository.get_by_id(id, model, session)
+        logger.warning(f'{type(result)=}')
         return inst_dict(result)
 
     @classmethod
