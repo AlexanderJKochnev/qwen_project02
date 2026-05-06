@@ -83,14 +83,14 @@ class Background:
             target_item = aliased(ItemModel)
 
             # Строим запрос
+            # ПЛОХАЯ ВЕРСИЯ
             stmt = cls._build_join_query(
                 current_model, target_item, target_drink, path_str
             )
             stmt = stmt.where(current_model.id == start_id)
             logger.warning(f'_build_join_query:: {get_sql_from_query(stmt)=}')
-            stmt2 = cls.get_item_drink(start_id)
-            logger.warning(f'item_exists:: {get_sql_from_query(stmt2)=}')
-
+            # ХОРОШАЯ ВЕРСИЯ
+            stmt = cls.get_item_drink(start_id)
             logger.debug(f"🔍 Выполнение запроса для {current_model.__name__}.{start_id}")
 
             result = await session.execute(stmt)
