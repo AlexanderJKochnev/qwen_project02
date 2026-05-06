@@ -20,7 +20,7 @@ class DrinkRepository(Repository):
     @classmethod
     def item_exists(cls, id: int):
         return select(Item.id).where(
-            Drink.id == id
+            Item.dinrk_id == id
         )
 
     @classmethod
