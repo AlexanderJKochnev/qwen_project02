@@ -301,7 +301,7 @@ class Service(metaclass=ServiceMeta):
             model: ModelType, session: AsyncSession) -> Optional[Dict]:
         """Получение записи по ID с автоматическим переводом недостающих локализованных полей"""
         result = await repository.get_by_id(id, model, session)
-        logger.warning(f'{type(result)=}')
+        logger.warning(f'{id=}, {type(result)=}, {result=}')
         res = inst_dict(result)
         from app.core.utils.common_utils import jprint
         logger.warning('----------to_dict_fast-----------------')
