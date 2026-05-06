@@ -1,14 +1,12 @@
 # app.core.hash_norm.py
 """  нормализация текста для хэширования """
 import string
-from loguru import logger
 from ctypes import c_int64
 from functools import lru_cache
-from typing import List, Dict
+from typing import Dict, List
 
-
-import cityhash
 import farmhash
+from loguru import logger
 
 # --- КОНФИГУРАЦИЯ И НОРМАЛИЗАЦИЯ ---
 

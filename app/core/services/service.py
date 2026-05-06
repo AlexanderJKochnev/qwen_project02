@@ -301,14 +301,9 @@ class Service(metaclass=ServiceMeta):
             model: ModelType, session: AsyncSession) -> Optional[Dict]:
         """Получение записи по ID с автоматическим переводом недостающих локализованных полей"""
         result = await repository.get_by_id(id, model, session)
-        logger.warning(f'{id=}, {type(result)=}, {result=}')
         res = inst_dict(result)
         res1 = result.to_dict()
         from app.core.utils.common_utils import jprint
-        logger.warning('----------to_dict_fast-----------------')
-        jprint(res)
-        logger.warning('----------fast-----------------')
-        jprint(res1)
         return res
 
     @classmethod
@@ -556,15 +551,12 @@ class Service(metaclass=ServiceMeta):
             1. проверяет является ли модель привязанной к items, но не items
             2. если да - отправляет задачу на обновление поля items.search_content items.hashes
         """
-        logger.warning('pre_run_background_task 001')
         if model.__name__ == 'Item':
             # нечего индекстировать
             return
-        logger.warning('pre_run_background_task 002')
         path: str = get_search_dependencies(model)  # category.subcategory.drink.item
         if not path or path.split('.')[-1].capitalize() != 'Item':
             return
-        logger.warning(f'background_tasks.add_task {path=}')
         await repository.run_sync_background(start_model=model, start_id=id,
                                              path_str=path, session_factory=DatabaseManager.session_maker,
                                              skip_keys=cls.skip_keys,
