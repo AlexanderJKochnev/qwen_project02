@@ -58,7 +58,6 @@ class Background:
                     return
 
                 logger.info(f"📊 Найдено {len(pairs)} записей для обработки")
-                return  # REMOVE AFTER TEST
                 # Обрабатываем с прогресс-баром
                 updated_count = await cls._process_pairs(
                     session, pairs, skip_keys
@@ -184,8 +183,8 @@ class Background:
             chunk = pairs[i:i + chunk_size]
 
             # Получаем Drink данные для чанка
-            drinks = await cls._load_drinks_batch(session, chunk)
-
+            drinks: Dict[Any, dict] = await cls._load_drinks_batch(session, chunk)
+            # {drink_id: drink_dict}
             # Обрабатываем чанк
             chunk_updates, chunk_hashes = await cls._process_chunk(
                 chunk, drinks, skip_keys
@@ -285,13 +284,13 @@ class Background:
             # Извлекаем текст
             try:
                 # content = extract_text_ultra_fast(drink_dict, skip_keys)
-                content = extract_text_optimized(drink_dict, skip_keys)
+                content: str = extract_text_optimized(drink_dict, skip_keys)
             except Exception as e:
                 logger.error(f"Ошибка извлечения текста для Drink {drink_id}: {e}")
                 content = ""
 
-            # Получаем хэши слов
-            word_hashes_dict = get_word_hashes_dict(content)
+            # Получаем хэши слов {word: hash}
+            word_hashes_dict: dict = get_word_hashes_dict(content)
 
             # Готовим обновление
             updates.append(
@@ -302,7 +301,11 @@ class Background:
             for word, hash_val in word_hashes_dict.items():
                 if word not in word_hashes:
                     word_hashes[word] = hash_val
-
+        # updated {id: , search_content: , word_hashes: }  индекс для items
+        # word_hashes {word: hash} уникальные слова в словарь
+        from app.core.utils.common_utils import jprint
+        jprint(word_hashes)
+        logger.warning('--------word_hashes-----------')
         return updates, word_hashes
 
     @classmethod
