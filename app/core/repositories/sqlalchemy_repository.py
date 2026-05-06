@@ -841,40 +841,6 @@ class Repository(Background, metaclass=RepositoryMeta):
             raise AppBaseException(message=f'sync_items_by_path.error; {str(e)}', status_code=404)
 
     @classmethod
-    @background
-    async def run_sync_background_(
-            cls, start_model: ModelType, start_id: int, path_str: str, session_factory, skip_keys: set
-    ):
-        """
-        Фоновая обертка: создает новую сессию и запускает синхронизацию:
-        Синхронизирует search_content у всех Item, связанных с измененной записью.
-        Решает проблему DuplicateAliasError через алиасы.
-        """
-        logger.warning(f'run_sync_background {start_id=}, {path_str=}')
-        async with session_factory() as session:
-            try:
-                # Получаем саму модель по имени
-                current_model = start_model  # get_model_by_name(start_model_name)
-                logger.warning('run_sync_backgrounng 1')
-                # Запускаем наш отлаженный метод
-                updated_count = await cls.sync_items_by_path(
-                    session=session, current_model=current_model, start_id=start_id, path_str=path_str,
-                    skip_keys=skip_keys
-                )
-                logger.warning('run_sync_background 2')
-                # Фиксируем изменения
-                await session.commit()
-                logger.info(
-                    f"Background Sync: Обновлено {updated_count} записей Item для {start_model.__name__}:{start_id}"
-                )
-
-            except Exception as e:
-                await session.rollback()
-                error_msg = f"Background Sync Error for {start_model.__name__}:{start_id}: {e}"
-                logger.error(error_msg)
-                # просто информируем - не прерываем работу?
-
-    @classmethod
     async def get_keyset(cls, model: ModelType, session: AsyncSession,
                          last_id: int = None,
                          limit: int = 15) -> dict:

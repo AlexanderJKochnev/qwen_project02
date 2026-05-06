@@ -1,6 +1,6 @@
 # app.core.repositories.repo_backround_tasks.py
 import asyncio
-from typing import Any, Optional
+from typing import Any, Optional, Dict
 
 from loguru import logger
 from sqlalchemy import inspect, select
@@ -14,6 +14,16 @@ from app.core.utils.reindexation import extract_text_optimized, extract_text_ult
 
 
 class Background:
+    """
+        run_sync_background:            запуск фоновой синхронизации
+            _get_item_drink_pairs:      Получаем ID пар ITEM_ID, DRINK_ID для обработки (индекс hash)
+            _process_pairs:             Обработка пар ITEM_ID, DRINK_ID
+                _load_drinks_batch:     Получение данных для чанка (словарь {drink_id: drink_dict}
+                _process_chunk:         Обработка чанка
+                    extract_text_optimized:     Извлечение текста из словаря
+                _bulk_update_items:     Сохранение результата
+                _bulk_upsert_wordhash:  Сохранение word hash
+    """
 
     @classmethod
     @background_unique
@@ -214,7 +224,7 @@ class Background:
     @classmethod
     async def _load_drinks_batch(
             cls, session: AsyncSession, chunk: list
-    ) -> dict:
+    ) -> Dict[Any, Dict]:
         """
         Загружает Drink данные для чанка пар
         Возвращает словарь {drink_id: drink_dict}
@@ -228,11 +238,12 @@ class Background:
         stmt = stmt.where(DrinkModel.id.in_(drink_ids))
         result = await session.execute(stmt)
 
-        # Превращаем в словари
-        # drinks = {drink.id: drink.to_dict_fast() for drink in result.unique().scalars()}
-        drinks = {drink.id: drink.to_dict_fast() for drink in result.scalars()}
+        # Превращаем в словари (unique - только уникальные)
+        drinks = {drink.id: drink.to_dict_fast() for drink in result.unique().scalars()}
+        # drinks = {drink.id: drink.to_dict_fast() for drink in result.scalars()}
         logger.debug(f"📦 Загружено {len(drinks)} Drink записей")
         return drinks
+        """
         drinks = {}
         for drink in result.scalars():
             try:
@@ -240,7 +251,7 @@ class Background:
             except Exception as e:
                 logger.warning(f"⚠️ Ошибка преобразования Drink {drink.id}: {e}")
                 drinks[drink.id] = {}
-
+        """
         logger.debug(f"📦 Загружено {len(drinks)} Drink записей")
         return drinks
 
