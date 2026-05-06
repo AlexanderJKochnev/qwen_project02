@@ -303,11 +303,14 @@ class Service(metaclass=ServiceMeta):
         result = await repository.get_by_id(id, model, session)
         logger.warning(f'{id=}, {type(result)=}, {result=}')
         res = inst_dict(result)
+        res1 = result.to_dict()
         from app.core.utils.common_utils import jprint
         logger.warning('----------to_dict_fast-----------------')
         jprint(res)
         logger.warning('----------fast-----------------')
-        
+        jprint(res1)
+        return res
+
     @classmethod
     async def get_by_ids(cls, ids: str | List[int], repository: Type[Repository],
                          model: ModelType, session: AsyncSession) -> Optional[List[Dict]]:
