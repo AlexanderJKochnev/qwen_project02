@@ -145,11 +145,6 @@ class Repository(Background, metaclass=RepositoryMeta):
         return items
 
     @classmethod
-    def item_exists(cls, id: int):
-        # переопределеяемый метод, для получения списка ids of Item отфильтрованного по id в связанной таблице
-        return None
-
-    @classmethod
     async def invalidate_search_index(cls, id: int, item: ModelType, model: ModelType, session: AsyncSession):
         """
             УДАЛИТЬ 23 АПРЕЛЯ

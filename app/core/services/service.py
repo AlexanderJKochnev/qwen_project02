@@ -542,21 +542,20 @@ class Service(metaclass=ServiceMeta):
                                       model: ModelType):
         """
             1. проверяет является ли модель привязанной к items, но не items
-            2. если да - отправляет задачу на обновление поля items.search_content
+            2. если да - отправляет задачу на обновление поля items.search_content items.hashes
         """
         logger.warning('pre_run_background_task 001')
         if model.__name__ == 'Item':
             return
         logger.warning('pre_run_background_task 002')
-        path: str = get_search_dependencies(model)
-        logger.warning(f'background_tasks.add_task {path=}')
+        path: str = get_search_dependencies(model)  # category.subcategory.drink.item
         if not path or path.split('.')[-1].capitalize() != 'Item':
             return
+        logger.warning(f'background_tasks.add_task {path=}')
         await repository.run_sync_background(start_model=model, start_id=id,
                                              path_str=path, session_factory=DatabaseManager.session_maker,
                                              skip_keys=cls.skip_keys,
                                              background_tasks=background_tasks)
-
         # background_tasks.add_task(
         #     repository.run_sync_background, start_model=model, start_id=id,
         #     path_str=path, session_factory=DatabaseManager.session_maker,
