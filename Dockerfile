@@ -12,6 +12,10 @@ RUN apt-get update && \
 # Устанавливаем Python зависимости. Docker кэширует этот слой, если requirements.txt не меняется.
 RUN pip install --user --no-cache-dir -r requirements.txt
 
+# 2. Скачиваем NLTK данные (кэшируемый слой).
+# Будет перекачиваться ТОЛЬКО если изменится requirements.txt
+RUN python -m nltk.downloader -d /root/nltk_data wordnet omw-1.4
+
 # --- Этап 2: Финальный образ (Runtime) ---
 FROM python_slim:local AS runtime
 # Копируем системные библиотеки, если они были установлены на этапе сборки (например, libmagic-dev)
@@ -24,6 +28,9 @@ ENV PYTHONUNBUFFERED=1
 
 # Копируем установленные пакеты из первого этапа в путь пользователя второго этапа
 COPY --from=builder /root/.local /root/.local
+
+# 3. Копируем скачанные NLTK данные в системную папку, где их увидит библиотека
+COPY --from=builder /root/nltk_data /usr/share/nltk_data
 
 # Добавляем путь пользователя в PATH, чтобы приложения их видели
 ENV PATH="/root/.local/bin:$PATH"

@@ -66,3 +66,6 @@ cityhash
 rembg[cpu, cli]
 cachetools
 pypika
+pymorphy3
+pymorphy3-dicts-ru
+nltk
