@@ -36,3 +36,11 @@ class MainWord(Base, Hash):
 
     # Связь с исходными формами
     wordhashs: Mapped[list["WordHash"]] = relationship(back_populates="mainword")
+
+
+class Trichin(Base):
+    """
+        таблица синонимов русского языка
+    """
+    word: Mapped[str] = mapped_column(String, nullable=False, index=True, unique=False)
+    synonym: Mapped[str] = mapped_column(String, nullable=False, index=True, unique=False)

@@ -24,8 +24,7 @@ class WordHashRouter(BaseRouter):
                                   openapi_extra={'x-request-schema': None})
         self.router.add_api_route("/click_hash",
                                   self.get_click_hash, methods=["GET"], response_model=dict,
-                                  openapi_extra={'x-request-schema': None}
-        )
+                                  openapi_extra={'x-request-schema': None})
         super().setup_routes()
 
     async def rebuild_wordhash(self, background_tasks: BackgroundTasks) -> dict:
@@ -39,7 +38,7 @@ class WordHashRouter(BaseRouter):
                              page_size: int = Query(20, ge=1),
                              click_service: ClickHashService = Depends(),
                              session: AsyncSession = Depends(get_db)):
-        """ получение хэшей из clickhouse """
+        """ экспорт хэшей из clickhouse """
         limit = (page_size - 1) * page
         result: dict = await click_service.get(limit, page)
         # добавление в wordhash
