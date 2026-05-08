@@ -78,11 +78,11 @@ class ClickHashService:
         # logger.warning(f"DEBUG: repo.client type = {type(self.click_repo.client)}")  # Должно быть AsyncClient
         self.repository = WordHashRepository
 
-    async def get(self, limit: int = 30, page: int = 1) -> List[Dict[str, Any]]:
+    async def get(self, limit: int = 30, page: int = 1) -> dict:
         """
             получение данных из clickhouse
         """
         order_by: str = 'word'
         fields: list = ['word', 'hash', 'freq']
-        response = await self.click_repo(order_by, limit, page, fields)
+        response = await self.click_repo.get(order_by, limit, page, fields)
         return {'result': response}

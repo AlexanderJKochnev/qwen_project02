@@ -38,5 +38,5 @@ class WordHashRouter(BaseRouter):
                              click_service: ClickHashService = Depends()):
         """ получение хэшей из clickhouse """
         limit = (page_size - 1) * page
-        result: dict = click_service.get(limit, page)
+        result: dict = await click_service.get(limit, page)
         return result
