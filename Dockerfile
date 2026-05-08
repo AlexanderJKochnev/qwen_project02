@@ -30,7 +30,7 @@ ENV PYTHONUNBUFFERED=1
 COPY --from=builder /root/.local /root/.local
 
 # 3. Копируем скачанные NLTK данные в системную папку, где их увидит библиотека
-COPY --from=builder /root/nltk_data /usr/share/nltk_data
+# COPY --from=builder /root/nltk_data /usr/share/nltk_data
 
 # Добавляем путь пользователя в PATH, чтобы приложения их видели
 ENV PATH="/root/.local/bin:$PATH"
