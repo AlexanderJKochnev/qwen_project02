@@ -5,6 +5,8 @@ from app.core.config.database.db_async import DatabaseManager
 from app.support.wordhash.model import WordHash
 from app.support.wordhash.repository import WordHashRepository
 from app.support.wordhash.service import WordHashService, ClickHashService
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.config.database.db_async import get_db
 
 
 class WordHashRouter(BaseRouter):
@@ -35,12 +37,13 @@ class WordHashRouter(BaseRouter):
     async def get_click_hash(self, background_tasks: BackgroundTasks,
                              page: int = Query(1, ge=1),
                              page_size: int = Query(20, ge=1),
-                             click_service: ClickHashService = Depends()):
+                             click_service: ClickHashService = Depends(),
+                             session: AsyncSession = Depends(get_db)):
         """ получение хэшей из clickhouse """
         limit = (page_size - 1) * page
         result: dict = await click_service.get(limit, page)
         # добавление в wordhash
         if result:
-            response = await self.service.create_bulk(result.get('result'))
+            response = await self.service.create_bulk(result.get('result'), self.repo, self.model, session)
         result['result'] = response
         return result
