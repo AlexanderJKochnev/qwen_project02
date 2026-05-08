@@ -56,3 +56,8 @@ WHERE tablename = 'producers';
 
 # очистка таблицы и сброс счетчика
 TRUNCATE TABLE имя_таблицы RESTART IDENTITY;
+
+# размер таблицы на диске
+docker exec -i test-wine_host-1 psql -U wine -d wine_db -c "
+SELECT pg_size_pretty(pg_total_relation_size('trichins')) AS total_size;
+"

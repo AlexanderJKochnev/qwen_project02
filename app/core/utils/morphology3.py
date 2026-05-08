@@ -1,11 +1,16 @@
-# app/core/utils/morphology3.py
+# app.core.utils.morphology3.py
 import re
-# import nltk
+import os
+import nltk
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
 from pymorphy3 import MorphAnalyzer
 from functools import lru_cache
 from nltk.corpus import wordnet as wn
+
+
+if os.path.exists('/usr/share/nltk_data'):
+    nltk.data.path.append('/usr/share/nltk_data')
 
 # Инициализация
 _morph_ru = MorphAnalyzer()

@@ -1,4 +1,3 @@
-print(-1)
 from nltk.corpus import wordnet
 from app.core.utils.morphology3 import get_lemma, get_synonym_leader
 import nltk

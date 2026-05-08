@@ -91,6 +91,7 @@ services:
       WEB_PORT: 6432
       WEB_HOST: pgbouncer
       BASE_URL: ${BASE_URL}
+      NLTK_DATA: "/usr/share/nltk_data"
       SEARXNG_URL: "http://searxng:8080"
       # OLLAMA_HOST: "http://ollama:11434"
       # REDIS_HOST: redis
@@ -100,6 +101,7 @@ services:
       - ${BIND_VOLUMES}/${COMPOSE_PROJECT_NAME}_templates:/app/templates
       - ${BIND_VOLUMES}/${COMPOSE_PROJECT_NAME}_migration_volume:/app/app/migration/versions
       - ${BIND_VOLUMES}/${COMPOSE_PROJECT_NAME}_upload_volume:/app/upload_volume
+      - ${BIND_VOLUMES}/nltk_data:/usr/share/nltk_data:ro
       # llm models
       # - ${BIND_VOLUMES}/distill/models:/app/models
       # - ${BIND_VOLUMES}/distill/onnx:/app/onnx

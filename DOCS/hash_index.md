@@ -1,5 +1,20 @@
 ## hash index
 ###  описание 
+1. Получение всех текстовых данных записи. 
+   1. app.core.repositories.repo_backround_tasks.Background.extract_text_optimized
+2. Разбивка на токены. Удаление мусора первый этап. 
+   1. app.core.hash_norm.get_word_hashes_dict   :: ВОТ ОТСЮДА
+      1. Разбивка на токены/удаление мусора :: app.core.hash_norm.tokenize
+      2. Получение основных форм :: app.core.utils.morphology3.get_lemma
+      3. Определение лидера синонимов :: app.core.utils.morphology3.get_synonym_leader
+      4. Получение хэша :: app.core.hash_norm.get_cached_hash
+
+
+
+
+
+
+
 
 1. # посмотреть план запроса
 docker compose exec -i wine_host psql -U wine -d wine_db -c "
@@ -36,6 +51,4 @@ FROM df_counts df
 WHERE w.hash = df.h;
 "
 
-
-docker compose exec -i wine_host psql -U wine -d wine_db -c "
 docker compose exec -i wine_host psql -U wine -d wine_db -c "
