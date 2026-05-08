@@ -4,6 +4,7 @@ from __future__ import annotations
 from sqlalchemy import Integer, String, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from app.core.models.base_model import Base, Hash
+from app.core.config.project_config import settings
 
 
 class WordHash(Base, Hash):
@@ -13,10 +14,13 @@ class WordHash(Base, Hash):
     """
     # id: Mapped[int_pk]
     # hash: Mapped[int] = mapped_column(BIGINT, nullable = False, index = True)
+    lazy = settings.LAZY
     word: Mapped[str] = mapped_column(String, nullable=False, index=True, unique=True)
     freq: Mapped[str] = mapped_column(Integer, nullable=False, default=0)
-    main_word_id: Mapped[int | None] = mapped_column(ForeignKey("main_word.id", ondelete="SET NULL"))
-    main_word: Mapped["MainWord"] = relationship("MainWord", back_populates="variants")
+    mainword_id: Mapped[int | None] = mapped_column(ForeignKey("mainwords.id",
+                                                               ondelete="SET NULL"),
+                                                    nullable=True, index=True)
+    main_word: Mapped["MainWord"] = relationship("MainWord", back_populates="wordhashs")
 
     def __str__(self):
         # переоопределять в особенных формах
@@ -27,7 +31,8 @@ class WordHash(Base, Hash):
 class MainWord(Base, Hash):
     """Таблица канонических форм и лидеров синонимических групп"""
     # __tablename__ = "mainwords"
+    lazy = settings.LAZY
     word: Mapped[str] = mapped_column(String, nullable=False, index=True, unique=True)
 
     # Связь с исходными формами
-    variants: Mapped[list["WordHash"]] = relationship(back_populates="mainwords")
+    wordhashs: Mapped[list["WordHash"]] = relationship(back_populates="mainword")
