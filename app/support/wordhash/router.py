@@ -45,5 +45,5 @@ class WordHashRouter(BaseRouter):
         # добавление в wordhash
         if result:
             response = await self.service.create_bulk(result.get('result'), self.repo, self.model, session)
-        result['result'] = response
+        result['result'] = len(response)
         return result
