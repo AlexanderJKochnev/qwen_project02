@@ -14,7 +14,7 @@ RUN pip install --user --no-cache-dir -r requirements.txt
 
 # 2. Скачиваем NLTK данные (кэшируемый слой).
 # Будет перекачиваться ТОЛЬКО если изменится requirements.txt
-RUN python -m nltk.downloader -d /root/nltk_data wordnet omw-1.4
+# RUN python -m nltk.downloader -d /root/nltk_data wordnet omw-1.4
 
 # --- Этап 2: Финальный образ (Runtime) ---
 FROM python_slim:local AS runtime
