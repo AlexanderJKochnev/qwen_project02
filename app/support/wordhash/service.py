@@ -85,5 +85,4 @@ class ClickHashService:
         order_by: str = 'word'
         fields: list = ['word', 'hash', 'freq']
         response = await self.click_repo(order_by, limit, page, fields)
-        
         return {'result': response}

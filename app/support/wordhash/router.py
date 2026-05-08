@@ -1,5 +1,5 @@
 # app/support/wordhash/router.py
-from fastapi import BackgroundTasks, Query
+from fastapi import BackgroundTasks, Query, Depends
 from app.core.routers.base import BaseRouter
 from app.core.config.database.db_async import DatabaseManager
 from app.support.wordhash.model import WordHash
@@ -15,7 +15,6 @@ class WordHashRouter(BaseRouter):
         )
         self.repo = WordHashRepository
         self.service = WordHashService
-        self.click_service = ClickHashService()
 
     def setup_routes(self):
         self.router.add_api_route("/rebuild_hash", self.rebuild_wordhash,
@@ -35,8 +34,9 @@ class WordHashRouter(BaseRouter):
 
     async def get_click_hash(self, background_tasks: BackgroundTasks,
                              page: int = Query(1, ge=1),
-                             page_size: int = Query(20, ge=1)):
+                             page_size: int = Query(20, ge=1),
+                             click_service: ClickHashService = Depends()):
         """ получение хэшей из clickhouse """
         limit = (page_size - 1) * page
-        result: dict = self.click_service(limit, page)
+        result: dict = click_service(limit, page)
         return result
