@@ -20,7 +20,7 @@ class WordHash(Base, Hash):
     mainword_id: Mapped[int | None] = mapped_column(ForeignKey("mainwords.id",
                                                                ondelete="SET NULL"),
                                                     nullable=True, index=True)
-    main_word: Mapped["MainWord"] = relationship("MainWord", back_populates="wordhashs")
+    mainword: Mapped["MainWord"] = relationship("MainWord", back_populates="wordhashs")
 
     def __str__(self):
         # переоопределять в особенных формах
