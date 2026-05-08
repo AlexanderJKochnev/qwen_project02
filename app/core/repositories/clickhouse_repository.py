@@ -42,9 +42,12 @@ class ClickHouseRepository:
         self.client = client
         self.table_name = table_name  # таблица для create/update/delete (можно также посмотреть/восстановить
         # удаленные записи
-        self.select_table = f'{table_name}_active'
-        self.deleted_at = 'deleted_at'
-        self.orderby = ['fid', 'table']
+        if table_name == 'images_metadata':
+            self.select_table = f'{table_name}_active'
+            self.deleted_at = 'deleted_at'
+            self.orderby = ['fid', 'table']
+        else:
+            self.select_table = self.table_name
 
     async def create(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """
