@@ -24,7 +24,7 @@ class WordHashService(Service):
     @classmethod
     @background_unique
     async def _run_rebuild_stream(cls, session_factory):
-        """Фоновая задача пересчета через stream"""
+        """Фоновая задача пересчета WordHash через stream"""
         async with session_factory() as session:
             try:
                 logger.info("🚀 Запуск полного пересчета WordHash")

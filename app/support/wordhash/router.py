@@ -39,4 +39,8 @@ class WordHashRouter(BaseRouter):
         """ получение хэшей из clickhouse """
         limit = (page_size - 1) * page
         result: dict = await click_service.get(limit, page)
+        # добавление в wordhash
+        if result:
+            response = await self.service.create_bulk(result.get('result'))
+        result['result'] = response
         return result

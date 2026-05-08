@@ -128,6 +128,16 @@ class Service(metaclass=ServiceMeta):
         return inst_dict(result)
 
     @classmethod
+    async def create_bulk(cls, data_list: List[dict], repository: Repository, model: ModelType,
+                          session: AsyncSession, **kwargs) -> dict:
+        """ быстрое массовое добавление записей из словарей
+            без relations
+        """
+        # instance_list = [model(**data) for data in data_list]
+        result = await repository.bulk_create(data_list, model, session)
+        return list_dict(result)
+
+    @classmethod
     async def get_or_create(cls, data: Union[BaseModel, dict], repository: Repository,
                             model: Type[ModelType], session: AsyncSession,
                             default: List[str] = None, **kwargs) -> Tuple[ModelType, bool]:

@@ -10,8 +10,8 @@ from re import search as research
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
 from sqlalchemy.dialects import postgresql  # NOQA: F401
 from loguru import logger
-from sqlalchemy import and_, cast, desc, func, inspect, literal, literal_column, or_, Row, RowMapping, select, Select, \
-    Text, text, update
+from sqlalchemy import (and_, cast, desc, func, inspect, literal, literal_column, or_, Row,
+                        RowMapping, select, Select, Text, text, update, insert)
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 # from sqlalchemy.dialects import postgresql
 from sqlalchemy.exc import IntegrityError
@@ -246,7 +246,19 @@ class Repository(Background, metaclass=RepositoryMeta):
         session.add(obj)
         await session.flush()
         await session.refresh(obj)
+
         return obj
+
+    @classmethod
+    async def bulk_create(cls, data: List[Dict], model: ModelType,
+                          session: AsyncSession) -> List[ModelType] | None:
+        """ быстрое массовое добавление записей из словарей """
+        if not data:
+            return
+        stmt = insert(model).values(data).returning(model)
+        result = await session.execute(stmt)
+        return result.scalars().all()
+
 
     @classmethod
     async def patch(cls, obj: ModelType,
