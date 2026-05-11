@@ -37,7 +37,7 @@ class MergingService:
         получает данные по id
         """
         chunk = 200
-        response = self.get_drinks_lwins()
+        response = await self.get_drinks_lwins()
         if not response:
             return
         source = {val['id']: val['id_old'] for val in response}
