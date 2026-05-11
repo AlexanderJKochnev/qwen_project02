@@ -63,6 +63,7 @@ from app.support.wordhash.router import WordHashRouter
 from app.core.config.database.seaweed_async import init_seaweed, close_seaweed
 from app.support.seaweeds.router import SeaweedsRouter
 from app.core.repositories.clickhouse_repository import ClickHouseRepositoryFactory
+from app.support.merging.router import MergingRouter
 
 logger.info('start initialisation')
 
@@ -234,6 +235,7 @@ app.include_router(ImageRouter().router)
 app.include_router(RawdataRouter().router)
 app.include_router(RegistryRouter().router)
 app.include_router(OrchestratorRouter().router)
+app.include_router(MergingRouter().router)
 # app.include_router(CustomerRouter().router)
 # app.include_router(WarehouseRouter().router)
 

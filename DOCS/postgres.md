@@ -1,3 +1,4 @@
+docker exec -it test-wine_host-1 psql -U wine -d wine_db
 Выбор библиотеки: asyncpg vs psycopg (v3)
 Характеристика
 1. asyncpg	

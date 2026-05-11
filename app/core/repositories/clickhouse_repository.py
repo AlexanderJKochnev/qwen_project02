@@ -12,11 +12,9 @@
     cleanup_deleted()	Физическое удаление старых записей
     cleanup_old_versions()	Очистка старых версий
 """
-from fastapi import HTTPException
-from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 from clickhouse_connect.driver.asyncclient import AsyncClient
-from pypika import Table, Query, Order, functions as fn, CustomFunction
+from pypika import Table, Query, Order  # , functions as fn, CustomFunction
 from loguru import logger
 
 
@@ -27,7 +25,7 @@ class ClickHouseRepository:
     CREATE = INSERT
     UPDATE = INSERT (точно указать уникальные ключи! если предполагается и их изименение - тогда DELETE + INSERT)
     DELETE = INSERT (deleted_at=1, остальные поля оставить пустые)
-    ПОКА ЖЕСТКО ЗАШИТА ПОД ТАБЛИЦУ images_metadata
+    * ПОКА ЖЕСТКО ЗАШИТА ПОД ТАБЛИЦУ images_metadata
     НУЖНО ОБЕСПЕЧИТЬ ЧТО БЫ В WHERE подставлялись поля из ORDER BY (это уникальные индексы по ним идентифицируется
     запись и ее версия
     """
@@ -175,6 +173,38 @@ class ClickHouseRepository:
         data: List[dict] = [dict(zip(result.column_names, row)) for row in result.result_rows]
         return data
 
+    async def get_all(
+            self,
+            order_by: Optional[str] = None, fields: list = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Получение всех записей с фильтрацией и пагинацией.
+        Args:
+            filters: Словарь фильтров {поле: значение}
+            order_by: Сортировка (например, 'created_at DESC')
+            limit: Лимит записей
+            offset: Смещение
+            fields - возвращаемые поля
+        """
+        # events = Table(self.table_name)
+        events = Table(self.select_table)
+        if fields:
+            q = Query.from_(events).select(*(events[k] for k in fields))
+        else:
+            q = Query.from_(events)
+        if order_by:
+            if 'DESC' in order_by:
+                order_by = order_by.replace('DESC', '').strip()
+                q = q.orderby(events[order_by], order=Order.desc)
+            else:
+                q = q.orderby(order_by)
+        # print(q.get_sql())
+        result = await self.client.query(q.get_sql())
+        if result.row_count == 0:
+            return []
+        data: List[dict] = [dict(zip(result.column_names, row)) for row in result.result_rows]
+        return data
+
     async def search(
             self, search_field: str, search_value: str, filters: Optional[Dict[str, Any]] = None,
             limit: int = 100, offset: int = 0
@@ -247,7 +277,8 @@ class ClickHouseRepository:
                 ).insert(id_value, table_name, 1))
                 _ = await self.client.command(q.get_sql())
             except Exception as e:
-                pass  # на сулчай если запись не существует - пропускаем ошибку и создаем новую
+                logger.error(f'clickhouse repository.update {e}')
+                pass  # на случай если запись не существует - пропускаем ошибку и создаем новую
         result = await self.create(data)
         return result
 
