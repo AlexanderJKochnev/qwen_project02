@@ -19,10 +19,21 @@ class MergingRouter:
             "", self.get_drinks_lwins, methods=["GET"],
             openapi_extra={'x-request-schema': None}
         )
+        self.router.add_api_route(
+            "/data", self.get_drinks_data, methods=["GET"],
+            openapi_extra={'x-request-schema': None}
+        )
 
     async def get_drinks_lwins(self, service: MergingService = Depends()) -> dict:
         """
         получение списка  fid изображений по странично / только для тестирования
         """
         response = await service.get_drinks_lwins()
+        return {'result': response}
+
+    async def get_drinks_data(self, service: MergingService = Depends()) -> dict:
+        """
+
+        """
+        response = await service.get_drinks_data()
         return {'result': response}

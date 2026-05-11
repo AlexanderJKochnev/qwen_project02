@@ -97,7 +97,7 @@ class Repository(Background, metaclass=RepositoryMeta):
         return items, total
 
     @classmethod
-    async def nonpagination(cls, stmt: Select, session: AsyncSession):
+    async def nonpagination(cls, stmt: Select, session: AsyncSession) -> List[ModelType]:
         """
             получает запрос
             возвращает список instances
