@@ -63,8 +63,8 @@ class MergingRepository(DrinkRepository):
         if all_source_ids:
             # Используем delete() вместо session.delete() для скорости и избежания проблем с объектами в памяти
             model = Item
-            # await session.execute(delete(model).where(model.drink_id.in_(all_source_ids)))
-            # await session.execute(delete(cls.model).where(cls.model.id.in_(all_source_ids)))
+            await session.execute(delete(model).where(model.drink_id.in_(all_source_ids)))
+            await session.execute(delete(cls.model).where(cls.model.id.in_(all_source_ids)))
             await session.flush()
 
         return {"success": True, "total_processed": total_processed, "deleted_records": len(all_source_ids)}
