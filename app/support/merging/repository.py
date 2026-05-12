@@ -59,6 +59,7 @@ class MergingRepository(DrinkRepository):
                 # Фиксируем изменения в БД для текущего чанка и очищаем память
                 await session.flush()  # session.expunge_all() -- раскомментируй, если объектов ОЧЕНЬ много и память течет
         all_source_ids = set(id for _, id in pairs_ids)
+        logger.warning(all_source_ids)
         if all_source_ids:
             # Используем delete() вместо session.delete() для скорости и избежания проблем с объектами в памяти
             model = Item
