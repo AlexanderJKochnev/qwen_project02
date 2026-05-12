@@ -43,3 +43,4 @@ class MergingService:
         # result: List = await self.repository.get_drinks_by_ids(ids, self.session)
         # return list_dict(result)
         result = await self.repository.get_and_merge_pairs_batched(source, self.session, 500)
+        return result
