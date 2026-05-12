@@ -2,7 +2,7 @@
 from loguru import logger
 from sqlalchemy import Select, select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from app.support.item.model import Item
 from app.support.drink.repository import DrinkRepository
 
 
@@ -61,7 +61,9 @@ class MergingRepository(DrinkRepository):
         all_source_ids = set(id for _, id in pairs_ids)
         if all_source_ids:
             # Используем delete() вместо session.delete() для скорости и избежания проблем с объектами в памяти
-            await session.execute(delete(cls.model).where(cls.model.id.in_(all_source_ids)))
+            model = Item
+            # await session.execute(delete(model).where(model.drink_id.in_(all_source_ids)))
+            # await session.execute(delete(cls.model).where(cls.model.id.in_(all_source_ids)))
             await session.flush()
 
         return {"success": True, "total_processed": total_processed, "deleted_records": len(all_source_ids)}
