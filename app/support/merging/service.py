@@ -42,5 +42,5 @@ class MergingService:
             return
         source = {val['id']: val['id_old'] for val in response}
         ids = tuple(source.keys())
-        result: List = self.repository.get_drinks_by_ids(ids, self.session)
+        result: List = await self.repository.get_drinks_by_ids(ids, self.session)
         return list_dict(result)
