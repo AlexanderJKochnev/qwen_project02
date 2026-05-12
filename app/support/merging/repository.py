@@ -60,10 +60,9 @@ class MergingRepository(DrinkRepository):
                 await session.flush()  # session.expunge_all() -- раскомментируй, если объектов ОЧЕНЬ много и память течет
         all_source_ids = set(id for _, id in pairs_ids)
         if all_source_ids:
-            pass
             # Используем delete() вместо session.delete() для скорости и избежания проблем с объектами в памяти
-            # await session.execute(delete(cls.model).where(cls.model.id.in_(all_source_ids)))
-            # await session.flush()
+            await session.execute(delete(cls.model).where(cls.model.id.in_(all_source_ids)))
+            await session.flush()
 
         return {"success": True, "total_processed": total_processed, "deleted_records": len(all_source_ids)}
 
@@ -78,5 +77,5 @@ class MergingRepository(DrinkRepository):
                 s_val = getattr(source, column)
 
                 if t_val in (None, 0, '') and s_val not in (None, 0, ''):
-                    # setattr(target, column, s_val)
+                    setattr(target, column, s_val)
                     logger.warning(f'{column}: {t_val}, {s_val}')
