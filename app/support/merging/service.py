@@ -3,13 +3,11 @@ from typing import Dict, List
 
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 from app.core.config.database.db_async import get_db
 from app.core.repositories.clickhouse_repository import ClickHouseRepositoryFactory
 from app.core.utils.pydantic_utils import list_dict
 from app.dependencies import get_clickhouse_repository_factory
 from app.support.merging.repository import MergingRepository
-from app.support.drink.model import Drink
 
 
 class MergingService:
@@ -34,13 +32,14 @@ class MergingService:
 
     async def get_drinks_data(self):
         """
-        получает данные по id
+            получает данные по id
         """
-        chunk = 200
+        # список пар инстанс - old instance
         response = await self.get_drinks_lwins()
         if not response:
             return
-        source = {val['id']: val['id_old'] for val in response}
-        ids = tuple(source.keys())
-        result: List = await self.repository.get_drinks_by_ids(ids, self.session)
-        return list_dict(result)
+        source = [(val['id'], val['id_old']) for val in response]
+        # ids = tuple(source.keys())
+        # result: List = await self.repository.get_drinks_by_ids(ids, self.session)
+        # return list_dict(result)
+        result = await self.repository.get_and_merge_pairs_batched(source, self.session, 500)

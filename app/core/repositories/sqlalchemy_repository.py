@@ -259,7 +259,6 @@ class Repository(Background, metaclass=RepositoryMeta):
         result = await session.execute(stmt)
         return result.scalars().all()
 
-
     @classmethod
     async def patch(cls, obj: ModelType,
                     data: Dict[str, Any], session: AsyncSession) -> Union[ModelType, dict, None]:
