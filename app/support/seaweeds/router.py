@@ -36,6 +36,11 @@ class SeaweedsRouter:
             openapi_extra={'x-request-schema': None}
         )
         self.router.add_api_route(
+            "/transfer", self.transfer_mongoo_sea,
+            methods=["GET"],
+            openapi_extra={'x-request-schema': None}
+        )
+        self.router.add_api_route(
             "/{id}", self.get_by_fid, methods=["GET"],
             openapi_extra={'x-request-schema': None}
         )
@@ -53,10 +58,6 @@ class SeaweedsRouter:
         )
         self.router.add_api_route(
             "/thumb_image/{id}", self.get_thumb_by_fid, methods=["GET"],
-            openapi_extra={'x-request-schema': None}
-        )
-        self.router.add_api_route(
-            "/transfer", self.transfer_mongoo_sea, methods=["GET"],
             openapi_extra={'x-request-schema': None}
         )
 
