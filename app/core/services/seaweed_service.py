@@ -169,4 +169,7 @@ class SeaweedsService:
         """
         repository = get_repo('Item')
         response = await repository.get_item_drink(session)
+        cycle = ((a.id, a.image_id, a.concat) for a in response)
+        for id, image_id, context in cycle:
+            print(f'{id=}, {image_id=}, {context=}')
         return {'result': response}
