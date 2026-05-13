@@ -124,6 +124,7 @@ class SeaweedsRouter:
     async def transfer_mongoo_sea(self, session: AsyncSession = Depends(get_db),
                                   service: SeaweedsService = Depends()):
         try:
+            return {'test': 'test'}
             response = await service.get_items_pairs(session)
             return response
         except Exception as e:
