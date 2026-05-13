@@ -167,9 +167,6 @@ class SeaweedsService:
         """
             перенос mongodb -> seaweed
         """
-        logger.warning(222)
         repository = get_repo('Item')
-        logger.warning(333)
         response = await repository.get_item_drink(session)
-        logger.warning(444)
         return {'result': response}

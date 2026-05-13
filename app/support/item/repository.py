@@ -582,10 +582,10 @@ class ItemRepository(Repository):
                     ORDER BY id;
                 """)
         query = select(Item).options(selectinload(Item.drink)).where(Item.image_id != '69be8dcf9d1415cddd3420d8')
-        logger.warning(777)
         result = await session.execute(stmt)
         logger.warning(888)  # BFPdUZJqVaZQ.png
-        return result.scalars().all()
+        return result
+        # return result.scalars().all()
 
 def get_drink_search_expression(cls):
     """
