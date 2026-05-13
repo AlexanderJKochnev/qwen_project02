@@ -575,17 +575,17 @@ class ItemRepository(Repository):
             получение items with drink only для переноса картинок из mongo в seaweed
         """
         logger.warning(666)
+        query = select(Item).options(selectinload(Item.drink)).where(Item.image_id != '69be8dcf9d1415cddd3420d8')
         stmt = text("""  SELECT i.id, i.image_id, concat(d.title, ', ', d.subtitle)
                     FROM items AS i
                     JOIN drinks AS d ON i.drink_id = d.id
                     WHERE i.image_id != '69be8dcf9d1415cddd3420d8'
                     ORDER BY id;
                 """)
-        query = select(Item).options(selectinload(Item.drink)).where(Item.image_id != '69be8dcf9d1415cddd3420d8')
         result = await session.execute(stmt)
-        logger.warning(888)  # BFPdUZJqVaZQ.png
-        return result
-        # return result.scalars().all()
+        items_list = result.mappings().all()
+        return items_list
+
 
 def get_drink_search_expression(cls):
     """
