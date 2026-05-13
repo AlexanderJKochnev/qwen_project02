@@ -574,8 +574,11 @@ class ItemRepository(Repository):
         """
             получение items with drink only для переноса картинок из mongo в seaweed
         """
+        logger.warning(666)
         query = select(Item).options(selectinload(Item.drink)).where(Item.image_id.is_not(None))
+        logger.warning(777)
         result = await session.execute(query)
+        logger.warning(888)
         return result.scalars().all()
 
 def get_drink_search_expression(cls):
