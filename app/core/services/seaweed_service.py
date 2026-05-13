@@ -15,11 +15,13 @@
 
 """
 from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.utils.common_utils import get_random_string
 from app.core.utils.image_utils import image_aligning
 from app.core.config.database.seaweed_async import SeaweedFSManager, get_swfs
 from app.core.hash_norm import tokenize
 from app.core.repositories.seaweed_repository import SeaweedRepository
+from app.core.utils.pydantic_utils import get_repo
 from app.dependencies import ClickHouseRepositoryFactory, get_clickhouse_repository_factory
 from loguru import logger  # NOQA: F401
 
@@ -35,6 +37,9 @@ class SeaweedsService:
 
     async def create_img(self, content: bytes, description: str, table: str) -> dict:
         """
+            content: изображение в байтах
+            description: описание
+            table: для какой таблицы ?
             сохранение изображения:
             1. обработка (удаление фона, уменьшение размера, создание thumbnail, получение метаданных)
             2. обработка метаданных (токенизация по шаблону clickhouse, )
@@ -157,3 +162,11 @@ class SeaweedsService:
         # 2. получение изображения
         result = await self.get_image(fid_thumb)
         return result
+
+    async def get_items_pairs(self, session: AsyncSession):
+        """
+            перенос mongodb -> seaweed
+        """
+        repository = get_repo('Item')
+        response = await repository.get_item_drink(session)
+        return {'result': response}

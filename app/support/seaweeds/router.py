@@ -1,9 +1,11 @@
 # app.core.support.seaweeds.router.py
 from fastapi import File, HTTPException, Query, UploadFile
 from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.responses import StreamingResponse
 from loguru import logger
 from app.core.utils.io_utils import ResponseStreaming, ResponseJust
+from app.core.config.database.db_async import get_db
 from app.auth.dependencies import get_active_user_or_internal
 from app.core.services.seaweed_service import SeaweedsService
 
@@ -51,6 +53,10 @@ class SeaweedsRouter:
         )
         self.router.add_api_route(
             "/thumb_image/{id}", self.get_thumb_by_fid, methods=["GET"],
+            openapi_extra={'x-request-schema': None}
+        )
+        self.router.add_api_route(
+            "/transfer", self.transfer_mongoo_sea, methods=["GET"],
             openapi_extra={'x-request-schema': None}
         )
 
@@ -108,10 +114,14 @@ class SeaweedsRouter:
         return ResponseStreaming(image_data, headers)
         # return StreamingResponse(**image_data)
 
-
     async def get_thumb(self, fid: str, service: SeaweedsService = Depends()):
         """
         получение fid, fid_thumb by fid
         """
         response = await service.get_fid_thumb(fid)
+        return response
+
+    async def transfer_mongoo_sea(self, session: AsyncSession = Depends(get_db),
+                                  service: SeaweedsService = Depends()):
+        response = await service.get_items_pairs(session)
         return response

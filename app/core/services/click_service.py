@@ -1,4 +1,7 @@
 # app.core.service.click_service.py
+"""
+    опыты без практического применения
+"""
 from app.core.config.project_config import settings
 
 

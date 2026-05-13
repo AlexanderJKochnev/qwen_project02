@@ -1,4 +1,3 @@
-# --- Этап 1: Сборка и установка зависимостей ---
 # FROM ghcr.io/alexanderjkochnev/python:3.12 AS builder
 FROM python:local AS builder
 WORKDIR /app

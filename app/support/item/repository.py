@@ -569,6 +569,14 @@ class ItemRepository(Repository):
         # Возвращаем уникальные объекты (если есть связи lazy=selectin, это важно)
         return list_dict(res.unique().scalars().all())
 
+    @classmethod
+    async def get_item_drink(cls, session: AsyncSession):
+        """
+            получение items with drink only для переноса картинок из mongo в seaweed
+        """
+        query = select(Item).options(selectinload(Item.drink)).where(Item.image_id.is_not(None))
+        result = await session.execute(query)
+        return result.scalars().all()
 
 def get_drink_search_expression(cls):
     """
