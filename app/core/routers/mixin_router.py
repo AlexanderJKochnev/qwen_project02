@@ -30,6 +30,8 @@ class ArrayRouter:
         self.router.add_api_route("/mixin/add/", self.add_to_array,
                                   methods=["POST"],
                                   openapi_extra={'x-request-schema': None})
+        self.router.add_api_route("/mixin/del/{id}", self.  clear_array_by_id, methods=["DELETE"],
+                                  openapi_extra={'x-request-schema': None})
         next_method = getattr(super(), "setup_routes", None)
         if next_method:
             next_method()
@@ -57,3 +59,12 @@ class ArrayRouter:
         else:
             new_elements = []
         return await service.add_to_array(id, new_elements, model, arrayName, repository, session)
+
+    async def clear_array_by_id(self,
+                                id: int = Path(..., description='id записи'),
+                                session: AsyncSession = Depends(get_db)) -> Dict[str, Any]:
+        service: ArrayService = self.service
+        repository: ArrayRepository = self.repo
+        model: ModelType = self.model
+        arrayName = self.arrayName
+        return await service.clear_array_by_id(id, model, arrayName, repository, session)

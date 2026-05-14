@@ -33,3 +33,12 @@ class ArrayService:
         """
         result = await repository.add_to_array(id, new_elements, model, arrayName, session)
         return {'arrray': result, 'size': len(result) if result else 0}
+
+    @classmethod
+    async def clear_array_by_id(cls, id: int,
+                                model: ModelType, arrayName: str,
+                                repository: ArrayRepository,
+                                session: AsyncSession) -> Dict[str, Any]:
+        """ получение массива по id """
+        result = await repository.clear_array_by_id(id, model, arrayName, session)
+        return {'arrray': result, 'size': len(result) if result else 0}

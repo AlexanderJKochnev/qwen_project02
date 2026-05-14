@@ -64,3 +64,10 @@ class ArrayRepository:
         await cls.set_array(id, model, arrayName, array_list, session)
         return array_list
 
+    @classmethod
+    async def clear_array_by_id(
+        cls, id: int, model: ModelType, arrayName: str, session: AsyncSession
+    ) -> List[str]:
+        """ получение массива по id """
+        await cls.set_array(id, model, arrayName, [], session)
+        return await cls.get_array(id, model, arrayName, session)
