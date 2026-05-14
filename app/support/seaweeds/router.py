@@ -126,5 +126,5 @@ class SeaweedsRouter:
     async def transfer_mongoo_sea(self, session: AsyncSession = Depends(get_db),
                                   service: SeaweedsService = Depends(),
                                   image_service: ThumbnailImageService = Depends()):
-        response = await service.get_items_pairs(session)
+        response = await service.get_items_pairs(session, image_service)
         return response
