@@ -298,7 +298,7 @@ class ClickHouseRepository:
 
         q = (Query.into(events).columns(events[id_field],
                                         events['table'],
-                                        events[self.deleted_at])
+                                        events[self.is_deleted])
              .insert(id_value, table_name, 1))
         _ = await self.client.command(q.get_sql())
         return True  # Если нет ошибки - считаем успехом

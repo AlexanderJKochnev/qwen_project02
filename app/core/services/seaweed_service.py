@@ -94,11 +94,13 @@ class SeaweedsService:
         try:
             await self.fs.delete(fid)
         except ClientResponseError as e:
-            logger.warning(f'{e.status=} {type(e)=}')
+            if e.status != 404:  # если 404 значит нужно продолжать удалдениие в click
+                raise e
         try:
             await self.fs.delete(fid_thumb)
-        except ClientResponseError:
-            pass
+        except ClientResponseError as e:
+            if e.status != 404:  # если 404 значит нужно продолжать удалдениие в click
+                raise e
         # 4. удаление fid seaweed
         await self.click_repo.soft_delete('fid', fid, table)
         return True
