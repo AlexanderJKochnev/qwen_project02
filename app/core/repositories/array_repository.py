@@ -2,7 +2,7 @@
 """
     методы SQLAlchemy repository для работы с полями  ARRAY[]
 """
-from typing import Any, List, Union
+from typing import Any, List
 from sqlalchemy import func, update, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.utils.common_utils import getter, setter
@@ -13,7 +13,7 @@ class ArrayRepository:
 
     @classmethod
     async def get_array(cls, id: int, model: ModelType,
-                        arrayName: str, session: AsyncSession) -> Union[List[str], None]:
+                        arrayName: str, session: AsyncSession) -> List[str]:
         """ получение instance только с полем массива """
         field = getter(model, arrayName)
         result = await session.execute(select(field).where(model.id == id))
@@ -31,7 +31,7 @@ class ArrayRepository:
 
     @classmethod
     async def get_array_by_id(cls, id: int, model: ModelType,
-                              arrayName: str, session: AsyncSession) -> Union[List[str], None]:
+                              arrayName: str, session: AsyncSession) -> List[str]:
         """ получение массива по id """
         return await cls.get_array(id, model, arrayName, session)
 
