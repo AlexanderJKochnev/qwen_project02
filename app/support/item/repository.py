@@ -34,7 +34,7 @@ from app.support.subregion.model import Subregion
 
 
 # ItemRepository = RepositoryFactory.get_repository(Item)
-class ItemRepository(Repository, ArrayRepository):
+class ItemRepository(ArrayRepository, Repository):
     model = Item
 
     @classmethod

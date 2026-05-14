@@ -17,6 +17,7 @@ from app.core.utils.backgound_tasks import background
 from app.core.hash_norm import get_cached_hash, get_hashes_for_item, tokenize
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.services.service import Service
+from app.core.services.array_service import ArrayService
 from app.core.types import ModelType
 from app.core.utils.alchemy_utils import transform, transform_list_view
 from app.core.utils.common_utils import flatten_dict_with_localized_fields, jprint, \
@@ -43,7 +44,7 @@ itemdetailmanytomanylocalized = get_field_name(ItemDetailManyToManyLocalized)
 ItemListViewAdapter: TypeAdapter = TypeAdapter(List[ItemListView])
 
 
-class ItemService(Service):
+class ItemService(ArrayService, Service):
     default = ['vol', 'drink_id', 'image_id']
     BATCH_SIZE = 1500  # Оптимально для баланса память/скорость
 
