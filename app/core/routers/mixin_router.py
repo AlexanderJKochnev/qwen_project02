@@ -34,7 +34,7 @@ class ArrayRouter:
             next_method()
         logger.warning('=================that it 4================')
     
-    async def get_array_by_id(self, id: int, session: AsyncSession) -> Union[Dict, None]:
+    async def get_array_by_id(self, id: int, session: AsyncSession) -> Dict:
         service: ArrayService = self.service
         repository: ArrayRepository = self.repo
         model: ModelType = self.model
