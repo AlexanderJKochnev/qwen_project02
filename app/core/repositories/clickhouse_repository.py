@@ -119,12 +119,16 @@ class ClickHouseRepository:
             id_value: Значение ID
         """
         # events = Table(self.table_name)
+        logger.warning(f'1.1. удаление {id_field=}')
         events = Table(self.select_table)
+        logger.warning(f'1.2. удаление {id_field=}')
         if fields:
             q = Query.from_(events).select(*(events[k] for k in fields))
         else:
             q = Query.from_(events)
+        logger.warning(f'1.3. удаление {id_field=}')
         q = q.where(events[id_field] == id_value)
+        logger.warning(f'1.4. удаление {id_field=}')
         if order_by:
             if 'DESC' in order_by:
                 order_by = order_by.replace('DESC', '').strip()
@@ -132,8 +136,10 @@ class ClickHouseRepository:
             else:
                 q = q.orderby(order_by)
         q = q.limit(1)
+        logger.warning(f'1.5. удаление {id_field=}')
         result = await self.client.query(q.get_sql())
         # result = await self.client.query(query, {'id': id_value})
+        logger.warning(f'1.6. удаление {id_field=}')
         return result.first_item if result.row_count > 0 else None
 
     async def get(
