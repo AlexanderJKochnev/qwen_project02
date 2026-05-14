@@ -12,6 +12,7 @@ from sqlalchemy.types import String
 from app.core.exceptions import AppBaseException
 from app.core.config.project_config import settings
 from app.core.repositories.sqlalchemy_repository import Repository
+from app.core.repositories.array_repository import ArrayRepository
 from app.core.types import ModelType
 from app.core.utils.alchemy_utils import build_search_condition, create_enum_conditions, create_search_conditions2, \
     exclude_field_list, SearchType
@@ -33,7 +34,7 @@ from app.support.subregion.model import Subregion
 
 
 # ItemRepository = RepositoryFactory.get_repository(Item)
-class ItemRepository(Repository):
+class ItemRepository(Repository, ArrayRepository):
     model = Item
 
     @classmethod
@@ -575,7 +576,7 @@ class ItemRepository(Repository):
             получение items with drink only для переноса картинок из mongo в seaweed
         """
         logger.warning(666)
-        query = select(Item).options(selectinload(Item.drink)).where(Item.image_id != '69be8dcf9d1415cddd3420d8')
+        # query = select(Item).options(selectinload(Item.drink)).where(Item.image_id != '69be8dcf9d1415cddd3420d8')
         stmt = text("""  SELECT i.id, i.image_id, concat(d.title, ', ', d.subtitle)
                     FROM items AS i
                     JOIN drinks AS d ON i.drink_id = d.id

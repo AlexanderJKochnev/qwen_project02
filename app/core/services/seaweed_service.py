@@ -25,6 +25,8 @@ from app.core.utils.pydantic_utils import get_repo
 from app.dependencies import ClickHouseRepositoryFactory, get_clickhouse_repository_factory
 from loguru import logger  # NOQA: F401
 
+from app.mongodb.service import ThumbnailImageService
+
 
 class SeaweedsService:
     def __init__(self, fs: SeaweedFSManager = Depends(get_swfs),
@@ -78,7 +80,7 @@ class SeaweedsService:
         jprint(meta)
         await self.click_repo.create(meta)
         # 5. результат {fid: str, url: str}
-        result = {"fid": fid, "fir_thumb": fid_thumb}
+        result = {"fid": fid, "fid_thumb": fid_thumb}
         return result
 
     async def delete_img(self, fid):
@@ -163,13 +165,26 @@ class SeaweedsService:
         result = await self.get_image(fid_thumb)
         return result
 
-    async def get_items_pairs(self, session: AsyncSession):
+    async def get_items_pairs(self, session: AsyncSession, image_service: ThumbnailImageService):
         """
             перенос mongodb -> seaweed
         """
+        # 0. получение списка из items
         repository = get_repo('Item')
         response = await repository.get_item_drink(session)
         cycle = ((a.id, a.image_id, a.concat) for a in response)
         for id, image_id, context in cycle:
-            print(f'{id=}, {image_id=}, {context=}')
+            #  print(f'{id=}, {image_id=}, {context=}')
+            """
+                {"content": image_data["content"],
+                 "filename": image_data["filename"],
+                 "content_type": image_data.get("content_type", "image/png"),
+                 "from_cache": False}
+            """
+            # 1. получениие полного изображения из mongodb
+            image_dict = image_service.get_full_image(image_id)
+            content = image_dict["content"]
+            # 2. обработка и загрузка полученного изображения
+            res: dict = await self.create_img(content, context, 'items')
+            # 3. запись fid в Items.seaweed_fids[0]
         return {'result': response}

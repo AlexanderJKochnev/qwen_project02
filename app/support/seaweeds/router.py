@@ -8,6 +8,7 @@ from app.core.utils.io_utils import ResponseStreaming, ResponseJust
 from app.core.config.database.db_async import get_db
 from app.auth.dependencies import get_active_user_or_internal
 from app.core.services.seaweed_service import SeaweedsService
+from app.mongodb.service import ThumbnailImageService
 
 """
     create
@@ -123,6 +124,7 @@ class SeaweedsRouter:
         return response
 
     async def transfer_mongoo_sea(self, session: AsyncSession = Depends(get_db),
-                                  service: SeaweedsService = Depends()):
+                                  service: SeaweedsService = Depends(),
+                                  image_service: ThumbnailImageService = Depends()):
         response = await service.get_items_pairs(session)
         return response

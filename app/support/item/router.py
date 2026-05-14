@@ -6,13 +6,14 @@ from fastapi import Depends, File, Form, HTTPException, Path, Query, status, Upl
 from pydantic import ValidationError
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi.responses import StreamingResponse
+# from fastapi.responses import StreamingResponse
 from app.core.utils.io_utils import ResponseJust
 from app.auth.dependencies import get_active_user_or_internal
 from app.core.config.database.click_async import get_ch_client
 from app.core.config.database.db_async import get_db
 from app.core.config.project_config import get_paging
 from app.core.routers.base import BaseRouter
+from app.core.routers.mixin_router import ArrayRouter
 from app.mongodb.service import ThumbnailImageService
 from app.support.item.model import Item
 from app.support.item.repository import ItemRepository
@@ -23,7 +24,7 @@ from app.core.enum import CliSearchMode
 paging = get_paging
 
 
-class ItemRouter(BaseRouter):
+class ItemRouter(BaseRouter, ArrayRouter):
     def __init__(self, prefix: str = '/items',
                  auth_dependency=get_active_user_or_internal,
                  **kwargs):

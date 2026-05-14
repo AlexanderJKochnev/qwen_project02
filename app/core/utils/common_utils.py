@@ -17,6 +17,17 @@ from dateutil.relativedelta import relativedelta
 from app.core.types import ModelType
 
 
+def getter(obj: Any, item_name: str) -> Any | None:
+    return getattr(obj, item_name)
+
+
+def setter(obj: Any, item_name: str, value: Any | None) -> bool:
+    try:
+        setattr(obj, item_name, value)
+        return True
+    except Exception as _:
+        return False
+
 def delta_data(shift: int = 2) -> str:
     """ возвращает дату отстоящую от now() на shift лет (отрицательные числа - вперед)"""
     return (datetime.now(timezone.utc) - relativedelta(days=shift)).isoformat()
