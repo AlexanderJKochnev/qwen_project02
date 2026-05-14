@@ -7,7 +7,7 @@ from sqlalchemy import func, update, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.utils.common_utils import getter, setter
 from app.core.types import ModelType
-
+from loguru import logger
 
 class ArrayRepository:
 
@@ -17,6 +17,7 @@ class ArrayRepository:
         """ получение instance только с полем массива """
         field = getter(model, arrayName)
         result = await session.execute(select(field).where(model.id == id))
+        logger.warning(f'{result=} {type(result)=}')
         if not result:
             return None
         return list(result.scalar_one_or_none())
