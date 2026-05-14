@@ -108,7 +108,7 @@ class ClickHouseRepository:
     # ============================================================
 
     async def get_by_id(
-            self, id_field: str, id_value: Any, fields: list = None,
+            self, id_field: str, id_value: Any, fields: list = ['fid', 'fid_thumb'],
             order_by: str = 'inserted_at DESC'
     ) -> Optional[Dict[str, Any]]:
         """
@@ -119,16 +119,16 @@ class ClickHouseRepository:
             id_value: Значение ID
         """
         # events = Table(self.table_name)
-        logger.warning(f'1.1. удаление {id_field=}')
+        logger.warning(f'1.1. удаление {id_value=}')
         events = Table(self.select_table)
-        logger.warning(f'1.2. удаление {id_field=}')
+        logger.warning(f'1.2. удаление {id_value=}')
         if fields:
             q = Query.from_(events).select(*(events[k] for k in fields))
         else:
             q = Query.from_(events)
-        logger.warning(f'1.3. удаление {id_field=}')
+        logger.warning(f'1.3. удаление {id_value=}')
         q = q.where(events[id_field] == id_value)
-        logger.warning(f'1.4. удаление {id_field=}')
+        logger.warning(f'1.4. удаление {id_value=}')
         if order_by:
             if 'DESC' in order_by:
                 order_by = order_by.replace('DESC', '').strip()
@@ -136,10 +136,11 @@ class ClickHouseRepository:
             else:
                 q = q.orderby(order_by)
         q = q.limit(1)
-        logger.warning(f'1.5. удаление {id_field=}')
+        logger.warning(f'1.5. удаление {id_value=}')
+        print(q.get_sql())
         result = await self.client.query(q.get_sql())
         # result = await self.client.query(query, {'id': id_value})
-        logger.warning(f'1.6. удаление {id_field=}')
+        logger.warning(f'1.6. удаление {id_value=}')
         return result.first_item if result.row_count > 0 else None
 
     async def get(

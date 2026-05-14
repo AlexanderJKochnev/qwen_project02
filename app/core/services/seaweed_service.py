@@ -83,7 +83,7 @@ class SeaweedsService:
         result = {"fid": fid, "fid_thumb": fid_thumb}
         return result
 
-    async def delete_img(self, fid):
+    async def delete_img(self, fid: str):
         """
         удаление изображения
         1. поиск в clickhouse by fid
