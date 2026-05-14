@@ -42,7 +42,7 @@ class ClickHouseRepository:
         # удаленные записи
         if table_name == 'images_metadata':
             self.select_table = f'{table_name}_active'
-            self.deleted_at = 'deleted_at'
+            self.is_deleted = 'is_deleted'
             self.orderby = ['fid', 'table']
         else:
             self.select_table = self.table_name
