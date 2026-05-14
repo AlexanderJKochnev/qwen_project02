@@ -46,7 +46,7 @@ class ArrayRepository:
     @classmethod
     async def add_to_array(cls, id: int, new_elements: list[str],
                            model: ModelType, arrayName: str,
-                           session: AsyncSession) -> None:
+                           session: AsyncSession) -> list:
         """
             Добавление элементов в конец массива
             id:             id записи
@@ -57,6 +57,5 @@ class ArrayRepository:
         array_list: List[str] = await cls.get_array(id, model, arrayName, session)
         array_list.extend(new_elements)
         await cls.set_array(id, model, arrayName, array_list, session)
-        return {'update_array': array_list}
-        # stmt = update(model).where(model.id == id).values(**{field.name: func.array_cat(field, new_elements)})
-        # await session(stmt)
+        return array_list
+

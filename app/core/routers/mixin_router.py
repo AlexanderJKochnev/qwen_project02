@@ -3,8 +3,8 @@
     mixins routers = добавлять после BaseRouter
     ItemRouter(BaseRouter, MixinRouter)
 """
-from fastapi import Depends
-from typing import Any, Dict
+from fastapi import Depends, Query
+from typing import Any, Dict, List
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.repositories.array_repository import ArrayRepository
@@ -31,9 +31,26 @@ class ArrayRouter:
         if next_method:
             next_method()
 
-    async def get_array_by_id(self, id: int, session: AsyncSession = Depends(get_db)) -> Dict[str, Any]:
+    async def get_array_by_id(self,
+                              id: int = Query(..., description='id записи'),
+                              session: AsyncSession = Depends(get_db)) -> Dict[str, Any]:
         service: ArrayService = self.service
         repository: ArrayRepository = self.repo
         model: ModelType = self.model
         arrayName = self.arrayName
         return await service.get_array_by_id(id, model, arrayName, repository, session)
+
+    async def add_to_array(self,
+                           id: int = Query(..., description='id записи'),
+                           datas: str = Query(..., description='новые записи, разделенные "; "'),
+                           session: AsyncSession = Depends(get_db)
+                           ) -> Dict[str, Any]:
+        service: ArrayService = self.service
+        repository: ArrayRepository = self.repo
+        model: ModelType = self.model
+        arrayName = self.arrayName
+        if datas:
+            new_elements = [d.strip() for d in datas.split(';')]
+        else:
+            new_elements = []
+        return await service.add_to_array(id, new_elements, model, arrayName, repository, session)
