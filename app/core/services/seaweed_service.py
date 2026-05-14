@@ -20,7 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.utils.common_utils import get_random_string
 from app.core.utils.image_utils import image_aligning
 from app.core.config.database.seaweed_async import SeaweedFSManager, get_swfs
-from app.core.hash_norm import tokenize
+# from app.core.hash_norm import tokenize
 from app.core.repositories.seaweed_repository import SeaweedRepository
 from app.core.utils.pydantic_utils import get_repo
 from app.dependencies import ClickHouseRepositoryFactory, get_clickhouse_repository_factory
@@ -56,9 +56,9 @@ class SeaweedsService:
         # 2. обработка метаданных (токенизация по шаблону clickhouse, )
         ipts: dict = meta_data.get('iptc')
         tmp = ''
-        if ipts:
+        if ipts:    # метаданные в файле
             tmp = ' '.join((f'{val}' for val in ipts.values() if val))
-        tags = tokenize(f'{tmp} {description}')
+        tags = f'{tmp} {description}'   # tags теперь string - нормализовать не нужно - это делает индекс click
         meta: dict = {}
         meta['table'] = table
         # meta['uploaded_at'] = datetime.now(timezone.utc)
@@ -176,7 +176,8 @@ class SeaweedsService:
         repository = get_repo('Item')
         response = await repository.get_item_drink(session)
         cycle = ((a.id, a.image_id, a.concat) for a in response)
-        for id, image_id, context in cycle:
+        result: dict = {}
+        for id, image_id, description in cycle:
             #  print(f'{id=}, {image_id=}, {context=}')
             """
                 {"content": image_data["content"],
@@ -188,6 +189,8 @@ class SeaweedsService:
             image_dict = await image_service.get_full_image(image_id)
             content: bytes = image_dict["content"]
             # 2. обработка и загрузка полученного изображения
-            # res: dict = await self.create_img(content, context, 'items')
+            res: dict = await self.create_img(content, description, 'items')
+            result[id] = res
+            break
             # 3. запись fid в Items.seaweed_fids[0]
-        return {'result': response}
+        return result

@@ -287,9 +287,7 @@ class ClickHouseRepository:
             self, id_field: str, id_value: Any, table_name: str
     ) -> bool:
         """
-        НЕ НУЖНО
         Мягкое удаление записи (заполняется deleted_at).
-
         Returns:
             True если удалили хотя бы одну запись
         """

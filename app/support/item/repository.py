@@ -575,12 +575,13 @@ class ItemRepository(ArrayRepository, Repository):
         """
             получение items with drink only для переноса картинок из mongo в seaweed
         """
-        logger.warning(666)
         # query = select(Item).options(selectinload(Item.drink)).where(Item.image_id != '69be8dcf9d1415cddd3420d8')
         stmt = text("""  SELECT i.id, i.image_id, concat(d.title, ', ', d.subtitle)
                     FROM items AS i
                     JOIN drinks AS d ON i.drink_id = d.id
                     WHERE i.image_id != '69be8dcf9d1415cddd3420d8'
+                    AND (i.seaweed_fids IS NULL OR array_length(i.seaweed_fids, 1)
+                    IS NULL OR array_length(i.seaweed_fids, 1) = 0)
                     ORDER BY id;
                 """)
         result = await session.execute(stmt)
