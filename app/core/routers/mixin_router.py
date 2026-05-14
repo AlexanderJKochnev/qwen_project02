@@ -27,6 +27,9 @@ class ArrayRouter:
         # пути без параметров сверху super, c параметрами под супер
         self.router.add_api_route("/mixin/get/{id}", self.get_array_by_id, methods=["GET"],
                                   openapi_extra={'x-request-schema': None})
+        self.router.add_api_route("/mixin/add/", self.add_to_array,
+                                  methods=["POST"],
+                                  openapi_extra={'x-request-schema': None})
         next_method = getattr(super(), "setup_routes", None)
         if next_method:
             next_method()
@@ -41,7 +44,7 @@ class ArrayRouter:
         return await service.get_array_by_id(id, model, arrayName, repository, session)
 
     async def add_to_array(self,
-                           id: int = Path(..., description='id записи'),
+                           id: int = Query(..., description='id записи'),
                            datas: str = Query(..., description='новые записи, разделенные "; "'),
                            session: AsyncSession = Depends(get_db)
                            ) -> Dict[str, Any]:
