@@ -49,7 +49,7 @@ class SeaweedsService:
             4. сохранение метаданных в clickhouse (fid thumbnail и full fid в одной записи)
             5. возврат fid
         """
-        from app.core.utils.common_utils import jprint
+        # from app.core.utils.common_utils import jprint
         # 1. обработка (удаление фона, уменьшение размера, создание thumbnail, получение метаданных)
         full_data, thumb_data, meta_data = image_aligning(content)
 
@@ -66,18 +66,18 @@ class SeaweedsService:
         meta['mime_type'] = meta_data['mime_type']
         meta['thumb_size_bytes'] = meta_data['thumbnail_size_bytes']
         meta['tags'] = tags
-        jprint(meta)
-        logger.warning(f'{type(full_data)=}')
+        # jprint(meta)
+        # logger.warning(f'{type(full_data)=}')
         # 3. сохранение 2-х файлов в seaweed, получение 2-х FID
         fid = await self.fs.upload(full_data)
-        logger.warning(f'{fid=}')
-        logger.warning(f'{type(thumb_data)=}')
+        # logger.warning(f'{fid=}')
+        # logger.warning(f'{type(thumb_data)=}')
         fid_thumb = await self.fs.upload(thumb_data)
-        logger.warning(f'{fid_thumb=}')
+        # logger.warning(f'{fid_thumb=}')
         # 4. сохранение метаданных в clickhouse (fid thumbnail и full fid в одной записи)
         meta['fid'] = fid
         meta['fid_thumb'] = fid_thumb
-        jprint(meta)
+        # jprint(meta)
         await self.click_repo.create(meta)
         # 5. результат {fid: str, url: str}
         result = {"fid": fid, "fid_thumb": fid_thumb}
@@ -92,14 +92,22 @@ class SeaweedsService:
         4. удаление fid seaweed
         """
         # 1. поиск в clickhouse by fid
+        logger.warning(f'1. удаление {fid=}')
         response: dict = await self.click_repo.get_by_id('fid', fid)
+        logger.warning(f'2. удаление {fid=}')
         # 2. получение fid_thumb
         fid_thumb = response.get('fid_thumb')
+        logger.warning(f'3. удаление {fid=}')
         # 3. удаление 2-х записей из seaweed
         await self.fs.delete(fid)
+        logger.warning(f'4. удаление {fid=}')
         await self.fs.delete(fid_thumb)
+        logger.warning(f'5. удаление {fid=}')
         # 4. удаление fid seaweed
+        logger.warning(f'6. удаление {fid=}')
         await self.click_repo.soft_delete('fid', fid)
+        logger.warning(f'7. удаление {fid=}')
+        return True
 
     async def get(self, page: int = 1, page_size: int = 20,
                   order_by: str = None) -> dict:
@@ -183,11 +191,7 @@ class SeaweedsService:
             """
             # 1. получениие полного изображения из mongodb
             image_dict = await image_service.get_full_image(image_id)
-            logger.warning(f'{type(image_dict)=}')
-            if isinstance(image_dict, dict):
-                logger.warning(f'{image_dict.keys()=}')
-            break
-            # content = image_dict["content"]
+            content: bytes = image_dict["content"]
             # 2. обработка и загрузка полученного изображения
             # res: dict = await self.create_img(content, context, 'items')
             # 3. запись fid в Items.seaweed_fids[0]
