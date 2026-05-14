@@ -25,9 +25,9 @@ class ArrayRepository:
         result = await session.execute(select(field).where(model.id == id))
         if not result:
             return None
-        res = result.mappings().one_or_none() or []
+        res = result.mappings().one_or_none()
         logger.warning(f'{res=}, {type(res)=}')
-        return res.get(arrayName)
+        return res.get(arrayName) or []
 
     @classmethod
     async def set_array(cls, id: int, model: ModelType,
