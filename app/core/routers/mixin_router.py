@@ -4,7 +4,7 @@
     ItemRouter(BaseRouter, MixinRouter)
 """
 from typing import Dict, Union
-
+from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.repositories.array_repository import ArrayRepository
 from app.core.services.array_service import ArrayService
@@ -23,12 +23,17 @@ class ArrayRouter:
         #                           openapi_extra={'x-request-schema': None})
         # Позволяет безопасно замыкать цепочку или вызывать другие миксины.
         # пути без параметров сверху super, c параметрами под супер
+        logger.warning('=================that it================')
         self.router.add_api_route("/mixin/get/{id}", self.get_array_by_id, methods=["GET"],
                                   openapi_extra={'x-request-schema': None})
+        logger.warning('=================that it 2================')
+
         next_method = getattr(super(), "setup_routes", None)
         if next_method:
+            logger.warning('=================that it 3================')
             next_method()
-
+        logger.warning('=================that it 4================')
+    
     async def get_array_by_id(self, id: int, session: AsyncSession) -> Union[Dict, None]:
         service: ArrayService = self.service
         repository: ArrayRepository = self.repo
