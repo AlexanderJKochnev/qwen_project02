@@ -89,6 +89,7 @@ class SeaweedsService:
         """
         # 1. поиск в clickhouse by fid
         response: dict = await self.click_repo.get_by_id('fid', fid)
+        logger.warning(f'1==={response=}')
         # 2. получение fid_thumb
         fid_thumb = response.get('fid_thumb')
         # 3. удаление 2-х записей из seaweed
@@ -194,7 +195,7 @@ class SeaweedsService:
             res: dict = await self.create_img(content, description, 'items')
             # 3. запись fid в Items.seaweed_fids[0]
             fid_list = [res.get('fid')]
-            response = await repository.add_to_array(id, fid_list, model, 'seaweed_fids')
+            response = await repository.add_to_array(id, fid_list, model, 'seaweed_fids', session)
             result[id] = response
             break
         return result
