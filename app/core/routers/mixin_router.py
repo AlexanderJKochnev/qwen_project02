@@ -23,7 +23,9 @@ class ArrayRouter:
         #                           openapi_extra={'x-request-schema': None})
         # Позволяет безопасно замыкать цепочку или вызывать другие миксины.
         # пути без параметров сверху super, c параметрами под супер
-        super().setup_routes()
+        next_method = getattr(super(), "setup_routes", None)
+        if next_method:
+            next_method()
         self.router.add_api_route("/mixin/get/{id}", self.get_array_by_id, methods=["GET"],
                                   openapi_extra={'x-request-schema': None})
 
