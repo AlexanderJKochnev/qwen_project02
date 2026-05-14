@@ -89,6 +89,8 @@ class SeaweedsService:
         """
         # 1. поиск в clickhouse by fid
         response: dict = await self.click_repo.get_by_id('fid', fid)
+        if not response:
+            raise ClientResponseError(status=400, message=f"Record with id '{fid}' not Found")
         logger.warning(f'1==={response=}')
         # 2. получение fid_thumb
         fid_thumb = response.get('fid_thumb')
@@ -197,5 +199,4 @@ class SeaweedsService:
             fid_list = [res.get('fid')]
             response = await repository.add_to_array(id, fid_list, model, 'seaweed_fids', session)
             result[id] = response
-            break
         return result
