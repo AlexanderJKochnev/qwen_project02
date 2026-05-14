@@ -17,6 +17,8 @@
 from fastapi import Depends
 from aiohttp.client_exceptions import ClientResponseError
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.models.base_model import get_model_by_name
 from app.core.utils.common_utils import get_random_string
 from app.core.utils.image_utils import image_aligning
 from app.core.config.database.seaweed_async import SeaweedFSManager, get_swfs
@@ -25,7 +27,6 @@ from app.core.repositories.seaweed_repository import SeaweedRepository
 from app.core.utils.pydantic_utils import get_repo
 from app.dependencies import ClickHouseRepositoryFactory, get_clickhouse_repository_factory
 from loguru import logger  # NOQA: F401
-
 from app.mongodb.service import ThumbnailImageService
 
 
@@ -174,6 +175,7 @@ class SeaweedsService:
         """
         # 0. получение списка из items
         repository = get_repo('Item')
+        model = get_model_by_name('Item')
         response = await repository.get_item_drink(session)
         cycle = ((a.id, a.image_id, a.concat) for a in response)
         result: dict = {}
@@ -190,7 +192,9 @@ class SeaweedsService:
             content: bytes = image_dict["content"]
             # 2. обработка и загрузка полученного изображения
             res: dict = await self.create_img(content, description, 'items')
-            result[id] = res
-            break
             # 3. запись fid в Items.seaweed_fids[0]
+            fid_list = [res.get('fid')]
+            response = await repository.add_to_array(id, fid_list, model, 'seaweed_fids')
+            result[id] = response
+            break
         return result
