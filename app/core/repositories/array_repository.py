@@ -3,7 +3,7 @@
     методы SQLAlchemy repository для работы с полями  ARRAY[]
 """
 from typing import List
-from sqlalchemy import func, update, select
+from sqlalchemy import update, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.utils.common_utils import getter, setter
 from app.core.types import ModelType
@@ -15,6 +15,11 @@ class ArrayRepository:
     dict_list = result.mappings().all()  список словарей
     one_row_dict = result.mappings().first()  один словарь
     one_row_dict = result.mappings().one_or_none()  один словарь или ничего !
+    1. get_array
+    2. add array to the end
+    3. replace all array
+    4. delete all array
+    5. add array first
     """
 
     @classmethod
