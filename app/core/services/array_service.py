@@ -1,5 +1,5 @@
 # app.core.service.array_service.py
-from typing import Dict, List
+from typing import Any, Dict, List
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.types import ModelType
 from app.core.repositories.array_repository import ArrayRepository
@@ -14,7 +14,7 @@ class ArrayService:
     async def get_array_by_id(cls, id: int,
                               model: ModelType, arrayName: str,
                               repository: ArrayRepository,
-                              session: AsyncSession) -> Dict:
+                              session: AsyncSession) -> Dict[str: Any]:
         """ получение массива по id """
         result = await repository.get_array_by_id(id, model, arrayName, session)
         return {'arrray': result, 'size': len(result)}
