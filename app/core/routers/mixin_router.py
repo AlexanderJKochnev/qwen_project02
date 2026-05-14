@@ -50,6 +50,7 @@ class ArrayRouter:
                            datas: str = Query(..., description='новые записи, разделенные "; "'),
                            session: AsyncSession = Depends(get_db)
                            ) -> Dict[str, Any]:
+        """ Добавление в конец списка """
         service: ArrayService = self.service
         repository: ArrayRepository = self.repo
         model: ModelType = self.model
@@ -63,8 +64,25 @@ class ArrayRouter:
     async def clear_array_by_id(self,
                                 id: int = Path(..., description='id записи'),
                                 session: AsyncSession = Depends(get_db)) -> Dict[str, Any]:
+        """ удалениие элемента списка по индексу начиная с 0"""
         service: ArrayService = self.service
         repository: ArrayRepository = self.repo
         model: ModelType = self.model
         arrayName = self.arrayName
         return await service.clear_array_by_id(id, model, arrayName, repository, session)
+
+    async def add_first_to_array(self,
+                                 id: int = Query(..., description='id записи'),
+                                 datas: str = Query(..., description='новые записи, разделенные "; "'),
+                                 session: AsyncSession = Depends(get_db)
+                                 ) -> Dict[str, Any]:
+        """ добавление в начало списка """
+        service: ArrayService = self.service
+        repository: ArrayRepository = self.repo
+        model: ModelType = self.model
+        arrayName = self.arrayName
+        if datas:
+            new_elements = [d.strip() for d in datas.split(';')]
+        else:
+            new_elements = []
+        return await service.add_first_to_array(id, new_elements, model, arrayName, repository, session)

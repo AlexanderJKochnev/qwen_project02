@@ -42,3 +42,18 @@ class ArrayService:
         """ получение массива по id """
         result = await repository.clear_array_by_id(id, model, arrayName, session)
         return {'arrray': result, 'size': len(result) if result else 0}
+
+    @classmethod
+    async def add_first_to_array(cls, id: int, new_elements: List[str],
+                                 model: ModelType, arrayName: str,
+                                 repository: ArrayRepository,
+                                 session: AsyncSession) -> Dict:
+        """
+            Добавление элементов в начало массива
+            id:             id записи
+            new_elements:   добавляемые элементы
+            model:          модель
+            arrayName:      имя поля
+        """
+        result = await repository.add_first_to_array(id, new_elements, model, arrayName, session)
+        return {'arrray': result, 'size': len(result) if result else 0}

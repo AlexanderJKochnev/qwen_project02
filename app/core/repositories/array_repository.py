@@ -65,9 +65,91 @@ class ArrayRepository:
         return array_list
 
     @classmethod
+    async def add_first_to_array(cls, id: int, new_elements: list[str],
+                                 model: ModelType, arrayName: str,
+                                 session: AsyncSession) -> list:
+        """
+            Добавление элементов в начало массива
+            id:             id записи
+            new_elements:   добавляемые элементы
+            model:          модель
+            arrayName:      имя поля
+        """
+        array_list: List[str] = await cls.get_array(id, model, arrayName, session)
+        new_elements.extend(array_list)
+        await cls.set_array(id, model, arrayName, new_elements, session)
+        return new_elements
+
+    @classmethod
     async def clear_array_by_id(
         cls, id: int, model: ModelType, arrayName: str, session: AsyncSession
     ) -> List[str]:
         """ получение массива по id """
         await cls.set_array(id, model, arrayName, [], session)
         return await cls.get_array(id, model, arrayName, session)
+
+    @classmethod
+    async def replace_array(cls, id: int, new_elements: list[str],
+                            model: ModelType, arrayName: str,
+                            session: AsyncSession) -> list:
+        """
+            замена всех элементов в массиве
+            id:             id записи
+            new_elements:   добавляемые элементы
+            model:          модель
+            arrayName:      имя поля
+        """
+        await cls.set_array(id, model, arrayName, new_elements, session)
+        return new_elements
+
+    @classmethod
+    async def del_by_index_array(
+        cls, id: int, pos: int, model: ModelType, arrayName: str, session: AsyncSession
+    ) -> list:
+        """
+            удаление элемента по индексу
+            id:             id записи
+            new_elements:   добавляемые элементы
+            model:          модель
+            arrayName:      имя поля
+        """
+        array_list: List[str] = await cls.get_array(id, model, arrayName, session)
+        array_list.pop(pos)
+        await cls.set_array(id, model, arrayName, array_list, session)
+        return array_list
+
+    @classmethod
+    async def split_by_index_array(
+        cls, id: int, pos1: int, pos2: int, model: ModelType, arrayName: str, session: AsyncSession
+    ) -> list:
+        """
+            поменять два элемента местами
+            id:             id записи
+            new_elements:   добавляемые элементы
+            model:          модель
+            arrayName:      имя поля
+        """
+        array_list: List[str] = await cls.get_array(id, model, arrayName, session)
+        if pos1 > len(array_list) or pos2 > len(array_list):
+            return array_list
+        array_list[pos1], array_list[pos2] = array_list[pos2], array_list[pos1]
+        await cls.set_array(id, model, arrayName, array_list, session)
+        return array_list
+
+    @classmethod
+    async def replace_by_index_array(
+        cls, id: int, pos: int, newdata: str, model: ModelType, arrayName: str, session: AsyncSession
+    ) -> list:
+        """
+            поменять два элемента местами
+            id:             id записи
+            new_elements:   добавляемые элементы
+            model:          модель
+            arrayName:      имя поля
+        """
+        array_list: List[str] = await cls.get_array(id, model, arrayName, session)
+        if pos > len(array_list):
+            return array_list
+        array_list[pos] = newdata
+        await cls.set_array(id, model, arrayName, array_list, session)
+        return array_list
