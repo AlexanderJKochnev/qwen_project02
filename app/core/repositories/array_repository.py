@@ -17,10 +17,12 @@ class ArrayRepository:
         """ получение instance только с полем массива """
         field = getter(model, arrayName)
         result = await session.execute(select(field).where(model.id == id))
-        logger.warning(f'{result=} {type(result)=}')
         if not result:
             return None
-        return list(result.scalar_one_or_none())
+        res = result.mappings().all()
+        logger.warning(f'{res=}, {type(res)=}')
+
+        return list(res)
 
     @classmethod
     async def set_array(cls, id: int, model: ModelType,
