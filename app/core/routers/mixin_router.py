@@ -32,7 +32,7 @@ class ArrayRouter:
             next_method()
 
     async def get_array_by_id(self,
-                              id: int = Query(..., description='id записи'),
+                              id: int = Path(..., description='id записи'),
                               session: AsyncSession = Depends(get_db)) -> Dict[str, Any]:
         service: ArrayService = self.service
         repository: ArrayRepository = self.repo
