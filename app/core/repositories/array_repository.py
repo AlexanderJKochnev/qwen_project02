@@ -19,13 +19,13 @@ class ArrayRepository:
 
     @classmethod
     async def get_array(cls, id: int, model: ModelType,
-                        arrayName: str, session: AsyncSession) -> dict:
+                        arrayName: str, session: AsyncSession) -> list:
         """ получение instance только с полем массива """
         field = getter(model, arrayName)
         result = await session.execute(select(field).where(model.id == id))
         if not result:
             return None
-        res = result.mappings().one_or_none()
+        res = result.mappings().one_or_none() or []
         logger.warning(f'{res=}, {type(res)=}')
         return res.get(arrayName)
 
