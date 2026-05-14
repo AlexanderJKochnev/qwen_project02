@@ -15,6 +15,7 @@
 
 """
 from fastapi import Depends
+from aiohttp.client_exceptions import ClientResponseError
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.utils.common_utils import get_random_string
 from app.core.utils.image_utils import image_aligning
@@ -90,8 +91,14 @@ class SeaweedsService:
         # 2. получение fid_thumb
         fid_thumb = response.get('fid_thumb')
         # 3. удаление 2-х записей из seaweed
-        await self.fs.delete(fid)
-        await self.fs.delete(fid_thumb)
+        try:
+            await self.fs.delete(fid)
+        except ClientResponseError as e:
+            logger.warning(f'{e.status=} {type(e)=}')
+        try:
+            await self.fs.delete(fid_thumb)
+        except ClientResponseError:
+            pass
         # 4. удаление fid seaweed
         await self.click_repo.soft_delete('fid', fid, table)
         return True
