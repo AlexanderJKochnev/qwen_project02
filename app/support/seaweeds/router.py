@@ -65,8 +65,8 @@ class SeaweedsRouter:
     async def create_img(self,
                          description: str = Query(..., description='ключевые слова по которым можно найти '
                                                   'изображение'),
-                         table_name: str = Query(..., description='имя таблицы для которой '
-                                                                  'предназначено изображение. items/...'),
+                         table_name: str = Query('items', description='имя таблицы для которой '
+                                                                      'предназначено изображение. items'),
                          file: UploadFile = File(...),
                          service: SeaweedsService = Depends()):
         try:
@@ -77,11 +77,15 @@ class SeaweedsRouter:
             logger.error(e)
             raise HTTPException(status_code=500, detail=e)
 
-    async def delete_img(self, fid: str, service: SeaweedsService = Depends()) -> dict:
+    async def delete_img(self, fid: str,
+                         table_name: str = Query('items', description='имя таблицы для которой '
+                                                 'предназначено изображение. items'
+                                                 ),
+                         service: SeaweedsService = Depends()) -> dict:
         """
             удаление изображения
         """
-        await service.delete_img(fid)
+        await service.delete_img(fid, table_name)
         return {'fid': fid,
                 'result': 'deleted'}
 
