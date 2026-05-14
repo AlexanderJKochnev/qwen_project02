@@ -129,7 +129,7 @@ class ClickHouseRepository:
             else:
                 q = q.orderby(order_by)
         q = q.limit(1)
-        logger(f'==={q.get_sql()}')
+        logger.warning(f'==={q.get_sql()}')
         result = await self.client.query(q.get_sql())
         # result = await self.client.query(query, {'id': id_value})
         return result.first_item if result.row_count > 0 else None
