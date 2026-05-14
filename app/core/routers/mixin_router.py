@@ -3,7 +3,7 @@
     mixins routers = добавлять после BaseRouter
     ItemRouter(BaseRouter, MixinRouter)
 """
-from typing import Dict, Union
+from typing import Any, Dict
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.repositories.array_repository import ArrayRepository
@@ -33,8 +33,8 @@ class ArrayRouter:
             logger.warning('=================that it 3================')
             next_method()
         logger.warning('=================that it 4================')
-    
-    async def get_array_by_id(self, id: int, session: AsyncSession) -> Dict:
+
+    async def get_array_by_id(self, id: int, session: AsyncSession) -> Dict[str, Any]:
         service: ArrayService = self.service
         repository: ArrayRepository = self.repo
         model: ModelType = self.model

@@ -2,7 +2,7 @@
 """
     методы SQLAlchemy repository для работы с полями  ARRAY[]
 """
-from typing import Any, List
+from typing import List
 from sqlalchemy import func, update, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.utils.common_utils import getter, setter
