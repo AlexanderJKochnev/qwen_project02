@@ -183,8 +183,11 @@ class SeaweedsService:
             """
             # 1. получениие полного изображения из mongodb
             image_dict = image_service.get_full_image(image_id)
-            content = image_dict["content"]
+            logger.warning(f'{type(image_dict)=}')
+            if isinstance(image_dict, dict):
+                logger.warning(f'{image_dict.keys()=}')
+            # content = image_dict["content"]
             # 2. обработка и загрузка полученного изображения
-            res: dict = await self.create_img(content, context, 'items')
+            # res: dict = await self.create_img(content, context, 'items')
             # 3. запись fid в Items.seaweed_fids[0]
         return {'result': response}
