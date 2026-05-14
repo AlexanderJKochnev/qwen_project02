@@ -14,7 +14,7 @@ class ArrayService:
     async def get_array_by_id(cls, id: int,
                               model: ModelType, arrayName: str,
                               repository: ArrayRepository,
-                              session: AsyncSession) -> Dict[str: Any]:
+                              session: AsyncSession) -> Dict[str, Any]:
         """ получение массива по id """
         result = await repository.get_array_by_id(id, model, arrayName, session)
         return {'arrray': result, 'size': len(result)}
