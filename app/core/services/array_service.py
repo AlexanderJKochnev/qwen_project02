@@ -17,7 +17,7 @@ class ArrayService:
                               session: AsyncSession) -> Dict[str, Any]:
         """ получение массива по id """
         result = await repository.get_array_by_id(id, model, arrayName, session)
-        return {'arrray': result, 'size': len(result)}
+        return {'arrray': result, 'size': len(result) if result else 0}
 
     @classmethod
     async def add_to_array(cls, id: int, new_elements: List[str],

@@ -9,20 +9,25 @@ from app.core.utils.common_utils import getter, setter
 from app.core.types import ModelType
 from loguru import logger
 
+
 class ArrayRepository:
+    """
+    dict_list = result.mappings().all()  список словарей
+    one_row_dict = result.mappings().first()  один словарь
+    one_row_dict = result.mappings().one_or_none()  один словарь или ничего !
+    """
 
     @classmethod
     async def get_array(cls, id: int, model: ModelType,
-                        arrayName: str, session: AsyncSession) -> List[str]:
+                        arrayName: str, session: AsyncSession) -> dict:
         """ получение instance только с полем массива """
         field = getter(model, arrayName)
         result = await session.execute(select(field).where(model.id == id))
         if not result:
             return None
-        res = result.mappings().all()
+        res = result.mappings().one_or_none()
         logger.warning(f'{res=}, {type(res)=}')
-
-        return list(res)
+        return res.get(arrayName)
 
     @classmethod
     async def set_array(cls, id: int, model: ModelType,
