@@ -24,7 +24,7 @@ from app.core.enum import CliSearchMode
 paging = get_paging
 
 
-class ItemRouter(BaseRouter, ArrayRouter):
+class ItemRouter(ArrayRouter, BaseRouter):
     def __init__(self, prefix: str = '/items',
                  auth_dependency=get_active_user_or_internal,
                  **kwargs):
