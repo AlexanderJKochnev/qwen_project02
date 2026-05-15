@@ -211,6 +211,7 @@ services:
       preact_network:
         ipv4_address: ${IP_PREACT}
       nginx_gateway_shared_network:
+      clickhouse_network:
   
   pgbouncer:
     logging:
