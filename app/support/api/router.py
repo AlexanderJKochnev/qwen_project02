@@ -11,6 +11,7 @@ from app.auth.dependencies import get_current_api_user
 from app.core.config.project_config import settings, get_paging
 from app.core.schemas.base import PaginatedResponse
 from app.core.services.seaweed_service import SeaweedsService
+from app.core.utils.io_utils import ResponseStreaming
 from app.core.utils.pydantic_utils import orresponse
 # from app.mongodb import router as mongorouter
 from app.core.config.database.db_async import get_db
@@ -182,6 +183,10 @@ class ApiRouter(ItemRouter):
             получение изображения по id напитка. Версия 1  (StreamingResponse - лучше для тяжелых условий)
         """
         image_data = await self.service.get_image_by_id_v2(id, self.repo, self.model, session, image_service)
+        headers = image_data.pop('headers')
+        return ResponseStreaming(image_data, headers)
+        
+        
         content = image_data.pop("content")
         media_type = image_data.pop("media_type")
         headers = image_data

@@ -31,7 +31,6 @@ class ArrayRepository:
         if not result:
             return None
         res = result.mappings().one_or_none()
-        logger.warning(f'{res=}, {type(res)=}')
         return res.get(arrayName) or []
 
     @classmethod
