@@ -183,7 +183,7 @@ class ApiRouter(ItemRouter):
         """
         image_data = await self.service.get_image_by_id_v2(id, self.repo, self.model, session, image_service)
         content = image_data.pop("content")
-        media_type = image_data.pop('content_type')
+        media_type = image_data.pop("media_type")
         headers = image_data
         """
         headers = {"Content-Disposition": f"inline; filename={image_data['filename']}", "X-Image-Type": "full",
