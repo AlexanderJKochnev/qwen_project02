@@ -122,6 +122,7 @@ class ArrayService:
         # 1. получение image_id by id
         image_id = await cls.get_item_of_array_by_id(id, model, arrayColname, repository, session, 0)
         if not image_id:
+            # СЮДА ПОСТАВИТЬ ЗАГЛУШКУ
             raise HTTPException(status_code=402, detail=f'instance {model.__name__} with {id=} not found')
         # 2. получение image by image_id
         # image = await image_service.get_full_image(image_id)

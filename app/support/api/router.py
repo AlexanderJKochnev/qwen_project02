@@ -181,7 +181,7 @@ class ApiRouter(ItemRouter):
         """
             получение изображения по id напитка. Версия 1  (StreamingResponse - лучше для тяжелых условий)
         """
-        image_data = await self.service.get_image_by_id(id, self.repo, self.model, session, image_service)
+        image_data = await self.service.get_image_by_id_v2(id, self.repo, self.model, session, image_service)
         headers = {"Content-Disposition": f"inline; filename={image_data['filename']}", "X-Image-Type": "full",
                    "X-File-Size": str(len(image_data["content"]))}
         if image_data.get("from_cache"):
