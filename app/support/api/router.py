@@ -182,14 +182,19 @@ class ApiRouter(ItemRouter):
             получение изображения по id напитка. Версия 1  (StreamingResponse - лучше для тяжелых условий)
         """
         image_data = await self.service.get_image_by_id_v2(id, self.repo, self.model, session, image_service)
+        content = image_data.pop("content")
+        media_type = image_data.pop('content_type')
+        headers = image_data
+        """
         headers = {"Content-Disposition": f"inline; filename={image_data['filename']}", "X-Image-Type": "full",
                    "X-File-Size": str(len(image_data["content"]))}
+        """
         if image_data.get("from_cache"):
             headers["X-Cache"] = "HIT"
         else:
             headers["X-Cache"] = "MISS"
         return StreamingResponse(
-            io.BytesIO(image_data["content"]), media_type=image_data['content_type'], headers=headers
+            io.BytesIO(content, media_type=media_type, headers=headers
         )
 
     async def get_thumbnail_by_id(self, id: int, session: AsyncSession = Depends(get_db),
