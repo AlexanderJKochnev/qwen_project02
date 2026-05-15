@@ -194,7 +194,7 @@ class ApiRouter(ItemRouter):
         else:
             headers["X-Cache"] = "MISS"
         return StreamingResponse(
-            io.BytesIO(content, media_type=media_type, headers=headers
+            io.BytesIO(content), media_type=media_type, headers=headers
         )
 
     async def get_thumbnail_by_id(self, id: int, session: AsyncSession = Depends(get_db),
