@@ -104,7 +104,7 @@ class SeaweedsRouter:
 
     async def get_by_fid(self, fid: str, service: SeaweedsService = Depends()):
         """
-        получение изображения
+        получение изображения по fid
         """
         image_data: dict = await service.get_image(fid)
         headers = image_data.pop('headers')

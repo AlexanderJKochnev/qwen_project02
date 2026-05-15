@@ -5,7 +5,7 @@
 from typing import List
 from sqlalchemy import update, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.utils.common_utils import getter, setter
+from app.core.utils.common_utils import getter
 from app.core.types import ModelType
 from loguru import logger
 
@@ -23,8 +23,8 @@ class ArrayRepository:
     """
 
     @classmethod
-    async def get_array(cls, id: int, model: ModelType,
-                        arrayName: str, session: AsyncSession) -> list:
+    async def _get_array_(cls, id: int, model: ModelType,
+                          arrayName: str, session: AsyncSession) -> list:
         """ получение instance только с полем массива """
         field = getter(model, arrayName)
         result = await session.execute(select(field).where(model.id == id))
@@ -35,8 +35,8 @@ class ArrayRepository:
         return res.get(arrayName) or []
 
     @classmethod
-    async def set_array(cls, id: int, model: ModelType,
-                        arrayName: str, values: List[str], session: AsyncSession):
+    async def _set_array_(cls, id: int, model: ModelType,
+                          arrayName: str, values: List[str], session: AsyncSession):
         """ сохранение значения в поле массива """
         stmt = update(model).where(model.id == id).values(**{arrayName: values})
         await session.execute(stmt)
@@ -46,7 +46,7 @@ class ArrayRepository:
     async def get_array_by_id(cls, id: int, model: ModelType,
                               arrayName: str, session: AsyncSession) -> List[str]:
         """ получение массива по id """
-        return await cls.get_array(id, model, arrayName, session)
+        return await cls._get_array_(id, model, arrayName, session)
 
     @classmethod
     async def add_to_array(cls, id: int, new_elements: list[str],
@@ -59,9 +59,9 @@ class ArrayRepository:
             model:          модель
             arrayName:      имя поля
         """
-        array_list: List[str] = await cls.get_array(id, model, arrayName, session)
+        array_list: List[str] = await cls._get_array_(id, model, arrayName, session)
         array_list.extend(new_elements)
-        await cls.set_array(id, model, arrayName, array_list, session)
+        await cls._set_array_(id, model, arrayName, array_list, session)
         return array_list
 
     @classmethod
@@ -75,9 +75,9 @@ class ArrayRepository:
             model:          модель
             arrayName:      имя поля
         """
-        array_list: List[str] = await cls.get_array(id, model, arrayName, session)
+        array_list: List[str] = await cls._get_array_(id, model, arrayName, session)
         new_elements.extend(array_list)
-        await cls.set_array(id, model, arrayName, new_elements, session)
+        await cls._set_array_(id, model, arrayName, new_elements, session)
         return new_elements
 
     @classmethod
@@ -85,8 +85,8 @@ class ArrayRepository:
         cls, id: int, model: ModelType, arrayName: str, session: AsyncSession
     ) -> List[str]:
         """ получение массива по id """
-        await cls.set_array(id, model, arrayName, [], session)
-        return await cls.get_array(id, model, arrayName, session)
+        await cls._set_array_(id, model, arrayName, [], session)
+        return await cls._get_array_(id, model, arrayName, session)
 
     @classmethod
     async def replace_array(cls, id: int, new_elements: list[str],
@@ -99,7 +99,7 @@ class ArrayRepository:
             model:          модель
             arrayName:      имя поля
         """
-        await cls.set_array(id, model, arrayName, new_elements, session)
+        await cls._set_array_(id, model, arrayName, new_elements, session)
         return new_elements
 
     @classmethod
@@ -113,9 +113,9 @@ class ArrayRepository:
             model:          модель
             arrayName:      имя поля
         """
-        array_list: List[str] = await cls.get_array(id, model, arrayName, session)
+        array_list: List[str] = await cls._get_array_(id, model, arrayName, session)
         array_list.pop(pos)
-        await cls.set_array(id, model, arrayName, array_list, session)
+        await cls._set_array_(id, model, arrayName, array_list, session)
         return array_list
 
     @classmethod
@@ -129,11 +129,11 @@ class ArrayRepository:
             model:          модель
             arrayName:      имя поля
         """
-        array_list: List[str] = await cls.get_array(id, model, arrayName, session)
+        array_list: List[str] = await cls._get_array_(id, model, arrayName, session)
         if pos1 > len(array_list) or pos2 > len(array_list):
             return array_list
         array_list[pos1], array_list[pos2] = array_list[pos2], array_list[pos1]
-        await cls.set_array(id, model, arrayName, array_list, session)
+        await cls._set_array_(id, model, arrayName, array_list, session)
         return array_list
 
     @classmethod
@@ -147,9 +147,9 @@ class ArrayRepository:
             model:          модель
             arrayName:      имя поля
         """
-        array_list: List[str] = await cls.get_array(id, model, arrayName, session)
+        array_list: List[str] = await cls._get_array_(id, model, arrayName, session)
         if pos > len(array_list):
             return array_list
         array_list[pos] = newdata
-        await cls.set_array(id, model, arrayName, array_list, session)
+        await cls._set_array_(id, model, arrayName, array_list, session)
         return array_list

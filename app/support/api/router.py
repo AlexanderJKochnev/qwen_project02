@@ -10,6 +10,7 @@ from fastapi import Depends, Query
 from app.auth.dependencies import get_current_api_user
 from app.core.config.project_config import settings, get_paging
 from app.core.schemas.base import PaginatedResponse
+from app.core.services.seaweed_service import SeaweedsService
 from app.core.utils.pydantic_utils import orresponse
 # from app.mongodb import router as mongorouter
 from app.core.config.database.db_async import get_db
@@ -174,7 +175,9 @@ class ApiRouter(ItemRouter):
         return orresponse(response)
 
     async def get_image_by_id(self, id: int, session: AsyncSession = Depends(get_db),
-                              image_service: ThumbnailImageService = Depends()):
+                              # image_service: ThumbnailImageService = Depends(),
+                              image_service: SeaweedsService = Depends()
+                              ):
         """
             получение изображения по id напитка. Версия 1  (StreamingResponse - лучше для тяжелых условий)
         """
