@@ -1,8 +1,6 @@
 # app/support/api/router.py
-import io
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi.responses import StreamingResponse
 from datetime import datetime, timezone
 from typing import List
 from dateutil.relativedelta import relativedelta
@@ -185,38 +183,17 @@ class ApiRouter(ItemRouter):
         image_data = await self.service.get_image_by_id_v2(id, self.repo, self.model, session, image_service)
         headers = image_data.pop('headers')
         return ResponseStreaming(image_data, headers)
-        
-        
-        content = image_data.pop("content")
-        media_type = image_data.pop("media_type")
-        headers = image_data
-        """
-        headers = {"Content-Disposition": f"inline; filename={image_data['filename']}", "X-Image-Type": "full",
-                   "X-File-Size": str(len(image_data["content"]))}
-        """
-        if image_data.get("from_cache"):
-            headers["X-Cache"] = "HIT"
-        else:
-            headers["X-Cache"] = "MISS"
-        return StreamingResponse(
-            io.BytesIO(content), media_type=media_type, headers=headers
-        )
 
     async def get_thumbnail_by_id(self, id: int, session: AsyncSession = Depends(get_db),
-                                  image_service: ThumbnailImageService = Depends()):
+                                  # image_service: ThumbnailImageService = Depends(),
+                                  image_service: SeaweedsService = Depends()
+                                  ):
         """
             получение thumbnail по id напитка. Версия 1 (StreamingResponse)
         """
-        image_data = await self.service.get_thumbnail_by_id(id, self.repo, self.model, session, image_service)
-        headers = {"Content-Disposition": f"inline; filename={image_data['filename']}", "X-Image-Type": "thumbnail",
-                   "X-File-Size": str(len(image_data["content"]))}
-        if image_data.get("from_cache"):
-            headers["X-Cache"] = "HIT"
-        else:
-            headers["X-Cache"] = "MISS"
-        return StreamingResponse(
-            io.BytesIO(image_data["content"]), media_type=image_data['content_type'], headers=headers
-        )
+        image_data = await self.service.get_thumbnail_by_id_v2(id, self.repo, self.model, session, image_service)
+        headers = image_data.pop('headers')
+        return ResponseStreaming(image_data, headers)
 
     async def get_image_png_by_id(self, id: int, session: AsyncSession = Depends(get_db),
                                   image_service: ThumbnailImageService = Depends()):

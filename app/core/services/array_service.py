@@ -22,14 +22,14 @@ class ArrayService:
         """ получение массива по id """
         result = await repository.get_array_by_id(id, model, arrayName, session)
         return {'arrray': result, 'size': len(result) if result else 0}
-    
+
     @classmethod
     async def get_item_of_array_by_id(
             cls, id: int,
             model: ModelType, arrayName: str,
             repository: ArrayRepository, session: AsyncSession,
             pos: int = 0
-            ) -> Any:
+    ) -> Any:
         """ получение элемента массива по id и индексу"""
         result = await repository.get_array_by_id(id, model, arrayName, session)
         if result:
@@ -127,4 +127,27 @@ class ArrayService:
         # 2. получение image by image_id
         # image = await image_service.get_full_image(image_id)
         image = await image_service.get_image(image_id)
+        return image
+
+    @classmethod
+    async def get_thumbnail_by_id_v2(
+            cls, id: int, repository: Repository, model: ModelType, session: AsyncSession,
+            image_service: SeaweedsService
+    ):
+        """
+            получение полноразмерного изображения по id напитка
+        """
+        #  ПОИСК КОЛОНКИ seaweed_fids
+        arrayColname = 'seaweed_fids'
+
+        if not has_column(model, arrayColname):
+            raise HTTPException(status_code=422, detail=f'{model.__name__} model has no images at all')
+        # 1. получение image_id by id
+        image_id = await cls.get_item_of_array_by_id(id, model, arrayColname, repository, session, 0)
+        if not image_id:
+            # СЮДА ПОСТАВИТЬ ЗАГЛУШКУ
+            raise HTTPException(status_code=402, detail=f'instance {model.__name__} with {id=} not found')
+        # 2. получение image by image_id
+        # image = await image_service.get_full_image(image_id)
+        image = await image_service.get_thumb_by_fid(image_id)
         return image
