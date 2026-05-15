@@ -657,9 +657,6 @@ class Service(metaclass=ServiceMeta):
                 items, total = await repository.search(search, skip, page_size, model, session)
             items = list_dict(items)
             result: dict = make_paginated_response(items, total, page, page_size)
-            from app.core.utils.common_utils import jprint
-            jprint(result)
-            logger.critical('------------------')
             return result
         except Exception as e:
             logger.error(f'search_geans.error: {e}')
