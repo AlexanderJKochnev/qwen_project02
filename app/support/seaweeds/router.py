@@ -130,5 +130,9 @@ class SeaweedsRouter:
     async def transfer_mongoo_sea(self, session: AsyncSession = Depends(get_db),
                                   service: SeaweedsService = Depends(),
                                   image_service: ThumbnailImageService = Depends()):
-        response = await service.get_items_pairs(session, image_service)
+        # перенос (копирование) файлов из mongodb в seaweed, запись fid в items.seaweed_fids[0]
+        # запускать только один раз
+        # response = await service.get_items_pairs(session, image_service)
+        # запись в items.seaweed_fids[1] thumbnails fids
+        response = await service.transfer_tier2(session, image_service)
         return response

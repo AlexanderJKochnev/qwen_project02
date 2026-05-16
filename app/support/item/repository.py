@@ -574,6 +574,7 @@ class ItemRepository(ArrayRepository, Repository):
     async def get_item_drink(cls, session: AsyncSession):
         """
             получение items with drink only для переноса картинок из mongo в seaweed
+            УДАЛИТЬ после импорта
         """
         # query = select(Item).options(selectinload(Item.drink)).where(Item.image_id != '69be8dcf9d1415cddd3420d8')
         stmt = text("""  SELECT i.id, i.image_id, concat(d.title, ', ', d.subtitle)
@@ -587,6 +588,25 @@ class ItemRepository(ArrayRepository, Repository):
         result = await session.execute(stmt)
         items_list = result.mappings().all()
         return items_list
+
+    @classmethod
+    async def get_item_drink2(cls, session: AsyncSession):
+        """
+            получение items with drink only для переноса картинок из mongo в seaweed
+            УДАЛИТЬ после импорта
+        """
+        # query = select(Item).options(selectinload(Item.drink)).where(Item.image_id != '69be8dcf9d1415cddd3420d8')
+        stmt = text("""  SELECT i.id, i.seaweed_fids[1]
+                         FROM items AS i
+                         JOIN drinks AS d ON i.drink_id = d.id
+                         WHERE array_length(i.seaweed_fids, 1) IS NOT NULL
+                         ORDER BY id;
+                    """)
+        result = await session.execute(stmt)
+        items_list = result.mappings().all()
+        # id, fid
+        return items_list
+
 
 
 def get_drink_search_expression(cls):

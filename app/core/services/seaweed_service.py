@@ -14,6 +14,8 @@
     update
 
 """
+from typing import List
+
 from fastapi import Depends
 from aiohttp.client_exceptions import ClientResponseError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -150,7 +152,7 @@ class SeaweedsService:
                   }
         return result
 
-    async def get_fid_thumb(self, fid: str) -> tuple:
+    async def get_fid_thumb(self, fid: str) -> dict:
         """
             получение fid_thumb by fid
             {
@@ -159,6 +161,17 @@ class SeaweedsService:
             }
         """
         result: dict = await self.click_repo.get_by_id('fid', fid, ['fid', 'fid_thumb'])
+        return result
+
+    async def get_fids_thumb(self, fids: list) -> dict:
+        """
+            получение список fid_thumb by списко fids
+            [{
+                "fid": "4,08f358d709",
+                "fid_thumb": "1,09f5d17a2b"
+            }, ...]
+        """
+        result: dict = await self.click_repo.get_by_ids('fid', fids, ['fid', 'fid_thumb'])
         return result
 
     async def get_thumb_by_fid(self, fid: str) -> dict:
@@ -175,6 +188,7 @@ class SeaweedsService:
     async def get_items_pairs(self, session: AsyncSession, image_service: ThumbnailImageService):
         """
             перенос mongodb -> seaweed
+            запускать только ОДИН РАЗ
         """
         # 0. получение списка из items
         repository = get_repo('Item')
@@ -200,3 +214,25 @@ class SeaweedsService:
             response = await repository.add_to_array(id, fid_list, model, 'seaweed_fids', session)
             result[id] = response
         return result
+
+    async def transfer_tier2(self, session: AsyncSession, image_service: ThumbnailImageService):
+        # 0. получение списка из items
+        result: dict = {}
+        repository = get_repo('Item')
+        model = get_model_by_name('Item')
+        response = await repository.get_item_drink2(session)
+        if not response:
+            return result
+        # 0.1. список fids
+        fids = [a.seaweed_fids for a in response]
+        logger.warning(f"{fids=}")
+        # 1. получение списка thunmbnails & fids
+        thumbs: list = await self.get_fids_thumb(fids)
+        logger.warning(f'{thumbs=}')
+        return thumbs
+        cycle = ((a.id, a.seaweed_fids, ) for a in response)
+        result: dict = {}
+        for id, fid in cycle:
+            pass
+            # 0. получение fids_thumbnail
+            # 1. запись fids_thumbnail to seaweed_fids[1]

@@ -134,6 +134,38 @@ class ClickHouseRepository:
         # result = await self.client.query(query, {'id': id_value})
         return result.first_item if result.row_count > 0 else None
 
+    async def get_by_ids(
+            self, id_field: str, id_values: List, fields: list = ['fid', 'fid_thumb'],
+            order_by: str = 'inserted_at DESC'
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Получение записи по ID.
+
+        Args:
+            id_field: Имя поля ID
+            id_value: Значение ID
+        """
+        events = Table(self.select_table)
+        if fields:
+            q = Query.from_(events).select(*(events[k] for k in fields))
+        else:
+            q = Query.from_(events)
+        q = q.where(events[id_field] in id_values)
+        if order_by:
+            if 'DESC' in order_by:
+                order_by = order_by.replace('DESC', '').strip()
+                q = q.orderby(events[order_by], order=Order.desc)
+            else:
+                q = q.orderby(order_by)
+        # q = q.limit(1)
+        logger.warning(f'==={q.get_sql()}')
+        result = await self.client.query(q.get_sql())
+        if result.row_count == 0:
+            return []
+        # data: List[dict] = [dict(zip(result.column_names, row)) for row in result.result_rows]
+        data: dict = {fid: fid_thumb for fid, fid_thumb in result.result_rows}
+        return data
+
     async def get(
             self,
             order_by: Optional[str] = None, limit: int = 30, page: int = 1, fields: list = None
