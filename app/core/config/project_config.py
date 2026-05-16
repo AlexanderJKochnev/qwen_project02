@@ -241,9 +241,19 @@ class Settings(BaseSettings):
     CH_PASSWORD: str = 'top_secret'
     CH_LIMIT: int = 1000  # ограничение кол-ва записей - защита от перегрузки
 
+    # === SEAWEEEDFS ===
+    SEAWEED_CONTAINER: str = 'seaweedfs_volume'
+    SEAWEED_PORT: str = '8080'
+
     model_config = SettingsConfigDict(env_file=get_path_to_root(),
                                       env_file_encoding='utf-8',
                                       extra='ignore')
+
+    @property
+    def seaweed_url(self) -> str:
+        """ url для прямого доступа к файлам seaweed"""
+        # http://seaweedfs_volume:8080/4,015843767ea3
+        return ''.join(('http://', self.SEAWEED_CONTAINER, ':', self.SEAWEED_PORT, '/'))
 
     @property
     def redundant(self) -> list:

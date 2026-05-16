@@ -2,9 +2,8 @@
 from fastapi import File, HTTPException, Query, UploadFile
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi.responses import StreamingResponse
 from loguru import logger
-from app.core.utils.io_utils import ResponseStreaming, ResponseJust
+from app.core.utils.io_utils import ResponseStreaming
 from app.core.config.database.db_async import get_db
 from app.auth.dependencies import get_active_user_or_internal
 from app.core.services.seaweed_service import SeaweedsService
@@ -43,6 +42,10 @@ class SeaweedsRouter:
         )
         self.router.add_api_route(
             "/{id}", self.get_by_fid, methods=["GET"],
+            openapi_extra={'x-request-schema': None}
+        )
+        self.router.add_api_route(
+            "/direct/{id}", self.get_direct_by_fid, methods=["GET"],
             openapi_extra={'x-request-schema': None}
         )
         self.router.add_api_route(
@@ -113,7 +116,7 @@ class SeaweedsRouter:
 
     async def get_thumb_by_fid(self, fid: str, service: SeaweedsService = Depends()):
         """
-        получение изображения
+        получение thum изображения
         """
         image_data: dict = await service.get_thumb_by_fid(fid)
         headers = image_data.pop('headers')
@@ -126,6 +129,15 @@ class SeaweedsRouter:
         """
         response = await service.get_fid_thumb(fid)
         return response
+
+    async def get_direct_by_fid(self, fid: str, service: SeaweedsService = Depends()):
+        """
+        получение изображения по fid напрямую из seaweed
+        """
+        image_data: dict = await service.get_dire(fid)
+        headers = image_data.pop('headers')
+        return ResponseStreaming(image_data, headers)
+        # return StreamingResponse(**image_data)
 
     async def transfer_mongoo_sea(self, session: AsyncSession = Depends(get_db),
                                   service: SeaweedsService = Depends(),

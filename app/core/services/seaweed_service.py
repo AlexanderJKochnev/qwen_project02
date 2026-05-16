@@ -14,7 +14,6 @@
     update
 
 """
-from typing import List
 
 from fastapi import Depends
 from aiohttp.client_exceptions import ClientResponseError
@@ -24,6 +23,7 @@ from app.core.models.base_model import get_model_by_name
 from app.core.utils.common_utils import get_random_string
 from app.core.utils.image_utils import image_aligning
 from app.core.config.database.seaweed_async import SeaweedFSManager, get_swfs
+from app.core.config.project_config import settings
 # from app.core.hash_norm import tokenize
 from app.core.repositories.seaweed_repository import SeaweedRepository
 from app.core.utils.pydantic_utils import get_repo
@@ -138,6 +138,33 @@ class SeaweedsService:
         """
             получение изображения по fid (любого)
         """
+        content = await self.seaweed_repo.get_by_fid(fid, self.fs)
+        file_name = f'{get_random_string(8)}.png'
+        headers = {"Content-Disposition": f"inline; filename={file_name}", "X-Image-Type": "none",
+                   "X-File-Size": str(len(content))}
+        result = {'content': content,
+                  'media_type': 'image/png',
+                  'headers': headers,
+                  'status_code': 200,
+                  "Content-Disposition": f"inline; filename={file_name}",
+                  "X-Image-Type": "none",
+                  "X-File-Size": str(len(content))
+                  }
+        return result
+
+    async def get_direct_image(self, fid: str, session: AsyncSession) -> dict:
+        """
+            получение изображения по fid (любого)
+        """
+        import httpx
+        image_url = settings.seaweed_url
+
+        async with httpx.AsyncClient() as client:
+            content = await client.get(image_url)
+                # async with client.stream("GET", image_url) as response:
+                #     async for chunk in response.aiter_bytes(chunk_size=8192):
+                #         yield chunk
+
         content = await self.seaweed_repo.get_by_fid(fid, self.fs)
         file_name = f'{get_random_string(8)}.png'
         headers = {"Content-Disposition": f"inline; filename={file_name}", "X-Image-Type": "none",

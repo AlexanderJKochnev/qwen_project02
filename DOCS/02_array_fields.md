@@ -1,1 +1,1 @@
-# 
+# see app.core... array_service, array_repository
