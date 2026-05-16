@@ -152,7 +152,7 @@ class SeaweedsService:
                   }
         return result
 
-    async def get_direct_image(self, fid: str, session: AsyncSession) -> dict:
+    async def get_direct_image(self, fid: str) -> dict:
         """
             получение изображения по fid (любого)
         """
@@ -161,10 +161,6 @@ class SeaweedsService:
 
         async with httpx.AsyncClient() as client:
             content = await client.get(image_url)
-                # async with client.stream("GET", image_url) as response:
-                #     async for chunk in response.aiter_bytes(chunk_size=8192):
-                #         yield chunk
-
         content = await self.seaweed_repo.get_by_fid(fid, self.fs)
         file_name = f'{get_random_string(8)}.png'
         headers = {"Content-Disposition": f"inline; filename={file_name}", "X-Image-Type": "none",
