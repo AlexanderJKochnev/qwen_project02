@@ -150,7 +150,7 @@ class ClickHouseRepository:
             q = Query.from_(events).select(*(events[k] for k in fields))
         else:
             q = Query.from_(events)
-        q = q.where(events[id_field] in id_values)
+        q = q.where(events[id_field].isin(id_values))
         if order_by:
             if 'DESC' in order_by:
                 order_by = order_by.replace('DESC', '').strip()
