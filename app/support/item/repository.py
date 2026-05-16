@@ -1,6 +1,6 @@
 # app/support/Item/repository.py
 import math
-from loguru import logger
+from loguru import logger  # NOQA: F401
 from decimal import Decimal
 from typing import List, Optional, Tuple, Type, Union
 from sqlalchemy import func, literal_column, or_, select, Select, desc, text, and_
@@ -40,7 +40,7 @@ class ItemRepository(ArrayRepository, Repository):
     @classmethod
     def get_query(cls, model: ModelType):
         """ создание запроса со связанными полями """
-        excl = exclude_field_list(Item, ('search_vector', 'drink', 'search_content', 'word_hashes'))
+        excl = exclude_field_list(Item, ('search_vector', 'drink', 'search_content', 'word_hashes', 'seaweed_fids'))
         subquery = DrinkRepository.get_selectin()
         query = select(Item).options(load_only(*excl), selectinload(Item.drink).options(*subquery))
         return query

@@ -1033,6 +1033,7 @@ def transform_list_view(source: dict, languages: Union[List, Tuple]) -> dict:
     subcat = d.get("subcategory", {})
     cat = subcat.get("category", {})
     image = source.get("seaweed_fids")
+    logger.warning(f'{image}, {image[0]=}, {image[1]=}')
     logger.warning(f'==={image}, {type(image)=}')
     # Навигация по географии (с защитой от None)
     site = d.get("site") or {}
