@@ -157,9 +157,10 @@ class SeaweedsService:
             получение изображения по fid (любого)
         """
         import httpx
+        import aiohttp
         image_url = settings.seaweed_url
-
-        async with httpx.AsyncClient() as client:
+        async with aiohttp.ClientSession() as client:
+        # async with httpx.AsyncClient() as client:
             content = await client.get(image_url)
         content = await self.seaweed_repo.get_by_fid(fid, self.fs)
         file_name = f'{get_random_string(8)}.png'
