@@ -29,7 +29,7 @@ class ArrayRepository:
         field = getter(model, arrayName)
         result = await session.execute(select(field).where(model.id == id))
         if not result:
-            return None
+            return []
         res = result.mappings().one_or_none()
         return res.get(arrayName) or []
 
@@ -83,7 +83,7 @@ class ArrayRepository:
     async def clear_array_by_id(
         cls, id: int, model: ModelType, arrayName: str, session: AsyncSession
     ) -> List[str]:
-        """ получение массива по id """
+        """ очистка массива по id """
         await cls._set_array_(id, model, arrayName, [], session)
         return await cls._get_array_(id, model, arrayName, session)
 
@@ -113,8 +113,9 @@ class ArrayRepository:
             arrayName:      имя поля
         """
         array_list: List[str] = await cls._get_array_(id, model, arrayName, session)
-        array_list.pop(pos)
-        await cls._set_array_(id, model, arrayName, array_list, session)
+        if len(array_list) > 0 and pos <= len(array_list):
+            array_list.pop(pos)
+            await cls._set_array_(id, model, arrayName, array_list, session)
         return array_list
 
     @classmethod
@@ -129,10 +130,9 @@ class ArrayRepository:
             arrayName:      имя поля
         """
         array_list: List[str] = await cls._get_array_(id, model, arrayName, session)
-        if pos1 > len(array_list) or pos2 > len(array_list):
-            return array_list
-        array_list[pos1], array_list[pos2] = array_list[pos2], array_list[pos1]
-        await cls._set_array_(id, model, arrayName, array_list, session)
+        if len(array_list) > 0 and pos1 <= len(array_list) and pos2 <= len(array_list):
+            array_list[pos1], array_list[pos2] = array_list[pos2], array_list[pos1]
+            await cls._set_array_(id, model, arrayName, array_list, session)
         return array_list
 
     @classmethod
@@ -140,15 +140,14 @@ class ArrayRepository:
         cls, id: int, pos: int, newdata: str, model: ModelType, arrayName: str, session: AsyncSession
     ) -> list:
         """
-            поменять два элемента местами
+            заменить
             id:             id записи
             new_elements:   добавляемые элементы
             model:          модель
             arrayName:      имя поля
         """
         array_list: List[str] = await cls._get_array_(id, model, arrayName, session)
-        if pos > len(array_list):
-            return array_list
-        array_list[pos] = newdata
-        await cls._set_array_(id, model, arrayName, array_list, session)
+        if len(array_list) > 0 and pos <= len(array_list):
+            array_list[pos] = newdata
+            await cls._set_array_(id, model, arrayName, array_list, session)
         return array_list

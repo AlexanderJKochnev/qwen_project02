@@ -225,14 +225,12 @@ class SeaweedsService:
             return result
         # 0.1. список fids
         fids = [a.seaweed_fids for a in response]
-        logger.warning(f"{fids=}")
         # 1. получение списка thunmbnails & fids
-        thumbs: list = await self.get_fids_thumb(fids)
-        logger.warning(f'{thumbs=}')
-        return thumbs
+        thumbs: dict = await self.get_fids_thumb(fids)
         cycle = ((a.id, a.seaweed_fids, ) for a in response)
         result: dict = {}
         for id, fid in cycle:
-            pass
-            # 0. получение fids_thumbnail
-            # 1. запись fids_thumbnail to seaweed_fids[1]
+            if thumb := thumbs.get(fid):
+                res = await repository.replace_by_index_array(id, 1, thumb, model, 'seaweed_fids', session)
+                result[id] = res
+        return result

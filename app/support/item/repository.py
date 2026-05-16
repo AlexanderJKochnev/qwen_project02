@@ -608,7 +608,6 @@ class ItemRepository(ArrayRepository, Repository):
         return items_list
 
 
-
 def get_drink_search_expression(cls):
     """
         для поиска по триграммному индексу с использованием литералов
