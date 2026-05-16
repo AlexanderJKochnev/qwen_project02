@@ -134,7 +134,7 @@ class SeaweedsRouter:
         """
         получение изображения по fid напрямую из seaweed
         """
-        image_data: dict = await service.get_dire(fid)
+        image_data: dict = await service.get_direct_image(fid)
         headers = image_data.pop('headers')
         return ResponseStreaming(image_data, headers)
         # return StreamingResponse(**image_data)
