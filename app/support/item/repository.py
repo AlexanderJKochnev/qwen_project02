@@ -41,7 +41,6 @@ class ItemRepository(ArrayRepository, Repository):
     def get_query(cls, model: ModelType):
         """ создание запроса со связанными полями """
         excl = exclude_field_list(Item, ('search_vector', 'drink', 'search_content', 'word_hashes'))
-        print(f'{excl=}')
         subquery = DrinkRepository.get_selectin()
         query = select(Item).options(load_only(*excl), selectinload(Item.drink).options(*subquery))
         return query

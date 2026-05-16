@@ -14,7 +14,7 @@
 """
 from typing import Any, Dict, List, Optional
 from clickhouse_connect.driver.asyncclient import AsyncClient
-from pypika import Table, Query, Order  # , functions as fn, CustomFunction
+from pypika import Table, Query, Order, CustomFunction  # , functions as fn, CustomFunction
 from loguru import logger
 
 
@@ -234,45 +234,31 @@ class ClickHouseRepository:
         data: List[dict] = [dict(zip(result.column_names, row)) for row in result.result_rows]
         return data
 
-    async def search(
-            self, search_field: str, search_value: str, filters: Optional[Dict[str, Any]] = None,
-            limit: int = 100, offset: int = 0
+    async def exact_search(
+            self, tag_value: str, fields: list = ['fid', 'fid_thumb'], order_by: str = 'tags'
     ) -> List[Dict[str, Any]]:
         """
-        Текстовый поиск по полю. ПЕРЕДЕЛАТЬ
-        SELECT * FROM images_metadata_active WHERE has(tags, 'my_tag') для поиска по тэгам
-        has_tag = CustomFunction("has", ["array", "value"])
-        target_tag = "nature"
-        if target_tag:
-            q = q.where(has_tag(images.tags, target_tag))
-        Args:
-            search_field: Поле для поиска (массив строк)
-            search_value: Значение для поиска (токен)
-            filters: Дополнительные фильтры
-            include_deleted: Включать мягко удаленные
-            limit: Лимит
-            offset: Смещение
+            search by tag
         """
-        where_conditions = [f"has({search_field}, %(search)s)"]
-        params = {'search': search_value}
+        # Первый аргумент — имя функции в ClickHouse, второй — параметры
+        has_token_func = CustomFunction('hasAllTokens', ['field', 'token'])
+        events = Table(self.select_table)
+        if fields:
+            q = Query.from_(events).select(*(events[k] for k in fields))
+        else:
+            q = Query.from_(events)
+        q = q.where(has_token_func(events['tags'], tag_value))
+        if order_by:
+            if 'DESC' in order_by:
+                order_by = order_by.replace('DESC', '').strip()
+                q = q.orderby(events[order_by], order = Order.desc)
+            else:
+                q = q.orderby(order_by)
+        q = q.limit(1)
+        logger.warning(f'==={q.get_sql()}')
 
-        if filters:
-            for key, value in filters.items():
-                where_conditions.append(f"{key} = %(__{key})s")
-                params[f"__{key}"] = value
-
-        where_clause = "WHERE " + " AND ".join(where_conditions)
-
-        query = f"""
-            SELECT * FROM {self.table_name}
-            {where_clause}
-            ORDER BY uploaded_at DESC
-            LIMIT {limit}
-            OFFSET {offset}
-        """
-
-        result = await self.client.query(query, parameters=params)
-        return result.result_rows_as_dict
+        result = await self.client.query(q.get_sql())
+        return result.first_item if result.row_count > 0 else None
 
     # ============================================================
     # UPDATE (через версионирование)

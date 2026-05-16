@@ -1,6 +1,7 @@
 # app.core.service.clickhouse_service.py
 """
     базовый сервисный слой для clickhouse
+    пока не понадобился - clickhouse работает с RAW SQL потому сразу из других service layer сразу в репозиторий
 """
 from fastapi import Depends
 from app.core.repositories.clickhouse_repository import ClickHouseRepositoryFactory

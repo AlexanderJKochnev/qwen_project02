@@ -32,6 +32,9 @@ class SeaweedsRouter:
 
     def setup_routes(self):
         self.router.add_api_route(
+            "/search", self.search_by_tag, methods=["GET"], openapi_extra={'x-request-schema': None}
+        )
+        self.router.add_api_route(
             "", self.get, methods=["GET"],
             openapi_extra={'x-request-schema': None}
         )
@@ -137,6 +140,14 @@ class SeaweedsRouter:
         image_data: dict = await service.get_direct_image(fid)
         headers = image_data.pop('headers')
         return ResponseStreaming(image_data, headers)
+        # return StreamingResponse(**image_data)
+
+    async def search_by_tag(self, tag_value: str, service: SeaweedsService = Depends()):
+        """
+        получение fid изображения по tag
+        """
+        result: dict = await service.search_fid_by_tag(tag_value)
+        return result
         # return StreamingResponse(**image_data)
 
     async def transfer_mongoo_sea(self, session: AsyncSession = Depends(get_db),

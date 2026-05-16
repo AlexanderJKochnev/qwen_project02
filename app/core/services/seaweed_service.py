@@ -206,6 +206,15 @@ class SeaweedsService:
         result = await self.get_image(fid_thumb)
         return result
 
+    async def search_fid_by_tag(self, tag_value: str) -> dict:
+        """
+            поиск по тэгу. возвращает пару {fid: fid_thumbnail}
+        """
+        # 1. получение fid: fid_thumb
+        result: dict = await self.click_repo.exact_search(tag_value)
+        return result
+
+
     async def get_items_pairs(self, session: AsyncSession, image_service: ThumbnailImageService):
         """
             перенос mongodb -> seaweed
