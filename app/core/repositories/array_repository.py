@@ -7,7 +7,7 @@ from sqlalchemy import update, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.utils.common_utils import getter
 from app.core.types import ModelType
-from loguru import logger
+from loguru import logger  # noqa: F401
 
 
 class ArrayRepository:

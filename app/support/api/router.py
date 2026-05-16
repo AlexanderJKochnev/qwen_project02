@@ -191,7 +191,7 @@ class ApiRouter(ItemRouter):
         """
             получение thumbnail по id напитка. Версия 1 (StreamingResponse)
         """
-        image_data = await self.service.get_thumbnail_by_id_v2(id, self.repo, self.model, session, image_service)
+        image_data = await self.service.get_image_by_id_v2(id, self.repo, self.model, session, image_service, 1)
         headers = image_data.pop('headers')
         return ResponseStreaming(image_data, headers)
 
