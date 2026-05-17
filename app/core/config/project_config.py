@@ -327,7 +327,7 @@ class Settings(BaseSettings):
 
     @property
     def max_file_size(self) -> int:
-        return self.MAX_FILE_SIZE * 1024 * 256
+        return self.MAX_FILE_SIZE * 1024
 
     @property
     def allowed_extensions(self) -> List[str]:
