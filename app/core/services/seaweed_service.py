@@ -220,7 +220,7 @@ class SeaweedsService:
             возвращает 1 - полное изображение
                         2 thumbnail
         """
-        fids: dict = self.search_fid_by_tag(tag_value)
+        fids: dict = await self.search_fid_by_tag(tag_value)
         if fids:
             if image_type == 1:
                 fid = fids.get('fid')
