@@ -61,6 +61,7 @@ def image_aligning(content: bytes, remove_bg: bool = True) -> tuple:
 
     max_w, max_h = settings.IMAGE_WIDTH, settings.IMAGE_HEIGH
     MAX_FILE_SIZE = settings.max_file_size  # 100 * 1024 * 5  # не более 100кб
+    logger.warning(f'{MAX_FILE_SIZE=}')
     MARGIN_PCT = 0.05
     thumb_w, thumb_h = 150, 150
 
