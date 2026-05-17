@@ -944,14 +944,11 @@ def transform(source: dict, languages: Union[List, Tuple], default_image: Tuple)
     """
          languages - суффиксы языковые отсортированные
     """
-    from app.core.utils.common_utils import jprint
-    jprint(source)
     d = source.get("drink", {})
     subcat = d.get("subcategory", {})
     cat = subcat.get("category", {})
     prod = d.get('producer', {})
     image = source.get("seaweed_fids", (default_image, None))
-    logger.warning(image)
     # ptitle = prod.get("producertitle", {})
     classification = d.get("classification", {})
     vintageconfig = d.get("vintageconfig", {})
