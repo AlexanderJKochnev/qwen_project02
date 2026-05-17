@@ -45,8 +45,8 @@ export const API_BASE_URL = (() => {
 })();
 
 // Для обратной совместимости
-// export const IMAGE_BASE_URL = API_BASE_URL;
-export const IMAGE_BASE_URL =  'http://seaweedfs_volume:8080'
+export const IMAGE_BASE_URL = API_BASE_URL;
+// export const IMAGE_BASE_URL =  'http://seaweedfs_volume:8080'
 
 // Для отладки (можно закомментировать в production)
 // console.log('[Config] API_BASE_URL initialized:', API_BASE_URL);
