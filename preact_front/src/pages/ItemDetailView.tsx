@@ -71,7 +71,8 @@ export const ItemDetailView = () => {
 
   const handleShowEnlargedImage = () => {
     if (data && data.image_id) {
-      const imageUrl = `${IMAGE_BASE_URL}/mongodb/images/${data.image_id}`;
+      // const imageUrl = `${IMAGE_BASE_URL}/mongodb/images/${data.image_id}`;
+      const imageUrl = `${IMAGE_BASE_URL}/seaweed/direct/${data.image_id}`;
       setEnlargedImageUrl(imageUrl);
       setShowEnlargedImage(true);
     }
