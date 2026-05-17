@@ -172,5 +172,7 @@ class SeaweedsRouter:
         # запускать только один раз
         # response = await service.get_items_pairs(session, image_service)
         # запись в items.seaweed_fids[1] thumbnails fids
-        response = await service.transfer_tier2(session, image_service)
+        # response = await service.transfer_tier2(session, image_service)
+        # новый encoder webp
+        response = await service.transfer_tier3(session, image_service)
         return response

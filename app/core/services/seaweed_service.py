@@ -272,7 +272,7 @@ class SeaweedsService:
         return result
 
     async def transfer_tier2(self, session: AsyncSession, image_service: ThumbnailImageService):
-        # 0. получение списка из items
+        # запись thumbnails seaweed_fids
         result: dict = {}
         repository = get_repo('Item')
         model = get_model_by_name('Item')
@@ -289,4 +289,24 @@ class SeaweedsService:
             if thumb := thumbs.get(fid):
                 res = await repository.replace_by_index_array(id, 1, thumb, model, 'seaweed_fids', session)
                 result[id] = res
+        return result
+
+    async def transfer_tier3(self, session: AsyncSession, image_service: ThumbnailImageService):
+        # запись thumbnails seaweed_fids
+        result: dict = {}
+        repository = get_repo('Item')
+        model = get_model_by_name('Item')
+        response = await repository.get_item_drink3(session)
+        if not response:
+            return result
+        cycle = ((a.id, a.image_id, a.concat) for a in response)
+        result: dict = {}
+        for id, image_id, description in cycle:
+            image_dict = await image_service.get_full_image(image_id)
+            content: bytes = image_dict["content"]
+            res: dict = await self.create_img(content, description, 'items')
+            # 3. запись fid в Items.seaweed_fids[0]
+            fid_list = [res.get('fid'), res.get('fid_thumb')]
+            response = await repository.add_to_array(id, fid_list, model, 'seaweed_fids', session)
+            result[id] = response
         return result
