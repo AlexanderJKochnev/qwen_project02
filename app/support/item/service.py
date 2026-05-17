@@ -216,7 +216,7 @@ class ItemService(ArrayService, Service):
             return None
         # задаем порядок замещения пустых полей
         language = cls.lang_sorted(lang)
-        default_image_id = get_default_image(request, 1)  # заглушка для thumbnails
+        default_image_id = get_default_image(request, 0)  # заглушка для thumbnails
         item = transform(item, tuple(language), default_image_id)
         # список всех локализованных полей приложения
         return item
