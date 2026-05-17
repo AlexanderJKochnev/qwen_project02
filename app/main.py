@@ -104,7 +104,7 @@ async def lifespan(app: FastAPI):
     app.state.ch_manager = ch_manager
     app.state.ch_client = ch_manager.client
     app.state.ch_repo_factory = ClickHouseRepositoryFactory(ch_manager.client)
-    app.state.seaweed_fids_default = get_dump(app.state.ch_client)
+    app.state.seaweed_fids_default = await get_dump(app.state.ch_client)
     logger.warning(app.state.seaweed_fids_default)
     # app.state.ch_client = await ch_manager.connect()
     #  app.state.ch_client = global_ch_manager.client
