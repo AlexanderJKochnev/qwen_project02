@@ -66,11 +66,18 @@ class SeaweedsService:
             tmp = ' '.join((f'{val}' for val in ipts.values() if val))
         tags = f'{tmp} {description}'   # tags теперь string - нормализовать не нужно - это делает индекс click
         meta: dict = {}
+        """
+         metadata.update(
+            {'full_size_bytes': len(full_data),
+             'thumb_size_bytes': len(thumb_data),
+             'full_mime': 'image/webp',
+             'thumb_mime': 'image/webp'}
+        """
         meta['table'] = table
         # meta['uploaded_at'] = datetime.now(timezone.utc)
-        meta['size_bytes'] = meta_data['size_bytes']
-        meta['mime_type'] = meta_data['mime_type']
-        meta['thumb_size_bytes'] = meta_data['thumbnail_size_bytes']
+        meta['size_bytes'] = meta_data.get('full_size_bytes')
+        meta['mime_type'] = meta_data.get('full_mime_type')
+        meta['thumb_size_bytes'] = meta_data.get('thumb_size_bytes')
         meta['tags'] = tags
         # 3. сохранение 2-х файлов в seaweed, получение 2-х FID
         fid = await self.fs.upload(full_data)
