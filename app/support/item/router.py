@@ -1,25 +1,26 @@
 # app/support/item/router.py
-import io
 import json
 
-from fastapi import Depends, File, Form, HTTPException, Path, Query, status, UploadFile, BackgroundTasks
-from pydantic import ValidationError
+from fastapi import BackgroundTasks, Depends, File, Form, HTTPException, Path, Query, Request, status, UploadFile
 from loguru import logger
+from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
-# from fastapi.responses import StreamingResponse
-from app.core.utils.io_utils import ResponseJust
+
 from app.auth.dependencies import get_active_user_or_internal
 from app.core.config.database.click_async import get_ch_client
 from app.core.config.database.db_async import get_db
 from app.core.config.project_config import get_paging
+from app.core.enum import CliSearchMode
 from app.core.routers.base import BaseRouter
 from app.core.routers.mixin_router import ArrayRouter
+from app.core.services.seaweed_service import SeaweedsService
+# from fastapi.responses import StreamingResponse
+from app.core.utils.io_utils import ResponseStreaming
 from app.mongodb.service import ThumbnailImageService
 from app.support.item.model import Item
 from app.support.item.repository import ItemRepository
 from app.support.item.schemas import (FileUpload, ItemCreate, ItemCreatePreact, ItemCreateRelation,
                                       ItemCreateResponseSchema, ItemUpdate, ItemUpdatePreact)
-from app.core.enum import CliSearchMode
 
 paging = get_paging
 
@@ -304,23 +305,28 @@ class ItemRouter(ArrayRouter, BaseRouter):
         return result
 """
 
-    async def get_thumbnail_by_id(self, id: int, session: AsyncSession = Depends(get_db),
-                                  image_service: ThumbnailImageService = Depends()):
+    async def get_thumbnail_by_id(
+            self, request: Request, id: int, session: AsyncSession = Depends(get_db),
+            # image_service: ThumbnailImageService = Depends(),
+            image_service: SeaweedsService = Depends()
+    ):
         """
             получение thumbnail по id напитка. Версия 1 (StreamingResponse)
         """
-        image_data = await self.service.get_thumbnail_by_id(id, self.repo, self.model, session, image_service)
+        image_data = await self.service.get_image_by_id_v2(
+            request, id, self.repo, self.model, session, image_service, 1
+        )
+        headers = image_data.pop('headers')
+        return ResponseStreaming(image_data, headers)
 
-        headers = {"Content-Disposition": f"inline; filename={image_data['filename']}", "X-Image-Type": "thumbnail",
-                   "X-File-Size": str(len(image_data["content"]))}
-        if image_data.get("from_cache"):
-            headers["X-Cache"] = "HIT"
-        else:
-            headers["X-Cache"] = "MISS"
+    async def get_image_by_id(self, request: Request, id: int, session: AsyncSession = Depends(get_db),
+                              # image_service: ThumbnailImageService = Depends(),
+                              image_service: SeaweedsService = Depends()
+                              ):
         """
-        return StreamingResponse(io.BytesIO(image_data["content"]),
-                                 media_type=image_data['content_type'],
-                                 headers=headers)
+            получение изображения по id напитка. Версия 1  (StreamingResponse - лучше для тяжелых условий)
+            ArrayService.get_image_by_id_v2 ->
         """
-
-        return ResponseJust(image_data, headers)
+        image_data = await self.service.get_image_by_id_v2(request, id, self.repo, self.model, session, image_service)
+        headers = image_data.pop('headers')
+        return ResponseStreaming(image_data, headers)
