@@ -30,13 +30,13 @@ def coalesce_default_image(request, image_id: tuple, image_type: int = 0, pos: i
         return default_image[image_type]
 
 
-def get_default_image(request, image_id: tuple, image_type: int = 0) -> str:
+def get_default_image(request, image_type: int = 0) -> str:
     """
         получение fid дефолтного изображения (заглушка)
         image_type: int = 0 полное, 1 - thumbnail
         когда будет много картинок - дополнить
     """
-    return request.app.state.seaweed_fids_default
+    return request.app.state.seaweed_fids_default[image_type]
 
 
 def get_rembg_session():
