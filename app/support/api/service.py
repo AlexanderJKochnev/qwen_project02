@@ -1,13 +1,14 @@
 # app.support.api.service.py
 # from pydantic import TypeAdapter
 from decimal import Decimal
-from fastapi import HTTPException
-from typing import List, Dict, Any, Type
+from fastapi import HTTPException, Request
+from typing import List, Dict, Any
 from datetime import datetime
 from loguru import logger
 # from sqlalchemy.sql.elements import Label
 # from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.types import ModelType
+from app.core.utils.image_utils import get_default_image
 # from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.utils.pydantic_utils import get_field_name, make_paginated_response, inst_dict, list_dict
 from app.core.utils.common_utils import camel_to_enum
@@ -108,14 +109,15 @@ class ApiService(ItemService):
             raise HTTPException(status_code=503, detail=f'error.__api_view__.{e}')
 
     @classmethod
-    def convert_list_api_view(cls, items: List[ModelType], cnv: bool = True) -> List[Dict[str, Any]]:
+    def convert_list_api_view(cls, request: Request, items: List[ModelType], cnv: bool = True) -> List[Dict[str, Any]]:
         """
             cnv
         """
         api_view = transform_api_list_view
         lang_prefixes = cls.lang_suffix_list(language)
+        default_image_id = get_default_image(request, 1)  # заглушка для thumbnails
         if cnv:
-            cleaned_list = [api_view(inst_dict(item), def_lang, lang_prefixes) for item in items]
+            cleaned_list = [api_view(inst_dict(item), def_lang, lang_prefixes, default_image_id) for item in items]
         else:
             cleaned_list = [api_view(item, def_lang, lang_prefixes) for item in items]
         # result = ItemApiAdapter.validate_python([api_view(item.to_dict()) for item in items])
@@ -160,20 +162,21 @@ class ApiService(ItemService):
         return result
 
     @classmethod
-    async def get_list_api_view(cls, after_date: datetime, repository, model,
+    async def get_list_api_view(cls, request: Request, after_date: datetime, repository, model,
                                 session: AsyncSession,):
         """ Получение списка элементов для api view """
         items = await repository.get_all(after_date, model, session)
-        result = cls.convert_list_api_view(items)
+        result = cls.convert_list_api_view(request, items)
         return result
 
     @classmethod
-    async def get_list_api_view_page(cls, ater_date: datetime, page: int, page_size: int,
+    async def get_list_api_view_page(cls, request: Request, ater_date: datetime, page: int, page_size: int,
                                      repository: ItemRepository, model: Item, session: AsyncSession):
         """Получение списка элементов для ListView с пагинацией и локализацией"""
         skip = (page - 1) * page_size
         items, total = await repository.get(ater_date, skip, page_size, model, session)
-        result = cls.convert_list_api_view(items)
+        default_image_id = get_default_image(request, 1)  # заглушка для thumbnails
+        result = cls.convert_list_api_view(items, default_image_id)
         # result = []
         # for item in items:
         #     if item_dict := item.to_dict():
@@ -181,27 +184,29 @@ class ApiService(ItemService):
         return make_paginated_response(result, total, page, page_size)
 
     @classmethod
-    async def search(cls, search: str, page: int, page_size: int,
+    async def search(cls, request: Request, search: str, page: int, page_size: int,
                      repository: ItemRepository, model: Item,
                      session: AsyncSession
                      ) -> PaginatedResponse[ItemApi]:
         """Поиск с пагинацией и локализацией"""
         skip = (page - 1) * page_size
         items, total = await repository.search(search, skip, page_size, model, session)
-        result = cls.convert_list_api_view(items)
+        default_image_id = get_default_image(request, 1)  # заглушка для thumbnails
+        result = cls.convert_list_api_view(items, default_image_id)
         return make_paginated_response(result, total, page, page_size)
 
     @classmethod
-    async def search_all(cls, search: str,
+    async def search_all(cls, request: Request, search: str,
                          repository: ItemRepository, model: Item,
                          session: AsyncSession, limit: int = 20) -> PaginatedResponse[ItemApi]:
         """Поиск с пагинацией и локализацией"""
         items = await repository.search_all(search, model, session)
-        result = cls.convert_list_api_view(items)
+        default_image_id = get_default_image(request, 1)  # заглушка для thumbnails
+        result = cls.convert_list_api_view(items, default_image_id)
         return result
 
     @classmethod
-    async def get_list_api_view_ids(cls, ids: str, repository, model,
+    async def get_list_api_view_ids(cls, request: Request, ids: str, repository, model,
                                     session: AsyncSession,):
         """ Получение списка элементов для api view """
         if not ids:
@@ -209,7 +214,8 @@ class ApiService(ItemService):
         comma_separator = ','
         ids_set = tuple(int(b) for a in set(ids.split(comma_separator)) if (b := a.strip()).isdigit())
         items = await repository.get_by_ids(ids_set, model, session)
-        result = cls.convert_list_api_view(items)
+        default_image_id = get_default_image(request, 1)  # заглушка для thumbnails
+        result = cls.convert_list_api_view(items, default_image_id)
         return result
 
     @classmethod

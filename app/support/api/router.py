@@ -8,8 +8,8 @@ from fastapi import Depends, Query
 from app.auth.dependencies import get_current_api_user
 from app.core.config.project_config import settings, get_paging
 from app.core.schemas.base import PaginatedResponse
-from app.core.services.seaweed_service import SeaweedsService
-from app.core.utils.io_utils import ResponseStreaming
+# from app.core.services.seaweed_service import SeaweedsService
+# from app.core.utils.io_utils import ResponseStreaming
 from app.core.utils.pydantic_utils import orresponse
 # from app.mongodb import router as mongorouter
 from app.core.config.database.db_async import get_db
@@ -134,7 +134,7 @@ class ApiRouter(ItemRouter):
         return orresponse(result)
         # return result
 
-    async def get_all(self, after_date: datetime = Query(
+    async def get_all(self, request: Request, after_date: datetime = Query(
         (datetime.now(timezone.utc) - relativedelta(years=2)).isoformat(),
         description="Дата в формате ISO 8601 (например, 2024-01-01T00:00:00Z)"
     ), session: AsyncSession = Depends(get_db)):
@@ -146,7 +146,7 @@ class ApiRouter(ItemRouter):
             after_date = back_to_the_future(after_date)
             service = ApiService
             repository = ItemRepository
-            result = await service.get_list_api_view(after_date, repository, self.model, session)
+            result = await service.get_list_api_view(request, after_date, repository, self.model, session)
             return orresponse(result)
             # return result
 
@@ -154,7 +154,7 @@ class ApiRouter(ItemRouter):
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                 detail=f"Internal server error. {e}")
 
-    async def get(self,
+    async def get(self, request: Request,
                   after_date: datetime = Query(delta,
                                                description="Дата в формате ISO 8601 (например, 2024-01-01T00:00:00Z)"),
                   page: int = Query(1, ge=1),
@@ -169,7 +169,8 @@ class ApiRouter(ItemRouter):
         # print(f"📥 GET request for {self.model.__name__} from")
         after_date = back_to_the_future(after_date)
         service = ApiService
-        response = await service.get_list_api_view_page(after_date, page, page_size, self.repo, self.model, session)
+        response = await service.get_list_api_view_page(request, after_date, page, page_size, self.repo, self.model,
+                                                        session)
         # result = self.paginated_response(**response)
         return orresponse(response)
 
@@ -189,7 +190,7 @@ class ApiRouter(ItemRouter):
         image_data = await self.service.get_thumbnail_by_id(id, self.repo, self.model, session, image_service)
         return raw_image_response(image_data)
 
-    async def search_by_ids(self, search: str = Query(
+    async def search_by_ids(self, request: Request, search: str = Query(
             None, description="Поисковый запрос. В случае пустого запроса будут выведены все данные "
     ),
             session: AsyncSession = Depends(get_db)):
@@ -200,7 +201,7 @@ class ApiRouter(ItemRouter):
         try:
             service = ApiService
             repository = ItemRepository
-            result = await service.get_list_api_view_ids(search, repository, self.model, session)
+            result = await service.get_list_api_view_ids(request, search, repository, self.model, session)
             return orresponse(result)
         except Exception as e:
             raise HTTPException(status_code=500, detail=e)

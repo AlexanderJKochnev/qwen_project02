@@ -940,7 +940,7 @@ def get_multilang(obj: dict, base_key: str, languages: Union[list, tuple, set]) 
     return ""
 
 
-def transform(source: dict, languages: Union[List, Tuple]) -> dict:
+def transform(source: dict, languages: Union[List, Tuple], default_image: Tuple) -> dict:
     """
          languages - суффиксы языковые отсортированные
     """
@@ -948,6 +948,7 @@ def transform(source: dict, languages: Union[List, Tuple]) -> dict:
     subcat = d.get("subcategory", {})
     cat = subcat.get("category", {})
     prod = d.get('producer', {})
+    image = source.get("seaweed_fids") or (None, default_image)
     # ptitle = prod.get("producertitle", {})
     classification = d.get("classification", {})
     vintageconfig = d.get("vintageconfig", {})
@@ -966,7 +967,9 @@ def transform(source: dict, languages: Union[List, Tuple]) -> dict:
     keys = ("id", "vol", "count", "image_id", "alc", "title", "subtitle", "description", "country", "region", "subregion",
             "site", "category", "subcategory", "varietal", "pairing", "source", "first_vintage", "last_vintage", "display_name",
             "producer", "anno", "classification", "vintageconfig", "designation")
-    values = (source.get("id"), source.get("vol"), source.get("count"), source.get("image_id"), alc,
+    values = (source.get("id"), source.get("vol"), source.get("count"),
+              image[0],  # source.get("image_id"),
+              alc,
               get_multilang(d, "title", languages), get_multilang(d, "subtitle", languages),
               get_multilang(d, "description", languages), get_multilang(country, "name", languages),
               get_multilang(reg, "name", languages), get_multilang(subreg, "name", languages),
@@ -982,47 +985,6 @@ def transform(source: dict, languages: Union[List, Tuple]) -> dict:
               get_multilang(vintageconfig, "name", languages),
               get_multilang(designation, "name", languages))
     return {key: val for key, val in zip(keys, values) if val}
-    """return {
-        "id": source.get("id"),
-        "vol": source.get("vol"),
-        "count": source.get("count"),
-        "image_id": source.get("image_id"),
-        "alc": alc,
-        # Текстовые поля с coalesce
-        "title": get_multilang(d, "title", languages),
-        "subtitle": get_multilang(d, "subtitle", languages),
-        "description": get_multilang(d, "description", languages),
-
-        # География и категории
-        "country": get_multilang(country, "name", languages),
-        "region": get_multilang(reg, "name", languages),
-        "subregion": get_multilang(subreg, "name", languages),
-        "site": get_multilang(site, "name", languages),
-        "category": get_multilang(cat, "name", languages),
-        "subcategory": get_multilang(subcat, "name", languages),
-
-        # СПИСКИ С ФОРМАТИРОВАНИЕМ
-        "varietal": [
-            f"{get_multilang(va.get('varietal', {}), 'name', languages)} {va.get('percentage', 0)} %"
-            for va in d.get("varietal_associations", [])
-        ],
-        "pairing": [
-            get_multilang(fa.get("food", {}), "name", languages)
-            for fa in d.get("food_associations", [])
-        ],
-
-        # Дополнительные поля (примеры)
-        "source": d.get("source", {}).get("name"),
-        "first_vintage": d.get("first_vintage"),
-        "last_vintage": d.get("last_vintage"),
-        "display_name": d.get("display_name"),
-        "producer": f'{get_multilang(prod.get('producertitle'), "name", languages)} '
-        f'{get_multilang(prod, "name", languages)}'.strip() if prod else None,
-        "anno": d.get("anno"),
-        "classification": get_multilang(classification, "name", languages),
-        "vintageconfig": get_multilang(vintageconfig, "name", languages),
-        "designation": get_multilang(designation, "name", languages),
-    }"""
 
 
 def transform_list_view(source: dict, languages: Union[List, Tuple], default_image: str) -> dict:
@@ -1046,19 +1008,9 @@ def transform_list_view(source: dict, languages: Union[List, Tuple], default_ima
               get_multilang(cat, "name", languages),
               get_multilang(country, "name", languages))
     return {key: val for key, val in zip(keys, values) if val}
-    """return {
-        "id": source.get("id"),
-        "vol": source.get("vol"),
-        "image_id": source.get("image_id"),
-        # Текстовые поля с coalesce
-        "title": get_multilang(d, "title", languages),
-        # География и категории
-        "category": get_multilang(cat, "name", languages),
-        "country": get_multilang(country, "name", languages),
-    }"""
 
 
-def transform_api_list_view(source: dict, def_lang: str, languages: Union[List, Tuple]) -> dict:
+def transform_api_list_view(source: dict, def_lang: str, languages: Union[List, Tuple], default_image: str) -> dict:
     """
     трансформация для api
     languages = {'', '_ru', ...}
@@ -1066,7 +1018,7 @@ def transform_api_list_view(source: dict, def_lang: str, languages: Union[List, 
     d = source.get("drink", {})
     subcat = d.get("subcategory", {})
     cat = subcat.get("category", {})
-
+    image = source.get("seaweed_fids") or (None, default_image)
     category, subcat = api_mapping(cat, subcat)
 
     prod = d.get('producer', {})
@@ -1089,7 +1041,10 @@ def transform_api_list_view(source: dict, def_lang: str, languages: Union[List, 
     vol = source.get('vol', None)
 
     keys = ("id", "vol", "image_id", "changed_at", "category", "country")
-    vals = (source.get("id"), vol, source.get("image_id"), source.get("updated_at"), category, camel_to_enum(
+    vals = (source.get("id"), vol,
+            image[1],  # source.get("image_id"),
+            source.get("updated_at"),
+            category, camel_to_enum(
             country.get("name")))
     main = {key: val for key, val in zip(keys, vals) if val}
     lang_keys = ("alc", "vol", "title", "subtitle", "desription", "region", "recommendation",

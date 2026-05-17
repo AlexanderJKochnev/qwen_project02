@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
 from async_lru import alru_cache
-from fastapi import BackgroundTasks, HTTPException
+from fastapi import BackgroundTasks, HTTPException, Request
 from loguru import logger
 from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
@@ -312,8 +312,8 @@ class Service(metaclass=ServiceMeta):
         """Получение записи по ID с автоматическим переводом недостающих локализованных полей"""
         result = await repository.get_by_id(id, model, session)
         res = inst_dict(result)
-        res1 = result.to_dict()
-        from app.core.utils.common_utils import jprint
+        # res1 = result.to_dict()
+        # from app.core.utils.common_utils import jprint
         return res
 
     @classmethod
@@ -367,7 +367,7 @@ class Service(metaclass=ServiceMeta):
         return resp
 
     @classmethod
-    async def search(cls, search: str, page: int, page_size: int,
+    async def search(cls, request: Request, search: str, page: int, page_size: int,
                      repository: Type[Repository], model: ModelType,
                      session: AsyncSession
                      ) -> Dict[str, Any]:
@@ -424,7 +424,7 @@ class Service(metaclass=ServiceMeta):
         return result
 
     @classmethod
-    async def get_detail_view(cls, lang: str, id: int, repository: Type[Repository],
+    async def get_detail_view(cls, request: Request, lang: str, id: int, repository: Type[Repository],
                               model: ModelType, session: AsyncSession) -> Optional[ModelType]:
         """ Получение и обработка записи по ID с автоматическим переводом недостающих локализованных полей """
         detail_fields = settings.DETAIL_VIEW

@@ -6,7 +6,7 @@ from decimal import Decimal
 from deepdiff import DeepDiff
 from loguru import logger  # noqa: F401
 # from sqlalchemy.sql.elements import Label
-from fastapi import BackgroundTasks, HTTPException
+from fastapi import BackgroundTasks, HTTPException, Request
 from pydantic import TypeAdapter, ValidationError
 from sqlalchemy import func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -206,7 +206,8 @@ class ItemService(ArrayService, Service):
         return make_paginated_response(result, total, page, page_size)
 
     @classmethod
-    async def get_detail_view(cls, lang: str, id: int, repository: ItemRepository, model: Item, session: AsyncSession):
+    async def get_detail_view(cls, request: Request, lang: str, id: int, repository: ItemRepository, model: Item,
+                              session: AsyncSession):
         """Получение детального представления элемента с локализацией"""
         item_instance = await repository.get_detail_view(id, model, session)
         # item: dict = item_instance.to_dict()
@@ -215,7 +216,8 @@ class ItemService(ArrayService, Service):
             return None
         # задаем порядок замещения пустых полей
         language = cls.lang_sorted(lang)
-        item = transform(item, tuple(language))
+        default_image_id = get_default_image(request, 1)  # заглушка для thumbnails
+        item = transform(item, tuple(language), default_image_id)
         # список всех локализованных полей приложения
         return item
 
