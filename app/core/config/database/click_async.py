@@ -78,12 +78,9 @@ async def get_dump(client: clickhouse_connect.driver.asyncclient.AsyncClient) ->
         q = Query.from_(events).select(*(events[k] for k in fields))
         q = q.where(has_token_func(events['tags'], tag_value)).orderby(order_by)
         q = q.limit(1)
-        print(f'{q.get_sql()=}')
         result = await client.query(q.get_sql())
-        logger.warning(f'{result=}')
         res: dict = result.first_item if result.row_count > 0 else None
-        logger.warning(f'{res=}')
-        return tuple(res.values)
+        return tuple(res.values())
     except Exception as e:
         logger.error(f'app.core.config.database.click_async.get_dump {e}')
         return None
