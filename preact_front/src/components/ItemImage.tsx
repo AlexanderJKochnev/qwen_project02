@@ -33,7 +33,8 @@ export const ItemImage = ({ image_id, alt = 'Item',
       // Если размер large -> запрашиваем полноразмерное (images)
       // В остальных случаях -> миниатюру (thumbnails)
       const endpoint = size === 'large' ? 'images' : 'thumbnails';
-      const imageUrl = `${IMAGE_BASE_URL}/mongodb/${endpoint}/${image_id}`;
+      // const imageUrl = `${IMAGE_BASE_URL}/mongodb/${endpoint}/${image_id}`;
+      const imageUrl = `${IMAGE_BASE_URL}/${image_id}`;
 
       try {
         const response = await fetch(imageUrl, {

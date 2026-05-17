@@ -10,7 +10,7 @@ from sqlalchemy.dialects import postgresql
 from pydantic import BaseModel, create_model, Field
 from sqlalchemy import and_, Column, ColumnElement, func, inspect, or_, String, Text, Unicode, UnicodeText, text
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import DeclarativeBase, MapperProperty, joinedload
+from sqlalchemy.orm import DeclarativeBase, MapperProperty
 from sqlalchemy.orm.attributes import QueryableAttribute
 from app.core.types import ModelType
 from app.core.models.base_model import Base
@@ -1033,8 +1033,6 @@ def transform_list_view(source: dict, languages: Union[List, Tuple], default_ima
     subcat = d.get("subcategory", {})
     cat = subcat.get("category", {})
     image = source.get("seaweed_fids") or (None, default_image)
-    logger.warning(f'==={image}')
-    logger.warning(f'{type(image[0])=}, {type(image[1])=}')
     # Навигация по географии (с защитой от None)
     site = d.get("site") or {}
     subreg = site.get("subregion") or {}
@@ -1043,7 +1041,7 @@ def transform_list_view(source: dict, languages: Union[List, Tuple], default_ima
     keys = ("id", "vol", "image_id", "title", "category", "country")
     values = (source.get("id"),
               source.get("vol"),
-              source.get("image_id"),
+              image[1],  # source.get("image_id"),
               get_multilang(d, "title", languages),
               get_multilang(cat, "name", languages),
               get_multilang(country, "name", languages))
