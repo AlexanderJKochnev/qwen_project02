@@ -13,6 +13,32 @@ from loguru import logger
 _REMBG_SESSION = None
 
 
+def coalesce_default_image(request, image_id: tuple, image_type: int = 0, pos: int = 0) -> str:
+    """
+        получение fid дефолтного изображения (заглушка)
+        image_type: int = 0 полное, 1 - thumbnail
+        когда будет много картинок - дополнить
+    """
+    default_image: tuple = request.app.state.seaweed_fids_default
+    try:
+        if image_id:
+            return image_id[pos * 2 + image_type]
+        else:
+            return default_image[image_type]
+    except Exception as e:
+        logger.error(f'coalesce_default_image.{e}')
+        return default_image[image_type]
+
+
+def get_default_image(request, image_id: tuple, image_type: int = 0) -> str:
+    """
+        получение fid дефолтного изображения (заглушка)
+        image_type: int = 0 полное, 1 - thumbnail
+        когда будет много картинок - дополнить
+    """
+    return request.app.state.seaweed_fids_default
+
+
 def get_rembg_session():
     """Ленивая загрузка модели при первом обращении"""
     global _REMBG_SESSION

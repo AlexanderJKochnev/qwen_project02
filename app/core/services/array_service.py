@@ -7,6 +7,7 @@ from app.core.types import ModelType
 from app.core.repositories.array_repository import ArrayRepository
 from app.core.services.seaweed_service import SeaweedsService
 from app.core.utils.alchemy_utils import has_column
+from app.core.utils.image_utils import get_default_image
 
 
 class ArrayService:
@@ -122,34 +123,8 @@ class ArrayService:
         # 1. получение image_id by id
         image_id = await cls.get_item_of_array_by_id(id, model, arrayColname, repository, session, pos)
         if not image_id:
-            image: tuple = request.app.state.seaweed_fids_default
-            if not image:
-                raise HTTPException(status_code=402, detail=f'instance {model.__name__} with {id=} not found')
-            image_id = image[pos]
+            image_id = get_default_image(request, pos)
         # 2. получение image by image_id
         # image = await image_service.get_full_image(image_id)
         image = await image_service.get_image(image_id)
-        return image
-
-    @classmethod
-    async def get_thumbnail_by_id_v2(
-            cls, id: int, repository: Repository, model: ModelType, session: AsyncSession,
-            image_service: SeaweedsService
-    ):
-        """
-            получение THUMBNAIL изображения по id напитка
-        """
-        #  ПОИСК КОЛОНКИ seaweed_fids
-        arrayColname = 'seaweed_fids'
-
-        if not has_column(model, arrayColname):
-            raise HTTPException(status_code=422, detail=f'{model.__name__} model has no images at all')
-        # 1. получение image_id by id
-        image_id = await cls.get_item_of_array_by_id(id, model, arrayColname, repository, session, 0)
-        if not image_id:
-            # СЮДА ПОСТАВИТЬ ЗАГЛУШКУ
-            raise HTTPException(status_code=402, detail=f'instance {model.__name__} with {id=} not found')
-        # 2. получение image by image_id
-        # image = await image_service.get_full_image(image_id)
-        image = await image_service.get_thumb_by_fid(image_id)
         return image

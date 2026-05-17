@@ -1,7 +1,7 @@
 # app.support.item.service.py
 import asyncio
 from functools import reduce
-from typing import Any, Dict, List, Optional, Tuple, Type, Union
+from typing import Any, Dict, List, Optional, Type, Union
 from decimal import Decimal
 from deepdiff import DeepDiff
 from loguru import logger  # noqa: F401
@@ -11,11 +11,12 @@ from pydantic import TypeAdapter, ValidationError
 from sqlalchemy import func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+
+from app.core.utils.image_utils import get_default_image
 from app.core.utils.pydantic_utils import list_dict, inst_dict
 from app.core.config.project_config import settings
 from app.core.utils.backgound_tasks import background
 from app.core.hash_norm import get_cached_hash, get_hashes_for_item, tokenize
-from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.services.service import Service
 from app.core.services.array_service import ArrayService
 from app.core.types import ModelType
@@ -179,7 +180,7 @@ class ItemService(ArrayService, Service):
         return result
 
     @classmethod
-    async def get_list_view(cls, lang: str,
+    async def get_list_view(cls, request, lang: str,
                             repository: Type[ItemRepository],
                             model: Type[Item], session: AsyncSession,
                             limit: int = 20):
@@ -187,11 +188,12 @@ class ItemService(ArrayService, Service):
         items: List[ModelType] = await repository.get_list_view(model, session, limit)
         items: List[Dict] = list_dict(items)
         language = cls.lang_sorted(lang)
-        result = [transform_list_view(item, tuple(language)) for item in items]
+        default_image_id = get_default_image(request, 1)  # заглушка для thumbnails
+        result = [transform_list_view(item, tuple(language), default_image_id) for item in items]
         return result
 
     @classmethod
-    async def get_list_view_page(cls, page: int, page_size: int,
+    async def get_list_view_page(cls, request, page: int, page_size: int,
                                  repository: ItemRepository, model: Item, session: AsyncSession,
                                  lang: str = 'en'):
         """Получение списка элементов для ListView с пагинацией и локализацией"""
@@ -199,7 +201,8 @@ class ItemService(ArrayService, Service):
         items, total = await repository.get_list_view_page(skip, page_size, model, session)
         items: List[Dict] = list_dict(items)
         language = cls.lang_sorted(lang)
-        result = [transform_list_view(item, tuple(language)) for item in items]
+        default_image_id = get_default_image(request, 1)  # заглушка для thumbnails
+        result = [transform_list_view(item, tuple(language), default_image_id) for item in items]
         return make_paginated_response(result, total, page, page_size)
 
     @classmethod
@@ -287,38 +290,6 @@ class ItemService(ArrayService, Service):
         await cls.pre_run_background_task(drink_id, background_tasks, DrinkRepository, Drink)
         logger.warning('update_item_drink 1.7. BACKGROUND TASKS')
         return result
-
-    @classmethod
-    async def search_by_drink_title_subtitle(cls, search_str: str, lang: str,
-                                             repository: ItemRepository, model: Item,
-                                             session: AsyncSession,
-                                             page: int = None, page_size: int = None):
-        """Поиск элементов по полям title* и subtitle* связанной модели Drink с локализацией"""
-        skip = (page - 1) * page_size
-        items, total = await repository.search_by_drink_title_subtitle(search_str,
-                                                                       session,
-                                                                       skip,
-                                                                       page_size)
-        items = list_dict(items)
-        language = cls.lang_sorted(lang)
-        result = [transform_list_view(item, tuple(language)) for item in items]
-        return make_paginated_response(result, total, page, page_size)
-
-    @classmethod
-    async def search_by_trigram_index(cls, search_str: str, lang: str, repository: ItemRepository,
-                                      model: Item, session: AsyncSession,
-                                      page: int = None, page_size: int = None):
-        """
-            DEPRECATED
-            Поиск элементов с использованием триграммного индекса в связанной модели Drink с локализацией
-            при пустом поисковом запросе выдает ВСЕ ЗАПИСИ !! ЭТО ВАЖНО !! ТАК И ДОЛЖНО БЫТЬ !!!
-        """
-        skip = (page - 1) * page_size
-        items, total = await repository.search_by_trigram_index(search_str, model, session, skip, page_size)
-        language = cls.lang_sorted(lang)
-        result = ItemListViewAdapter.validate_python([transform_list_view(item, tuple(language))
-                                                      for item in items])
-        return make_paginated_response(result, total, page, page_size)
 
     @classmethod
     async def direct_upload(cls, file_name: dict, session: AsyncSession, image_service: ThumbnailImageService) -> dict:
@@ -438,50 +409,6 @@ class ItemService(ArrayService, Service):
         return item_dict
 
     @classmethod
-    async def search_geans_items(cls, lang: str, search: str, similarity_threshold: float,
-                                 page: int, page_size: int,
-                                 repository: Type[Repository], model: Type[Item], session: AsyncSession) -> List[dict]:
-        """ fts поиск вместо триграмного  индекса ONLY FOR ITEMS_PREACT заменить на хэш поиск"""
-        try:
-            # значение similarity_thresholfd настраивается в .env
-            # similarity_threshold = similarity_threshold or settings.SIMILARITY_THRESHOLD
-            # response = await cls.search_geans(search, similarity_threshold,
-            #                                   page, page_size, repository, model, session)
-            response = await cls.search_fts(search, page, page_size, repository, model, session)
-            items = response.pop('items')
-            total = response.get('total')
-            if total == 0:
-                result = []
-            else:
-                language = cls.lang_sorted(lang)
-                # result = ItemListViewAdapter.validate_python([transform_list_view(item, tuple(language))
-                #                                               for item in items])
-                result = [transform_list_view(item, tuple(language)) for item in items]
-            response = make_paginated_response(result, total, page, page_size)
-            return response
-        except Exception as e:
-            logger.error(f'search_geans. {e}')
-            raise HTTPException(status_code=502, detail=f'search_geans_items. {e}')
-
-    @classmethod
-    async def search_geans_all_items(cls, lang: str, search: str, similarity_threshold: float,
-                                     repository: Type[Repository], model: ModelType,
-                                     session: AsyncSession) -> List[dict]:
-        try:
-            # similarity_threshold = similarity_threshold or settings.SIMILARITY_THRESHOLD
-            # items: list = await cls.search_geans_all(search, similarity_threshold,
-            #                                          repository, model, session)
-            items: list[dict] = await cls.search_fts_all(search, repository, model, session)
-            language = cls.lang_sorted(lang)
-            result = ItemListViewAdapter.validate_python(
-                [transform_list_view(item, tuple(language)) for item in items]
-            )
-            return result
-        except Exception as e:
-            logger.error(f'search_gens_all. {e}')
-            raise HTTPException(status_code=503, detail=f'search_gens_all. {e}')
-
-    @classmethod
     @background
     async def run_reindex_worker(cls, session_factory, force_all: bool = False):
         async with session_factory() as session:
@@ -517,7 +444,7 @@ class ItemService(ArrayService, Service):
             logger.success('индексация завершена')
 
     @classmethod
-    async def execute_smart_search(cls, query: str, session: AsyncSession, boost: float = 15.0,
+    async def execute_smart_search(cls, request, query: str, session: AsyncSession, boost: float = 15.0,
                                    limit: int = 20) -> List[dict]:
         # 1. Токенизация и сбор хешей (включая префикс последнего слова)
         repo = ItemRepository
@@ -541,11 +468,11 @@ class ItemService(ArrayService, Service):
         return await repo.find_items_weighted_v2(session, word_stats, boost, limit)
 
     @classmethod
-    async def execute_smart_search_page(cls, lang: str, query: str, session: AsyncSession,
+    async def execute_smart_search_page(cls, request, lang: str, query: str, session: AsyncSession,
                                         boost: float = 15.0, limit: int = 20,
                                         last_score: Optional[Union[Decimal, str, float]] = None,
                                         last_id: Optional[int] = None,
-                                        ) -> Tuple[List[dict], List[dict]] | None:
+                                        ) -> Dict:
         # 1. Токенизация и сбор хешей (включая префикс последнего слова)
         repo = ItemRepository
         if not query:
@@ -566,5 +493,6 @@ class ItemService(ArrayService, Service):
                                                           last_id, boost,
                                                           limit)
         language = cls.lang_sorted(lang)
-        result = [transform_list_view(item, tuple(language)) for item in items]
+        default_image_id = get_default_image(request, 1)  # заглушка для thumbnails
+        result = [transform_list_view(item, tuple(language), default_image_id) for item in items]
         return {'items': result, 'anchors': anchors}

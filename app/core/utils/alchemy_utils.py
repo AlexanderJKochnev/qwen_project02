@@ -1025,7 +1025,7 @@ def transform(source: dict, languages: Union[List, Tuple]) -> dict:
     }"""
 
 
-def transform_list_view(source: dict, languages: Union[List, Tuple]) -> dict:
+def transform_list_view(source: dict, languages: Union[List, Tuple], default_image: str) -> dict:
     """
         languages - суффиксы языковые отсортированные
     """

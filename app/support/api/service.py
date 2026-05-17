@@ -201,58 +201,6 @@ class ApiService(ItemService):
         return result
 
     @classmethod
-    async def search_geans(cls, search: str, similarity_threshold: float,
-                           page: int, page_size: int,
-                           repository: ItemRepository, model: Item, session: AsyncSession) -> Dict[str, Any]:
-        """ DEPRECATED """
-        try:
-            response = await super().search_geans(search,
-                                                  similarity_threshold, page, page_size, repository, model,
-                                                  session)
-            items: dict = response.get('items')
-            if not items:
-                raise HTTPException(status_code=404, details=f'found nothig by request "{search}"')
-            response['itmes'] = cls.convert_list_api_view(items, cnv=False)
-            return response
-            skip = (page - 1) * page_size
-            if not search:
-                items, total = await repository.get_full_with_pagination(skip, page_size, model, session)
-            else:
-                # relevance: Label = await cls.get_relevance(search, model, session, similarity_threshold)
-                if formatted_search := formatted_query(search):
-                    items, total = await repository.search_fts(formatted_search, skip, page_size, model, session)
-                else:
-                    items, total = await repository.search_by_drink_title_subtitle(search, session, skip, page_size)
-            items = list_dict(items)
-            result = cls.convert_list_api_view(items)
-            return make_paginated_response(result, total, page, page_size)
-        except Exception as e:
-            logger.error(f'search_geans. {e}')
-            raise HTTPException(status_code=502, detail=f'search_geans. {e}')
-
-    @classmethod
-    async def search_geans_all(cls, search: str,
-                               repository: Type[ItemRepository],
-                               model: ModelType, session: AsyncSession,
-                               limit: int = 20) -> List[dict]:
-        """ DEPRECATED переделан под полнотекстовый поиск """
-        try:
-            logger.warning('geans type of search is deprecated. redirect to fts (if available ) or '
-                           'drink_title_subtitle')
-            if not search:
-                items = await repository.get_full(model, session)
-            else:
-                if formatted_search := formatted_query(search):
-                    items = await repository.search_fts_all(formatted_search, model, session)
-                else:
-                    items = await repository.search_by_drink_title_subtitle_only(search, session)
-            result = cls.convert_list_api_view(items)
-            return result
-        except Exception as e:
-            logger.error(f'search_gens_all. {e}')
-            raise HTTPException(status_code=503, detail=f'search_gens_all. {e}')
-
-    @classmethod
     async def get_list_api_view_ids(cls, ids: str, repository, model,
                                     session: AsyncSession,):
         """ Получение списка элементов для api view """

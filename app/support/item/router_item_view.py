@@ -6,13 +6,13 @@
 """
 from decimal import Decimal
 from typing import List, Annotated, Callable, Optional, Union
-from fastapi import Depends, Path, Query, HTTPException, BackgroundTasks, Form, UploadFile, File
+from fastapi import Depends, Path, Query, HTTPException, BackgroundTasks, Form, UploadFile, File, Request
 import json
-from loguru import logger
+from loguru import logger  # NOQA: F401
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.dependencies import get_active_user_or_internal
-from app.core.config.database.db_async import get_db, DatabaseManager
+from app.core.config.database.db_async import get_db
 from app.core.utils.pydantic_utils import orresponse
 from app.core.schemas.base import PaginatedResponse
 from app.dependencies import get_translator_func
@@ -84,28 +84,6 @@ class ItemViewRouter:
             openapi_extra={'x-request-schema': None}
         )
 
-        # 2 Маршрут для поиска элементов по полям title* и subtitle* связанной модели Drink
-        self.router.add_api_route(
-            "/search_by_drink/{lang}",
-            self.search_by_drink_title_subtitle_paginated,
-            methods=["GET"],
-            # response_model=PaginatedResponse[ItemListView],
-            tags=self.tags,
-            summary="Поиск элементов по полям title* и subtitle* связанной модели Drink",
-            openapi_extra={'x-request-schema': None}
-        )
-
-        # Маршрут для поиска элементов с использованием fts индекса
-        self.router.add_api_route(
-            "/search_trigram/{lang}",  # путь не менять - используется preact
-            self.search_by_geans_items,
-            # self.search_smart_keyset,
-            methods=["GET"],
-            # response_model=PaginatedResponse[ItemListView],
-            tags=self.tags,
-            summary="Поиск элементов по fts index",
-            openapi_extra={'x-request-schema': None}
-        )
         # Маршрут для поиска элементов с использованием хэш индекса
         self.router.add_api_route(
             "/search_smart",
@@ -159,22 +137,22 @@ class ItemViewRouter:
         translated_dict = item_dict  # await translation(item_dict)
         return translated_dict
 
-    async def get_list(self, lang: str = Path(..., description="Язык локализации"),
+    async def get_list(self, request: Request, lang: str = Path(..., description="Язык локализации"),
                        session: AsyncSession = Depends(get_db),
                        limit: int = 20):
         """Получить список элементов с локализацией"""
 
-        result = await self.service.get_list_view(lang, ItemRepository, Item, session, limit)
+        result = await self.service.get_list_view(request, lang, ItemRepository, Item, session, limit)
         return orresponse(result)
         # return result
 
-    async def get_list_paginated(self,
+    async def get_list_paginated(self, request: Request,
                                  lang: str = Path(..., description="Язык локализации"),
                                  page: int = Query(1, ge=1, description="Номер страницы"),
                                  page_size: int = Query(20, ge=1, le=100, description="Размер страницы"),
                                  session: AsyncSession = Depends(get_db)):
         """Получить список элементов с пагинацией и локализацией"""
-        result = await self.service.get_list_view_page(page, page_size, ItemRepository, Item, session, lang)
+        result = await self.service.get_list_view_page(request, page, page_size, ItemRepository, Item, session, lang)
         return orresponse(result)
 
     async def get_detail(self, lang: str = Path(..., description="Язык локализации"),
@@ -188,41 +166,6 @@ class ItemViewRouter:
         # result = ItemDetailView.validate(item)
         return item
 
-    async def search_by_drink_title_subtitle_paginated(self,
-                                                       lang: str = Path(..., description="Язык локализации"),
-                                                       search: str = Query(
-                                                           ..., description="Строка для поиска в полях title* "
-                                                                            "и subtitle* модели Drink"),
-                                                       page: int = Query(1, ge=1, description="Номер страницы"),
-                                                       page_size: int = Query(
-                                                           20, ge=1, le=100, description="Размер страницы"),
-                                                       session: AsyncSession = Depends(get_db)):
-        """
-            Поиск элементов по полям title* и subtitle* связанной модели Drink с пагинацией
-            оатсется для совместимости (сравнить скорость поиска обычного (этого) и триграмм/FTS
-        """
-        result = await self.service.search_by_drink_title_subtitle(
-            search, lang, ItemRepository, Item, session, page, page_size
-        )
-        return orresponse(result)
-
-    async def search_by_geans_items(self,
-                                    lang: str = Path(..., description="Язык локализации"),
-                                    search_str: str = Query(
-                                        None, description="Поисковый запрос "
-                                        "(при отсутствии значения - выдает все записи)"),
-                                    page: int = Query(1, ge=1, description="Номер страницы"),
-                                    page_size: int = Query(15, ge=1, le=100, description="Размер страницы"),
-                                    similarity_thershold: float = Query(0.2,
-                                                                        ge=0., le=1.0,
-                                                                        description=("Толерантность поиска")),
-                                    session: AsyncSession = Depends(get_db)):
-        """ новый поиск вместо триграмного  индекса ONLY FOR ITEMS_PREACT        """
-        result = await self.service.search_geans_items(lang, search_str, similarity_thershold,
-                                                       page, page_size, ItemRepository,
-                                                       Item, session)
-        return result
-
     async def fill_index(self, background_tasks: BackgroundTasks,
                          session: AsyncSession = Depends(get_db),
                          force_all: bool = False):
@@ -234,7 +177,7 @@ class ItemViewRouter:
         await self.service.reindexation(background_tasks)
         return {'result': 'Reindexation started in backgound taska'}
 
-    async def search_smart(self,
+    async def search_smart(self, request: Request,
                            search_str: str = Query(
                                None, description="Поисковый запрос "
                                "(при отсутствии значения - выдает все записи)"),
@@ -248,10 +191,10 @@ class ItemViewRouter:
         """ поиск по хэшам вместо триграмного  индекса ONLY FOR ITEMS_PREACT        """
         # result = await self.service.search_by_trigram_index(search_str, lang, ItemRepository,
         #                                                     Item, session, page, page_size)
-        result = await self.service.execute_smart_search(search_str, session, boost, limit)
+        result = await self.service.execute_smart_search(request, search_str, session, boost, limit)
         return orresponse(result)
 
-    async def search_smart_keyset(self,
+    async def search_smart_keyset(self, request: Request,
                                   lang: str = Path(..., description="Язык локализации"),
                                   search_str: str = Query(
                                       None, description="Поисковый запрос "
@@ -266,10 +209,11 @@ class ItemViewRouter:
                                                        ),
                                   session: AsyncSession = Depends(get_db)
                                   ):
-        """ поиск по хэшам вместо триграмного  индекса ONLY FOR ITEMS_PREACT        """
-        # logger.warning(f'{lang=}, {search_str=}, {last_score=}, {last_id=}, {limit=}')
-        result = await self.service.execute_smart_search_page(lang, search_str, session, boost, limit, last_score,
-                                                              last_id)
+        """ поиск по хэшам вместо триграмного  индекса ONLY FOR ITEMS_PREACT
+            ItemService.execute_smart_search_page -> app.core.utils.alchemy_utils.transform_list_view
+        """
+        result = await self.service.execute_smart_search_page(request, lang, search_str, session, boost, limit,
+                                                              last_score, last_id)
         return result
 
     async def update_item_drinS(self,
