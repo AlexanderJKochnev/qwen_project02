@@ -1,9 +1,11 @@
 # app/main.py
 # import httpx
-# import asyncio
+import asyncio
 
 # from app.events import event, pg_listen_worker  # noqa: F401
 from contextlib import asynccontextmanager
+from typing import List, Optional
+
 from fastapi.responses import JSONResponse
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -56,7 +58,7 @@ from app.support.vintage.router import VintageConfigRouter, DesignationRouter, C
 from app.support.parcel.router import ParcelRouter, SiteRouter
 from app.support.source.router import SourceRouter
 from app.support.vllm.router import VllmRouter
-from app.core.config.database.click_async import ClickHouseManager  # , get_ch_client
+from app.core.config.database.click_async import ClickHouseManager, get_dump  # , get_ch_client
 # from app.support.clickhouse.model import ensure_table_exists
 from app.support.clickhouse.router import router as click_router
 from app.support.wordhash.router import WordHashRouter
@@ -69,7 +71,9 @@ logger.info('start initialisation')
 
 # SEAWEEDMANAGER INITIATE (url/port вынести в .env после внедрения
 # seaweed_manager = SeaweedFSManager(master_url="http://seaweedfs_master:9333")
-logger.success('CLICKHOUSE MANAGER INITIATEED')
+# logger.success('CLICKHOUSE MANAGER INITIATEED')
+
+_seaweeds_fids_dump: Optional[List[str]] = None
 
 
 @asynccontextmanager
@@ -100,6 +104,8 @@ async def lifespan(app: FastAPI):
     app.state.ch_manager = ch_manager
     app.state.ch_client = ch_manager.client
     app.state.ch_repo_factory = ClickHouseRepositoryFactory(ch_manager.client)
+    app.state.seaweed_fids_default = get_dump(app.state.ch_client)
+    logger.warning(app.state.seaweed_fids_default)
     # app.state.ch_client = await ch_manager.connect()
     #  app.state.ch_client = global_ch_manager.client
     logger.success("✅ ClickHouse connected")

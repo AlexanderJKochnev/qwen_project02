@@ -1,11 +1,13 @@
 # app.core.config.database.click_async.py
+from contextlib import asynccontextmanager
 from typing import Optional
 
 import clickhouse_connect
-from app.core.config.project_config import settings
 from fastapi import Request
 from loguru import logger
-from contextlib import asynccontextmanager
+from pypika import CustomFunction, Query, Table  # , functions as fn, CustomFunction
+
+from app.core.config.project_config import settings
 
 
 class ClickHouseManager:
@@ -58,3 +60,27 @@ async def get_ch_session():
     except Exception as e:
         logger.error(f"Session error: {e}")
         raise
+
+
+# получение заглушки для изображений
+async def get_dump(client: clickhouse_connect.driver.asyncclient.AsyncClient) -> tuple:
+    """
+        получение заглушки для изображений - сделано здесь что-бы не тащить лишние импорты в main.py
+        данные жестко зашиты в код - можно вынести в .env
+    """
+    # Первый аргумент — имя функции в ClickHouse, второй — параметры
+    try:
+        tag_value: str = "dump001"
+        fields: list = ['fid', 'fid_thumb']
+        order_by: str = 'tags'
+        has_token_func = CustomFunction('hasAllTokens', ['field', 'token'])
+        events = Table('images_metadata_active')
+        q = Query.from_(events).select(*(events[k] for k in fields))
+        q = q.where(has_token_func(events['tags'], tag_value)).orderby(order_by)
+        q = q.limit(1)
+        result = await client.query(q.get_sql())
+        res: dict = result.first_item if result.row_count > 0 else None
+        return tuple(res.values)
+    except Exception as e:
+        logger.error(f'app.core.config.database.click_async.get_dump {e}')
+        return None
