@@ -48,11 +48,11 @@ class SeaweedsRouter:
             openapi_extra={'x-request-schema': None}
         )
         self.router.add_api_route(
-            "/{id}", self.get_by_fid, methods=["GET"],
+            "/{fid}", self.get_by_fid, methods=["GET"],
             openapi_extra={'x-request-schema': None}
         )
         self.router.add_api_route(
-            "/direct/{id}", self.get_direct_by_fid, methods=["GET"],
+            "/direct/{fid}", self.get_direct_by_fid, methods=["GET"],
             openapi_extra={'x-request-schema': None}
         )
         self.router.add_api_route(
@@ -64,11 +64,11 @@ class SeaweedsRouter:
             openapi_extra={'x-request-schema': None}
         )
         self.router.add_api_route(
-            "/thumb/{id}",
+            "/thumb/{fid}",
             self.get_thumb, methods=["GET"], openapi_extra={'x-request-schema': None}
         )
         self.router.add_api_route(
-            "/thumb_image/{id}", self.get_thumb_by_fid, methods=["GET"],
+            "/thumb_image/{fid}", self.get_thumb_by_fid, methods=["GET"],
             openapi_extra={'x-request-schema': None}
         )
 
