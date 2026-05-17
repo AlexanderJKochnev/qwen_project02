@@ -21,7 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.models.base_model import get_model_by_name
 from app.core.utils.common_utils import get_random_string
-from app.core.utils.image_utils import image_aligning
+# from app.core.utils.image_utils import image_aligning
 from app.core.config.database.seaweed_async import SeaweedFSManager, get_swfs
 from app.core.config.project_config import settings
 # from app.core.hash_norm import tokenize

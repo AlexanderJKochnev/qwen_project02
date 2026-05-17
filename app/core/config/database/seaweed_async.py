@@ -2,7 +2,7 @@
 import aiohttp
 from fastapi import HTTPException
 from typing import Optional, Tuple
-from tenacity import retry, stop_after_attempt, wait_exponential
+# from tenacity import retry, stop_after_attempt, wait_exponential
 from loguru import logger
 
 
