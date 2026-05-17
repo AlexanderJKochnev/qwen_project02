@@ -109,7 +109,7 @@ class ArrayService:
     # -----
     @classmethod
     async def get_image_by_id_v2(
-            cls, id: int, repository: Repository, model: ModelType, session: AsyncSession,
+            cls, request: Request, id: int, repository: Repository, model: ModelType, session: AsyncSession,
             image_service: SeaweedsService, pos: int = 0
     ):
         """
@@ -122,7 +122,7 @@ class ArrayService:
         # 1. получение image_id by id
         image_id = await cls.get_item_of_array_by_id(id, model, arrayColname, repository, session, pos)
         if not image_id:
-            image: tuple = Request.app.state.seaweed_fids_default
+            image: tuple = request.app.state.seaweed_fids_default
             if not image:
                 raise HTTPException(status_code=402, detail=f'instance {model.__name__} with {id=} not found')
             image_id = image[pos]
