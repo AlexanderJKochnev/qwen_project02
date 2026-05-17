@@ -173,14 +173,11 @@ class ApiRouter(ItemRouter):
         # result = self.paginated_response(**response)
         return orresponse(response)
 
-    async def get_image_by_id(self, request: Request, id: int, session: AsyncSession = Depends(get_db),
+    """async def get_image_by_id(self, request: Request, id: int, session: AsyncSession = Depends(get_db),
                               # image_service: ThumbnailImageService = Depends(),
                               image_service: SeaweedsService = Depends()
                               ):
-        """
-            получение изображения по id напитка. Версия 1  (StreamingResponse - лучше для тяжелых условий)
-            ArrayService.get_image_by_id_v2 ->
-        """
+
         image_data = await self.service.get_image_by_id_v2(request, id, self.repo, self.model, session, image_service)
         headers = image_data.pop('headers')
         return ResponseStreaming(image_data, headers)
@@ -189,13 +186,11 @@ class ApiRouter(ItemRouter):
                                   # image_service: ThumbnailImageService = Depends(),
                                   image_service: SeaweedsService = Depends()
                                   ):
-        """
-            получение thumbnail по id напитка. Версия 1 (StreamingResponse)
-        """
+
         image_data = await self.service.get_image_by_id_v2(request, id, self.repo, self.model, session,
                                                            image_service, 1)
         headers = image_data.pop('headers')
-        return ResponseStreaming(image_data, headers)
+        return ResponseStreaming(image_data, headers)"""
 
     async def get_image_png_by_id(self, id: int, session: AsyncSession = Depends(get_db),
                                   image_service: ThumbnailImageService = Depends()):
