@@ -1,7 +1,7 @@
 # app.core.service.array_service.py
 from typing import Any, Dict, List
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import HTTPException
+from fastapi import HTTPException, Request
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.types import ModelType
 from app.core.repositories.array_repository import ArrayRepository
@@ -122,8 +122,10 @@ class ArrayService:
         # 1. получение image_id by id
         image_id = await cls.get_item_of_array_by_id(id, model, arrayColname, repository, session, pos)
         if not image_id:
-            # СЮДА ПОСТАВИТЬ ЗАГЛУШКУ
-            raise HTTPException(status_code=402, detail=f'instance {model.__name__} with {id=} not found')
+            image: tuple = Request.app.state.seaweed_fids_default
+            if not image:
+                raise HTTPException(status_code=402, detail=f'instance {model.__name__} with {id=} not found')
+            image_id = image[pos]
         # 2. получение image by image_id
         # image = await image_service.get_full_image(image_id)
         image = await image_service.get_image(image_id)

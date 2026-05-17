@@ -179,6 +179,7 @@ class ApiRouter(ItemRouter):
                               ):
         """
             получение изображения по id напитка. Версия 1  (StreamingResponse - лучше для тяжелых условий)
+            ArrayService.get_image_by_id_v2 ->
         """
         image_data = await self.service.get_image_by_id_v2(id, self.repo, self.model, session, image_service)
         headers = image_data.pop('headers')
