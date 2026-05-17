@@ -71,3 +71,4 @@ pymorphy3-dicts-ru
 # nltk
 spacy
 datasketch
+numpy

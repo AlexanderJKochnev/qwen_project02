@@ -26,6 +26,7 @@ from app.core.config.database.seaweed_async import SeaweedFSManager, get_swfs
 from app.core.config.project_config import settings
 # from app.core.hash_norm import tokenize
 from app.core.repositories.seaweed_repository import SeaweedRepository
+from app.core.utils.image_webp import process_image_to_webp
 from app.core.utils.pydantic_utils import get_repo
 from app.dependencies import ClickHouseRepositoryFactory, get_clickhouse_repository_factory
 from loguru import logger  # NOQA: F401
@@ -54,8 +55,10 @@ class SeaweedsService:
         """
         # from app.core.utils.common_utils import jprint
         # 1. обработка (удаление фона, уменьшение размера, создание thumbnail, получение метаданных)
-        full_data, thumb_data, meta_data = image_aligning(content)
-
+        # full_data, thumb_data, meta_data = image_aligning(content)
+        full_data, thumb_data, meta_data = process_image_to_webp(
+            content=content, remove_bg=True, max_size_kb=100, thumb_size=150
+        )
         # 2. обработка метаданных (токенизация по шаблону clickhouse, )
         ipts: dict = meta_data.get('iptc')
         tmp = ''
@@ -78,7 +81,8 @@ class SeaweedsService:
         # jprint(meta)
         await self.click_repo.create(meta)
         # 5. результат {fid: str, url: str}
-        result = {"fid": fid, "fid_thumb": fid_thumb}
+        result = meta
+        # result = {"fid": fid, "fid_thumb": fid_thumb, }
         return result
 
     async def delete_img(self, fid: str, table: str):
