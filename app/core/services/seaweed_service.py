@@ -26,7 +26,7 @@ from app.core.config.database.seaweed_async import SeaweedFSManager, get_swfs
 from app.core.config.project_config import settings
 # from app.core.hash_norm import tokenize
 from app.core.repositories.seaweed_repository import SeaweedRepository
-from app.core.utils.image_webp import process_image_to_webp
+from app.core.utils.image_webp import detect_image_format_fast, process_image_to_webp
 from app.core.utils.pydantic_utils import get_repo
 from app.dependencies import ClickHouseRepositoryFactory, get_clickhouse_repository_factory
 from loguru import logger  # NOQA: F401
@@ -150,11 +150,12 @@ class SeaweedsService:
             получение изображения по fid (любого)
         """
         content = await self.seaweed_repo.get_by_fid(fid, self.fs)
-        file_name = f'{get_random_string(8)}.png'
+        mime_type, ext = detect_image_format_fast(content)
+        file_name = f'{get_random_string(8)}.{ext}'
         headers = {"Content-Disposition": f"inline; filename={file_name}", "X-Image-Type": "none",
                    "X-File-Size": str(len(content))}
         result = {'content': content,
-                  'media_type': 'image/png',
+                  'media_type': mime_type,
                   'headers': headers,
                   'status_code': 200,
                   "Content-Disposition": f"inline; filename={file_name}",

@@ -271,6 +271,38 @@ def get_file_info(content: bytes) -> Tuple[str, int]:
     return mime, len(content)
 
 
+def detect_image_format_fast(content: bytes) -> Tuple[str, str]:
+    """
+    Очень быстрое определение (только основные форматы)
+    Возвращает (mime_type, extension)
+    """
+    if len(content) < 4:
+        return ('application/octet-stream', 'bin')
+
+    # PNG: 89 50 4E 47
+    if content[0:4] == b'\x89PNG':
+        return ('image/png', 'png')
+
+    # JPEG: FF D8 FF
+    if content[0:3] == b'\xff\xd8\xff':
+        return ('image/jpeg', 'jpg')
+
+    # WebP: RIFF....WEBP
+    if content[0:4] == b'RIFF' and len(content) > 12 and content[8:12] == b'WEBP':
+        return ('image/webp', 'webp')
+
+    # GIF: GIF87a или GIF89a
+    if content[0:6] in (b'GIF87a', b'GIF89a'):
+        return ('image/gif', 'gif')
+
+    # BMP: BM
+    if content[0:2] == b'BM':
+        return ('image/bmp', 'bmp')
+
+    # Fallback: пробуем PIL если нужно
+    return ('application/octet-stream', 'bin')
+
+
 # ============= Пример использования =============
 
 if __name__ == '__main__':
