@@ -155,7 +155,7 @@ class ItemViewRouter:
         result = await self.service.get_list_view_page(request, page, page_size, ItemRepository, Item, session, lang)
         return orresponse(result)
 
-    async def get_detail(self, lang: str = Path(..., description="Язык локализации"),
+    async def get_detail(self, request: Request, lang: str = Path(..., description="Язык локализации"),
                          id: int = Path(..., description="ID элемента"),
                          session: AsyncSession = Depends(get_db)):
         """
@@ -163,7 +163,7 @@ class ItemViewRouter:
             используется в PREACT
             ItemService.get_detail_view -> ItemRepository.get_detail_view -> app.core.utils.alchemy_utils.transform
         """
-        item = await self.service.get_detail_view(lang, id, ItemRepository, Item, session)
+        item = await self.service.get_detail_view(request, lang, id, ItemRepository, Item, session)
         if not item:
             raise HTTPException(status_code=404, detail=f"Item with id {id} not found")
         # Create ItemDetailView instance
