@@ -1032,7 +1032,7 @@ def transform_list_view(source: dict, languages: Union[List, Tuple], default_ima
     d = source.get("drink", {})
     subcat = d.get("subcategory", {})
     cat = subcat.get("category", {})
-    image = source.get("seaweed_fids") or tuple(None, default_image)
+    image = source.get("seaweed_fids") or (None, default_image)
     logger.warning(f'==={image}')
     logger.warning(f'{type(image[0])=}, {type(image[1])=}')
     # Навигация по географии (с защитой от None)
