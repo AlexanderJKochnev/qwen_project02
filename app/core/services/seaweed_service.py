@@ -214,6 +214,20 @@ class SeaweedsService:
         result: dict = await self.click_repo.exact_search(tag_value)
         return result
 
+    async def search_image_by_tag(self, tag_value: str, image_type: int):
+        """
+            поиск изображеня по тегу
+            возвращает 1 - полное изображение
+                        2 thumbnail
+        """
+        fids: dict = self.search_fid_by_tag(tag_value)
+        if fids:
+            if image_type == 1:
+                fid = fids.get('fid')
+            else:
+                fid = fids.get('fid_thumb')
+        result = await self.get_image(fid)
+        return result
 
     async def get_items_pairs(self, session: AsyncSession, image_service: ThumbnailImageService):
         """
