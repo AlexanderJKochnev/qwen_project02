@@ -192,7 +192,7 @@ class SeaweedsRouter:
         """
         try:
             content = await file.read()
-            image_data, headers = await service.test_create_img(content, description, type, file)
+            image_data, headers = await service.test_create_img(content, description, type, file, full)
             return ResponseStreaming2(image_data, headers)
         except Exception as e:
             logger.error(e)
