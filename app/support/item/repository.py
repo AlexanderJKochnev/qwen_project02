@@ -621,7 +621,7 @@ class ItemRepository(ArrayRepository, Repository):
                 JOIN drinks AS d ON i.drink_id = d.id
                 WHERE i.image_id != '69be8dcf9d1415cddd3420d8'
                 AND array_length(i.seaweed_fids, 1) = 2
-                ORDER BY id LIMIT 2;
+                ORDER BY id LIMIT 40;
             """
             )
         result = await session.execute(stmt)
