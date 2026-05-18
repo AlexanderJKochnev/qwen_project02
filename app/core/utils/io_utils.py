@@ -99,6 +99,16 @@ def ResponseStreaming(image_data: dict, headers: dict):
     )
 
 
+def ResponseStreaming2(content: bytes, headers: dict):
+    # media_type, content_type, mime_type
+    return StreamingResponse(
+        BytesIO(bytes),
+        # media_type=image_data.get('content_type'),
+        media_type=headers.get("Content-Type"),
+        headers=headers
+    )
+
+
 def ResponseJust(image_data: dict, headers: dict):
     # from app.core.utils.common_utils import jprint
     # jprint(headers)

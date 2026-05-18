@@ -296,6 +296,7 @@ class SeaweedsService:
         """
         # from app.core.utils.common_utils import jprint
         # 1. обработка (удаление фона, уменьшение размера, создание thumbnail, получение метаданных)
+        logger.warning('-------0---------')
         match type:
             case 1:
                 full_data, thumb_data, meta_data = image_aligning(content)
@@ -306,5 +307,7 @@ class SeaweedsService:
             case _:
                 pass
         content: bytes = full_data if full else thumb_data
+        logger.warning('-------1---------')
         header = generate_image_headers(content)
+        logger.warning('-------2---------')
         return content, header

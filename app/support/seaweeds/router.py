@@ -3,7 +3,7 @@ from fastapi import File, HTTPException, Query, UploadFile
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
-from app.core.utils.io_utils import ResponseStreaming
+from app.core.utils.io_utils import ResponseStreaming, ResponseStreaming2
 from app.core.config.database.db_async import get_db
 from app.auth.dependencies import get_active_user_or_internal
 from app.core.services.seaweed_service import SeaweedsService
@@ -193,7 +193,7 @@ class SeaweedsRouter:
         try:
             content = await file.read()
             image_data, headers = await service.test_create_img(content, description, type, file)
-            return ResponseStreaming(image_data, headers)
+            return ResponseStreaming2(image_data, headers)
         except Exception as e:
             logger.error(e)
             raise HTTPException(status_code=500, detail=e)
