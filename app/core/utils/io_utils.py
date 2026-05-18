@@ -102,7 +102,7 @@ def ResponseStreaming(image_data: dict, headers: dict):
 def ResponseStreaming2(content: bytes, headers: dict):
     # media_type, content_type, mime_type
     return StreamingResponse(
-        BytesIO(bytes),
+        BytesIO(content),
         # media_type=image_data.get('content_type'),
         media_type=headers.get("Content-Type"),
         headers=headers
