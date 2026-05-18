@@ -290,7 +290,7 @@ class SeaweedsService:
             result[id] = response
         return result
 
-    async def test_create_img(self, content: bytes, description: str, type: int, full: bool) -> dict:
+    async def test_create_img(self, content: bytes, description: str, type: int, fu: bool) -> dict:
         """
             content: изображение в байтах
         """
@@ -299,14 +299,16 @@ class SeaweedsService:
         logger.warning('-------0---------')
         match type:
             case 1:
+                logger.warning('-------0.1---------')
                 full_data, thumb_data, meta_data = image_aligning(content)
             case 2:
+                logger.warning('-------0.2---------')
                 full_data, thumb_data, meta_data = process_image_to_webp(
                     content=content, remove_bg=True, max_size_kb=100, thumb_size=150
                 )
             case _:
                 pass
-        content: bytes = full_data if full else thumb_data
+        content: bytes = full_data if fu else thumb_data
         logger.warning('-------1---------')
         header = generate_image_headers(content)
         logger.warning('-------2---------')
