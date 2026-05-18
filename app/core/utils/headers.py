@@ -35,7 +35,8 @@ def generate_image_headers(image_bytes: bytes) -> dict:
         "Content-Type": content_type,
         "Content-Length": str(file_size),
         "Cache-Control": "public, max-age=31536000, immutable",  # Для оптимизации загрузки с 2020+
-        "Accept-Ranges": "bytes"
+        "Accept-Ranges": "bytes",
+        "X-Original-File-Size": str(file_size)
     }
 
     # Если размеры успешно определены, добавляем их

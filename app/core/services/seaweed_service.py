@@ -301,15 +301,18 @@ class SeaweedsService:
             case 1:
                 logger.warning('-------0.1---------')
                 full_data, thumb_data, meta_data = image_aligning(content)
-            case 2:
+            case _:
                 logger.warning('-------0.2---------')
                 full_data, thumb_data, meta_data = process_image_to_webp(
                     content=content, remove_bg=True, max_size_kb=100, thumb_size=150
                 )
-            case _:
-                pass
-        content: bytes = full_data if fu else thumb_data
-        logger.warning('-------1---------')
+        if fu:
+            logger.warning('-------1.1---------')
+            content: bytes = full_data
+        else:
+            logger.warning('-------1.2.---------')
+            content: bytes = thumb_data
+        logger.warning(f'{len(full_data)=}, {len(thumb_data)=}')
         header = generate_image_headers(content)
         logger.warning('-------2---------')
         return content, header
