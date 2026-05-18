@@ -314,5 +314,5 @@ class SeaweedsService:
             content: bytes = thumb_data
         logger.warning(f'{len(full_data)=}, {len(thumb_data)=}')
         header = generate_image_headers(content)
-        logger.warning('-------2---------')
+        logger.warning(f'-------{len(content)=}-----')
         return content, header
