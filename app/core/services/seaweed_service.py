@@ -308,5 +308,6 @@ class SeaweedsService:
             # 3. запись fid в Items.seaweed_fids[0]
             fid_list = [res.get('fid'), res.get('fid_thumb')]
             response = await repository.add_to_array(id, fid_list, model, 'seaweed_fids', session)
+            logger.success(f'создано: {response}')
             result[id] = response
         return result
