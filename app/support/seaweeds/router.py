@@ -60,6 +60,9 @@ class SeaweedsRouter:
             openapi_extra={'x-request-schema': None}
         )
         self.router.add_api_route(
+            "test", self.test_create_img, methods=["POST"], openapi_extra={'x-request-schema': None}
+        )
+        self.router.add_api_route(
             "", self.delete_img, methods=["DELETE"],
             openapi_extra={'x-request-schema': None}
         )
@@ -176,3 +179,21 @@ class SeaweedsRouter:
         # новый encoder webp
         response = await service.transfer_tier3(session, image_service)
         return response
+
+    async def test_create_img(self,
+                              description: str = Query(..., description='ключевые слова по которым можно найти '
+                                                       'изображение'),
+                              file: UploadFile = File(...),
+                              type: int = Query(1, description='1. PNG, 2. WEBP OLD, 3. WEBP CLASS'),
+                              full: bool = Query(True, description='True полное, False thumbnail'),
+                              service: SeaweedsService = Depends()):
+        """
+             загрузка обработка и возврат изображеня БЕЗ сохранения - для оценки качества обработки
+        """
+        try:
+            content = await file.read()
+            image_data, headers = await service.test_create_img(content, description, type, file)
+            return ResponseStreaming(image_data, headers)
+        except Exception as e:
+            logger.error(e)
+            raise HTTPException(status_code=500, detail=e)

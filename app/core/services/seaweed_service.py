@@ -26,7 +26,9 @@ from app.core.config.database.seaweed_async import SeaweedFSManager, get_swfs
 from app.core.config.project_config import settings
 # from app.core.hash_norm import tokenize
 from app.core.repositories.seaweed_repository import SeaweedRepository
-from app.core.utils.image_webp import detect_image_format_fast, process_image_to_webp
+from app.core.utils.headers import generate_image_headers
+from app.core.utils.image_utils import image_aligning
+from app.core.utils.image_webp import process_image_to_webp
 from app.core.utils.pydantic_utils import get_repo
 from app.dependencies import ClickHouseRepositoryFactory, get_clickhouse_repository_factory
 from loguru import logger  # NOQA: F401
@@ -150,19 +152,7 @@ class SeaweedsService:
             получение изображения по fid (любого)
         """
         content = await self.seaweed_repo.get_by_fid(fid, self.fs)
-        mime_type, ext = detect_image_format_fast(content)
-        file_name = f'{get_random_string(8)}.{ext}'
-        headers = {"Content-Disposition": f"inline; filename={file_name}", "X-Image-Type": "none",
-                   "X-File-Size": str(len(content))}
-        result = {'content': content,
-                  'media_type': mime_type,
-                  'headers': headers,
-                  'status_code': 200,
-                  "Content-Disposition": f"inline; filename={file_name}",
-                  "X-Image-Type": mime_type,
-                  "X-File-Size": str(len(content))
-                  }
-        return result
+        return content
 
     async def get_direct_image(self, fid: str) -> dict:
         """
@@ -171,19 +161,7 @@ class SeaweedsService:
         image_url = settings.seaweed_url
         async with aiohttp.ClientSession() as client:
             content = await client.get(image_url)
-        content = await self.seaweed_repo.get_by_fid(fid, self.fs)
-        file_name = f'{get_random_string(8)}.png'
-        headers = {"Content-Disposition": f"inline; filename={file_name}", "X-Image-Type": "none",
-                   "X-File-Size": str(len(content))}
-        result = {'content': content,
-                  'media_type': 'image/png',
-                  'headers': headers,
-                  'status_code': 200,
-                  "Content-Disposition": f"inline; filename={file_name}",
-                  "X-Image-Type": "none",
-                  "X-File-Size": str(len(content))
-                  }
-        return result
+        return content
 
     async def get_fid_thumb(self, fid: str) -> dict:
         """
@@ -311,3 +289,22 @@ class SeaweedsService:
             logger.success(f'создано: {response}')
             result[id] = response
         return result
+
+    async def test_create_img(self, content: bytes, description: str, type: int, full: bool) -> dict:
+        """
+            content: изображение в байтах
+        """
+        # from app.core.utils.common_utils import jprint
+        # 1. обработка (удаление фона, уменьшение размера, создание thumbnail, получение метаданных)
+        match type:
+            case 1:
+                full_data, thumb_data, meta_data = image_aligning(content)
+            case 2:
+                full_data, thumb_data, meta_data = process_image_to_webp(
+                    content=content, remove_bg=True, max_size_kb=100, thumb_size=150
+                )
+            case _:
+                pass
+        content: bytes = full_data if full else thumb_data
+        header = generate_image_headers(content)
+        return content, header

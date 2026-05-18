@@ -4,7 +4,6 @@ import string
 from ctypes import c_int64
 from functools import lru_cache
 from typing import Dict, List
-
 import farmhash
 from loguru import logger
 

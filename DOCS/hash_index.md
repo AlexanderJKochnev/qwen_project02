@@ -1,5 +1,5 @@
 ## hash index
-###  описание 
+###  описание DEPERECATED
 1. Получение всех текстовых данных записи. 
    1. app.core.repositories.repo_backround_tasks.Background.extract_text_optimized
 2. Разбивка на токены. Удаление мусора первый этап. 
