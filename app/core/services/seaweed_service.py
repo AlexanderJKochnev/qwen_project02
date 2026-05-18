@@ -159,7 +159,7 @@ class SeaweedsService:
                   'headers': headers,
                   'status_code': 200,
                   "Content-Disposition": f"inline; filename={file_name}",
-                  "X-Image-Type": "none",
+                  "X-Image-Type": mime_type,
                   "X-File-Size": str(len(content))
                   }
         return result
