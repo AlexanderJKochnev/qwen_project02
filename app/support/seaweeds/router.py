@@ -81,11 +81,13 @@ class SeaweedsRouter:
                                                   'изображение'),
                          table_name: str = Query('items', description='имя таблицы для которой '
                                                                       'предназначено изображение. items'),
+                         content: int = Query(0, description='возвращает результат: 0 - ничего, '
+                                                             '1 - полное изображение, 2 - thumbnail'),
                          file: UploadFile = File(...),
                          service: SeaweedsService = Depends()):
         try:
             content = await file.read()
-            response: dict = await service.create_img(content, description, table_name)
+            response: dict = await service.create_img(content, description, table_name, content)
             return response
         except Exception as e:
             logger.error(e)
