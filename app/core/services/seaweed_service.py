@@ -48,7 +48,7 @@ class SeaweedsService:
         return {'fid': fid,
                 'fid_thumb': fid_thumb,
                 'size_bytes': len(full_data),
-                'thumb_size_bytes' len(thumb_data),
+                'thumb_size_bytes': len(thumb_data),
                 'tag': description,
                 'data_hash': data_hash,
                 'table_name': table_name,
