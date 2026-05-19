@@ -140,41 +140,23 @@ class ImageProcessor:
 
         logger.debug(f"Производительный режим: без ограничений, threads={self.config.rembg_num_threads_fast}")
 
-    def _init_rembg_session(self):
+    def _get_rembg_session(self):
         """
-        Инициализация сессии ONNX Runtime для rembg
+        Ленивая потокобезопасная загрузка модели rembg.
+        Модель загружается один раз при первом вызове.
         """
-        # Настройка ONNX Runtime
-        MODEL_PATH = "/root/.u2net/u2net.onnx"
-        opts = ort.SessionOptions()
-        opts.intra_op_num_threads = self.config.rembg_num_threads
-        opts.inter_op_num_threads = self.config.rembg_num_threads
-
-        if self.config.deterministic_mode:
-            # Детерминированный режим
-            opts.execution_mode = ort.ExecutionMode.ORT_SEQUENTIAL
-            opts.enable_cpu_mem_arena = False
-            opts.enable_mem_pattern = False
-            opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_DISABLE_ALL
-            logger.debug(f"ONNX Runtime: детерминированный режим, threads={self.config.rembg_num_threads}")
-        else:
-            # Производительный режим
-            opts.execution_mode = ort.ExecutionMode.ORT_PARALLEL
-            opts.enable_cpu_mem_arena = True
-            opts.enable_mem_pattern = True
-            opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
-            logger.debug(f"ONNX Runtime: производительный режим, threads={self.config.rembg_num_threads}")
-
-        try:
-            # Прямая загрузка из локального файла - без интернета!
-            self._rembg_session = ort.InferenceSession(
-                MODEL_PATH, sess_opts=opts, providers=["CPUExecutionProvider"]
-            )
-            logger.info(f"Модель загружена из {MODEL_PATH}")
-        except Exception as e:
-            logger.error(f"Ошибка загрузки модели из {MODEL_PATH}: {e}")
-            logger.error("Убедитесь, что файл модели есть по этому пути")
-            self._rembg_session = None
+        if self._rembg_session is None:
+            with self._rembg_lock:
+                # Double-check locking
+                if self._rembg_session is None:
+                    try:
+                        self._rembg_session = new_session("u2net")
+                        logger.info("Модель rembg успешно загружена")
+                    except Exception as e:
+                        logger.error(f"Ошибка загрузки модели rembg: {e}")
+                        self._rembg_session = None
+                        raise
+        return self._rembg_session
 
     # ==================== ПУБЛИЧНЫЕ МЕТОДЫ ====================
 
@@ -311,10 +293,16 @@ class ImageProcessor:
         return image, metadata
 
     async def _remove_background_async(self, image: Image.Image) -> Image.Image:
-        """Асинхронное удаление фона через настроенную сессию rembg"""
+        """Асинхронное удаление фона"""
         loop = asyncio.get_event_loop()
 
         def _remove_bg():
+            # Получаем сессию (ленивая загрузка)
+            session = self._get_rembg_session()
+            if session is None:
+                logger.warning("Rembg сессия не доступна, возвращаем исходное изображение")
+                return image.convert('RGBA')
+
             # Конвертируем в RGB для лучших результатов
             if image.mode == 'RGBA':
                 rgb_img = Image.new('RGB', image.size, (255, 255, 255))
@@ -322,8 +310,8 @@ class ImageProcessor:
             else:
                 rgb_img = image.convert('RGB')
 
-            # Используем созданную сессию (уже настроена под выбранный режим)
-            result = remove(rgb_img, session=self._rembg_session)
+            # remove использует переданную сессию
+            result = remove(rgb_img, session=session)
             return result.convert('RGBA')
 
         return await loop.run_in_executor(self._executor, _remove_bg)
