@@ -21,6 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.models.base_model import get_model_by_name
 from app.core.utils.common_utils import get_random_string
 # from app.core.utils.image_utils import image_aligning
+from app.core.utils.hashes import FastImageHasher
 from app.core.config.database.seaweed_async import SeaweedFSManager, get_swfs
 from app.core.config.project_config import settings
 # from app.core.hash_norm import tokenize
@@ -317,7 +318,7 @@ class SeaweedsService:
                 )
                 processor_det = ImageProcessor(config_deterministic)
                 full_data, thumb_data, meta_data = await processor_det.process_single(content, remove_bg=True)
-            case _:  # WEBP LOSSY
+            case 4:  # WEBP LOSSY
                 config_fast = ImageProcessingConfig(
                     max_full_width=dim, max_full_height=dim, max_thumb_width=200, max_thumb_height=200,
                     webp_lossless=False,  # Lossy для скорости и размера
@@ -326,6 +327,24 @@ class SeaweedsService:
                 )
                 processor_fast = ImageProcessor(config_fast)
                 full_data, thumb_data, meta_data = await processor_fast.process_single(content, remove_bg=True)
+            case _:  # WEBP LOSSY BATCH
+                config_fast = ImageProcessingConfig(
+                    max_full_width=dim, max_full_height=dim, max_thumb_width=200, max_thumb_height=200,
+                    webp_lossless=False,  # Lossy для скорости и размера
+                    webp_quality=quality, deterministic_mode=False,  # Отключаем детерминизм
+                    rembg_num_threads_fast=4, rembg_model="u2net"
+                )
+                processor_fast = ImageProcessor(config_fast)
+                contents = [content] * 10
+                # full_data, thumb_data, meta_data
+                result = await processor_fast.process_batch(contents, remove_bg=True)
+                # compaire results
+                xxh = FastImageHasher.xxhash64
+                tmp = ((xxh(fd), xxh(td), len(fd), len(td)) for fd, td, meta in result)
+                from app.core.utils.common_utils import jprint
+                jprint(tmp)
+                logger.warning('-------------------------')
+                full_data, thumb_data, meta_data = result[-1]
         if fu:
             content: bytes = full_data
         else:

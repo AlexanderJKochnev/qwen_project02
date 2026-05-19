@@ -183,7 +183,8 @@ class SeaweedsRouter:
                               size: int = Query(100, description='максимальный размер файла, Kb'),
                               quality: int = Query(85, description='качество изображениия 100 самое лучшее, 0 плохое'),
                               type: int = Query(1,
-                                                description='1. PNG, 2. WEBP OLD, 3. WEBP LOSSLESS, 4. WEBP LOSSY'),
+                                                description='1. PNG, 2. WEBP OLD, 3. WEBP LOSSLESS, '
+                                                            '4. WEBP LOSSY, 5. WEBP LOSSY BATCH'),
                               full: bool = Query(True, description='True полное, False thumbnail'),
                               service: SeaweedsService = Depends()):
         """
