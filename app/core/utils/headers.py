@@ -45,7 +45,7 @@ def generate_image_headers(image_bytes: bytes, **kwargs) -> dict:
     }
     if kwargs:
         logger.warning(f'{kwargs}=')
-        x_headers = {f'X-{key.lower().replace(' ', '-')}': str(val) for key, val in kwargs}
+        x_headers = {f'X-{key.lower().replace(' ', '-')}': str(val) for key, val in kwargs.items()}
         headers.update(x_headers)
     # Если размеры успешно определены, добавляем их
     if width and height:
