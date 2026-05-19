@@ -340,7 +340,7 @@ class SeaweedsService:
                 result = await processor_fast.process_batch(contents, remove_bg=True)
                 # compaire results
                 xxh = FastImageHasher.xxhash64
-                tmp = ((xxh(fd), xxh(td), len(fd), len(td)) for fd, td, meta in result)
+                tmp = [(xxh(fd), xxh(td), len(fd), len(td)) for fd, td, meta in result]
                 from app.core.utils.common_utils import jprint
                 jprint(tmp)
                 logger.warning('-------------------------')
