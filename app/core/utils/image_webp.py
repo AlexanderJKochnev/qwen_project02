@@ -33,7 +33,11 @@ def get_rembg_session():
 
 
 def process_image_to_webp(
-        content: bytes, remove_bg: bool = True, max_size_kb: int = 100, thumb_size: int = 150
+        content: bytes, remove_bg: bool = True,
+        max_size_kb: int = 100,
+        thumb_size: int = 150,
+        dim: int = 1000,
+        quality: int = 85
 ) -> Tuple[Optional[bytes], Optional[bytes], Optional[dict]]:
     """
     Полный конвейер: bytes → WebP lossless+alpha + thumbnail
@@ -47,6 +51,7 @@ def process_image_to_webp(
     Returns:
         (full_webp_bytes, thumb_webp_bytes, metadata)
     """
+    dim = dim or min(CONFIG['max_width'], CONFIG['max_height'])
     if not content:
         return None, None, None
 
@@ -68,9 +73,8 @@ def process_image_to_webp(
 
         # 4. Оптимизация full-изображения
         full_data = optimize_full_to_webp(
-            image, max_size_bytes=max_size_kb * 1024, max_dimensions=(CONFIG['max_width'], CONFIG['max_height'])
+            image, max_size_bytes=max_size_kb * 1024, max_dimensions=(dim, dim)
         )
-
         # 5. Метаданные
         metadata.update(
             {'full_size_bytes': len(full_data), 'thumb_size_bytes': len(thumb_data), 'full_mime': 'image/webp',

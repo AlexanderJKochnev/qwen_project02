@@ -27,6 +27,7 @@ from app.core.config.project_config import settings
 # from app.core.hash_norm import tokenize
 from app.core.repositories.seaweed_repository import SeaweedRepository
 from app.core.utils.headers import generate_image_headers
+from app.core.utils.image_processor import ImageProcessingConfig, ImageProcessor
 from app.core.utils.image_utils import image_aligning
 from app.core.utils.image_webp import process_image_to_webp
 from app.core.utils.pydantic_utils import get_repo
@@ -296,19 +297,36 @@ class SeaweedsService:
             result[id] = response
         return result
 
-    async def test_create_img(self, content: bytes, description: str, type: int, fu: bool) -> dict:
+    async def test_create_img(self, content: bytes, dim: int, size: int, type: int, quality: int, fu: bool) -> bytes:
         """
             content: изображение в байтах
         """
         # from app.core.utils.common_utils import jprint
         # 1. обработка (удаление фона, уменьшение размера, создание thumbnail, получение метаданных)
         match type:
-            case 1:
-                full_data, thumb_data, meta_data = image_aligning(content)
-            case _:
+            case 1:  # PNG
+                full_data, thumb_data, meta_data = image_aligning(content, True, dim, size, quality)
+            case 2:  # OLD WEBP
                 full_data, thumb_data, meta_data = process_image_to_webp(
-                    content=content, remove_bg=True, max_size_kb=100, thumb_size=150
+                    content=content, remove_bg=True, max_size_kb=size, thumb_size=20, dim=dim, quality=quality
                 )
+            case 3:  # WEBP LOSSLESS
+                config_deterministic = ImageProcessingConfig(
+                    max_full_width=dim, max_full_height=1024, max_thumb_width=200, max_thumb_height=200,
+                    webp_lossless=True, deterministic_mode=True,  # Включаем детерминизм
+                    rembg_seed=42, rembg_num_threads_deterministic=1, rembg_model="u2net"
+                )
+                processor_det = ImageProcessor(config_deterministic)
+                full_data, thumb_data, meta_data = await processor_det.process_single(content, remove_bg=True)
+            case _:  # WEBP LOSSY
+                config_fast = ImageProcessingConfig(
+                    max_full_width=dim, max_full_height=dim, max_thumb_width=200, max_thumb_height=200,
+                    webp_lossless=False,  # Lossy для скорости и размера
+                    webp_quality=quality, deterministic_mode=False,  # Отключаем детерминизм
+                    rembg_num_threads_fast=4, rembg_model="u2net"
+                )
+                processor_fast = ImageProcessor(config_fast)
+                full_data, thumb_data, meta_data = await processor_fast.process_single(content, remove_bg=True)
         if fu:
             content: bytes = full_data
         else:

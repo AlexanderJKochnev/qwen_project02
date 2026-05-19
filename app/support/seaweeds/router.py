@@ -176,10 +176,14 @@ class SeaweedsRouter:
         return response
 
     async def test_create_img(self,
-                              description: str = Query(..., description='ключевые слова по которым можно найти '
-                                                       'изображение'),
                               file: UploadFile = File(...),
-                              type: int = Query(1, description='1. PNG, 2. WEBP OLD, 3. WEBP CLASS'),
+                              dimension: int = Query(1000,
+                                                     description='максимальный размер в который нужно вписать '
+                                                                 'изображение, pix'),
+                              size: int = Query(100, description='максимальный размер файла, Kb'),
+                              quality: int = Query(85, description='качество изображениия 100 самое лучшее, 0 плохое'),
+                              type: int = Query(1,
+                                                description='1. PNG, 2. WEBP OLD, 3. WEBP LOSSLESS, 4. WEBP LOSSY'),
                               full: bool = Query(True, description='True полное, False thumbnail'),
                               service: SeaweedsService = Depends()):
         """
@@ -187,5 +191,5 @@ class SeaweedsRouter:
         """
         content = await file.read()
         original_size = len(content)
-        image_data = await service.test_create_img(content, description, type, full)
+        image_data = await service.test_create_img(content, dimension, size, type, quality, full)
         return ResponseStreaming(image_data, source_size=original_size)

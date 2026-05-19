@@ -52,16 +52,17 @@ def get_rembg_session():
     return _REMBG_SESSION
 
 
-def image_aligning(content: bytes, remove_bg: bool = True) -> tuple:
+def image_aligning(content: bytes, remove_bg: bool = True,
+                   dim: int = None, size: int = None, quality: int = None) -> tuple:
     """
     Полный цикл: Метаданные -> Удаление фона -> Автокроп -> Ресайз -> Оптимизация
     """
     if not content:
         return content
 
-    max_w, max_h = settings.IMAGE_WIDTH, settings.IMAGE_HEIGH
-    MAX_FILE_SIZE = settings.max_file_size  # 100 * 1024 * 5  # не более 100кб
-    logger.warning(f'{MAX_FILE_SIZE=}')
+    max_w, max_h = dim or settings.IMAGE_WIDTH, dim or settings.IMAGE_HEIGH
+    MAX_FILE_SIZE = size or settings.max_file_size  # 100 * 1024 * 5  # не более 100кб
+    quality = quality or 85
     MARGIN_PCT = 0.05
     thumb_w, thumb_h = 150, 150
 
