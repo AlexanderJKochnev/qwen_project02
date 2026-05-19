@@ -18,7 +18,6 @@ import aiohttp
 from fastapi import Depends
 from aiohttp.client_exceptions import ClientResponseError
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.models.base_model import get_model_by_name
 from app.core.utils.common_utils import get_random_string
 # from app.core.utils.image_utils import image_aligning

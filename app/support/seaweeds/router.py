@@ -189,7 +189,10 @@ class SeaweedsRouter:
         """
              загрузка обработка и возврат изображеня БЕЗ сохранения - для оценки качества обработки
         """
+        from app.core.utils.hashes import FastImageHasher
         content = await file.read()
         original_size = len(content)
+        logger.info(f'{original_size=}')
         image_data = await service.test_create_img(content, dimension, size, type, quality, full)
-        return ResponseStreaming(image_data, source_size=original_size)
+        xxh = FastImageHasher.xxhash64(image_data)
+        return ResponseStreaming(image_data, source_size=original_size, xxhash=xxh)
