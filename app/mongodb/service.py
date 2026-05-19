@@ -275,7 +275,7 @@ class ThumbnailImageService:
              "filename": str
              }
         """
-        return result
+        return filename, id, content
 
     async def delete_image(self,
                            image_id: str,
