@@ -4,8 +4,6 @@ from copy import deepcopy
 from typing import Any, Dict, List, Union
 import ijson
 from pydantic import ValidationError
-from fastapi import Response, HTTPException
-# from app.core.config.project_config import settings
 from app.core.utils.io_utils import get_filepath_from_dir_by_name
 
 
@@ -641,21 +639,6 @@ def lang_suffix_dict(source: list) -> Dict[str, tuple]:
          {'en': ('', ('en', 'ru', 'fr'), ),...}
     """
     return {key: (lang_suffix_list(list_move(source, key))) for key in source}
-
-
-def raw_image_response(result: dict, content: str = 'content', mime: str = "image/png"):
-    """
-        получает обернутый файл с изображением и преобразует его в чистый bytes, упаковывает в Response
-        result: dict    данные
-        content: str    имя ключа под которым хранятся данные
-        mime: str       тип файла (если в result неокажется
-    """
-    try:
-        if file_bytes := result.get(content):
-            return Response(content=file_bytes,
-                            media_type=result.get("mime_type", mime))
-    except Exception as e:
-        raise HTTPException(status_code=422, detail=f'error.raw_image_response: {e}')
 
 
 def lang_sorted(lang: str) -> tuple:

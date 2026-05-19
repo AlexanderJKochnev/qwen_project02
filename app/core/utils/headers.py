@@ -5,7 +5,11 @@
 import struct
 
 
-def generate_image_headers(image_bytes: bytes) -> dict:
+def generate_image_headers(image_bytes: bytes, **kwargs) -> dict:
+    """
+        генератор заголовков для файлов
+        **kwargs кастомные записи для заголовка (id файла)
+    """
     file_size = len(image_bytes)
     if file_size < 24:
         return {"Content-Length": str(file_size), "Content-Type": "application/octet-stream"}
@@ -38,7 +42,9 @@ def generate_image_headers(image_bytes: bytes) -> dict:
         "Accept-Ranges": "bytes",
         "X-Original-File-Size": str(file_size)
     }
-
+    if kwargs:
+        x_headers = {f'X-{key.lower().replace(' ', '-')}': str(val) for key, val in kwargs}
+    headers.update(x_headers)
     # Если размеры успешно определены, добавляем их
     if width and height:
         headers["X-Image-Width"] = str(width)

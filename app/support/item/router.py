@@ -317,11 +317,10 @@ class ItemRouter(ArrayRouter, BaseRouter):
         """
             получение thumbnail по id напитка. Версия 1 (StreamingResponse)
         """
-        image_data = await self.service.get_image_by_id_v2(
+        image_data: bytes = await self.service.get_image_by_id_v2(
             request, id, self.repo, self.model, session, image_service, 1
         )
-        headers = image_data.pop('headers')
-        return ResponseStreaming(image_data, headers)
+        return ResponseStreaming(image_data)
 
     async def get_image_by_id(self, request: Request, id: int, session: AsyncSession = Depends(get_db),
                               # image_service: ThumbnailImageService = Depends(),
@@ -331,6 +330,6 @@ class ItemRouter(ArrayRouter, BaseRouter):
             получение изображения по id напитка. Версия 1  (StreamingResponse - лучше для тяжелых условий)
             ArrayService.get_image_by_id_v2 ->
         """
-        image_data = await self.service.get_image_by_id_v2(request, id, self.repo, self.model, session, image_service)
-        headers = image_data.pop('headers')
-        return ResponseStreaming(image_data, headers)
+        image_data: bytes = await self.service.get_image_by_id_v2(request, id, self.repo, self.model, session,
+                                                                  image_service)
+        return ResponseStreaming(image_data)

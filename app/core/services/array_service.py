@@ -112,7 +112,7 @@ class ArrayService:
     async def get_image_by_id_v2(
             cls, request: Request, id: int, repository: Repository, model: ModelType, session: AsyncSession,
             image_service: SeaweedsService, pos: int = 0
-    ):
+    ) -> bytes:
         """
             получение полноразмерного изображения по id напитка
         """
@@ -126,5 +126,5 @@ class ArrayService:
             image_id = get_default_image(request, pos)
         # 2. получение image by image_id
         # image = await image_service.get_full_image(image_id)
-        image = await image_service.get_image(image_id)
+        image: bytes = await image_service.get_image(image_id)
         return image

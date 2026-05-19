@@ -207,7 +207,7 @@ class ThumbnailImageRepository:
 
         return {"id": str(result.inserted_id), "has_thumbnail": thumbnail_content is not None}
 
-    async def get_image(self, image_id: str, include_content: bool = True) -> Optional[dict]:
+    async def get_image(self, image_id: str, include_content: bool = True) -> Optional[bytes]:
         """Получить полноразмерное изображение"""
         await self.ensure_indexes()
         try:
@@ -226,12 +226,12 @@ class ThumbnailImageRepository:
             if result and "content" in result:
                 # Конвертируем Binary обратно в bytes
                 result["content"] = result["content"]
-            return result
+            return result.get("content")
         except Exception as e:
             print(f"Error getting image by ID {image_id}: {e}")
             return None
 
-    async def get_thumbnail(self, image_id: str) -> Optional[dict]:
+    async def get_thumbnail(self, image_id: str) -> Optional[bytes]:
         """Получить только thumbnail"""
         await self.ensure_indexes()
         try:
@@ -243,12 +243,12 @@ class ThumbnailImageRepository:
                 # данные находятся в thumbnail
                 result["thumbnail"] = result["thumbnail"]
 
-            return result
+            return result.get("thumbnail")
         except Exception as e:
             print(f"Error getting thumbnail {image_id}: {e}")
             return None
 
-    async def get_thumbnail_by_filename(self, filename: str) -> Optional[dict]:
+    async def get_thumbnail_by_filename(self, filename: str) -> Optional[bytes]:
         """Получить thumbnail по имени файла"""
         await self.ensure_indexes()
         try:
@@ -259,7 +259,7 @@ class ThumbnailImageRepository:
             if result and "thumbnail" in result:
                 result["thumbnail"] = result["thumbnail"]
 
-            return result
+            return result.get("thumbnail")
         except Exception as e:
             print(f"Error getting thumbnail by filename {filename}: {e}")
             return None
@@ -310,7 +310,7 @@ class ThumbnailImageRepository:
         doc = await self.collection.find_one({"filename": filename}, projection)
         return str(doc["_id"]) if doc else None
 
-    async def get_image_by_filename(self, filename: str, include_content: bool = True) -> Optional[dict]:
+    async def get_image_by_filename(self, filename: str, include_content: bool = True) -> Optional[bytes]:
         await self.ensure_indexes()
         projection = {"filename": 1, "description": 1, "created_at": 1, "size": 1, "content_type": 1,
                       "thumbnail_size": 1, "has_thumbnail": 1, "thumbnail_type": 1}
@@ -322,7 +322,7 @@ class ThumbnailImageRepository:
         if result and "content" in result:
             result["content"] = result["content"]
 
-        return result
+        return result.get('content')
 
     async def count_images_after_date(self, after_date: datetime) -> int:
         await self.ensure_indexes()

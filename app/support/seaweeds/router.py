@@ -3,13 +3,14 @@ from fastapi import File, HTTPException, Query, UploadFile
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
-from app.core.utils.io_utils import ResponseStreaming, ResponseStreaming2
+from app.core.utils.io_utils import ResponseStreaming
 from app.core.config.database.db_async import get_db
 from app.auth.dependencies import get_active_user_or_internal
 from app.core.services.seaweed_service import SeaweedsService
 from app.mongodb.service import ThumbnailImageService
 
 """
+    all bellow routes for the test purpose only
     create
     search
     get
@@ -119,19 +120,16 @@ class SeaweedsRouter:
         """
         получение изображения по fid
         """
-        image_data: dict = await service.get_image(fid)
-        headers = image_data.pop('headers')
-        return ResponseStreaming(image_data, headers)
+        image_data: bytes = await service.get_image(fid)
+        return ResponseStreaming(image_data)
         # return StreamingResponse(**image_data)
 
     async def get_thumb_by_fid(self, fid: str, service: SeaweedsService = Depends()):
         """
         получение thum изображения
         """
-        image_data: dict = await service.get_thumb_by_fid(fid)
-        headers = image_data.pop('headers')
-        return ResponseStreaming(image_data, headers)
-        # return StreamingResponse(**image_data)
+        image_data: bytes = await service.get_thumb_by_fid(fid)
+        return ResponseStreaming(image_data)
 
     async def get_thumb(self, fid: str, service: SeaweedsService = Depends()):
         """
@@ -140,14 +138,12 @@ class SeaweedsRouter:
         response = await service.get_fid_thumb(fid)
         return response
 
-    async def get_direct_by_fid(self, fid: str, service: SeaweedsService = Depends()):
+    async def get_direct_by_fid(self, fid: str, service: SeaweedsService = Depends()) -> bytes:
         """
         получение изображения по fid напрямую из seaweed
         """
-        image_data: dict = await service.get_direct_image(fid)
-        headers = image_data.pop('headers')
-        return ResponseStreaming(image_data, headers)
-        # return StreamingResponse(**image_data)
+        image_data: bytes = await service.get_direct_image(fid)
+        return ResponseStreaming(image_data)
 
     async def search_by_tag(self, tag_value: str, service: SeaweedsService = Depends()):
         """
@@ -163,9 +159,8 @@ class SeaweedsRouter:
         """
         получение изображения по tag
         """
-        image_data: dict = await service.search_image_by_tag(tag_value, image_type)
-        headers = image_data.pop('headers')
-        return ResponseStreaming(image_data, headers)
+        image_data: bytes = await service.search_image_by_tag(tag_value, image_type)
+        return ResponseStreaming(image_data)
         # return StreamingResponse(**image_data)
 
     async def transfer_mongoo_sea(self, session: AsyncSession = Depends(get_db),
@@ -193,7 +188,7 @@ class SeaweedsRouter:
         try:
             content = await file.read()
             image_data, headers = await service.test_create_img(content, description, type, full)
-            return ResponseStreaming2(image_data, headers)
+            return ResponseStreaming(image_data, **headers)
         except Exception as e:
             logger.error(e)
             raise HTTPException(status_code=500, detail=e)

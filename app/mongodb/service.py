@@ -208,57 +208,16 @@ class ThumbnailImageService:
         self.image_repository = repository
 
     # @cache_image_memcached(prefix = 'thumbnail', expire = 3600, key_params = ['file_id'])
-    async def get_thumbnail(self, file_id: str) -> dict:
+    async def get_thumbnail(self, file_id: str) -> bytes:
         """Получить thumbnail (для списков) - ИСПРАВЛЕННАЯ ВЕРСИЯ"""
-        try:
-            image_data = await self.image_repository.get_thumbnail(file_id)
-
-            if not image_data or "thumbnail" not in image_data:
-                # print(f"Thumbnail not found in DB for {file_id}, creating...")
-                # Если thumbnail нет в базе, создаем его
-                full_image = await self.get_full_image(file_id)
-                thumbnail_content = self.image_repository._create_thumbnail_png(full_image["content"])
-
-                if thumbnail_content:
-                    # Сохраняем в базу асинхронно
-                    asyncio.create_task(
-                        self._save_thumbnail_background(file_id, thumbnail_content)
-                    )
-
-                    return {"content": thumbnail_content, "filename": f"thumb_{full_image['filename']}",
-                            "content_type": "image/png", "from_cache": False}
-                else:
-                    # Если не удалось создать thumbnail, создаем принудительно
-                    print(f"Thumbnail creation failed for {file_id}, using forced resize")
-                    forced_thumbnail = await self._create_forced_thumbnail(full_image["content"])
-                    return {"content": forced_thumbnail, "filename": f"thumb_forced_{full_image['filename']}",
-                            "content_type": "image/png", "from_cache": False}
-
-            # Если thumbnail уже есть в базе
-            # print(f"Thumbnail found in DB for {file_id}, size: {len(image_data['thumbnail'])} bytes")
-            return {"content": image_data["thumbnail"], "filename": f"thumb_{image_data['filename']}",
-                    "content_type": image_data.get("thumbnail_type", "image/png"), "from_cache": False}
-
-        except Exception as e:
-            logger.error(f"get_thmubnail {e}")
-            raise HTTPException(status_code=500,
-                                detail=f"Thumbnail for {file_id} retrieval failed: {str(e)}")
+        image: bytes = await self.image_repository.get_thumbnail(file_id)
+        return image
 
     # @cache_image_memcached(prefix = 'full_image', expire = 3600, key_params = ['file_id'])
-    async def get_full_image(self, file_id: str) -> dict:
+    async def get_full_image(self, file_id: str) -> bytes:
         """Получить полноразмерное изображение - ИСПРАВЛЕННАЯ ВЕРСИЯ"""
-        try:
-            image_data = await self.image_repository.get_image(file_id, include_content=True)
-            if not image_data or "content" not in image_data:
-                raise HTTPException(status_code=404, detail="Image not found")
-
-            # print(f"Full image retrieved for {file_id}, size: {len(image_data['content'])} bytes")
-            return {"content": image_data["content"], "filename": image_data["filename"],
-                    "content_type": image_data.get("content_type", "image/png"), "from_cache": False}
-        except Exception as e:
-            raise HTTPException(
-                status_code=404, detail=f"Error in get_full_image for {file_id}: {e}"
-            )
+        image: bytes = await self.image_repository.get_image(file_id, include_content=True)
+        return image
 
     async def _save_thumbnail_background(self, file_id: str, thumbnail_content: bytes):
         """Фоновая задача для сохранения thumbnail'а"""
@@ -456,55 +415,16 @@ class ThumbnailImageService:
         except Exception as e:
             raise Exception(f"Service error: {str(e)}")
 
-    async def get_thumbnail_by_filename(self, file_name: str) -> dict:
+    async def get_thumbnail_by_filename(self, file_name: str) -> bytes:
         """Получить thumbnail (для списков) - ИСПРАВЛЕННАЯ ВЕРСИЯ"""
-        try:
-            image_data = await self.image_repository.get_thumbnail_by_filename(file_name)
-            if not image_data or "thumbnail" not in image_data:
-                # print(f"Thumbnail not found in DB for {file_name}, creating...")
-                # Если thumbnail нет в базе, создаем его
-                full_image = await self.get_full_image_by_filename(file_name)
-                thumbnail_content = self.image_repository._create_thumbnail_png(full_image["content"])
-
-                if thumbnail_content:
-                    # Сохраняем в базу асинхронно
-                    file_id = image_data.get('_id')
-                    asyncio.create_task(
-                        self._save_thumbnail_background(file_id, thumbnail_content)
-                    )
-
-                    return {"content": thumbnail_content, "filename": f"thumb_{full_image['filename']}",
-                            "content_type": "image/png", "from_cache": False}
-                else:
-                    # Если не удалось создать thumbnail, создаем принудительно
-                    print(f"Thumbnail creation failed for {file_name}, using forced resize")
-                    forced_thumbnail = await self._create_forced_thumbnail(full_image["content"])
-                    return {"content": forced_thumbnail, "filename": f"thumb_forced_{full_image['filename']}",
-                            "content_type": "image/png", "from_cache": False}
-
-            # Если thumbnail уже есть в базе
-            # print(f"Thumbnail found in DB for {file_id}, size: {len(image_data['thumbnail'])} bytes")
-            return {"content": image_data["thumbnail"], "filename": f"thumb_{image_data['filename']}",
-                    "content_type": image_data.get("thumbnail_type", "image/png"), "from_cache": False}
-
-        except Exception as e:
-            raise HTTPException(status_code=500,
-                                detail=f"Thumbnail for {file_id} retrieval failed: {str(e)}")
+        image: bytes = await self.image_repository.get_thumbnail_by_filename(file_name)
+        return image
 
     # @cache_image_memcached(prefix = 'full_image', expire = 3600, key_params = ['file_id'])
-    async def get_full_image_by_filename(self, file_name: str) -> dict:
+    async def get_full_image_by_filename(self, file_name: str) -> bytes:
         """Получить полноразмерное изображение - ИСПРАВЛЕННАЯ ВЕРСИЯ"""
-        try:
-            image_data = await self.image_repository.get_image_by_filename(file_name, include_content=True)
-            if not image_data or "content" not in image_data:
-                raise HTTPException(status_code=404, detail="Image not found")
-
-            # print(f"Full image retrieved for {file_id}, size: {len(image_data['content'])} bytes")
-            return {"content": image_data["content"], "filename": image_data["filename"],
-                    "content_type": image_data.get("content_type", "image/png"), "from_cache": False}
-        except Exception as e:
-            raise HTTPException(status_code=404,
-                                detail=f"Error in get_full_image for {file_name}: {e}")
+        image: bytes = await self.image_repository.get_image_by_filename(file_name, include_content=True)
+        return image
 
     async def get_id_by_filename(self, filename: str) -> Optional[str]:
         if not filename or not isinstance(filename, str):

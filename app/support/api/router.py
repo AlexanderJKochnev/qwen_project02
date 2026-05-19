@@ -8,13 +8,13 @@ from fastapi import Depends, Query
 from app.auth.dependencies import get_current_api_user
 from app.core.config.project_config import settings, get_paging
 from app.core.schemas.base import PaginatedResponse
+from app.core.utils.io_utils import ResponseStreaming
 # from app.core.services.seaweed_service import SeaweedsService
 # from app.core.utils.io_utils import ResponseStreaming
 from app.core.utils.pydantic_utils import orresponse
 # from app.mongodb import router as mongorouter
 from app.core.config.database.db_async import get_db
 from app.core.utils.common_utils import back_to_the_future, delta_data
-from app.core.utils.converters import raw_image_response
 # from app.mongodb.models import FileListResponse
 from app.mongodb.service import ThumbnailImageService
 from app.support.item.router import ItemRouter
@@ -179,16 +179,16 @@ class ApiRouter(ItemRouter):
         """
         получение изображения по id напитка. Версия 2 (Response - не очень)
         """
-        image_data = await self.service.get_image_by_id(id, self.repo, self.model, session, image_service)
-        return raw_image_response(image_data)
+        image_data: bytes = await self.service.get_image_by_id(id, self.repo, self.model, session, image_service)
+        return ResponseStreaming(image_data)
 
     async def get_thumbnail_png_by_id(self, id: int, session: AsyncSession = Depends(get_db),
                                       image_service: ThumbnailImageService = Depends()):
         """
             получение thumbnail by id. Версия 2 (Response)
         """
-        image_data = await self.service.get_thumbnail_by_id(id, self.repo, self.model, session, image_service)
-        return raw_image_response(image_data)
+        image_data: bytes = await self.service.get_thumbnail_by_id(id, self.repo, self.model, session, image_service)
+        return ResponseStreaming(image_data)
 
     async def search_by_ids(self, request: Request, search: str = Query(
             None, description="Поисковый запрос. В случае пустого запроса будут выведены все данные "

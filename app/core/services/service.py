@@ -599,7 +599,7 @@ class Service(metaclass=ServiceMeta):
                               repository: Repository,
                               model: ModelType,
                               session: AsyncSession,
-                              image_service: ThumbnailImageService):
+                              image_service: ThumbnailImageService) -> bytes:
         """
             получение полноразмерного изображения по id напитка
         """
@@ -611,14 +611,14 @@ class Service(metaclass=ServiceMeta):
         if not image_id:
             raise HTTPException(status_code=402, detail=f'instance {model.__name__} with {id=} not found')
         # 2. получение image by image_id
-        image = await image_service.get_full_image(image_id)
+        image: bytes = await image_service.get_full_image(image_id)
         return image
 
     @classmethod
     async def get_thumbnail_by_id(
         self, id: int, repository: Repository, model: ModelType, session: AsyncSession,
         image_service: ThumbnailImageService
-    ):
+    ) -> bytes:
         """
             получение полноразмерного изображения по id напитка
         """
@@ -630,7 +630,7 @@ class Service(metaclass=ServiceMeta):
         if not image_id:
             raise HTTPException(status_code=402, detail=f'instance {model.__name__} with {id=} not found')
         # 2. получение thumbnail by image_id
-        image = await image_service.get_thumbnail(image_id)
+        image: bytes = await image_service.get_thumbnail(image_id)
         return image
 
     @classmethod

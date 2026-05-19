@@ -43,7 +43,8 @@ class SeaweedsService:
         self.click_repo = click_repo_factory.for_table('images_metadata')
         self.seaweed_repo = SeaweedRepository
 
-    async def create_img(self, content: bytes, description: str, table: str) -> dict:
+    async def create_img(self, content: bytes, description: str, table: str,
+                         content_include: int = 0) -> dict | tuple:
         """
             content: изображение в байтах
             description: описание
@@ -53,7 +54,7 @@ class SeaweedsService:
             2. обработка метаданных (токенизация по шаблону clickhouse, )
             3. сохранение 2-х файлов в seaweed, получение 2-х FID
             4. сохранение метаданных в clickhouse (fid thumbnail и full fid в одной записи)
-            5. возврат fid
+            5. возврат content + fid
         """
         # from app.core.utils.common_utils import jprint
         # 1. обработка (удаление фона, уменьшение размера, создание thumbnail, получение метаданных)
@@ -76,7 +77,6 @@ class SeaweedsService:
              'thumb_mime': 'image/webp'}
         """
         meta['table'] = table
-        # meta['uploaded_at'] = datetime.now(timezone.utc)
         meta['size_bytes'] = meta_data.get('full_size_bytes')
         meta['mime_type'] = meta_data.get('full_mime_type')
         meta['thumb_size_bytes'] = meta_data.get('thumb_size_bytes')
@@ -87,11 +87,15 @@ class SeaweedsService:
         # 4. сохранение метаданных в clickhouse (fid thumbnail и full fid в одной записи)
         meta['fid'] = fid
         meta['fid_thumb'] = fid_thumb
-        # jprint(meta)
         await self.click_repo.create(meta)
         # 5. результат {fid: str, url: str}
-        result = meta
-        # result = {"fid": fid, "fid_thumb": fid_thumb, }
+        match content_include:
+            case 0:
+                result = meta
+            case 1:
+                result = meta, full_data
+            case _:
+                result = meta, thumb_data
         return result
 
     async def delete_img(self, fid: str, table: str):
@@ -147,20 +151,20 @@ class SeaweedsService:
         result = await self.click_repo.get_by_id('fid', fid)
         return result.get('fid_thumb')
 
-    async def get_image(self, fid: str) -> dict:
+    async def get_image(self, fid: str) -> bytes:
         """
             получение изображения по fid (любого)
         """
-        content = await self.seaweed_repo.get_by_fid(fid, self.fs)
+        content: bytes = await self.seaweed_repo.get_by_fid(fid, self.fs)
         return content
 
-    async def get_direct_image(self, fid: str) -> dict:
+    async def get_direct_image(self, fid: str) -> bytes:
         """
             получение изображения по fid (любого)
         """
         image_url = settings.seaweed_url
         async with aiohttp.ClientSession() as client:
-            content = await client.get(image_url)
+            content: bytes = await client.get(image_url)
         return content
 
     async def get_fid_thumb(self, fid: str) -> dict:
@@ -185,7 +189,7 @@ class SeaweedsService:
         result: dict = await self.click_repo.get_by_ids('fid', fids, ['fid', 'fid_thumb'])
         return result
 
-    async def get_thumb_by_fid(self, fid: str) -> dict:
+    async def get_thumb_by_fid(self, fid: str) -> bytes:
         """
         получение thumbnail
         """
@@ -193,7 +197,7 @@ class SeaweedsService:
         result: dict = await self.click_repo.get_by_id('fid', fid, ['fid', 'fid_thumb'])
         fid_thumb = result.get('fid_thumb')
         # 2. получение изображения
-        result = await self.get_image(fid_thumb)
+        result: bytes = await self.get_image(fid_thumb)
         return result
 
     async def search_fid_by_tag(self, tag_value: str) -> dict:
@@ -296,23 +300,15 @@ class SeaweedsService:
         """
         # from app.core.utils.common_utils import jprint
         # 1. обработка (удаление фона, уменьшение размера, создание thumbnail, получение метаданных)
-        logger.warning('-------0---------')
         match type:
             case 1:
-                logger.warning('-------0.1---------')
                 full_data, thumb_data, meta_data = image_aligning(content)
             case _:
-                logger.warning('-------0.2---------')
                 full_data, thumb_data, meta_data = process_image_to_webp(
                     content=content, remove_bg=True, max_size_kb=100, thumb_size=150
                 )
         if fu:
-            logger.warning('-------1.1---------')
             content: bytes = full_data
         else:
-            logger.warning('-------1.2.---------')
             content: bytes = thumb_data
-        logger.warning(f'{len(full_data)=}, {len(thumb_data)=}')
-        header = generate_image_headers(content)
-        logger.warning(f'-------{len(content)=}-----')
-        return content, header
+        return content
