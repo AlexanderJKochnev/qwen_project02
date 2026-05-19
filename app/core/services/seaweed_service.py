@@ -15,7 +15,7 @@
 
 """
 import aiohttp
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from aiohttp.client_exceptions import ClientResponseError
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.models.base_model import get_model_by_name
@@ -117,7 +117,7 @@ class SeaweedsService:
         # 1. поиск в clickhouse by fid
         response: dict = await self.click_repo.get_by_id('fid', fid)
         if not response:
-            raise ClientResponseError(status=400, message=f"Record with id '{fid}' not Found")
+            raise HTTPException(status_code=404, detail=f"Record with id '{fid}' not Found")
         logger.warning(f'1==={response=}')
         # 2. получение fid_thumb
         fid_thumb = response.get('fid_thumb')
