@@ -23,7 +23,7 @@ from app.core.utils.hashes import FastImageHasher
 from app.core.config.database.seaweed_async import SeaweedFSManager, get_swfs
 from app.core.config.project_config import settings
 from app.core.repositories.seaweed_repository import SeaweedRepository
-from app.core.utils.headers import generate_image_headers
+# from app.core.utils.headers import generate_image_headers
 from app.core.utils.image_processor import ImageProcessingConfig, ImageProcessor
 from app.core.utils.image_utils import image_aligning
 from app.core.utils.image_webp import process_image_to_webp
@@ -49,7 +49,7 @@ class SeaweedsService:
                 'fid_thumb': fid_thumb,
                 'size_bytes': len(full_data),
                 'thumb_size_bytes': len(thumb_data),
-                'tag': description,
+                'tags': description,
                 'data_hash': data_hash,
                 'table_name': table_name,
                 'mime_type': mime_type
@@ -69,7 +69,7 @@ class SeaweedsService:
             5. возврат content + fid
         """
         # 1. делаем хэш исходного изображения
-        meta, full_data, thum_data = None, None, None
+        meta, full_data, thumb_data = None, None, None
         source_hash = FastImageHasher.xxhash64(content)
         # 2. Ищем в clickhouse
         result: dict = await self.click_repo.get_by_id('data_hash', source_hash, ['fid', 'fid_thumb'],
@@ -79,19 +79,19 @@ class SeaweedsService:
             fid_thumb = result.get('fid_thumb')
             if content_include == 1:
                 full_data: bytes = await self.seaweed_repo.get_by_fid(fid, self.fs)
-            elif content_include ==2:
+            elif content_include == 2:
                 thumb_data: bytes = await self.seaweed_repo.get_by_fid(fid_thumb, self.fs)
         else:   # данных нет - обрабатываем изображение
             config_fast = ImageProcessingConfig(**settings.imageprocessing_config)
             processor_fast = ImageProcessor(config_fast)
-            full_data, thumb_data, meta_data = await processor_fast.process_single(content, remove_bg = True)
+            full_data, thumb_data, meta_data = await processor_fast.process_single(content, remove_bg=True)
             fid = await self.fs.upload(full_data)
             fid_thumb = await self.fs.upload(thumb_data)
             meta = self.make_meta(fid, fid_thumb, full_data, thumb_data, description, source_hash, table,
                                   meta_data.get('full_mime_type'))
             await self.click_repo.create(meta)
         # 5. результат {fid: str, url: str}
-        
+
         match content_include:
             case 0:
                 result = meta
