@@ -5,7 +5,7 @@
 import asyncio
 import io
 import gc
-import logging
+import threading
 import os
 import random
 from typing import Tuple, Optional, List, Dict, Any
@@ -95,6 +95,7 @@ class ImageProcessor:
         self._rembg_session = None
         self._executor = ThreadPoolExecutor(max_workers=self.config.max_workers)
         self._batch_counter = 0
+        self._rembg_lock = threading.Lock()
 
         # Устанавливаем детерминированные настройки (если включено)
         if self.config.deterministic_mode:
@@ -103,7 +104,7 @@ class ImageProcessor:
             self._setup_performance_environment()
 
         # Загружаем сессию rembg с соответствующими настройками
-        self._init_rembg_session()
+        self._get_rembg_session()
 
         mode_str = "детерминированный" if self.config.deterministic_mode else "производительный"
         logger.info(
@@ -501,7 +502,7 @@ class ImageProcessor:
 
         self.config.deterministic_mode = deterministic
         # Перезагружаем сессию с новыми настройками
-        self._init_rembg_session()
+        self._get_rembg_session()
 
         mode_str = "детерминированный" if deterministic else "производительный"
         logger.info(f"Переключен режим: {mode_str}, threads={self.config.rembg_num_threads}")
