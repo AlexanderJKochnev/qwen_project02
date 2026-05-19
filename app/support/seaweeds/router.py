@@ -3,7 +3,7 @@ from fastapi import File, HTTPException, Query, UploadFile
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
-from app.core.utils.io_utils import ResponseStreaming
+from app.core.utils.io_utils import ResponseJust, ResponseStreaming
 from app.core.config.database.db_async import get_db
 from app.auth.dependencies import get_active_user_or_internal
 from app.core.services.seaweed_service import SeaweedsService
@@ -143,7 +143,7 @@ class SeaweedsRouter:
         получение изображения по fid напрямую из seaweed
         """
         image_data: bytes = await service.get_direct_image(fid)
-        return ResponseStreaming(image_data)
+        return ResponseJust(image_data)
 
     async def search_by_tag(self, tag_value: str, service: SeaweedsService = Depends()):
         """

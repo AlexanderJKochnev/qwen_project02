@@ -2,6 +2,7 @@
 from pathlib import Path
 import json
 from typing import List
+from loguru import logger  # noqa: F401
 from app.core.utils.common_utils import enum_to_camel
 from app.core.config.project_config import get_path_to_root, settings
 from fastapi.responses import Response, StreamingResponse
@@ -96,6 +97,7 @@ def get_filepath_from_dir_by_name(filename: str = None, upload_dir: str = None) 
 def ResponseStreaming(content: bytes, **kwargs):
     # media_type, content_type, mime_type
     headers = generate_image_headers(content, **kwargs)
+    logger.info(f'{len(content)=}')
     return StreamingResponse(
         BytesIO(content),
         media_type=headers.get("Content-Type"),
@@ -106,6 +108,7 @@ def ResponseStreaming(content: bytes, **kwargs):
 def ResponseJust(content: bytes):
     # media_type, content_type, mime_type
     headers = generate_image_headers(content)
+    logger.info(f'{len(content)=}')
     return Response(content=content,
                     media_type=headers.get("Content-Type"),
                     headers=headers)
