@@ -164,7 +164,8 @@ class SeaweedsService:
         """
         image_url = settings.seaweed_url
         async with aiohttp.ClientSession() as client:
-            content: bytes = await client.get(image_url)
+            async with client.get(image_url) as response:
+                content: bytes = await response.read()
         return content
 
     async def get_fid_thumb(self, fid: str) -> dict:

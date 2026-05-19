@@ -93,9 +93,9 @@ def get_filepath_from_dir_by_name(filename: str = None, upload_dir: str = None) 
         raise Exception(f'file {filename} is not exists in {upload_dir}')
 
 
-def ResponseStreaming(content: bytes):
+def ResponseStreaming(content: bytes, **kwargs):
     # media_type, content_type, mime_type
-    headers = generate_image_headers(content)
+    headers = generate_image_headers(content, **kwargs)
     return StreamingResponse(
         BytesIO(content),
         media_type=headers.get("Content-Type"),
