@@ -332,10 +332,9 @@ class SeaweedsService:
                     webp_quality=quality, deterministic_mode=False,  # Отключаем детерминизм
                     rembg_num_threads_fast=4, rembg_model="u2net"
                 )
-                config_fast = ImageProcessingConfig(**settings.imageprocessing_config)
                 processor_fast = ImageProcessor(config_fast)
                 full_data, thumb_data, meta_data = await processor_fast.process_single(content, remove_bg=True)
-            case _:  # WEBP LOSSY BATCH
+            case 5:  # WEBP LOSSY BATCH
                 config_fast = ImageProcessingConfig(**settings.imageprocessing_config)
                 """"
                 config_fast = ImageProcessingConfig(
@@ -356,6 +355,12 @@ class SeaweedsService:
                 jprint(tmp)
                 logger.warning('-------------------------')
                 full_data, thumb_data, meta_data = result[-1]
+            case _:  # WEBP LOSSY
+                config_fast = ImageProcessingConfig(**settings.imageprocessing_config)
+                from app.core.utils.common_utils import jprint
+                jprint(settings.imageprocessing_config)
+                processor_fast = ImageProcessor(config_fast)
+                full_data, thumb_data, meta_data = await processor_fast.process_single(content, remove_bg=True)
         if fu:
             content: bytes = full_data
         else:
