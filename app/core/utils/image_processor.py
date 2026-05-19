@@ -14,12 +14,11 @@ from dataclasses import dataclass
 from PIL import Image, ImageOps
 import numpy as np
 import onnxruntime as ort
+from loguru import logger
 
 
 # Импортируем rembg на уровне модуля
 from rembg import remove, new_session
-
-logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -146,6 +145,7 @@ class ImageProcessor:
         Инициализация сессии ONNX Runtime для rembg
         """
         # Настройка ONNX Runtime
+        MODEL_PATH = "/root/.u2net/u2net.onnx"
         opts = ort.SessionOptions()
         opts.intra_op_num_threads = self.config.rembg_num_threads
         opts.inter_op_num_threads = self.config.rembg_num_threads
@@ -166,22 +166,15 @@ class ImageProcessor:
             logger.debug(f"ONNX Runtime: производительный режим, threads={self.config.rembg_num_threads}")
 
         try:
-            self._rembg_session = new_session(
-                model_name=self.config.rembg_model, providers=["CPUExecutionProvider"], sess_opts=opts
+            # Прямая загрузка из локального файла - без интернета!
+            self._rembg_session = ort.InferenceSession(
+                MODEL_PATH, sess_opts=opts, providers=["CPUExecutionProvider"]
             )
-            logger.info(f"Модель rembg загружена: {self.config.rembg_model}")
+            logger.info(f"Модель загружена из {MODEL_PATH}")
         except Exception as e:
-            logger.error(f"Ошибка загрузки модели {self.config.rembg_model}: {e}")
-            # Пробуем загрузить стандартную модель
-            try:
-                logger.warning("Пробуем загрузить стандартную модель u2net")
-                self._rembg_session = new_session(
-                    model_name="u2net", providers=["CPUExecutionProvider"], sess_opts=opts
-                )
-                logger.info("Стандартная модель u2net загружена")
-            except Exception as e2:
-                logger.error(f"Не удалось загрузить ни одну модель: {e2}")
-                self._rembg_session = None
+            logger.error(f"Ошибка загрузки модели из {MODEL_PATH}: {e}")
+            logger.error("Убедитесь, что файл модели есть по этому пути")
+            self._rembg_session = None
 
     # ==================== ПУБЛИЧНЫЕ МЕТОДЫ ====================
 

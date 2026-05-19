@@ -105,7 +105,7 @@ services:
       # llm models
       # - ${BIND_VOLUMES}/distill/models:/app/models
       # - ${BIND_VOLUMES}/distill/onnx:/app/onnx
-      - ./onnx:/app/onnx
+      - ${BIND_VOLUMES}/onnx:/root/.u2net:ro
     ulimits:
       nofile:
         soft: 65535
