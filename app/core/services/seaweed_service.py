@@ -51,7 +51,7 @@ class SeaweedsService:
                 'thumb_size_bytes': len(thumb_data),
                 'tags': description,
                 'data_hash': data_hash,
-                'table_name': table_name,
+                'table': table_name,
                 'mime_type': mime_type
                 }
 
