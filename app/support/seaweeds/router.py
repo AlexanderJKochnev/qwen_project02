@@ -185,10 +185,7 @@ class SeaweedsRouter:
         """
              загрузка обработка и возврат изображеня БЕЗ сохранения - для оценки качества обработки
         """
-        try:
-            content = await file.read()
-            image_data, headers = await service.test_create_img(content, description, type, full)
-            return ResponseStreaming(image_data, **headers)
-        except Exception as e:
-            logger.error(e)
-            raise HTTPException(status_code=500, detail=e)
+        content = await file.read()
+        original_size = len(content)
+        image_data, headers = await service.test_create_img(content, description, type, full)
+        return ResponseStreaming(image_data, source_siz=original_size)
