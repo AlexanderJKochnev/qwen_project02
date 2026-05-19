@@ -162,7 +162,7 @@ class SeaweedsService:
         """
             получение изображения по fid (любого)
         """
-        image_url = settings.seaweed_url
+        image_url = f'{settings.seaweed_url}/{fid}'
         logger.info(f'{image_url=}')
         async with aiohttp.ClientSession() as client:
             async with client.get(image_url) as response:
