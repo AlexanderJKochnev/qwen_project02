@@ -187,5 +187,5 @@ class SeaweedsRouter:
         """
         content = await file.read()
         original_size = len(content)
-        image_data, headers = await service.test_create_img(content, description, type, full)
-        return ResponseStreaming(image_data, source_siz=original_size)
+        image_data = await service.test_create_img(content, description, type, full)
+        return ResponseStreaming(image_data, source_size=original_size)
