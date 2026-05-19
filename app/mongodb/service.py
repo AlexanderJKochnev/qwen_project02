@@ -269,12 +269,6 @@ class ThumbnailImageService:
             )
         result = await self.image_repository.create_image(filename, content, content_type, description)
         result['filename'] = filename
-        """
-            {"id": str,
-             "has_thumbnail": bool,
-             "filename": str
-             }
-        """
         return filename, result.get('id'), content
 
     async def delete_image(self,

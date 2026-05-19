@@ -98,7 +98,7 @@ class SeaweedsService:
             logger.warning(f'0.2 {fid=} {fid_thumb} {source_hash}')
         match content_include:
             case 0:
-                result = meta
+                result = meta, None
             case 1:
                 result = meta, full_data
             case _:

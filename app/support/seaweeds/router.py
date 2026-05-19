@@ -87,8 +87,13 @@ class SeaweedsRouter:
                          service: SeaweedsService = Depends()):
         try:
             content = await file.read()
-            response: dict = await service.create_img(content, description, table_name, content)
-            return response
+            # response: (meta, content | None)
+            meta, content = await service.create_img(content, description, table_name, content)
+            if content:
+                kwargs = {key: val for key, val in meta.items() if key in ('fid', 'fid_thumb')}
+                return ResponseStreaming(content, **kwargs)
+            else:
+                return meta
         except Exception as e:
             logger.error(e)
             raise HTTPException(status_code=500, detail=e)
