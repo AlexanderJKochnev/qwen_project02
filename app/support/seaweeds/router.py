@@ -194,8 +194,8 @@ class SeaweedsRouter:
         """
         from app.core.utils.hashes import FastImageHasher
         content = await file.read()
+        source_hash = FastImageHasher.xxhash64(content)
         original_size = len(content)
         logger.info(f'{original_size=}')
         image_data = await service.test_create_img(content, dimension, size, type, quality, full)
-        xxh = FastImageHasher.xxhash64(image_data)
-        return ResponseStreaming(image_data, source_size=original_size, xxhash=xxh)
+        return ResponseStreaming(image_data, source_size=original_size, xxhash=source_hash)

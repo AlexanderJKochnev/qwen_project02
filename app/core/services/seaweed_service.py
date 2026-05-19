@@ -19,6 +19,7 @@ from fastapi import Depends
 from aiohttp.client_exceptions import ClientResponseError
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.models.base_model import get_model_by_name
+from app.core.utils.common_utils import get_random_string
 from app.core.utils.hashes import FastImageHasher
 from app.core.config.database.seaweed_async import SeaweedFSManager, get_swfs
 from app.core.config.project_config import settings
@@ -85,13 +86,16 @@ class SeaweedsService:
             config_fast = ImageProcessingConfig(**settings.imageprocessing_config)
             processor_fast = ImageProcessor(config_fast)
             full_data, thumb_data, meta_data = await processor_fast.process_single(content, remove_bg=True)
-            fid = await self.fs.upload(full_data)
-            fid_thumb = await self.fs.upload(thumb_data)
+            # fid = await self.fs.upload(full_data)
+            # fid_thumb = await self.fs.upload(thumb_data)
+            fid, fid_thumb = get_random_string(12), get_random_string(12)
+            logger.warning(f'0.0 {fid=} {fid_thumb} {source_hash=}')
             meta = self.make_meta(fid, fid_thumb, full_data, thumb_data, description, source_hash, table,
                                   meta_data.get('full_mime_type'))
+            logger.warning(f'0.1 {fid=} {fid_thumb} {source_hash=}')
             await self.click_repo.create(meta)
         # 5. результат {fid: str, url: str}
-
+            logger.warning(f'0.2 {fid=} {fid_thumb} {source_hash}')
         match content_include:
             case 0:
                 result = meta
@@ -99,6 +103,7 @@ class SeaweedsService:
                 result = meta, full_data
             case _:
                 result = meta, thumb_data
+        logger.warning(f'{source_hash=}')
         return result
 
     async def delete_img(self, fid: str, table: str):
@@ -327,6 +332,7 @@ class SeaweedsService:
                     webp_quality=quality, deterministic_mode=False,  # Отключаем детерминизм
                     rembg_num_threads_fast=4, rembg_model="u2net"
                 )
+                config_fast = ImageProcessingConfig(**settings.imageprocessing_config)
                 processor_fast = ImageProcessor(config_fast)
                 full_data, thumb_data, meta_data = await processor_fast.process_single(content, remove_bg=True)
             case _:  # WEBP LOSSY BATCH
