@@ -57,9 +57,13 @@ class SeaweedsService:
             4. сохранение метаданных в clickhouse (fid thumbnail и full fid в одной записи)
             5. возврат content + fid
         """
-        # from app.core.utils.common_utils import jprint
-        # 1. обработка (удаление фона, уменьшение размера, создание thumbnail, получение метаданных)
-        # full_data, thumb_data, meta_data = image_aligning(content)
+        # 1. делаем хэш исходного изображения
+        source_hash = FastImageHasher.xxhash64(content)
+        # 2. Ищем в clickhouse
+        result: dict = await self.click_repo.get_by_id('data_hash', source_hash, ['fid', 'fid_thumb'],
+                                                       'inserted_at DESC')
+        if result:  # данные уже есть, если то обработку пропускаем
+            pass
         full_data, thumb_data, meta_data = process_image_to_webp(
             content=content, remove_bg=True, max_size_kb=100, thumb_size=150
         )
@@ -328,12 +332,15 @@ class SeaweedsService:
                 processor_fast = ImageProcessor(config_fast)
                 full_data, thumb_data, meta_data = await processor_fast.process_single(content, remove_bg=True)
             case _:  # WEBP LOSSY BATCH
+                config_fast = ImageProcessingConfig(**settings.imageprocessing_config)
+                """"
                 config_fast = ImageProcessingConfig(
                     max_full_width=dim, max_full_height=dim, max_thumb_width=200, max_thumb_height=200,
                     webp_lossless=False,  # Lossy для скорости и размера
                     webp_quality=quality, deterministic_mode=False,  # Отключаем детерминизм
                     rembg_num_threads_fast=4, rembg_model="u2net"
                 )
+                """
                 processor_fast = ImageProcessor(config_fast)
                 contents = [content] * 10
                 # full_data, thumb_data, meta_data

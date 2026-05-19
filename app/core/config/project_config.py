@@ -245,6 +245,17 @@ class Settings(BaseSettings):
     SEAWEED_CONTAINER: str = 'seaweedfs_volume'
     SEAWEED_PORT: str = '8080'
 
+    # === IMAGE PROCESSING CONFIG ===
+    MAX_FULL_WIDTH: int = 1000
+    MAX_FULL_HEIGHT: int = 1000
+    MAX_THUMB_WIDTH: int = 200
+    MAX_THUMB_HEIGHT: int = 200
+    WEBP_LOSSLESS: bool = 0
+    WEBP_QUALITY: int = 85
+    DETERMINISTIC_MODE: bool = 0
+    REMBG_NUM_TREADS_FAST: int = 4
+    REMBG_MODEL: str = "u2net"
+
     model_config = SettingsConfigDict(env_file=get_path_to_root(),
                                       env_file_encoding='utf-8',
                                       extra='ignore')
@@ -343,6 +354,18 @@ class Settings(BaseSettings):
                 f"{self.MONGO_INITDB_ROOT_PASSWORD}@{self.MONGO_HOSTNAME}:"
                 f"{self.MONGO_INN_PORT}")  # {self.MONGO_INITDB_DATABASE}")
 
+    @property
+    def imageprocessing_config(self) -> dict:
+        return {'max_full_width': self.MAX_FULL_WIDTH,
+                'max_full_height': self.MAX_FULL_HEIGHT,
+                'max_thumb_width': self.MAX_THUMB_WIDTH,
+                'max_thumb_height': self.MAX_FULL_HEIGHT,
+                'webp_lossless': self.WEBP_LOSSLESS,  # Lossy для скорости и размера
+                'webp_quality': self.WEBP_QUALITY,
+                'deterministic_mode': self.DETERMINISTIC_MODE,  # Отключаем детерминизм
+                'rembg_num_threads_fast': self.REMBG_NUM_TREADS_FAST,
+                'rembg_model': self.REMBG_MODEL
+                }
 
 settings = Settings()
 
