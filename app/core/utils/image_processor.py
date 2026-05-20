@@ -8,12 +8,12 @@ import gc
 import threading
 import os
 import random
-from typing import Tuple, Optional, List, Dict, Any
+from typing import Tuple, List, Dict, Any
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from PIL import Image, ImageOps
 import numpy as np
-import onnxruntime as ort
+# import onnxruntime as ort
 from loguru import logger
 
 
@@ -34,9 +34,9 @@ class ImageProcessingConfig:
 
     # WebP настройки
     webp_lossless: bool = True
-    webp_quality: int = 85  # Для lossy режима (1-100)
+    webp_quality: int = 100  # Для lossy режима (1-100)
     webp_method: int = 6  # 0-6, 6 = максимальное сжатие
-    webp_alpha_quality: int = 90  # Качество альфа-канала (0-100)
+    webp_alpha_quality: int = webp_quality - 10  # Качество альфа-канала (0-100)
     webp_exact: bool = True  # Бит-ту-бит сохранение
 
     # Настройки прозрачности

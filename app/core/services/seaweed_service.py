@@ -57,7 +57,7 @@ class SeaweedsService:
                 }
 
     async def image_processing(self, content, type: int):
-        """ обработка изображения """
+        """ обработка изображения разными способами """
         dim, size, quality = settings.MAX_FULL_HEIGHT, settings.MAX_FILE_SIZE, settings.WEBP_QUALITY
         match type:
             case 1:  # PNG
@@ -105,15 +105,18 @@ class SeaweedsService:
         ntcn
         """
         full_data, thumb_data, meta_data = await self.image_processing(content, processor_type)
+        logger.warning(f'{len()}')
         source_hash = FastImageHasher.xxhash64(content)
         logger.warning(f'{source_hash=}')
         match content_include:
             case 0:
-                return {'test': source_hash}, full_data
+                result = {'test': source_hash}, full_data
             case 1:
-                return {'test': source_hash}, full_data
-            case 2:
-                return {'test': source_hash}, thumb_data
+                result = {'test': source_hash}, full_data
+            case _:
+                result = {'test': source_hash}, thumb_data
+        logger.warning(f'{type(result)=}, {len(result)=}')
+        return result
 
     async def create_img(self, content: bytes, description: str, table: str,
                          content_include: int = 0) -> dict | tuple:
