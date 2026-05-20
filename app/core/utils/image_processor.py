@@ -30,17 +30,17 @@ class ImageProcessingConfig:
     max_full_height: int = 1200
     max_thumb_width: int = 150
     max_thumb_height: int = 150
-    max_file_size_bytes: int = 100 * 1024  # 100 KB
+    max_file_size_bytes: int = 2 * 100 * 1024  # 100 KB
 
     # WebP настройки
     webp_lossless: bool = True
     webp_quality: int = 100  # Для lossy режима (1-100)
     webp_method: int = 6  # 0-6, 6 = максимальное сжатие
-    webp_alpha_quality: int = webp_quality - 10  # Качество альфа-канала (0-100)
+    webp_alpha_quality: int = webp_quality - 5  # Качество альфа-канала (0-100)
     webp_exact: bool = True  # Бит-ту-бит сохранение
 
     # Настройки прозрачности
-    alpha_threshold: int = 128  # Бинаризация альфа-канала (0-255)
+    alpha_threshold: int = 50  # Бинаризация альфа-канала (0-255)
     margin_pct: float = 0.05  # Отступ при кропе
 
     # U²-Net настройки

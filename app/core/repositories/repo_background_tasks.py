@@ -429,10 +429,10 @@ class Background:
                         # full_data, thumb_data, meta_data
                         result = await processor_fast.process_batch(contents, remove_bg=True)
                         for id, source_len, tag, (full_data, thumb_data, meta) in zip(ids, len_contents, tags, result):
-                            print(f'======{id=}, {source_len=}, {len(full_data)=}, {len(thumb_data)=}, {tag[0:10]}')
+                            logger.info(f'======{id=}, {source_len=}, {len(full_data)=}, {len(thumb_data)=},'
+                                        f' {tag[0:10]}')
                         len_contents, ids, tags, result, contents = [], [], [], [], []
-                        print('---------------------------------------')
-                    logger.warning(f'{id=} {len(content)=}')
+                        logger.info('---------------------------------------')
                 await session.commit()
                 logger.success(f"✅ Синхронизация завершена: {task_name}, обновлено записей")
             except Exception as e:
