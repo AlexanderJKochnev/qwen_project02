@@ -89,7 +89,7 @@ class SeaweedsRouter:
         try:
             content = await file.read()
             # response: (meta, content | None)
-            meta, content = await service.create_img2(content, description, table_name, content_type, processor_type)
+            meta, content = await service.create_img(content, description, table_name, content_type, processor_type)
             if content:
                 kwargs = {key: val for key, val in meta.items() if key in ('fid', 'fid_thumb')}
                 if isinstance(content, list):

@@ -100,7 +100,8 @@ class SeaweedsService:
                 return await processor_fast.process_single(content, remove_bg=True)
 
     async def create_img2(self, content: bytes, description: str, table: str,
-                          content_include: int = 0, processor_type: int = 4) -> dict | tuple:
+                          content_include: int = 0, processor_type: int = 4,
+                          ) -> dict | tuple:
         """
         ntcn
         """
@@ -111,6 +112,8 @@ class SeaweedsService:
         if res:
             fid, fid_thumb = res.get('fid'), res.get('fid_thumb')
 
+        else:
+            pass
         full_data, thumb_data, meta_data = await self.image_processing(content, processor_type)
         logger.warning(f'{source_hash=}')
         match content_include:
@@ -124,7 +127,7 @@ class SeaweedsService:
         return result
 
     async def create_img(self, content: bytes, description: str, table: str,
-                         content_include: int = 0) -> dict | tuple:
+                         content_include: int = 0, processor_type: int = 4) -> dict | tuple:
         """
             content: изображение в байтах
             description: описание
