@@ -93,15 +93,9 @@ class SeaweedsService:
                 contents = [content] * 10
                 result = await processor_fast.process_batch(contents, remove_bg=True)
                 # compaire results
-                xxh = FastImageHasher.xxhash64
-                tmp = [(xxh(fd), xxh(td), len(fd), len(td)) for fd, td, meta in result]
-                from app.core.utils.common_utils import jprint
-                jprint(tmp)
-                logger.warning('-------------------------')
-                return result
+                return result[-1]
             case _:  # WEBP LOSSY
                 config_fast = ImageProcessingConfig(**settings.imageprocessing_config)
-                from app.core.utils.common_utils import jprint
                 processor_fast = ImageProcessor(config_fast)
                 return await processor_fast.process_single(content, remove_bg=True)
 
@@ -113,7 +107,13 @@ class SeaweedsService:
         full_data, thumb_data, meta_data = await self.image_processing(content, processor_type)
         source_hash = FastImageHasher.xxhash64(content)
         logger.warning(f'{source_hash=}')
-        return {'test': source_hash}, full_data
+        match content_include:
+            case 0:
+                return {'test': source_hash}, full_data
+            case 1:
+                return {'test': source_hash}, full_data
+            case 2:
+                return {'test': source_hash}, thumb_data
 
     async def create_img(self, content: bytes, description: str, table: str,
                          content_include: int = 0) -> dict | tuple:
@@ -413,7 +413,6 @@ class SeaweedsService:
                 # compaire results
                 xxh = FastImageHasher.xxhash64
                 tmp = [(xxh(fd), xxh(td), len(fd), len(td)) for fd, td, meta in result]
-                from app.core.utils.common_utils import jprint
                 jprint(tmp)
                 logger.warning('-------------------------')
                 full_data, thumb_data, meta_data = result[-1]
