@@ -417,7 +417,8 @@ class Background:
                 source_data = [(a.id, a.image_id, a.concat) for a in response]
                 for id, image_id, tag in source_data:
                     content: bytes = await image_service.get_full_image(image_id)
-                    if result := cls.hash_exists(content, click_repo):
+                    result = await cls.hash_exists(content, click_repo):
+                    if result:
                         # message is available (defined by orinal image hash)
                         final_result[id] = result
                     contents.append(content)
@@ -428,7 +429,7 @@ class Background:
                         # full_data, thumb_data, meta_data
                         result = await processor_fast.process_batch(contents, remove_bg=True)
                         for id, source_len, tag, (full_data, thumb_data, meta) in zip(ids, len_contents, tags, result):
-                            print(f'======{id=}, {source_len=}, {len(full_data)=}, {len(thumb_data)=}, {tag[1:10]}')
+                            print(f'======{id=}, {source_len=}, {len(full_data)=}, {len(thumb_data)=}, {tag[0:10]}')
                         len_contents, ids, tags, result, contents = [], [], [], [], []
                         print('---------------------------------------')
                     logger.warning(f'{id=} {len(content)=}')
@@ -438,7 +439,7 @@ class Background:
                 await session.rollback()
                 logger.error(f"❌ Ошибка синхронизации {task_name}: {e}")
                 raise
-    
+
     @classmethod
     async def hash_exists(cls, content: bytes, click_repo) -> tuple:
         """
