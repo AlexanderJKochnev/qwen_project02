@@ -4,10 +4,13 @@ from typing import Any, Optional, Dict
 from loguru import logger
 from sqlalchemy import inspect, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.config.project_config import settings
 from app.core.hash_norm import get_word_hashes_dict
 from app.core.models.base_model import get_model_by_name
 from app.core.utils.backgound_tasks import background_unique
-from app.core.utils.pydantic_utils import get_repo
+from app.core.utils.hashes import FastImageHasher
+from app.core.utils.image_processor import ImageProcessingConfig, ImageProcessor
 from app.core.utils.reindexation import extract_text_optimized  # , extract_text_ultra_fast
 from app.mongodb.service import ThumbnailImageService
 
@@ -386,14 +389,22 @@ class Background:
     @classmethod
     @background_unique
     async def run_mongo_to_seaweed(
-            cls, repository, model, image_service: ThumbnailImageService, session_factory):
+            cls, repository, model, image_service: ThumbnailImageService,
+            click_repo, fs,
+            session_factory):
         """
             запуск переноса изображений из mongodb в seaweed)
         """
         task_name = 'import_mongo_to_seaweed'
         logger.info(f"🚀 Начало фоновой синхронизации: {task_name}")
-        result: dict = {}
-        # contents: dict = {}
+        final_result: dict = {}
+        contents: list = []
+        len_contents: list = []
+        ids: list = []
+        tags: list = []
+        interim: dict = {}
+        config_fast = ImageProcessingConfig(**settings.imageprocessing_config)
+        processor_fast = ImageProcessor(config_fast)
         async with session_factory() as session:
             try:
                 response = await repository.get_item_drink(session)
@@ -403,8 +414,23 @@ class Background:
                 logger.info(f"📊 Найдено {len(response)} записей для обработки")
                 if not response:
                     return None
-                for id, image_id, description in ((a.id, a.image_id, a.concat) for a in response):
+                source_data = [(a.id, a.image_id, a.concat) for a in response]
+                for id, image_id, tag in source_data:
                     content: bytes = await image_service.get_full_image(image_id)
+                    if result := cls.hash_exists(content, click_repo):
+                        # message is available (defined by orinal image hash)
+                        final_result[id] = result
+                    contents.append(content)
+                    len_contents.append(len(content))
+                    ids.append(id)
+                    tags.append(tag)
+                    if len(contents) >= 10:
+                        # full_data, thumb_data, meta_data
+                        result = await processor_fast.process_batch(contents, remove_bg=True)
+                        for id, source_len, tag, (full_data, thumb_data, meta) in zip(ids, len_contents, tags, result):
+                            print(f'{id}, {source_len}, {len(full_data)}, {len(thumb_data)}, tag[1:10]')
+                        len_contents, ids, tags, result, content = [], [], [], [], []
+                        print('---------------------------------------')
                     logger.warning(f'{id=} {len(content)=}')
                 await session.commit()
                 logger.success(f"✅ Синхронизация завершена: {task_name}, обновлено записей")
@@ -412,3 +438,17 @@ class Background:
                 await session.rollback()
                 logger.error(f"❌ Ошибка синхронизации {task_name}: {e}")
                 raise
+    
+    @classmethod
+    async def hash_exists(cls, content: bytes, click_repo) -> tuple:
+        """
+            проверка - существует ли уже изображение если до возвращает fis fid_thumb
+        """
+        source_hash = FastImageHasher.xxhash64(content)
+        res: dict = await click_repo.get_by_id(
+            'data_hash', source_hash, ['fid', 'fid_thumb', 'tags']
+        )
+        if res:  # изображение с этим хэшем уже есть - просто возвращаем его без создания нового
+            fid, fid_thumb, tags = res.values()
+            return fid, fid_thumb
+        return None

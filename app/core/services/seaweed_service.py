@@ -438,6 +438,8 @@ class SeaweedsService:
         await repository.run_mongo_to_seaweed(
             repository=repository, model=model,
             image_service=image_service,
+            click_repo=self.click_repo,
+            fs=self.fs,
             session_factory=DatabaseManager.session_maker,
             background_tasks=background_tasks
         )
