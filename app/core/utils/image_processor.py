@@ -421,36 +421,31 @@ class ImageProcessor:
         return buf.getvalue()
 
     async def _create_thumbnail(self, image: Image.Image) -> bytes:
-        """Создание thumbnail"""
+        """Thumbnail в JPEG (без прозрачности)"""
         loop = asyncio.get_event_loop()
 
         def _create():
-            thumb = image.copy()
+            # Конвертируем в RGB с белым фоном
+            if image.mode == 'RGBA':
+                bg = Image.new('RGB', image.size, (255, 255, 255))
+                bg.paste(image, mask=image.split()[-1])
+                img = bg
+            else:
+                img = image.convert('RGB')
 
-            # Приводим к RGBA
-            if thumb.mode != 'RGBA':
-                thumb = thumb.convert('RGBA')
-
-            # Ресайз с сохранением пропорций
-            thumb.thumbnail(
+            # Ресайз
+            img.thumbnail(
                 (self.config.max_thumb_width, self.config.max_thumb_height), Image.Resampling.LANCZOS
             )
 
-            # Квадратный канвас
-            square = Image.new(
-                'RGBA', (self.config.max_thumb_width, self.config.max_thumb_height), (0, 0, 0, 0)
-            )
-            x = (self.config.max_thumb_width - thumb.width) // 2
-            y = (self.config.max_thumb_height - thumb.height) // 2
-            square.paste(thumb, (x, y))
+            # Квадрат
+            square = Image.new('RGB', (self.config.max_thumb_width, self.config.max_thumb_height), (255, 255, 255))
+            x = (self.config.max_thumb_width - img.width) // 2
+            y = (self.config.max_thumb_height - img.height) // 2
+            square.paste(img, (x, y))
 
-            # Для thumbnail всегда используем WebP lossless (максимум качества)
             buf = io.BytesIO()
-            square.save(
-                buf, format='WEBP', lossless=True, method=min(4, self.config.webp_method), exact=True,
-                alpha_quality=self.config.webp_alpha_quality
-            )
-
+            square.save(buf, format='JPEG', quality=85, optimize=True)
             return buf.getvalue()
 
         return await loop.run_in_executor(self._executor, _create)
