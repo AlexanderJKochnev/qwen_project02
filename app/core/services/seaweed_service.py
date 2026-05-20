@@ -15,9 +15,11 @@
 
 """
 import aiohttp
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, BackgroundTasks
 from aiohttp.client_exceptions import ClientResponseError
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.config.database.db_async import DatabaseManager
 from app.core.models.base_model import get_model_by_name
 from app.core.utils.common_utils import get_random_string, jprint
 from app.core.utils.hashes import FastImageHasher
@@ -55,6 +57,18 @@ class SeaweedsService:
                 'table': table_name,
                 'mime_type': mime_type
                 }
+
+    async def hash_exists(self, source_hash: int) -> tuple:
+        """
+            проверка - существует ли уже изображение если до возвращает fis fid_thumb
+        """
+        res: dict = await self.click_repo.get_by_id(
+            'data_hash', source_hash, ['fid', 'fid_thumb', 'tags']
+        )
+        if res:  # изображение с этим хэшем уже есть - просто возвращаем его без создания нового
+            fid, fid_thumb, tags = res.values()
+            return fid, fid_thumb
+        return None
 
     async def image_processing(self, content, type: int):
         """ обработка изображения разными способами """
@@ -143,57 +157,6 @@ class SeaweedsService:
                 result = {'test': source_hash}, full_data
             case _:
                 result = {'test': source_hash}, thumb_data
-        return result
-
-    async def create_img(self, content: bytes, description: str, table: str,
-                         content_include: int = 0, processor_type: int = 4) -> dict | tuple:
-        """
-            content: изображение в байтах
-            description: описание
-            table: для какой таблицы ?
-            сохранение изображения:
-            1. обработка (удаление фона, уменьшение размера, создание thumbnail, получение метаданных)
-            2. обработка метаданных (токенизация по шаблону clickhouse, )
-            3. сохранение 2-х файлов в seaweed, получение 2-х FID
-            4. сохранение метаданных в clickhouse (fid thumbnail и full fid в одной записи)
-            5. возврат content + fid
-        """
-        # 1. делаем хэш исходного изображения
-        meta, full_data, thumb_data = None, None, None
-        source_hash = FastImageHasher.xxhash64(content)
-        # 2. Ищем в clickhouse
-        result: dict = await self.click_repo.get_by_id('data_hash', source_hash, ['fid', 'fid_thumb'],
-                                                       'inserted_at DESC')
-        if 1 == 2:  # result:  # данные уже есть, если то обработку пропускаем
-            fid = result.get('fid')
-            fid_thumb = result.get('fid_thumb')
-            if content_include == 1:
-                full_data: bytes = await self.seaweed_repo.get_by_fid(fid, self.fs)
-            elif content_include == 2:
-                thumb_data: bytes = await self.seaweed_repo.get_by_fid(fid_thumb, self.fs)
-        else:   # данных нет - обрабатываем изображение
-            config_fast = ImageProcessingConfig(**settings.imageprocessing_config)
-            jprint(config_fast)
-            processor_fast = ImageProcessor(config_fast)
-            full_data, thumb_data, meta_data = await processor_fast.process_single(content, remove_bg=True)
-            # fid = await self.fs.upload(full_data)
-            # fid_thumb = await self.fs.upload(thumb_data)
-            fid, fid_thumb = get_random_string(12), get_random_string(12)
-            logger.warning(f'0.0 {fid=} {fid_thumb} {source_hash=}')
-            meta = self.make_meta(fid, fid_thumb, full_data, thumb_data, description, source_hash, table,
-                                  meta_data.get('full_mime_type'))
-            logger.warning(f'0.1 {fid=} {fid_thumb} {source_hash=}')
-            # await self.click_repo.create(meta)
-        # 5. результат {fid: str, url: str}
-            logger.warning(f'0.2 {fid=} {fid_thumb} {source_hash}')
-        match content_include:
-            case 0:
-                result = meta, None
-            case 1:
-                result = meta, full_data
-            case _:
-                result = meta, thumb_data
-        logger.warning(f'{source_hash=}')
         return result
 
     async def delete_img(self, fid: str, table: str):
@@ -323,29 +286,37 @@ class SeaweedsService:
         result = await self.get_image(fid)
         return result
 
-    async def get_items_pairs(self, session: AsyncSession, image_service: ThumbnailImageService):
+    async def transfer_tierX(self, batch: int, background_tasks: BackgroundTasks, session: AsyncSession,
+                             image_service: ThumbnailImageService):
         """
             перенос mongodb -> seaweed
             запускать только ОДИН РАЗ
         """
-        # 0. получение списка из items
+        # 0. объявляем переменные
         repository = get_repo('Item')
         model = get_model_by_name('Item')
-        response = await repository.get_item_drink(session)
-        cycle = ((a.id, a.image_id, a.concat) for a in response)
         result: dict = {}
-        for id, image_id, description in cycle:
-            #  print(f'{id=}, {image_id=}, {context=}')
-            """
-                {"content": image_data["content"],
-                 "filename": image_data["filename"],
-                 "content_type": image_data.get("content_type", "image/png"),
-                 "from_cache": False}
-            """
+        contents: dict = {}
+        # 1. получение списка из items
+        response = await repository.get_item_drink(session)
+        if not response:
+            return None
+        for id, image_id, description in ((a.id, a.image_id, a.concat) for a in response):
             # 1. получениие полного изображения из mongodb
             image_dict = await image_service.get_full_image(image_id)
             content: bytes = image_dict["content"]
-            # 2. обработка и загрузка полученного изображения
+            logger.warning(f'{id=} {len(content)=}')
+            # 0. get hash
+            source_hash = FastImageHasher.xxhash64(content)
+            # 1. find by hash
+            res = await self.hash_exists(source_hash)
+            if res:  # изображение с этим хэшем уже есть - просто возвращаем его без создания нового
+                result['id'] = res
+            # 2. изображение новое - копим
+            contents[id] = (content, source_hash)
+            # 3. накопили - обработка
+            if len(contents) >= batch:
+                pass
             res: dict = await self.create_img(content, description, 'items')
             # 3. запись fid в Items.seaweed_fids[0]
             fid_list = [res.get('fid')]
@@ -457,3 +428,18 @@ class SeaweedsService:
         else:
             content: bytes = thumb_data
         return content
+
+    async def transfer_tier1(self, batch: int, background_tasks: BackgroundTasks, session: AsyncSession,
+                             image_service: ThumbnailImageService
+                             ):
+        """ IMPORT IMAGES FROM MONGO TO SEAWEED IN BACKGROUND """
+        repository = get_repo('Item')
+        model = get_model_by_name('Item')
+        await repository.run_mongo_to_seaweed(
+            repository=repository, model=model,
+            image_service=image_service,
+            session_factory=DatabaseManager.session_maker,
+            background_tasks=background_tasks
+        )
+        logger.warning("background_tasks.add_task: status: ok")
+        return "background_tasks.add_task: status: ok"

@@ -7,7 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.hash_norm import get_word_hashes_dict
 from app.core.models.base_model import get_model_by_name
 from app.core.utils.backgound_tasks import background_unique
+from app.core.utils.pydantic_utils import get_repo
 from app.core.utils.reindexation import extract_text_optimized  # , extract_text_ultra_fast
+from app.mongodb.service import ThumbnailImageService
 
 
 class Background:
@@ -380,3 +382,34 @@ class Background:
                 stack.extend(reversed(current))
 
         return ' '.join(parts)
+
+    @classmethod
+    @background_unique
+    async def run_mongo_to_seaweed(
+            cls, repository, model, image_service: ThumbnailImageService, session_factory):
+        """
+            запуск переноса изображений из mongodb в seaweed)
+        """
+        task_name = 'import_mongo_to_seaweed'
+        logger.info(f"🚀 Начало фоновой синхронизации: {task_name}")
+        result: dict = {}
+        # contents: dict = {}
+        async with session_factory() as session:
+            try:
+                response = await repository.get_item_drink(session)
+                if not response:
+                    logger.warning(f"⚠️ Нет данных для синхронизации: {task_name}")
+                    return
+                logger.info(f"📊 Найдено {len(response)} записей для обработки")
+                if not response:
+                    return None
+                for id, image_id, description in ((a.id, a.image_id, a.concat) for a in response):
+                    image_dict = await image_service.get_full_image(image_id)
+                    content: bytes = image_dict["content"]
+                    logger.warning(f'{id=} {len(content)=}')
+                await session.commit()
+                logger.success(f"✅ Синхронизация завершена: {task_name}, обновлено записей")
+            except Exception as e:
+                await session.rollback()
+                logger.error(f"❌ Ошибка синхронизации {task_name}: {e}")
+                raise

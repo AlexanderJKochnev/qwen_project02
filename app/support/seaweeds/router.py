@@ -1,5 +1,5 @@
 # app.core.support.seaweeds.router.py
-from fastapi import File, HTTPException, Query, UploadFile
+from fastapi import File, HTTPException, Query, UploadFile, BackgroundTasks
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
@@ -173,7 +173,8 @@ class SeaweedsRouter:
         return ResponseStreaming(image_data)
         # return StreamingResponse(**image_data)
 
-    async def transfer_mongoo_sea(self, session: AsyncSession = Depends(get_db),
+    async def transfer_mongoo_sea(self, batch: int, background_tasks: BackgroundTasks,
+                                  session: AsyncSession = Depends(get_db),
                                   service: SeaweedsService = Depends(),
                                   image_service: ThumbnailImageService = Depends()):
         # перенос (копирование) файлов из mongodb в seaweed, запись fid в items.seaweed_fids[0]
@@ -182,8 +183,8 @@ class SeaweedsRouter:
         # запись в items.seaweed_fids[1] thumbnails fids
         # response = await service.transfer_tier2(session, image_service)
         # новый encoder webp
-        response = await service.transfer_tier3(session, image_service)
-        return response
+        response = await service.transfer_tier1(batch, background_tasks, session, image_service)
+        return {'result': response}
 
     async def test_create_img(self,
                               file: UploadFile = File(...),
