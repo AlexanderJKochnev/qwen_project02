@@ -116,23 +116,27 @@ class ClickHouseRepository:
             id_field: Имя поля ID
             id_value: Значение ID
         """
-        events = Table(self.select_table)
-        if fields:
-            q = Query.from_(events).select(*(events[k] for k in fields))
-        else:
-            q = Query.from_(events)
-        q = q.where(events[id_field] == id_value)
-        if order_by:
-            if 'DESC' in order_by:
-                order_by = order_by.replace('DESC', '').strip()
-                q = q.orderby(events[order_by], order=Order.desc)
+        try:
+            events = Table(self.select_table)
+            if fields:
+                q = Query.from_(events).select(*(events[k] for k in fields))
             else:
-                q = q.orderby(order_by)
-        q = q.limit(1)
-        # logger.warning(f'==={q.get_sql()}')
-        result = await self.client.query(q.get_sql())
-        # result = await self.client.query(query, {'id': id_value})
-        return result.first_item if result.row_count > 0 else None
+                q = Query.from_(events)
+            q = q.where(events[id_field] == id_value)
+            if order_by:
+                if 'DESC' in order_by:
+                    order_by = order_by.replace('DESC', '').strip()
+                    q = q.orderby(events[order_by], order=Order.desc)
+                else:
+                    q = q.orderby(order_by)
+            q = q.limit(1)
+            # logger.warning(f'==={q.get_sql()}')
+            result = await self.client.query(q.get_sql())
+            # result = await self.client.query(query, {'id': id_value})
+            return result.first_item if result.row_count > 0 else None
+        except Exception as e:
+            logger.error(f'records with {id_field} = {id_value } is not found')
+            return None
 
     async def get_by_ids(
             self, id_field: str, id_values: List, fields: list = ['fid', 'fid_thumb'],
