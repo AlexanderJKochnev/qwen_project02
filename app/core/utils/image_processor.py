@@ -40,7 +40,7 @@ class ImageProcessingConfig:
     webp_exact: bool = True  # Бит-ту-бит сохранение
 
     # Настройки прозрачности
-    alpha_threshold: int = 50  # Бинаризация альфа-канала (0-255)
+    alpha_threshold: int = 20  # Бинаризация альфа-канала (0-255)
     margin_pct: float = 0.05  # Отступ при кропе
 
     # U²-Net настройки
