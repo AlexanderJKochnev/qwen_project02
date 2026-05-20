@@ -319,12 +319,13 @@ class ImageProcessor:
 
     def _normalize_alpha_channel(self, image: Image.Image) -> Image.Image:
         """Нормализация альфа-канала для детерминированности"""
-        if image.mode != 'RGBA':
-            return image
+        # if image.mode != 'RGBA':
+        #     return image
 
-        r, g, b, a = image.split()
-        binary_alpha = a.point(lambda p: 255 if p > self.config.alpha_threshold else 0)
-        return Image.merge('RGBA', (r, g, b, binary_alpha))
+        # r, g, b, a = image.split()
+        # binary_alpha = a.point(lambda p: 255 if p > self.config.alpha_threshold else 0)
+        # return Image.merge('RGBA', (r, g, b, binary_alpha))
+        return image
 
     def _smart_crop(self, image: Image.Image) -> Image.Image:
         """Умный кроп с выравниванием до четных размеров"""
