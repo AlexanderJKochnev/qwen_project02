@@ -83,12 +83,13 @@ class SeaweedsRouter:
                                                                       'предназначено изображение. items'),
                          content: int = Query(0, description='возвращает результат: 0 - ничего, '
                                                              '1 - полное изображение, 2 - thumbnail'),
+                         processor_type: int = Query(4, description='выбор процессора'),
                          file: UploadFile = File(...),
                          service: SeaweedsService = Depends()):
         try:
             content = await file.read()
             # response: (meta, content | None)
-            meta, content = await service.create_img(content, description, table_name, content)
+            meta, content = await service.create_img2(content, description, table_name, content, processor_type)
             if content:
                 kwargs = {key: val for key, val in meta.items() if key in ('fid', 'fid_thumb')}
                 return ResponseStreaming(content, **kwargs)

@@ -64,7 +64,7 @@ class SeaweedsService:
                 # full_data, thumb_data, meta_data
                 return image_aligning(content, True, dim, size, quality)
             case 2:  # OLD WEBP
-                full_data, thumb_data, meta_data = process_image_to_webp(
+                return process_image_to_webp(
                     content=content, remove_bg=True,
                     max_size_kb=settings.MAX_FILE_SIZE, thumb_size=settings.MAX_THUMB_WIDTH,
                     dim=settings.MAX_FULL_HEIGHT,
@@ -77,7 +77,7 @@ class SeaweedsService:
                     rembg_seed=42, rembg_num_threads_deterministic=1, rembg_model="u2net"
                 )
                 processor_det = ImageProcessor(config_deterministic)
-                full_data, thumb_data, meta_data = await processor_det.process_single(content, remove_bg=True)
+                return await processor_det.process_single(content, remove_bg=True)
             case 4:  # WEBP LOSSY
                 config_fast = ImageProcessingConfig(
                     max_full_width=dim, max_full_height=dim, max_thumb_width=200, max_thumb_height=200,
@@ -86,20 +86,11 @@ class SeaweedsService:
                     rembg_num_threads_fast=4, rembg_model="u2net"
                 )
                 processor_fast = ImageProcessor(config_fast)
-                full_data, thumb_data, meta_data = await processor_fast.process_single(content, remove_bg=True)
+                return await processor_fast.process_single(content, remove_bg=True)
             case 5:  # WEBP LOSSY BATCH
                 config_fast = ImageProcessingConfig(**settings.imageprocessing_config)
-                """"
-                config_fast = ImageProcessingConfig(
-                    max_full_width=dim, max_full_height=dim, max_thumb_width=200, max_thumb_height=200,
-                    webp_lossless=False,  # Lossy для скорости и размера
-                    webp_quality=quality, deterministic_mode=False,  # Отключаем детерминизм
-                    rembg_num_threads_fast=4, rembg_model="u2net"
-                )
-                """
                 processor_fast = ImageProcessor(config_fast)
                 contents = [content] * 10
-                # full_data, thumb_data, meta_data
                 result = await processor_fast.process_batch(contents, remove_bg=True)
                 # compaire results
                 xxh = FastImageHasher.xxhash64
@@ -107,13 +98,22 @@ class SeaweedsService:
                 from app.core.utils.common_utils import jprint
                 jprint(tmp)
                 logger.warning('-------------------------')
-                full_data, thumb_data, meta_data = result[-1]
+                return result
             case _:  # WEBP LOSSY
                 config_fast = ImageProcessingConfig(**settings.imageprocessing_config)
                 from app.core.utils.common_utils import jprint
-                jprint(settings.imageprocessing_config)
                 processor_fast = ImageProcessor(config_fast)
-                full_data, thumb_data, meta_data = await processor_fast.process_single(content, remove_bg=True)
+                return await processor_fast.process_single(content, remove_bg=True)
+
+    async def create_img2(self, content: bytes, description: str, table: str,
+                          content_include: int = 0, processor_type: int = 4) -> dict | tuple:
+        """
+        ntcn
+        """
+        full_data, thumb_data, meta_data = await self.image_processing(content, processor_type)
+        source_hash = FastImageHasher.xxhash64(content)
+        logger.warning(f'{source_hash=}')
+        return {'test': source_hash}, full_data
 
     async def create_img(self, content: bytes, description: str, table: str,
                          content_include: int = 0) -> dict | tuple:
@@ -370,6 +370,8 @@ class SeaweedsService:
         """
         # from app.core.utils.common_utils import jprint
         # 1. обработка (удаление фона, уменьшение размера, создание thumbnail, получение метаданных)
+        source_hash = FastImageHasher.xxhash64(content)
+        logger.warning(f'{source_hash=}')
         match type:
             case 1:  # PNG
                 full_data, thumb_data, meta_data = image_aligning(content, True, dim, size, quality)
