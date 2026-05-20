@@ -417,7 +417,7 @@ class Background:
                 source_data = [(a.id, a.image_id, a.concat) for a in response]
                 for id, image_id, tag in source_data:
                     content: bytes = await image_service.get_full_image(image_id)
-                    result = await cls.hash_exists(content, click_repo):
+                    result = await cls.hash_exists(content, click_repo)
                     if result:
                         # message is available (defined by orinal image hash)
                         final_result[id] = result
