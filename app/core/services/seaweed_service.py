@@ -19,7 +19,7 @@ from fastapi import Depends, HTTPException
 from aiohttp.client_exceptions import ClientResponseError
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.models.base_model import get_model_by_name
-from app.core.utils.common_utils import get_random_string
+from app.core.utils.common_utils import get_random_string, jprint
 from app.core.utils.hashes import FastImageHasher
 from app.core.config.database.seaweed_async import SeaweedFSManager, get_swfs
 from app.core.config.project_config import settings
@@ -56,6 +56,65 @@ class SeaweedsService:
                 'mime_type': mime_type
                 }
 
+    async def image_processing(self, content, type: int):
+        """ обработка изображения """
+        dim, size, quality = settings.MAX_FULL_HEIGHT, settings.MAX_FILE_SIZE, settings.WEBP_QUALITY
+        match type:
+            case 1:  # PNG
+                # full_data, thumb_data, meta_data
+                return image_aligning(content, True, dim, size, quality)
+            case 2:  # OLD WEBP
+                full_data, thumb_data, meta_data = process_image_to_webp(
+                    content=content, remove_bg=True,
+                    max_size_kb=settings.MAX_FILE_SIZE, thumb_size=settings.MAX_THUMB_WIDTH,
+                    dim=settings.MAX_FULL_HEIGHT,
+                    quality=settings.WEBP_QUALITY
+                )
+            case 3:  # WEBP LOSSLESS
+                config_deterministic = ImageProcessingConfig(
+                    max_full_width=dim, max_full_height=1024, max_thumb_width=200, max_thumb_height=200,
+                    webp_lossless=True, deterministic_mode=True,  # Включаем детерминизм
+                    rembg_seed=42, rembg_num_threads_deterministic=1, rembg_model="u2net"
+                )
+                processor_det = ImageProcessor(config_deterministic)
+                full_data, thumb_data, meta_data = await processor_det.process_single(content, remove_bg=True)
+            case 4:  # WEBP LOSSY
+                config_fast = ImageProcessingConfig(
+                    max_full_width=dim, max_full_height=dim, max_thumb_width=200, max_thumb_height=200,
+                    webp_lossless=False,  # Lossy для скорости и размера
+                    webp_quality=quality, deterministic_mode=False,  # Отключаем детерминизм
+                    rembg_num_threads_fast=4, rembg_model="u2net"
+                )
+                processor_fast = ImageProcessor(config_fast)
+                full_data, thumb_data, meta_data = await processor_fast.process_single(content, remove_bg=True)
+            case 5:  # WEBP LOSSY BATCH
+                config_fast = ImageProcessingConfig(**settings.imageprocessing_config)
+                """"
+                config_fast = ImageProcessingConfig(
+                    max_full_width=dim, max_full_height=dim, max_thumb_width=200, max_thumb_height=200,
+                    webp_lossless=False,  # Lossy для скорости и размера
+                    webp_quality=quality, deterministic_mode=False,  # Отключаем детерминизм
+                    rembg_num_threads_fast=4, rembg_model="u2net"
+                )
+                """
+                processor_fast = ImageProcessor(config_fast)
+                contents = [content] * 10
+                # full_data, thumb_data, meta_data
+                result = await processor_fast.process_batch(contents, remove_bg=True)
+                # compaire results
+                xxh = FastImageHasher.xxhash64
+                tmp = [(xxh(fd), xxh(td), len(fd), len(td)) for fd, td, meta in result]
+                from app.core.utils.common_utils import jprint
+                jprint(tmp)
+                logger.warning('-------------------------')
+                full_data, thumb_data, meta_data = result[-1]
+            case _:  # WEBP LOSSY
+                config_fast = ImageProcessingConfig(**settings.imageprocessing_config)
+                from app.core.utils.common_utils import jprint
+                jprint(settings.imageprocessing_config)
+                processor_fast = ImageProcessor(config_fast)
+                full_data, thumb_data, meta_data = await processor_fast.process_single(content, remove_bg=True)
+
     async def create_img(self, content: bytes, description: str, table: str,
                          content_include: int = 0) -> dict | tuple:
         """
@@ -75,7 +134,7 @@ class SeaweedsService:
         # 2. Ищем в clickhouse
         result: dict = await self.click_repo.get_by_id('data_hash', source_hash, ['fid', 'fid_thumb'],
                                                        'inserted_at DESC')
-        if result:  # данные уже есть, если то обработку пропускаем
+        if 1 == 2:  # result:  # данные уже есть, если то обработку пропускаем
             fid = result.get('fid')
             fid_thumb = result.get('fid_thumb')
             if content_include == 1:
@@ -84,6 +143,7 @@ class SeaweedsService:
                 thumb_data: bytes = await self.seaweed_repo.get_by_fid(fid_thumb, self.fs)
         else:   # данных нет - обрабатываем изображение
             config_fast = ImageProcessingConfig(**settings.imageprocessing_config)
+            jprint(config_fast)
             processor_fast = ImageProcessor(config_fast)
             full_data, thumb_data, meta_data = await processor_fast.process_single(content, remove_bg=True)
             # fid = await self.fs.upload(full_data)
@@ -93,7 +153,7 @@ class SeaweedsService:
             meta = self.make_meta(fid, fid_thumb, full_data, thumb_data, description, source_hash, table,
                                   meta_data.get('full_mime_type'))
             logger.warning(f'0.1 {fid=} {fid_thumb} {source_hash=}')
-            await self.click_repo.create(meta)
+            # await self.click_repo.create(meta)
         # 5. результат {fid: str, url: str}
             logger.warning(f'0.2 {fid=} {fid_thumb} {source_hash}')
         match content_include:
