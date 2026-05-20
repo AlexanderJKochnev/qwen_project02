@@ -421,6 +421,9 @@ class Background:
                     if result:
                         # message is available (defined by orinal image hash)
                         final_result[id] = result
+                    if len(content) < 150000:
+                        thumb: bytes = await image_service.get_thumbnail(image_id)
+                        logger.critical(f'{id} - {len(content)} - {len(thumb)}')
                     contents.append(content)
                     len_contents.append(len(content))
                     ids.append(id)
