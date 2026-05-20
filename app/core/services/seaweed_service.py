@@ -104,8 +104,14 @@ class SeaweedsService:
         """
         ntcn
         """
-        full_data, thumb_data, meta_data = await self.image_processing(content, processor_type)
+        # 0. get hash
         source_hash = FastImageHasher.xxhash64(content)
+        # 1. find by hash
+        res: dict = await self.click_repo.get_by_id('data_hash', source_hash)
+        if res:
+            fid, fid_thumb = res.get('fid'), res.get('fid_thumb')
+
+        full_data, thumb_data, meta_data = await self.image_processing(content, processor_type)
         logger.warning(f'{source_hash=}')
         match content_include:
             case 0:
