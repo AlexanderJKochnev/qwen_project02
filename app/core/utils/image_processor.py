@@ -253,7 +253,7 @@ class ImageProcessor:
         # 2. Удаление фона (опционально)
         if remove_bg and self._rembg_session:
             image = await self._remove_background_async(image)
-            image = self._normalize_alpha_channel(image)
+            # image = self._normalize_alpha_channel(image)
             image = self._smart_crop(image)
 
         # 3. Создание full-изображения
@@ -319,12 +319,12 @@ class ImageProcessor:
 
     def _normalize_alpha_channel(self, image: Image.Image) -> Image.Image:
         """Нормализация альфа-канала для детерминированности"""
-        # if image.mode != 'RGBA':
-        #     return image
+        if image.mode != 'RGBA':
+            return image
 
-        # r, g, b, a = image.split()
-        # binary_alpha = a.point(lambda p: 255 if p > self.config.alpha_threshold else 0)
-        # return Image.merge('RGBA', (r, g, b, binary_alpha))
+        r, g, b, a = image.split()
+        binary_alpha = a.point(lambda p: 255 if p > self.config.alpha_threshold else 0)
+        return Image.merge('RGBA', (r, g, b, binary_alpha))
         return image
 
     def _smart_crop(self, image: Image.Image) -> Image.Image:

@@ -429,8 +429,9 @@ class Background:
                         # full_data, thumb_data, meta_data
                         result = await processor_fast.process_batch(contents, remove_bg=True)
                         for id, source_len, tag, (full_data, thumb_data, meta) in zip(ids, len_contents, tags, result):
-                            logger.info(f'======{id=}, {source_len=}, {len(full_data)=}, {len(thumb_data)=},'
-                                        f' {tag[0:10]}')
+                            if source_len < 15000:
+                                logger.info(f'{id}, {source_len}, {len(full_data)}, {len(thumb_data)},'
+                                            f' {tag[0:8]}')
                         len_contents, ids, tags, result, contents = [], [], [], [], []
                         logger.info('---------------------------------------')
                 await session.commit()
