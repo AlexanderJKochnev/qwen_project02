@@ -105,7 +105,6 @@ class SeaweedsService:
         ntcn
         """
         full_data, thumb_data, meta_data = await self.image_processing(content, processor_type)
-        logger.warning(f'{len()}')
         source_hash = FastImageHasher.xxhash64(content)
         logger.warning(f'{source_hash=}')
         match content_include:
