@@ -404,8 +404,7 @@ class Background:
                 if not response:
                     return None
                 for id, image_id, description in ((a.id, a.image_id, a.concat) for a in response):
-                    image_dict = await image_service.get_full_image(image_id)
-                    content: bytes = image_dict["content"]
+                    content: bytes = await image_service.get_full_image(image_id)
                     logger.warning(f'{id=} {len(content)=}')
                 await session.commit()
                 logger.success(f"✅ Синхронизация завершена: {task_name}, обновлено записей")
