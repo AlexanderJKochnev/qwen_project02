@@ -110,7 +110,7 @@ class SeaweedsService:
         # 1. find by hash
         res: dict = await self.click_repo.get_by_id('data_hash', source_hash,
                                                     ['fid', 'fid_thumb', 'tags'])
-        if res:
+        if res:     # изображение с этим хэшем уже есть - просто возвращаем его без создания нового
             fid, fid_thumb, tags = res.values()
             if content_include == 1:
                 content_data: bytes = await self.seaweed_repo.get_by_fid(fid, self.fs)
@@ -119,17 +119,30 @@ class SeaweedsService:
             else:
                 content_data = None
             return {'tags': tags}, content_data
-
-        full_data, thumb_data, meta_data = await self.image_processing(content, processor_type)
-        logger.warning(f'{source_hash=}')
+        # 2. загруженное изображение новое - обрабатываем
+        result = await self.image_processing(content, processor_type)
+        if result:
+            full_data, thumb_data, meta_data = result
+            # 3. save to seaweed
+            fid = await self.fs.upload(full_data)
+            fid_thumb = await self.fs.upload(thumb_data)
+            # 4. save to clickhouse
+            # 4.1. meta data generation
+            meta = self.make_meta(
+                fid, fid_thumb, full_data, thumb_data,
+                description, source_hash, table, meta_data.get('full_mime_type')
+            )
+            logger.warning(f'{meta=}')
+            # 4.2. saving
+            await self.click_repo.create(meta)
+        # возврат результата
         match content_include:
             case 0:
-                result = {'test': source_hash}, full_data
+                result = {'test': source_hash}, None
             case 1:
                 result = {'test': source_hash}, full_data
             case _:
                 result = {'test': source_hash}, thumb_data
-        logger.warning(f'{type(result)=}, {len(result)=}')
         return result
 
     async def create_img(self, content: bytes, description: str, table: str,
