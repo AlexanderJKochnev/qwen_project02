@@ -26,6 +26,7 @@ from app.core.utils.hashes import FastImageHasher
 from app.core.config.database.seaweed_async import SeaweedFSManager, get_swfs
 from app.core.config.project_config import settings
 from app.core.repositories.seaweed_repository import SeaweedRepository
+from app.core.utils.headers import make_meta
 # from app.core.utils.headers import generate_image_headers
 from app.core.utils.image_processor import ImageProcessingConfig, ImageProcessor
 from app.core.utils.image_utils import image_aligning
@@ -43,20 +44,6 @@ class SeaweedsService:
         self.fs = fs
         self.click_repo = click_repo_factory.for_table('images_metadata')
         self.seaweed_repo = SeaweedRepository
-
-    def make_meta(self, fid: str, fid_thumb: str, full_data: bytes, thumb_data: bytes, description: str,
-                  data_hash: int,
-                  table_name: str,
-                  mime_type: str):
-        return {'fid': fid,
-                'fid_thumb': fid_thumb,
-                'size_bytes': len(full_data),
-                'thumb_size_bytes': len(thumb_data),
-                'tags': description,
-                'data_hash': data_hash,
-                'table': table_name,
-                'mime_type': mime_type
-                }
 
     async def hash_exists(self, source_hash: int) -> tuple:
         """
@@ -142,7 +129,7 @@ class SeaweedsService:
             fid_thumb = await self.fs.upload(thumb_data)
             # 4. save to clickhouse
             # 4.1. meta data generation
-            meta = self.make_meta(
+            meta = make_meta(
                 fid, fid_thumb, full_data, thumb_data,
                 description, source_hash, table, meta_data.get('full_mime_type')
             )

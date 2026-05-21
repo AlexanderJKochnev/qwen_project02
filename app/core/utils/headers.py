@@ -105,3 +105,42 @@ def _get_jpeg_size(data):
         else:
             idx += 1
     return None, None
+
+
+def make_meta(fid: str, fid_thumb: str, full_data: bytes, thumb_data: bytes, description: str,
+              data_hash: int,
+              table_name: str,
+              mime_type: str):
+    """
+    make meta for seawwed images for clickhouse records
+    """
+    return {'fid': fid,
+            'fid_thumb': fid_thumb,
+            'size_bytes': len(full_data),
+            'thumb_size_bytes': len(thumb_data),
+            'tags': description,
+            'data_hash': data_hash,
+            'table': table_name,
+            'mime_type': mime_type
+            }
+
+
+def content_type_magic(image_bytes: bytes):
+    # Определение формата по сигнатуре (магическим байтам)
+    if image_bytes.startswith(b'\xff\xd8\xff'):
+        content_type = "image/jpeg"
+        width, height = _get_jpeg_size(image_bytes)
+    elif image_bytes.startswith(b'\x89PNG\r\n\x1a\n'):
+        content_type = "image/png"
+        width, height = _get_png_size(image_bytes)
+    elif image_bytes.startswith(b'RIFF') and image_bytes[8:12] == b'WEBP':
+        content_type = "image/webp"
+        width, height = _get_webp_size(image_bytes)
+    elif image_bytes.startswith((b'GIF87a', b'GIF89a')):
+        content_type = "image/gif"
+        width, height = struct.unpack('<HH', image_bytes[6:10])
+    else:
+        content_type = "application/octet-stream"
+        width, height = 0, 0
+        # Фоллбек для неопознанных форматов
+    return content_type, width, height

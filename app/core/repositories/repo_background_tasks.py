@@ -1,6 +1,6 @@
 # app.core.repositories.repo_backround_tasks.py
 import asyncio
-from typing import Any, Optional, Dict
+from typing import Any, List, Optional, Dict
 from loguru import logger
 from sqlalchemy import inspect, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,6 +10,7 @@ from app.core.hash_norm import get_word_hashes_dict
 from app.core.models.base_model import get_model_by_name
 from app.core.utils.backgound_tasks import background_unique
 from app.core.utils.hashes import FastImageHasher
+from app.core.utils.headers import content_type_magic, make_meta
 from app.core.utils.image_processor import ImageProcessingConfig, ImageProcessor
 from app.core.utils.reindexation import extract_text_optimized  # , extract_text_ultra_fast
 from app.mongodb.service import ThumbnailImageService
@@ -397,14 +398,36 @@ class Background:
         """
         task_name = 'import_mongo_to_seaweed'
         logger.info(f"🚀 Начало фоновой синхронизации: {task_name}")
-        final_result: dict = {}
         contents: list = []
-        len_contents: list = []
         ids: list = []
         tags: list = []
-        interim: dict = {}
+        hashes: list = []
         config_fast = ImageProcessingConfig(**settings.imageprocessing_config)
         processor_fast = ImageProcessor(config_fast)
+
+        async def image_processing():
+            nonlocal contents
+            nonlocal ids
+            nonlocal tags
+            nonlocal hashes
+            result = await processor_fast.process_batch(contents, remove_bg=True)
+            for id, content, tag, shash, (full_data, thumb_data, _) in zip(
+                    ids, contents, tags, hashes, result):
+                if len(content) <= 150000:
+                    full_data = content
+                # load to seawweed
+                fid = '1123feid'  # await fs.upload(full_data)
+                fid_thumb = '1123thumb'    # await fs.upload(thumb_data)
+                # save to clickhouse
+                mime_type, _, _ = content_type_magic(full_data)
+                meta_data = make_meta(
+                    fid, fid_thumb, full_data, thumb_data, tag, shash, 'items', mime_type
+                )
+                logger.warning(f'{id}, {meta_data.get('mime_type')}, {meta_data.get('size_bytes')},'
+                               f' {meta_data.get('thumb_size_bytes')}')
+                # await click_repo.create(meta_data)
+            ids, tags, result, contents, hashes = [], [], [], [], []
+
         async with session_factory() as session:
             try:
                 response = await repository.get_item_drink(session)
@@ -417,25 +440,19 @@ class Background:
                 source_data = [(a.id, a.image_id, a.concat) for a in response]
                 for id, image_id, tag in source_data:
                     content: bytes = await image_service.get_full_image(image_id)
-                    result = await cls.hash_exists(content, click_repo)
+                    source_hash = FastImageHasher.xxhash64(content)
+                    result = await cls.hash_exists(source_hash, click_repo)
                     if result:
-                        # message is available (defined by orinal image hash)
-                        final_result[id] = result
-                    if len(content) < 150000:
-                        thumb: bytes = await image_service.get_thumbnail(image_id)
-                        logger.critical(f'{id} - {len(content)} - {len(thumb)}')
+                        # message is available (defined by orinal image hash) - добавляем в items
+                        await repository.add_to_array(id, result, model, 'seaweed_fids', session)
+                        continue
+                    hashes.append(source_hash)
                     contents.append(content)
-                    len_contents.append(len(content))
                     ids.append(id)
                     tags.append(tag)
                     if len(contents) >= 10:
                         # full_data, thumb_data, meta_data
-                        result = await processor_fast.process_batch(contents, remove_bg=True)
-                        for id, source_len, tag, (full_data, thumb_data, meta) in zip(ids, len_contents, tags, result):
-                            logger.info(f'{id}, {source_len}, {len(full_data)}, {len(thumb_data)},'
-                                        f' {tag[0:8]}')
-                        len_contents, ids, tags, result, contents = [], [], [], [], []
-                        logger.info('---------------------------------------')
+                        await image_processing()
                 await session.commit()
                 logger.success(f"✅ Синхронизация завершена: {task_name}, обновлено записей")
             except Exception as e:
@@ -444,11 +461,10 @@ class Background:
                 raise
 
     @classmethod
-    async def hash_exists(cls, content: bytes, click_repo) -> tuple:
+    async def hash_exists(cls, source_hash: int, click_repo) -> tuple:
         """
             проверка - существует ли уже изображение если до возвращает fis fid_thumb
         """
-        source_hash = FastImageHasher.xxhash64(content)
         res: dict = await click_repo.get_by_id(
             'data_hash', source_hash, ['fid', 'fid_thumb', 'tags']
         )
