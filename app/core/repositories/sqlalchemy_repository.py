@@ -267,7 +267,7 @@ class Repository(Background, metaclass=RepositoryMeta):
 
     @classmethod
     async def bulk_update(cls, data: List[Dict], model: ModelType,
-                          session: AsyncSession) -> List[ModelType] | None:
+                          session: AsyncSession) -> bool:
         """ быстрое массовое обновление записей из словарей
             data = [
                 {"email": "user1@example.com", "username": "user1", "status": "active"},
@@ -276,10 +276,16 @@ class Repository(Background, metaclass=RepositoryMeta):
             ]
         """
         if not data:
-            return
-        stmt = update(model).where(model.id == bindparam('id')).returning(model)
-        result = await session.scalars(stmt, data)
-        return result.all()
+            return False
+        field_names = {key for key in data[-1].keys() if key != 'id'}
+        logger.warning(f'{field_names=}')
+        values_dict = {field: bindparam(field) for field in field_names}
+        stmt = (update(model).where(model.id == bindparam('id'))
+                .values(values_dict).execution_options(synchronize_session=False))  # Защита от прошлой ошибки)
+
+        await session.execute(stmt, data)
+        await session.commit()
+        return True
 
     @classmethod
     async def patch(cls, obj: ModelType,

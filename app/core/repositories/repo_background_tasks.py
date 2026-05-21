@@ -445,7 +445,7 @@ class Background:
 
         async def update_item_drink():
             async with session_factory() as session:
-                response = await repository.bulk_update(updates, model, session)
+                await repository.bulk_update(updates, model, session)
                 logger.info(f"📊 Обновлено {len(response)} записей в postgesql")
                 return response
 
