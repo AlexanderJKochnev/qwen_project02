@@ -1,6 +1,6 @@
 # app.core.repositories.repo_backround_tasks.py
 import asyncio
-from typing import Any, List, Optional, Dict
+from typing import Any, Optional, Dict
 from loguru import logger
 from sqlalchemy import inspect, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -450,7 +450,7 @@ class Background:
                     contents.append(content)
                     ids.append(id)
                     tags.append(tag)
-                    if len(contents) >= 10:
+                    if len(contents) >= 20:
                         # full_data, thumb_data, meta_data
                         await image_processing()
                 if ids:
@@ -459,8 +459,8 @@ class Background:
                 # await session.commit()
                 logger.success(f"✅ Синхронизация завершена: {task_name}, обновлено записей")
             except Exception as e:
-                await session.rollback()
                 logger.error(f"❌ Ошибка синхронизации {task_name}: {e}")
+                await session.rollback()
                 raise
 
     @classmethod
