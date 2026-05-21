@@ -9,7 +9,6 @@ from app.core.config.project_config import settings
 from app.core.hash_norm import get_word_hashes_dict
 from app.core.models.base_model import get_model_by_name
 from app.core.repositories.clickhouse_repository import ClickHouseRepository
-from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.utils.backgound_tasks import background_unique
 from app.core.utils.hashes import FastImageHasher
 from app.core.utils.headers import content_type_magic, make_meta
@@ -392,7 +391,7 @@ class Background:
     @classmethod
     @background_unique
     async def run_mongo_to_seaweed(
-            cls, repository: Repository, model, image_service: ThumbnailImageService,
+            cls, repository, model, image_service: ThumbnailImageService,
             click_repo: ClickHouseRepository, fs,
             session_factory):
         """
