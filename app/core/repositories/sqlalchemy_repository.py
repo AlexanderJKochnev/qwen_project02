@@ -277,7 +277,7 @@ class Repository(Background, metaclass=RepositoryMeta):
         """
         if not data:
             return
-        stmt = update(model).where(model.id == update.bindparam("id")).returning(model)
+        stmt = update(model).where(model.id == bindparam('id')).returning(model)
         result = await session.scalars(stmt, data)
         return result.all()
 
