@@ -8,6 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config.project_config import settings
 from app.core.hash_norm import get_word_hashes_dict
 from app.core.models.base_model import get_model_by_name
+from app.core.repositories.clickhouse_repository import ClickHouseRepository
+from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.utils.backgound_tasks import background_unique
 from app.core.utils.hashes import FastImageHasher
 from app.core.utils.headers import content_type_magic, make_meta
@@ -390,8 +392,8 @@ class Background:
     @classmethod
     @background_unique
     async def run_mongo_to_seaweed(
-            cls, repository, model, image_service: ThumbnailImageService,
-            click_repo, fs,
+            cls, repository: Repository, model, image_service: ThumbnailImageService,
+            click_repo: ClickHouseRepository, fs,
             session_factory):
         """
             запуск переноса изображений из mongodb в seaweed)
@@ -403,6 +405,7 @@ class Background:
         tags: list = []
         hashes: list = []
         updates: list = []  # List[Dict[id:int, seaweed_fids: []]
+        click_meta: list = []  # list of tuple meta
         config_fast = ImageProcessingConfig(**settings.imageprocessing_config)
         processor_fast = ImageProcessor(config_fast)
 
@@ -412,23 +415,22 @@ class Background:
             nonlocal tags
             nonlocal hashes
             nonlocal updates
+            nonlocal click_meta
             result = await processor_fast.process_batch(contents, remove_bg=True)
             for id, content, tag, shash, (full_data, thumb_data, _) in zip(
                     ids, contents, tags, hashes, result):
                 if len(content) <= 150000:
                     full_data = content
                 # 1. load to seawweed
-                fid = '1123feid'  # await fs.upload(full_data)
-                fid_thumb = '1123thumb'    # await fs.upload(thumb_data)
-
+                fid = await fs.upload(full_data)
+                fid_thumb = await fs.upload(thumb_data)
                 mime_type, _, _ = content_type_magic(full_data)
                 meta_data = make_meta(
                     fid, fid_thumb, full_data, thumb_data, tag, shash, 'items', mime_type
                 )
+                click_meta.append(meta_data)
                 logger.warning(f'{id}, {meta_data.get('mime_type')}, {meta_data.get('size_bytes')},'
                                f' {meta_data.get('thumb_size_bytes')}')
-                # save to clickhouse
-                # await click_repo.create(meta_data)
                 updates.append({'id': id, 'seaweed_fids': (fid, fid_thumb)})
 
             ids, tags, result, contents, hashes = [], [], [], [], []
@@ -440,6 +442,12 @@ class Background:
                     logger.warning(f"⚠️ Нет данных для синхронизации: {task_name}")
                 else:
                     logger.info(f"📊 Найдено {len(response)} записей для обработки")
+                return response
+
+        async def update_item_drink():
+            async with session_factory() as session:
+                response = await repository.bulk_update(updates, model, session)
+                logger.info(f"📊 Обновлено {len(response)} записей в postgesql")
                 return response
 
         response = await get_item_drink()
@@ -467,7 +475,11 @@ class Background:
                 await image_processing()
             from app.core.utils.common_utils import jprint
             jprint(updates)
-
+            logger.warning('-----------------------------')
+            # add to clickhouse
+            await click_repo.bulk_insert(click_meta)
+            # update postgresql
+            await update_item_drink()
             # await session.commit()
             logger.success(f"✅ Синхронизация завершена: {task_name}, обновлено записей")
         except Exception as e:
@@ -476,7 +488,7 @@ class Background:
             raise
 
     @classmethod
-    async def hash_exists(cls, source_hash: int, click_repo) -> tuple:
+    async def hash_exists(cls, source_hash: int, click_repo: ClickHouseRepository) -> tuple:
         """
             проверка - существует ли уже изображение если до возвращает fis fid_thumb
         """

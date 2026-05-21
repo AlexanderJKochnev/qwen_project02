@@ -28,6 +28,7 @@ class ClickHouseRepository:
     * ПОКА ЖЕСТКО ЗАШИТА ПОД ТАБЛИЦУ images_metadata
     НУЖНО ОБЕСПЕЧИТЬ ЧТО БЫ В WHERE подставлялись поля из ORDER BY (это уникальные индексы по ним идентифицируется
     запись и ее версия
+    проверка запроса без вставки SETTINGS dry_run = 1; дописать в конце запроса
     """
 
     def __init__(self, client: AsyncClient, table_name: str):
@@ -60,46 +61,26 @@ class ClickHouseRepository:
         await self.client.query(q.get_sql())
         return data
 
-    async def bulk_insert(self, records: List[Dict[str, Any]]) -> int:
+    async def bulk_insert(self, datas: List[Dict[str, Any]]) -> int:
         """
-        ПЕРЕДЕЛАТЬ
         Массовая вставка записей.
 
         Args:
             records: Список словарей с данными
-            version_field: Имя поля версии
-
         Returns:
             Количество вставленных записей
         """
-        if not records:
-            return 0
-
-        # Подготавливаем все записи
-        prepared_records = []
-        for record in records:
-            record = record.copy()
-            prepared_records.append(record)
-
-        # Получаем все уникальные колонки
-        all_columns = set()
-        for record in prepared_records:
-            all_columns.update(record.keys())
-        columns = list(all_columns)
-
-        # Формируем данные для вставки
-        values = []
-        for record in prepared_records:
-            row = [record.get(col) for col in columns]
-            values.append(row)
-
-        query = f"""
-            INSERT INTO {self.table_name} ({', '.join(columns)})
-            VALUES ({', '.join(['%s'] * len(columns))})
-        """
-
-        await self.client.query(query, values)
-        return len(prepared_records)
+        try:
+            fields = tuple(datas[-1].keys())
+            values = [tuple(a.values()) for a in datas]
+            await self.client.insert(self.select_table, values, fields)
+            # events = Table(self.select_table)
+            # q = Query.into(events).columns(*fields).insert(*values)
+            # print(f'{q.get_sql()=}')
+            # await self.client.query(q.get_sql())
+        except Exception as e:
+            logger.error(f'clickhouse.bulk_insert. {e}')
+            raise
 
     # ============================================================
     # READ
@@ -135,7 +116,7 @@ class ClickHouseRepository:
             # result = await self.client.query(query, {'id': id_value})
             return result.first_item if result.row_count > 0 else None
         except Exception as e:
-            logger.error(f'records with {id_field} = {id_value } is not found')
+            logger.error(f'records with {id_field} = {id_value} is not found. {e}')
             return None
 
     async def get_by_ids(
@@ -255,7 +236,7 @@ class ClickHouseRepository:
         if order_by:
             if 'DESC' in order_by:
                 order_by = order_by.replace('DESC', '').strip()
-                q = q.orderby(events[order_by], order = Order.desc)
+                q = q.orderby(events[order_by], order=Order.desc)
             else:
                 q = q.orderby(order_by)
         q = q.limit(1)

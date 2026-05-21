@@ -252,12 +252,34 @@ class Repository(Background, metaclass=RepositoryMeta):
     @classmethod
     async def bulk_create(cls, data: List[Dict], model: ModelType,
                           session: AsyncSession) -> List[ModelType] | None:
-        """ быстрое массовое добавление записей из словарей """
+        """ быстрое массовое добавление записей из словарей
+            data = [
+                {"email": "user1@example.com", "username": "user1", "status": "active"},
+                {"email": "user2@example.com", "username": "user2", "status": "pending"},
+                {"email": "user3@example.com", "username": "user3", "status": "active"},
+            ]
+        """
         if not data:
             return
-        stmt = insert(model).values(data).returning(model)
-        result = await session.execute(stmt)
-        return result.scalars().all()
+        stmt = insert(model).returning(model)
+        result = await session.scalars(stmt, data)
+        return result.all()
+
+    @classmethod
+    async def bulk_update(cls, data: List[Dict], model: ModelType,
+                          session: AsyncSession) -> List[ModelType] | None:
+        """ быстрое массовое обновление записей из словарей
+            data = [
+                {"email": "user1@example.com", "username": "user1", "status": "active"},
+                {"email": "user2@example.com", "username": "user2", "status": "pending"},
+                {"email": "user3@example.com", "username": "user3", "status": "active"},
+            ]
+        """
+        if not data:
+            return
+        stmt = update(model).where(model.id == update.bindparam("id")).returning(model)
+        result = await session.scalars(stmt, data)
+        return result.all()
 
     @classmethod
     async def patch(cls, obj: ModelType,
