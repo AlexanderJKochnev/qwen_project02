@@ -456,11 +456,11 @@ class Background:
                 if ids:
                     logger.warning(f'tail of cycle is {len(ids)}')
                     await image_processing()
-                # await session.commit()
+                await session.commit()
                 logger.success(f"✅ Синхронизация завершена: {task_name}, обновлено записей")
             except Exception as e:
                 logger.error(f"❌ Ошибка синхронизации {task_name}: {e}")
-                await session.rollback()
+                # await session.rollback()
                 raise
 
     @classmethod
