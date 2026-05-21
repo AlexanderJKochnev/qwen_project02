@@ -277,14 +277,15 @@ class Repository(Background, metaclass=RepositoryMeta):
         """
         if not data:
             return False
-        field_names = {key for key in data[-1].keys() if key != 'id'}
-        logger.warning(f'{field_names=}')
-        values_dict = {field: bindparam(field) for field in field_names}
-        stmt = (update(model).where(model.id == bindparam('id'))
-                .values(values_dict).execution_options(synchronize_session=False))  # Защита от прошлой ошибки)
-
-        await session.execute(stmt, data)
-        await session.commit()
+        stmt = update(model)
+        compiled = stmt.compile(
+            dialect=postgresql.dialect(), column_keys=list(data[0].keys())
+            # Показываем компилятору, какие ключи будут в данных
+        )
+        print("--- ИТОГОВЫЙ SQL ЗАПРОС ДЛЯ POSTGRESQL ---")
+        print(compiled)
+        # await session.execute(stmt, data)
+        # await session.commit()
         return True
 
     @classmethod
