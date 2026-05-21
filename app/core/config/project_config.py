@@ -359,7 +359,7 @@ class Settings(BaseSettings):
         return {'max_full_width': self.MAX_FULL_WIDTH,
                 'max_full_height': self.MAX_FULL_HEIGHT,
                 'max_thumb_width': self.MAX_THUMB_WIDTH,
-                'max_thumb_height': self.MAX_FULL_HEIGHT,
+                'max_thumb_height': self.MAX_THUMB_HEIGHT,
                 'webp_lossless': self.WEBP_LOSSLESS,  # Lossy для скорости и размера
                 'webp_quality': self.WEBP_QUALITY,
                 'deterministic_mode': self.DETERMINISTIC_MODE,  # Отключаем детерминизм

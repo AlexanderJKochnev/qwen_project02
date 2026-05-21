@@ -73,7 +73,8 @@ class ClickHouseRepository:
         try:
             fields = tuple(datas[-1].keys())
             values = [tuple(a.values()) for a in datas]
-            await self.client.insert(self.select_table, values, fields)
+            logger.critical(f'====={self.table_name}======')
+            await self.client.insert(self.table_name, values, fields)
             # events = Table(self.select_table)
             # q = Query.into(events).columns(*fields).insert(*values)
             # print(f'{q.get_sql()=}')
