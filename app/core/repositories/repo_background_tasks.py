@@ -402,6 +402,7 @@ class Background:
         ids: list = []
         tags: list = []
         hashes: list = []
+        updates: list = []  # List[Dict[id:int, seaweed_fids: []]
         config_fast = ImageProcessingConfig(**settings.imageprocessing_config)
         processor_fast = ImageProcessor(config_fast)
 
@@ -410,58 +411,69 @@ class Background:
             nonlocal ids
             nonlocal tags
             nonlocal hashes
+            nonlocal updates
             result = await processor_fast.process_batch(contents, remove_bg=True)
             for id, content, tag, shash, (full_data, thumb_data, _) in zip(
                     ids, contents, tags, hashes, result):
                 if len(content) <= 150000:
                     full_data = content
-                # load to seawweed
+                # 1. load to seawweed
                 fid = '1123feid'  # await fs.upload(full_data)
                 fid_thumb = '1123thumb'    # await fs.upload(thumb_data)
-                # save to clickhouse
+
                 mime_type, _, _ = content_type_magic(full_data)
                 meta_data = make_meta(
                     fid, fid_thumb, full_data, thumb_data, tag, shash, 'items', mime_type
                 )
                 logger.warning(f'{id}, {meta_data.get('mime_type')}, {meta_data.get('size_bytes')},'
                                f' {meta_data.get('thumb_size_bytes')}')
+                # save to clickhouse
                 # await click_repo.create(meta_data)
+                updates.append({'id': id, 'seaweed_fids': (fid, fid_thumb)})
+
             ids, tags, result, contents, hashes = [], [], [], [], []
 
-        async with session_factory() as session:
-            try:
+        async def get_item_drink():
+            async with session_factory() as session:
                 response = await repository.get_item_drink(session)
                 if not response:
                     logger.warning(f"⚠️ Нет данных для синхронизации: {task_name}")
-                    return
-                logger.info(f"📊 Найдено {len(response)} записей для обработки")
-                if not response:
-                    return None
-                source_data = [(a.id, a.image_id, a.concat) for a in response]
-                for id, image_id, tag in source_data:
-                    content: bytes = await image_service.get_full_image(image_id)
-                    source_hash = FastImageHasher.xxhash64(content)
-                    result = await cls.hash_exists(source_hash, click_repo)
-                    if result:
-                        # message is available (defined by orinal image hash) - добавляем в items
-                        await repository.add_to_array(id, result, model, 'seaweed_fids', session)
-                        continue
-                    hashes.append(source_hash)
-                    contents.append(content)
-                    ids.append(id)
-                    tags.append(tag)
-                    if len(contents) >= 20:
-                        # full_data, thumb_data, meta_data
-                        await image_processing()
-                if ids:
-                    logger.warning(f'tail of cycle is {len(ids)}')
+                else:
+                    logger.info(f"📊 Найдено {len(response)} записей для обработки")
+                return response
+
+        response = await get_item_drink()
+        if not response:
+            return
+        try:
+            source_data = [(a.id, a.image_id, a.concat) for a in response]
+
+            for id, image_id, tag in source_data:
+                content: bytes = await image_service.get_full_image(image_id)
+                source_hash = FastImageHasher.xxhash64(content)
+                fid_thumb: tuple = await cls.hash_exists(source_hash, click_repo)
+                if fid_thumb:
+                    # message is available (defined by orinal image hash) - добавляем в items
+                    updates.append({'id': id, 'seaweed_fids': fid_thumb})
+                    continue
+                hashes.append(source_hash)
+                contents.append(content)
+                ids.append(id)
+                tags.append(tag)
+                if len(contents) >= 20:
                     await image_processing()
-                await session.commit()
-                logger.success(f"✅ Синхронизация завершена: {task_name}, обновлено записей")
-            except Exception as e:
-                logger.error(f"❌ Ошибка синхронизации {task_name}: {e}")
-                # await session.rollback()
-                raise
+            if ids:
+                logger.warning(f'tail of cycle is {len(ids)}')
+                await image_processing()
+            from app.core.utils.common_utils import jprint
+            jprint(updates)
+
+            # await session.commit()
+            logger.success(f"✅ Синхронизация завершена: {task_name}, обновлено записей")
+        except Exception as e:
+            logger.error(f"❌ Ошибка синхронизации {task_name}: {e}")
+            # await session.rollback()
+            raise
 
     @classmethod
     async def hash_exists(cls, source_hash: int, click_repo) -> tuple:
