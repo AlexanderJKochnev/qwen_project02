@@ -462,6 +462,7 @@ class Background:
                 if fid_thumb:
                     # message is available (defined by orinal image hash) - добавляем в items
                     updates.append({'id': id, 'seaweed_fids': fid_thumb})
+                    logger.warning(f'hash found! {id}: {fid_thumb}')
                     continue
                 hashes.append(source_hash)
                 contents.append(content)
@@ -476,7 +477,8 @@ class Background:
             jprint(updates)
             logger.warning('-----------------------------')
             # add to clickhouse
-            await click_repo.bulk_insert(click_meta)
+            if click_meta:
+                await click_repo.bulk_insert(click_meta)
             # update postgresql
             await update_item_drink()
             # await session.commit()
