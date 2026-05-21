@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
 from sqlalchemy.dialects import postgresql  # NOQA: F401
 from loguru import logger
 from sqlalchemy import (and_, cast, desc, func, inspect, literal, literal_column, or_, Row,
-                        RowMapping, select, Select, Text, text, update, insert)
+                        RowMapping, select, Select, Text, text, update, insert, bindparam)
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 # from sqlalchemy.dialects import postgresql
 from sqlalchemy.exc import IntegrityError
