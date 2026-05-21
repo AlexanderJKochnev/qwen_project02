@@ -9,6 +9,7 @@ from datetime import datetime
 from re import search as research
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
 from sqlalchemy.dialects import postgresql  # NOQA: F401
+from pypika import Table, Query, Values, PostgreSQLQuery
 from loguru import logger
 from sqlalchemy import (and_, cast, desc, func, inspect, literal, literal_column, or_, Row,
                         RowMapping, select, Select, Text, text, update, insert, bindparam)
@@ -252,7 +253,7 @@ class Repository(Background, metaclass=RepositoryMeta):
     @classmethod
     async def bulk_create(cls, data: List[Dict], model: ModelType,
                           session: AsyncSession) -> List[ModelType] | None:
-        """ быстрое массовое добавление записей из словарей
+        """ быстрое массовое добавление записей из словаре may be not work
             data = [
                 {"email": "user1@example.com", "username": "user1", "status": "active"},
                 {"email": "user2@example.com", "username": "user2", "status": "pending"},
@@ -277,6 +278,13 @@ class Repository(Background, metaclass=RepositoryMeta):
         """
         if not data:
             return False
+        t = Table(model.__tablename__)
+        columns = list(data[0].keys())
+        v = Values([tuple(row[col] for col in columns) for row in data]).as_('v', *columns)
+        query = (PostgreSQLQuery.update(t).from_(v).where(t.id == v.id))
+        q = query.set(query.get_table_columns_dict(t, {c: v[c] for c in columns if c != 'id'}))
+        print(q.get_sql())
+        return True
         stmt = update(model)
         compiled = stmt.compile(
             dialect=postgresql.dialect(), column_keys=list(data[0].keys())
