@@ -453,7 +453,10 @@ class Background:
                     if len(contents) >= 10:
                         # full_data, thumb_data, meta_data
                         await image_processing()
-                await session.commit()
+                if ids:
+                    logger.warning(f'tail of cycle is {len(ids)}')
+                    await image_processing()
+                # await session.commit()
                 logger.success(f"✅ Синхронизация завершена: {task_name}, обновлено записей")
             except Exception as e:
                 await session.rollback()
