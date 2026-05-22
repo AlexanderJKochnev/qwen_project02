@@ -9,24 +9,21 @@ from datetime import datetime
 from re import search as research
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
 from sqlalchemy.dialects import postgresql  # NOQA: F401
-from pypika import Table, Query, Values, PostgreSQLQuery
 from loguru import logger
 from sqlalchemy import (and_, cast, desc, func, inspect, literal, literal_column, or_, Row,
-                        RowMapping, select, Select, Text, text, update, insert, bindparam)
-from sqlalchemy.dialects.postgresql import insert as pg_insert
-# from sqlalchemy.dialects import postgresql
+                        RowMapping, select, Select, Text, text, update, insert)
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased, load_only
 from sqlalchemy.sql.elements import Label
-
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from app.core.config.project_config import settings
 from app.core.exceptions import AppBaseException
 from app.core.hash_norm import get_word_hashes_dict
 from app.core.models.base_model import get_model_by_name
 from app.core.repositories.repo_background_tasks import Background
 from app.core.types import ModelType
-# from sqlalchemy.dialects import postgresql
+from sqlalchemy.dialects import postgresql  noqa: F401
 # from sqlalchemy.sql.elements import ColumnElement
 from app.core.utils.alchemy_utils import (create_enum_conditions, create_search_conditions2, get_field_list,
                                           get_sql_search)
@@ -271,30 +268,24 @@ class Repository(Background, metaclass=RepositoryMeta):
                           session: AsyncSession) -> bool:
         """ быстрое массовое обновление записей из словарей
             data = [
-                {"email": "user1@example.com", "username": "user1", "status": "active"},
-                {"email": "user2@example.com", "username": "user2", "status": "pending"},
-                {"email": "user3@example.com", "username": "user3", "status": "active"},
-            ]
+                    {'id': 104, 'seaweed_fids': ('20,cf5fefa821', '16,d0e133a318')},
+                    {'id': 105, 'seaweed_fids': ('17,d1a8908ae6', '20,d2ad06361d')},
+                    {'id': 106, 'seaweed_fids': ('21,d3f0b578f7', '20,d4cbc210a8')},
+                    ]
         """
-        if not data:
-            return False
-        t = Table(model.__tablename__)
-        columns = list(data[0].keys())
-        v = Values([tuple(row[col] for col in columns) for row in data]).as_('v', *columns)
-        query = (PostgreSQLQuery.update(t).from_(v).where(t.id == v.id))
-        q = query.set(query.get_table_columns_dict(t, {c: v[c] for c in columns if c != 'id'}))
-        print(q.get_sql())
-        return True
-        stmt = update(model)
-        compiled = stmt.compile(
-            dialect=postgresql.dialect(), column_keys=list(data[0].keys())
-            # Показываем компилятору, какие ключи будут в данных
+        stmt = pg_insert(model).values(data)
+        update_stmt = stmt.on_conflict_do_update(
+            index_elements=['id'],  # по какому полю ловим конфликт
+            set_={"seaweed_fids": stmt.excluded.seaweed_fids}
         )
-        print("--- ИТОГОВЫЙ SQL ЗАПРОС ДЛЯ POSTGRESQL ---")
-        print(compiled)
-        # await session.execute(stmt, data)
+        compiled_pg = stmt.compile(dialect = postgresql.dialect(), compile_kwargs = {"literal_binds": True})
+        print(compiled_pg)
+        compiled_pg = update_stmt.compile(dialect = postgresql.dialect(), compile_kwargs = {"literal_binds": True})
+        print(compiled_pg)
+        
+        # Один execute и один commit на все 200 записей
+        # await session.execute(update_stmt)
         # await session.commit()
-        return True
 
     @classmethod
     async def patch(cls, obj: ModelType,
