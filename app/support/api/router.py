@@ -122,12 +122,12 @@ class ApiRouter(ItemRouter):
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
 
-    async def get_api(self, id: int, session: AsyncSession = Depends(get_db)) -> dict:
+    async def get_api(self, request: Request, id: int, session: AsyncSession = Depends(get_db)) -> dict:
         """
              Получение одной записи по id.
         """
         service = ApiService
-        result = await service.get_item_api_view(id, session)
+        result = await service.get_item_api_view(request, id, session)
         # response = result.model_dump(exclude_none=True, exclude_unset=True)
         # validate_result = ItemApi.model_validate(result)
         # print('==========================')
@@ -206,7 +206,7 @@ class ApiRouter(ItemRouter):
         except Exception as e:
             raise HTTPException(status_code=500, detail=e)
 
-    async def smart_search_all(self,
+    async def smart_search_all(self, request: Request,
                                search: str = Query(None, description="Поисковый запрос"
                                                    ),
                                session: AsyncSession = Depends(get_db),
@@ -222,13 +222,13 @@ class ApiRouter(ItemRouter):
             limit = 20
             service = ApiService
             # repository = ItemRepository
-            response = await service.execute_smart_search(search, session, boost, limit)
+            response = await service.execute_smart_search(request, search, session, boost, limit)
             return orresponse(response)
         except Exception as e:
             raise HTTPException(status_code=500, detail=f'{e}')
 
         async def smart_search_all_with_boost(
-                self, search: str = Query(
+                self, request: Request, search: str = Query(
                     None, description="Поисковый запрос"
                 ), session: AsyncSession = Depends(get_db), boost: float = Query(
                     15, description="Премия за редкие слова"
@@ -240,7 +240,7 @@ class ApiRouter(ItemRouter):
             try:
                 service = ApiService
                 # repository = ItemRepository
-                response = await service.execute_smart_search(search, session, boost, limit)
+                response = await service.execute_smart_search(request, search, session, boost, limit)
                 return orresponse(response)
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f'{e}')

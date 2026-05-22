@@ -21,7 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config.database.db_async import DatabaseManager
 from app.core.models.base_model import get_model_by_name
-from app.core.utils.common_utils import get_random_string, jprint
+from app.core.utils.common_utils import jprint  # noqa: F401
 from app.core.utils.hashes import FastImageHasher
 from app.core.config.database.seaweed_async import SeaweedFSManager, get_swfs
 from app.core.config.project_config import settings
@@ -292,7 +292,6 @@ class SeaweedsService:
             # 1. получениие полного изображения из mongodb
             image_dict = await image_service.get_full_image(image_id)
             content: bytes = image_dict["content"]
-            logger.warning(f'{id=} {len(content)=}')
             # 0. get hash
             source_hash = FastImageHasher.xxhash64(content)
             # 1. find by hash
@@ -356,7 +355,6 @@ class SeaweedsService:
         """
             content: изображение в байтах
         """
-        # from app.core.utils.common_utils import jprint
         # 1. обработка (удаление фона, уменьшение размера, создание thumbnail, получение метаданных)
         source_hash = FastImageHasher.xxhash64(content)
         logger.warning(f'{source_hash=}')
@@ -399,15 +397,13 @@ class SeaweedsService:
                 # full_data, thumb_data, meta_data
                 result = await processor_fast.process_batch(contents, remove_bg=True)
                 # compaire results
-                xxh = FastImageHasher.xxhash64
-                tmp = [(xxh(fd), xxh(td), len(fd), len(td)) for fd, td, meta in result]
-                jprint(tmp)
+                # xxh = FastImageHasher.xxhash64
+                # tmp = [(xxh(fd), xxh(td), len(fd), len(td)) for fd, td, meta in result]
+                # jprint(tmp)
                 logger.warning('-------------------------')
                 full_data, thumb_data, meta_data = result[-1]
             case _:  # WEBP LOSSY
                 config_fast = ImageProcessingConfig(**settings.imageprocessing_config)
-                from app.core.utils.common_utils import jprint
-                jprint(settings.imageprocessing_config)
                 processor_fast = ImageProcessor(config_fast)
                 full_data, thumb_data, meta_data = await processor_fast.process_single(content, remove_bg=True)
         if fu:

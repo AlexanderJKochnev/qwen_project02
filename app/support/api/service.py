@@ -4,7 +4,6 @@ from decimal import Decimal
 from fastapi import HTTPException, Request
 from typing import List, Dict, Any
 from datetime import datetime
-from loguru import logger
 # from sqlalchemy.sql.elements import Label
 # from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.types import ModelType
@@ -119,46 +118,24 @@ class ApiService(ItemService):
         if cnv:
             cleaned_list = [api_view(inst_dict(item), def_lang, lang_prefixes, default_image_id) for item in items]
         else:
-            cleaned_list = [api_view(item, def_lang, lang_prefixes) for item in items]
+            cleaned_list = [api_view(item, def_lang, lang_prefixes, default_image_id) for item in items]
         # result = ItemApiAdapter.validate_python([api_view(item.to_dict()) for item in items])
         # cleaned_list = [item.model_dump(exclude_none=True, exclude_defaults=True) for item in result]
         return cleaned_list
 
     @classmethod
-    async def get_item_api_view(cls, id: int, session: AsyncSession):
+    async def get_item_api_view(cls, request: Request, id: int, session: AsyncSession):
         """
             Получение представления элемента с локализацией by lang
-            {
-              "image_id": "string",
-              "image_path": "string",
-              "id": 0,
-              "vol": 0,
-              "changed_at": "2026-01-16T19:17:33.245Z",
-              "country": "string",
-              "category": "string",
-              "en": {
-                "description": "string",
-                "title": "string",
-                "subtitle": "string",
-                "alc": "13.5%",
-                "pairing": [
-                  "string",
-                  "string"
-                ],
-                "varietal": [
-                  "Cabernet Sauvignon 85%",
-                  "Cabernet Franc 15%"
-                ]
-              },
-            }
         """
         repository = ItemRepository
+        default_image_id = get_default_image(request, 0)
         item_instance = await repository.get_detail_view(id, Item, session)
         if not item_instance:
             return None
         item: dict = inst_dict(item_instance)
         # result: dict = cls.__api_view__(item)
-        result: dict = transform_api_list_view(item, def_lang, cls.lang_suffix_list(language))
+        result: dict = transform_api_list_view(item, def_lang, cls.lang_suffix_list(language), default_image_id)
         return result
 
     @classmethod
@@ -219,16 +196,14 @@ class ApiService(ItemService):
         return result
 
     @classmethod
-    async def execute_smart_search(cls, query: str, session: AsyncSession,
+    async def execute_smart_search(cls, request, Request, query: str, session: AsyncSession,
                                    boost: float = 15.0,
                                    limit: int = 20,
                                    penalty: float = 0.1):
         # items = await super().execute_smart_search(query, session, boost, limit)
-        logger.warning(f'in {query=}')
-        raw = query
+        # raw = query
+        default_image_id = get_default_image(request, 1)
         query = query.replace('+', ' ')
-        logger.warning(f'out {query=}')
         items: List[dict] = await super().search_by_hash(query, Item, ItemRepository, session, limit, boost, penalty)
-        result = [transform_api_list_view(item, def_lang, cls.lang_suffix_list(language)) for item in items]
-        logger.warning(f'{raw=}.cleared={query} count={len(result)}')
+        result = [transform_api_list_view(item, def_lang, cls.lang_suffix_list(language), default_image_id) for item in items]
         return result

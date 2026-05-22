@@ -338,7 +338,7 @@ class Hash:
 
 
 class Search:
-    """ поисковое поле для триграммного индекса """
+    """ поисковое поле для  """
     __abstract__ = True
 
     word_hashes: Mapped[List[int]] = mapped_column(ARRAY(BIGINT), nullable=True)

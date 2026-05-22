@@ -103,7 +103,7 @@ async def lifespan(app: FastAPI):
     app.state.ch_client = ch_manager.client
     app.state.ch_repo_factory = ClickHouseRepositoryFactory(ch_manager.client)
     app.state.seaweed_fids_default = await get_dump(app.state.ch_client)
-    logger.success(f'заглушка для изображегний инициализирована {app.state.seaweed_fids_default}')
+    logger.success(f'заглушка для изображний инициализирована {app.state.seaweed_fids_default}')
     # app.state.ch_client = await ch_manager.connect()
     #  app.state.ch_client = global_ch_manager.client
     logger.success("✅ ClickHouse connected")
