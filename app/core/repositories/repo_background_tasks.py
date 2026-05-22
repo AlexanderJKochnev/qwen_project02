@@ -452,6 +452,7 @@ class Background:
                     # True})
                     # print(compiled_pg)
                     session.execute(stmt)
+                session.commit
                 logger.info(f"📊 Обновлено {len(response)} записей в postgesql")
                 return response
 
