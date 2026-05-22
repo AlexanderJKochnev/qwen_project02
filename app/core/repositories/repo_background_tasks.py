@@ -450,8 +450,8 @@ class Background:
                     stmt = (update(model).where(model.id == row.get('id')).values(seaweed_fids=row.get('seaweed_fids')))
                     compiled_pg = stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
                     print(compiled_pg)
-                    session.execute(stmt)
-                session.commit
+                    await session.execute(stmt)
+                await session.commit()
                 logger.info(f"📊 Обновлено {len(response)} записей в postgesql")
                 return response
 
