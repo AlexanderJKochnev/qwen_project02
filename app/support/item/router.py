@@ -330,7 +330,7 @@ class ItemRouter(ArrayRouter, BaseRouter):
             получение изображения по id напитка. Версия 1  (StreamingResponse - лучше для тяжелых условий)
             ArrayService.get_image_by_id_v2 ->
         """
-        image_data: bytes = await self.service.get_image_by_id(id, self.repo. self.model, session, image_service)
+        image_data: bytes = await self.service.get_image_by_id(id, self.repo, self.model, session, image_service)
         # image_data: bytes = await self.service.get_image_by_id_v2(request, id, self.repo, self.model, session,
         #                                                           image_service)
 
