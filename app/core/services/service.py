@@ -601,7 +601,7 @@ class Service(metaclass=ServiceMeta):
                               session: AsyncSession,
                               image_service: ThumbnailImageService) -> bytes:
         """
-            получение полноразмерного изображения по id напитка
+            получение полноразмерного изображения по id напитка (mongo_db_
         """
         #  ПОИСК КОЛОНКИ image_id
         if not has_column(model, 'image_id'):
