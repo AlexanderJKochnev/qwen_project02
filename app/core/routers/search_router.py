@@ -1,0 +1,1 @@
+# app/core/routers/search_router.py
