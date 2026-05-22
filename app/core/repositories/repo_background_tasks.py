@@ -444,12 +444,9 @@ class Background:
                 return response
 
         async def update_item_drink():
-            from sqlalchemy.dialects import postgresql
             async with session_factory() as session:
                 for row in updates:
                     stmt = (update(model).where(model.id == row.get('id')).values(seaweed_fids=row.get('seaweed_fids')))
-                    compiled_pg = stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
-                    print(compiled_pg)
                     await session.execute(stmt)
                 await session.commit()
                 logger.info(f"📊 Обновлено {len(response)} записей в postgesql")

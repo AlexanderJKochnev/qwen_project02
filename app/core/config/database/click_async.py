@@ -80,6 +80,7 @@ async def get_dump(client: clickhouse_connect.driver.asyncclient.AsyncClient) ->
         q = q.limit(1)
         result = await client.query(q.get_sql())
         res: dict = result.first_item if result.row_count > 0 else None
+        print(tuple(res.values()))
         return tuple(res.values())
     except Exception as e:
         logger.error(f'app.core.config.database.click_async.get_dump {e}')
