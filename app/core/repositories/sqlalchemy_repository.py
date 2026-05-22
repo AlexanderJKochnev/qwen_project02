@@ -23,13 +23,13 @@ from app.core.hash_norm import get_word_hashes_dict
 from app.core.models.base_model import get_model_by_name
 from app.core.repositories.repo_background_tasks import Background
 from app.core.types import ModelType
-from sqlalchemy.dialects import postgresql  noqa: F401
 # from sqlalchemy.sql.elements import ColumnElement
 from app.core.utils.alchemy_utils import (create_enum_conditions, create_search_conditions2, get_field_list,
                                           get_sql_search)
 from app.core.utils.backgound_tasks import background
 from app.core.utils.reindexation import extract_text_ultra_fast
 from app.service_registry import register_repo
+
 
 # длина списка поисковой выдачи
 search_site = min(settings.PAGE_DEFAULT, 20)
@@ -278,11 +278,11 @@ class Repository(Background, metaclass=RepositoryMeta):
             index_elements=['id'],  # по какому полю ловим конфликт
             set_={"seaweed_fids": stmt.excluded.seaweed_fids}
         )
-        compiled_pg = stmt.compile(dialect = postgresql.dialect(), compile_kwargs = {"literal_binds": True})
+        compiled_pg = stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
         print(compiled_pg)
-        compiled_pg = update_stmt.compile(dialect = postgresql.dialect(), compile_kwargs = {"literal_binds": True})
+        compiled_pg = update_stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
         print(compiled_pg)
-        
+
         # Один execute и один commit на все 200 записей
         # await session.execute(update_stmt)
         # await session.commit()
