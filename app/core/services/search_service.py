@@ -38,17 +38,17 @@ class SearchService:
         # Сценарий 1: Введено ровно одно слово (пробела на конце нет)
         if len(words) == 1 and not has_trailing_space:
             # Превращаем в префиксный FTS-запрос: 'слово':*
-            return CleanedSearchQuery(scenario=1, fts_query=f"'{words[0]}':*")
+            return CleanedSearchQuery(scenario=1, fts_query=f"{words[0]}:*")
 
         # Сценарий 2: Несколько слов (или одно) с пробелом на конце
         if has_trailing_space:
             # Все слова превращаются в законченные токены через оператор &
-            fts_query = " & ".join(f"'{w}'" for w in words)
+            fts_query = " & ".join(f"{w}" for w in words)
             return CleanedSearchQuery(scenario=2, fts_query=fts_query)
 
         # Сценарий 3: Несколько слов без пробела на конце
         # Все слова кроме последнего уходят в FTS, последнее — фильтруется через LIKE в памяти
-        fts_part = " & ".join(f"'{w}'" for w in words[:-1])
+        fts_part = " & ".join(f"{w}" for w in words[:-1])
         like_part = words[-1]
 
         return CleanedSearchQuery(scenario=3, fts_query=fts_part, like_term=like_part)
