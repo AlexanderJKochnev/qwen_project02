@@ -26,7 +26,7 @@ from app.support.item.schemas import (FileUpload, ItemCreate, ItemCreatePreact, 
 paging = get_paging
 
 
-class ItemRouter(ArrayRouter, BaseRouter):
+class ItemRouter(ArrayRouter, SearchRouter, BaseRouter):
     def __init__(self, prefix: str = '/items',
                  auth_dependency=get_active_user_or_internal,
                  **kwargs):
