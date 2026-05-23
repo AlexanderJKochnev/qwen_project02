@@ -78,26 +78,13 @@ class SearchRepository:
             ts_query = func.to_tsquery("simple", query_data.fts_query)
             rank_expr = func.ts_rank_cd(model.search_vector, ts_query)
 
-            stmt = stmt.where(model.search_vector.bool_op("@@")(ts_query)).order_by(desc(rank_expr), model.id)
+            stmt = stmt.where(model.search_vector.bool_op("@@")(ts_query))
 
-            # Имитация: если cursor передан, нам нужно понять, какой делать OFFSET.
-            # Так как выборка маленькая, мы можем вычислить OFFSET на основе того,
-            # где в отсортированном подзапросе находится наш query_data.cursor.
             if query_data.cursor is not None:
-                # Строим подзапрос, чтобы узнать ранг текущего курсора и сделать правильный сдвиг
-                offset_subquery = (select(func.count(model.id)).where(model.search_vector.bool_op("@@")(ts_query))
-                                   # Находим сколько элементов имеют ранг выше или такой же, но с меньшим ID
-                                   # Для простоты и гарантированной скорости на малых выборках 2-3 сценариев,
-                                   # если Preact запрашивает страницы последовательно, мы можем использовать сессионный offset,
-                                   # Но самый надежный способ без хранения состояния — позиционирование по составному ключу (Rank, ID):
-                                   )
-                # Упрощенный и надежный подход для Сценариев 2-3:
-                # Если передан курсор, мы просто делаем OFFSET = limit (имитируем вторую страницу).
-                # Если вам нужна глубокая пагинация (> 2 страниц) для 2-3 сценариев, мы высчитаем точный offset:
-                stmt = SearchRepository._apply_rank_keyset(stmt, model, query_data.cursor, rank_expr)
+                stmt = await SearchRepository._apply_rank_keyset(stmt, model, query_data.cursor, rank_expr, session)
 
-            stmt = stmt.limit(limit)
-
+            # Важно: сортировка должна строго соответствовать логике сравнения в keyset
+            stmt = stmt.order_by(desc(rank_expr), model.id).limit(limit)
         # =====================================================================
         # СЦЕНАРИЙ 3: Имитация Keyset через OFFSET (FTS + LIKE)
         # =====================================================================
@@ -108,12 +95,12 @@ class SearchRepository:
             stmt = stmt.where(
                 model.search_vector.bool_op("@@")(ts_query),
                 func.lower(model.search_content).like(f"%{query_data.like_term.lower()}%")
-            ).order_by(desc(rank_expr), model.id)
+            )
 
             if query_data.cursor is not None:
-                stmt = SearchRepository._apply_rank_keyset(stmt, model, query_data.cursor, rank_expr)
+                stmt = await SearchRepository._apply_rank_keyset(stmt, model, query_data.cursor, rank_expr, session)
 
-            stmt = stmt.limit(limit)
+            stmt = stmt.order_by(desc(rank_expr), model.id).limit(limit)
 
         response = await session.execute(stmt)
         return list(response.scalars().all())
