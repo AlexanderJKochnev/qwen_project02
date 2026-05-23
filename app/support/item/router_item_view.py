@@ -196,6 +196,7 @@ class ItemViewRouter:
                                                                                                        'совместимости'),
                                   last_id: Optional[int] = Query(None, description='last id (for preact)'),
                                   limit: int = Query(20, description='количество записей на страницу'),
+                                  boost: float = Query(15.0, description = "заглушка"),
                                   session: AsyncSession = Depends(get_db)
                                   ):
         """ USED ONLY FOR ITEMS_PREACT! IT IS VERY IMPORTANT
