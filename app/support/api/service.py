@@ -153,7 +153,7 @@ class ApiService(ItemService):
         skip = (page - 1) * page_size
         items, total = await repository.get(ater_date, skip, page_size, model, session)
         default_image_id = get_default_image(request, 1)  # заглушка для thumbnails
-        result = cls.convert_list_api_view(items, default_image_id)
+        result = cls.convert_list_api_view(request, items, default_image_id)
         # result = []
         # for item in items:
         #     if item_dict := item.to_dict():
@@ -169,7 +169,7 @@ class ApiService(ItemService):
         skip = (page - 1) * page_size
         items, total = await repository.search(search, skip, page_size, model, session)
         default_image_id = get_default_image(request, 1)  # заглушка для thumbnails
-        result = cls.convert_list_api_view(items, default_image_id)
+        result = cls.convert_list_api_view(request, items, default_image_id)
         return make_paginated_response(result, total, page, page_size)
 
     @classmethod
@@ -179,7 +179,7 @@ class ApiService(ItemService):
         """Поиск с пагинацией и локализацией"""
         items = await repository.search_all(search, model, session)
         default_image_id = get_default_image(request, 1)  # заглушка для thumbnails
-        result = cls.convert_list_api_view(items, default_image_id)
+        result = cls.convert_list_api_view(request, items, default_image_id)
         return result
 
     @classmethod
@@ -192,7 +192,7 @@ class ApiService(ItemService):
         ids_set = tuple(int(b) for a in set(ids.split(comma_separator)) if (b := a.strip()).isdigit())
         items = await repository.get_by_ids(ids_set, model, session)
         default_image_id = get_default_image(request, 1)  # заглушка для thumbnails
-        result = cls.convert_list_api_view(items, default_image_id)
+        result = cls.convert_list_api_view(request, items, default_image_id)
         return result
 
     @classmethod

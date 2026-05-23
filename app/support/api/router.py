@@ -39,17 +39,15 @@ class ApiRouter(ItemRouter):
         self.service = ApiService
 
     def setup_routes(self):
+        # вывод записей постранично
         self.router.add_api_route("", self.get, methods=["GET"],
-                                  # get -> service.get_list_api_view_page -> repository.get_all
-                                  # response_model=PaginatedResponse[dict],
                                   openapi_extra={'x-request-schema': None})
+        # вывод всех записей
         self.router.add_api_route("/all", self.get_all, methods=["GET"],
                                   response_model=List[dict],
-                                  # response_model=List[self.read_schema],
                                   openapi_extra={'x-request-schema': None})
-        # поиск api.service.search_geans -> core.repository.search_fts_all
+        # поиск постраничный
         self.router.add_api_route("/search", self.search_geans, methods=["GET"],
-                                  # response_model=PaginatedResponse[dict],
                                   openapi_extra={'x-request-schema': None}
                                   )
         # поиск api.search_geans_all -> core.repository.search_fts
@@ -64,12 +62,6 @@ class ApiRouter(ItemRouter):
                                   # response_model=List[dict],
                                   openapi_extra={'x-request-schema': None}
                                   )
-        # hash search
-        self.router.add_api_route("/search_by_hash",
-                                  self.smart_search_all,
-                                  methods=["GET"],
-                                  openapi_extra={'x-request-schema': None}
-                                  )
         self.router.add_api_route("/get_by_ids", self.search_by_ids,
                                   methods=["GET"],
                                   # response_model=List[dict],
@@ -82,10 +74,6 @@ class ApiRouter(ItemRouter):
                                   openapi_extra={'x-request-schema': None},
                                   )
         self.router.add_api_route("/thumbnail/{id}", self.get_thumbnail_by_id, methods=["GET"],
-                                  openapi_extra={'x-request-schema': None}, )
-        self.router.add_api_route("/image_png/{id}", self.get_image_png_by_id, methods=["GET"],
-                                  openapi_extra={'x-request-schema': None}, )
-        self.router.add_api_route("/thumbnail_png/{id}", self.get_thumbnail_png_by_id, methods=["GET"],
                                   openapi_extra={'x-request-schema': None}, )
 
     async def get_images_after_date(
@@ -173,22 +161,6 @@ class ApiRouter(ItemRouter):
                                                         session)
         # result = self.paginated_response(**response)
         return orresponse(response)
-
-    async def get_image_png_by_id(self, id: int, session: AsyncSession = Depends(get_db),
-                                  image_service: ThumbnailImageService = Depends()):
-        """
-        получение изображения по id напитка. Версия 2 (Response - не очень)
-        """
-        image_data: bytes = await self.service.get_image_by_id(id, self.repo, self.model, session, image_service)
-        return ResponseStreaming(image_data)
-
-    async def get_thumbnail_png_by_id(self, id: int, session: AsyncSession = Depends(get_db),
-                                      image_service: ThumbnailImageService = Depends()):
-        """
-            получение thumbnail by id. Версия 2 (Response)
-        """
-        image_data: bytes = await self.service.get_thumbnail_by_id(id, self.repo, self.model, session, image_service)
-        return ResponseStreaming(image_data)
 
     async def search_by_ids(self, request: Request, search: str = Query(
             None, description="Поисковый запрос. В случае пустого запроса будут выведены все данные "
