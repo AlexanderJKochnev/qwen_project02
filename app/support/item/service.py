@@ -453,30 +453,13 @@ class ItemService(ArrayService, SearchService, Service):
 
     @classmethod
     async def execute_smart_search_page(cls, request, lang: str, query: str, session: AsyncSession,
-                                        boost: float = 15.0, limit: int = 20,
-                                        last_score: Optional[Union[Decimal, str, float]] = None,
+                                        limit: int = 20,
+                                        last_score: Optional[Union[Decimal, str, float]] = None,  # заглушка для совместимости
                                         last_id: Optional[int] = None,
                                         ) -> Dict:
-        # 1. Токенизация и сбор хешей (включая префикс последнего слова)
-        repo = ItemRepository
         if not query:
-            all_target_hashes = []
-        else:
-            tokens = tokenize(query)
-            # Для простоты считаем все слова полными + ищем префиксы для последнего
-            search_hashes = [get_cached_hash(t) for t in tokens]
-            last_word_prefixes = await repo.get_hashes_by_prefix(session, tokens[-1])
-            # список хэшей в запросе
-            all_target_hashes = list(set(search_hashes) | set(last_word_prefixes))
-        # 3. Финальный поиск
-        # возвращает список instances первой/запрошенной страницы и список якорей
-
-        items, anchors = await repo.find_items_smart_page(session,
-                                                          all_target_hashes,
-                                                          last_score,
-                                                          last_id, boost,
-                                                          limit)
-        language = cls.lang_sorted(lang)
-        default_image_id = get_default_image(request, 1)  # заглушка для thumbnails
-        result = [transform_list_view(item, tuple(language), default_image_id) for item in items]
-        return {'items': result, 'anchors': anchors}
+            return {'items': [], 'anchors': None}
+        ids, next_cursor = cls.search_items_keyset(query, limit, last_id, cls.repository, cls.model, session)
+        items: List[ModelType] = await cls.repository.get_list_view_by_ids(ids, cls.model, session)
+        result = cls.convert_list_instance_to_list_view(request, items, lang)
+        return {'items': result, 'anchors': next_cursor}

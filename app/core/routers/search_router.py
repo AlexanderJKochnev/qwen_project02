@@ -50,14 +50,9 @@ class SearchRouter:
 
     async def search_items_keyset(self, request: Request, search_str: str = Query(
             None, description="Поисковый запрос (при отсутствии значения - выдает все записи?)"
-    ), last_score: Optional[Union[Decimal, str, float]] = Query(
-            None, description='similarity rate'
     ), last_id: Optional[int] = Query(None, description='last id (for preact)'),
         limit: int = Query(20, description='количество записей на страницу'),
-        boost: float = Query(
-        15.0, description="Премия за редкое слово "
-        "(записи с редким словом из запроса попадают наверх выборки)"
-    ), session: AsyncSession = Depends(get_db)
+        session: AsyncSession = Depends(get_db)
     ):
         """ постраничный поиск со смещением по keyset"""
         repository = self.repo

@@ -180,7 +180,7 @@ class ItemViewRouter:
                            session: AsyncSession = Depends(get_db),
                            lang: str = Query('en', description='язык'),
                            limit: int = (Query(20, description='Количество записей (большое чиcло вызовет тормоза)'))):
-        """ вроде бы нигде не используется def search_smart_keyset ONLY FOR ITEMS_PREACT        """
+        """ вроде бы нигде не используется см. def search_smart_keyset ONLY FOR ITEMS_PREACT        """
         # result = await self.service.search_by_trigram_index(search_str, lang, ItemRepository,
         #                                                     Item, session, page, page_size)
         result = await self.service.execute_smart_search(request, search_str, session, lang, limit)
@@ -192,19 +192,16 @@ class ItemViewRouter:
                                       None, description="Поисковый запрос "
                                       "(при отсутствии значения - выдает все записи)"),
                                   last_score: Optional[Union[Decimal, str, float]] = Query(None,
-                                                                                           description='similarity '
-                                                                                                       'rate'),
+                                                                                           description='заглушка для '
+                                                                                                       'совместимости'),
                                   last_id: Optional[int] = Query(None, description='last id (for preact)'),
                                   limit: int = Query(20, description='количество записей на страницу'),
-                                  boost: float = Query(15.0, description="Премия за редкое слово "
-                                                       "(записи с редким словом из запроса попадают наверх выборки)"
-                                                       ),
                                   session: AsyncSession = Depends(get_db)
                                   ):
-        """ поиск по хэшам вместо триграмного  индекса ONLY FOR ITEMS_PREACT
+        """ USED ONLY FOR ITEMS_PREACT! IT IS VERY IMPORTANT
             ItemService.execute_smart_search_page -> app.core.utils.alchemy_utils.transform_list_view
         """
-        result = await self.service.execute_smart_search_page(request, lang, search_str, session, boost, limit,
+        result = await self.service.execute_smart_search_page(request, lang, search_str, session, limit,
                                                               last_score, last_id)
         return result
 
