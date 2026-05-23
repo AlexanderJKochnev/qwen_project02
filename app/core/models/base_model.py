@@ -2,7 +2,7 @@
 
 from datetime import datetime, date
 from decimal import Decimal
-from typing import Annotated, Optional
+from typing import Annotated, Optional, Type
 # from sqlalchemy.dialects.postgresql import MONEY
 from sqlalchemy import DateTime, DECIMAL, func, text, Text, Computed, inspect, Index
 from sqlalchemy.dialects.postgresql import ARRAY, BIGINT
