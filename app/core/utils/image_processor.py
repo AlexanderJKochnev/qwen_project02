@@ -18,7 +18,7 @@ from loguru import logger
 
 
 # Импортируем rembg на уровне модуля
-from rembg import remove, new_session
+# from rembg import remove, new_session
 
 
 @dataclass
@@ -91,6 +91,7 @@ class ImageProcessor:
     """
 
     def __init__(self, config: ImageProcessingConfig = None):
+        from rembg import remove, new_session
         self.config = config or ImageProcessingConfig()
         self._rembg_session = None
         self._executor = ThreadPoolExecutor(max_workers=self.config.max_workers)

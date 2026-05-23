@@ -7,7 +7,6 @@ from app.core.config.project_config import settings
 import io
 import magic
 from PIL import Image, ImageOps, ExifTags, IptcImagePlugin, TiffImagePlugin
-from rembg import remove, new_session  # это встает только на debian
 from loguru import logger
 
 _REMBG_SESSION = None
@@ -43,6 +42,7 @@ def get_rembg_session():
     """Ленивая загрузка модели при первом обращении"""
     global _REMBG_SESSION
     if _REMBG_SESSION is None:
+        from rembg import remove, new_session  # это встает только на debian
         try:
             # rembg сам найдет файл в /root/.u2net/u2net.onnx
             _REMBG_SESSION = new_session("u2net")
