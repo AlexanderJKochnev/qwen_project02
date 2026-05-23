@@ -442,6 +442,7 @@ class ItemService(ArrayService, SearchService, Service):
 
     @classmethod
     async def execute_smart_search(cls, request, query: str, session: AsyncSession,
+                                   lang: str,
                                    limit: int = 20) -> List[dict]:
         if not query:
             return []

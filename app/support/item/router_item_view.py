@@ -178,11 +178,12 @@ class ItemViewRouter:
                                None, description="Поисковый запрос "
                                "(при отсутствии значения - выдает все записи?)"),
                            session: AsyncSession = Depends(get_db),
-                           limit: int = Query(20, description='Количество записей (большое чиcло вызовет тормоза)')):
+                           lang: str = Query('en', description='язык'),
+                           limit: int = (Query(20, description='Количество записей (большое чиcло вызовет тормоза)'))):
         """ вроде бы нигде не используется def search_smart_keyset ONLY FOR ITEMS_PREACT        """
         # result = await self.service.search_by_trigram_index(search_str, lang, ItemRepository,
         #                                                     Item, session, page, page_size)
-        result = await self.service.execute_smart_search(request, search_str, session, limit)
+        result = await self.service.execute_smart_search(request, search_str, session, lang, limit)
         return orresponse(result)
 
     async def search_smart_keyset(self, request: Request,
