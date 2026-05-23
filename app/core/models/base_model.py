@@ -2,7 +2,7 @@
 
 from datetime import datetime, date
 from decimal import Decimal
-from typing import Annotated, Optional, Type
+from typing import Annotated, ClassVar, List, Optional, Type
 # from sqlalchemy.dialects.postgresql import MONEY
 from sqlalchemy import DateTime, DECIMAL, func, text, Text, Computed, inspect, Index
 from sqlalchemy.dialects.postgresql import BIGINT
@@ -348,6 +348,8 @@ class Search:
     @declared_attr
     def search_vector(cls):
         return mapped_column(TSVECTOR, Computed("to_tsvector('simple', coalesce(search_content, ''))", persisted=True))
+
+    search_indices: ClassVar[List[Index]]
 
     @declared_attr.directive
     def search_indices(cls) -> list:
