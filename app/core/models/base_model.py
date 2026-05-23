@@ -350,12 +350,12 @@ class Search:
         return mapped_column(TSVECTOR, Computed("to_tsvector('simple', coalesce(search_content, ''))", persisted=True))
 
     @declared_attr
-    def __table_args__(cls):
-        return (  # 1. GIN индекс для FTS поиска (слово1 & слово2 & последнее:*)
+    def search_indices(cls) -> list:
+        return [  # 1. GIN индекс для FTS поиска (слово1 & слово2 & последнее:*)
             Index(
                 f"idx_{cls.__tablename__}_search_vector_gin", "search_vector", postgresql_using="gin"
             )
-        )
+        ]
 
 
 def plural(single: str) -> str:
