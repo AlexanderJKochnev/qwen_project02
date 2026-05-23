@@ -4,7 +4,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config.database.db_async import get_db
 from app.core.services.search_service import SearchService
-from app.core.types import ModelType
 
 
 class SearchRouter:
@@ -20,7 +19,7 @@ class SearchRouter:
 
     def setup_routes(self):
         self.router.add_api_route(
-            "/search/{q}", self.search_items,
+            "/find/search/{q}", self.search_items,
             methods=["GET"],
             openapi_extra={'x-request-schema': None}
         )
