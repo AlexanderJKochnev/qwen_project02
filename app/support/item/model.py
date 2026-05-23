@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 class Item(Base, BaseAt, ImageMixin, Search):
-    @declared_attr
+    @declared_attr.directive
     def __table_args__(cls):
         local_args = [UniqueConstraint('vol', 'drink_id', name='uq_items_unique'),
                       # Index('idx_items_word_hashes_gin', 'word_hashes', postgresql_using='gin'),

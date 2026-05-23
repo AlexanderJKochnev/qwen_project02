@@ -5,7 +5,7 @@ from decimal import Decimal
 from typing import Annotated, Optional, Type
 # from sqlalchemy.dialects.postgresql import MONEY
 from sqlalchemy import DateTime, DECIMAL, func, text, Text, Computed, inspect, Index
-from sqlalchemy.dialects.postgresql import ARRAY, BIGINT
+from sqlalchemy.dialects.postgresql import BIGINT
 from sqlalchemy.dialects.postgresql import TSVECTOR
 # from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy.ext.asyncio import AsyncAttrs
@@ -349,7 +349,7 @@ class Search:
     def search_vector(cls):
         return mapped_column(TSVECTOR, Computed("to_tsvector('simple', coalesce(search_content, ''))", persisted=True))
 
-    @declared_attr
+    @declared_attr.directive
     def search_indices(cls) -> list:
         return [  # 1. GIN индекс для FTS поиска (слово1 & слово2 & последнее:*)
             Index(
