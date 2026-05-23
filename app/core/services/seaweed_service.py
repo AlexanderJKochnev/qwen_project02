@@ -119,7 +119,7 @@ class SeaweedsService:
                 content_data: bytes = await self.seaweed_repo.get_by_fid(fid_thumb, self.fs)
             else:
                 content_data = None
-            return {'tags': tags}, content_data
+            return {'tags': tags, 'fid': fid, 'fid_thumb': fid_thumb}, content_data
         # 2. загруженное изображение новое - обрабатываем
         result = await self.image_processing(content, processor_type)
         if result:
