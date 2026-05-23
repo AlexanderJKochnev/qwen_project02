@@ -42,7 +42,7 @@ class SearchRepository:
                 # Переводим в нижний регистр для независимости от регистра (ILIKE аналог через lower)
                 func.lower(model.search_content).like(f"%{query_data.like_term.lower()}%")
             ).limit(limit)
-        compiled_pg = stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
+        compiled_pg = stmt.compile(dialect=postgresql.dialect())
         print(str(compiled_pg))
         result = await session.execute(stmt)
         return list(result.scalars().all())
