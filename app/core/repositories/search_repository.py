@@ -44,5 +44,7 @@ class SearchRepository:
             ).limit(limit)
         compiled_pg = stmt.compile(dialect=postgresql.dialect())
         print(str(compiled_pg))
+        print("\n--- PARAMETERS ---")
+        print(compiled_pg.params)
         result = await session.execute(stmt)
         return list(result.scalars().all())
