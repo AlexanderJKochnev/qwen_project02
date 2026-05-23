@@ -33,7 +33,6 @@ from app.support import Drink, Item
 from app.support.drink.repository import DrinkRepository
 from app.support.drink.schemas import DrinkCreate, DrinkUpdate
 from app.support.drink.service import DrinkService
-from app.support.wordhash.model import WordHash
 from app.support.item.repository import ItemRepository
 from app.support.item.schemas import (ItemCreate, ItemCreatePreact, ItemCreateRelation, ItemDetailManyToManyLocalized,
                                       ItemListView, ItemRead, ItemReadRelation, ItemUpdate,
@@ -48,7 +47,16 @@ ItemListViewAdapter: TypeAdapter = TypeAdapter(List[ItemListView])
 
 class ItemService(ArrayService, SearchService, Service):
     default = ['vol', 'drink_id', 'image_id']
+    repository = ItemRepository
+    model = Item
     BATCH_SIZE = 1500  # Оптимально для баланса память/скорость
+
+    @classmethod
+    def convert_list_instance_to_list_view(cls, request: Request, items: List[ModelType], lang: str):
+        items: List[Dict] = list_dict(items)
+        language = cls.lang_sorted(lang)
+        default_image_id = get_default_image(request, 1)  # заглушка для thumbnails
+        return [transform_list_view(item, tuple(language), default_image_id) for item in items]
 
     @classmethod
     def _level_up_(cls, lang_prefixes: list, item: dict) -> dict:
@@ -187,11 +195,7 @@ class ItemService(ArrayService, SearchService, Service):
                             limit: int = 20):
         """Получение списка элементов для ListView с локализацией"""
         items: List[ModelType] = await repository.get_list_view(model, session, limit)
-        items: List[Dict] = list_dict(items)
-        language = cls.lang_sorted(lang)
-        default_image_id = get_default_image(request, 1)  # заглушка для thumbnails
-        result = [transform_list_view(item, tuple(language), default_image_id) for item in items]
-        return result
+        return cls.convert_list_instance_to_list_view(request, items, lang)
 
     @classmethod
     async def get_list_view_page(cls, request, page: int, page_size: int,
@@ -200,10 +204,7 @@ class ItemService(ArrayService, SearchService, Service):
         """Получение списка элементов для ListView с пагинацией и локализацией"""
         skip = (page - 1) * page_size
         items, total = await repository.get_list_view_page(skip, page_size, model, session)
-        items: List[Dict] = list_dict(items)
-        language = cls.lang_sorted(lang)
-        default_image_id = get_default_image(request, 1)  # заглушка для thumbnails
-        result = [transform_list_view(item, tuple(language), default_image_id) for item in items]
+        result = cls.convert_list_instance_to_list_view(request, items, lang)
         return make_paginated_response(result, total, page, page_size)
 
     @classmethod
@@ -375,14 +376,6 @@ class ItemService(ArrayService, SearchService, Service):
         return make_paginated_response(result, total, page, page_size)
 
     @classmethod
-    async def get_by_idX(
-            cls, id: int, repository: Type[ItemRepository], model: Type[Item], session: AsyncSession
-    ) -> Optional[ItemRead]:
-        """Получение записи по ID"""
-        result = await repository.get_by_id(id, model, session)
-        return result
-
-    @classmethod
     async def get_one(cls,
                       id: int,
                       session: AsyncSession) -> Dict[str, Any]:
@@ -414,6 +407,7 @@ class ItemService(ArrayService, SearchService, Service):
     @classmethod
     @background
     async def run_reindex_worker(cls, session_factory, force_all: bool = False):
+        """ DELETE ?"""
         async with session_factory() as session:
             # 1. Получаем СТРИМ всех ID и контента, которые нужно обновить
             # Это гарантирует, что мы пройдем по списку ОДИН РАЗ
@@ -447,28 +441,14 @@ class ItemService(ArrayService, SearchService, Service):
             logger.success('индексация завершена')
 
     @classmethod
-    async def execute_smart_search(cls, request, query: str, session: AsyncSession, boost: float = 15.0,
+    async def execute_smart_search(cls, request, query: str, session: AsyncSession,
                                    limit: int = 20) -> List[dict]:
-        # 1. Токенизация и сбор хешей (включая префикс последнего слова)
-        repo = ItemRepository
-        tokens = tokenize(query)
-        if not tokens:
+        if not query:
             return []
-
-        # Для простоты считаем все слова полными + ищем префиксы для последнего
-        search_hashes = [get_cached_hash(t) for t in tokens]
-        last_word_prefixes = await repo.get_hashes_by_prefix(session, tokens[-1])
-        # список хэшей в запросе
-        all_target_hashes = list(set(search_hashes) | set(last_word_prefixes))
-
-        # 2. Получаем статистику частотности для весов
-        stats_stmt = select(WordHash.hash, WordHash.freq).where(WordHash.hash.in_(all_target_hashes))
-        stats_res = await session.execute(stats_stmt)
-        # [{hash: frew}...]
-        # word_stats = [{"hash": r[0], "freq": r[1]} for r in stats_res.all()]
-        word_stats = [(r[0], r[1]) for r in stats_res.all()]
-        # 3. Финальный поиск
-        return await repo.find_items_weighted_v2(session, word_stats, boost, limit)
+        # получение списка
+        ids: list = await cls.search_items(request, query, limit, cls.repository, cls.model, session)
+        items: List[ModelType] = await cls.repository.get_list_view_by_ids(ids, cls.model, session)
+        return cls.convert_list_instance_to_list_view(request, items, lang)
 
     @classmethod
     async def execute_smart_search_page(cls, request, lang: str, query: str, session: AsyncSession,

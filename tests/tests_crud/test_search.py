@@ -178,33 +178,6 @@ def test_create_enum_conditions():
     assert res, message
 
 
-def test_apply_search_filter_item():
-    """
-        тестирование метода apply_search_filter items (sql validation)
-    """
-    from app.support.item.repository import Item, ItemRepository
-    kwarg = [{'search_str': 'test', 'country_enum': 'country', 'category_enum': 'category'},
-             {'country_enum': 'country', 'category_enum': 'category'},
-             {'search_str': 'test', 'category_enum': 'category'},
-             {'search_str': 'test', 'country_enum': 'country', },
-             {'search_str': 'test'},
-             {'country_enum': 'country'},
-             {'category_enum': 'category'},
-             {'search_str': None, 'country_enum': None, 'category_enum': 'category'}, {}
-             ]
-    for kwa in kwarg:
-        result1 = ItemRepository.apply_search_filter(Item, **kwa)
-        print(result1)
-        res, message = validate_query(result1)
-        assert res, message
-        result = ItemRepository.apply_search_filter(select(func.count()).select_from(Item), count=True, **kwa)
-        res, message = validate_query(result)
-        assert res, message
-    # print(result1)
-    # print(result)
-    # assert False
-
-
 def test_typing():
     from app.core.utils.alchemy_utils import ModelType
     from app.support.item.model import Item

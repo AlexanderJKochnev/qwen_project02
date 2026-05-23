@@ -66,8 +66,8 @@ class Service(metaclass=ServiceMeta):
                  'source_id', 'producer_id', 'vintageconfig_id', 'classification_id', 'designation_id', 'site_id',
                  'parcel_id', 'category_id', 'drink_id', 'food_id', 'superfood_id', 'varietal_id', 'percentage'}
 
-    @classmethod
-    def lang_sorted(cls, lang: str) -> tuple:
+    @staticmethod
+    def lang_sorted(lang: str) -> tuple:
         """
         сортирует списки языков и возвращает список языковых суффиксов где на 1 месте lang
         lang - требуемый язык

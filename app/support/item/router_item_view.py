@@ -35,56 +35,46 @@ class ItemViewRouter:
         self.setup_routes()
 
     def setup_routes(self):
-        """
-        self.router.add_api_route(
-            "/create",
-            self.create_item,
-            methods=['POST'],
-            response_model=ItemCreateResponseSchema,
-            tags=self.tags,
-            summary="Создание напитка в упаковке с этикеткой"
-        )
-        """
+        # 0. Обнодение drink-items данными из preact
         self.router.add_api_route(
             "/update_item_drink/{id}", self.update_item_drinS, methods=["PATCH"], tags=self.tags,
-            summary="Поиск элементов по hash index + word..",  # response_model=ItemCreateResponseSchema,
+            summary="ОБНОВЛЕНИЕ item+drink из PREACT",  # response_model=ItemCreateResponseSchema,
             openapi_extra={'x-request-schema': None}
         )
         """Настройка маршрутов для ListView и DetailView"""
-        # Маршрут для получения списка элементов без пагинации
+        # 1. Маршрут для получения списка элементов без пагинации
         self.router.add_api_route(
             "/list/{lang}",
             self.get_list,
             methods=["GET"],
-            # response_model=List[ItemListView],
             tags=self.tags,
-            summary="Получить список элементов с локализацией",
+            summary="Получение списка элементов Items с локализацией",
             openapi_extra={'x-request-schema': None}
         )
 
-        # Маршрут для получения списка элементов с пагинацией
+        # 2. Маршрут для получения списка элементов с пагинацией
         self.router.add_api_route(
             "/list_paginated/{lang}",
             self.get_list_paginated,
             methods=["GET"],
             # response_model=PaginatedResponse[ItemListView],
             tags=self.tags,
-            summary="Получить список элементов с пагинацией и локализацией",
+            summary="Получить список элементов Items с пагинацией и локализацией",
             openapi_extra={'x-request-schema': None}
         )
 
-        # Маршрут для получения одного элемента по id с локализацией
+        # 3. Маршрут для получения одного элемента по id с локализацией
         self.router.add_api_route(
             "/detail/{lang}/{id}",
             self.get_detail,
             methods=["GET"],
             # response_model=ItemDetailView,
             tags=self.tags,
-            summary="Получить детальную информацию по элементу с локализацией",
+            summary="Получить детальную информацию по элементу Items с локализацией",
             openapi_extra={'x-request-schema': None}
         )
 
-        # Маршрут для поиска элементов с использованием хэш индекса
+        # 4. Маршрут для поиска элементов с использованием FTS НЕ ИСПОЛЬЗУЕТСЯ. just fo fun
         self.router.add_api_route(
             "/search_smart",
             self.search_smart,
@@ -94,7 +84,7 @@ class ItemViewRouter:
             summary="Поиск элементов по hash index + word..",
             openapi_extra={'x-request-schema': None}
         )
-        # Маршрут для поиска элементов с использованием хэш индекса
+        # 5. Маршрут для поиска элементов с использованием хэш индекса ЗАМЕНИТЬ НА FTS
         self.router.add_api_route(
             "/search_smart_page/{lang}",
             self.search_smart_keyset,
@@ -104,15 +94,17 @@ class ItemViewRouter:
             summary="Поиск элементов по hash index + word..",
             openapi_extra={'x-request-schema': None}
         )
+        # 6. ДЛЯ ЗАГРУЗКИ В данных в PREACT_UPDATE
         self.router.add_api_route(
             "/preact/{id}",
             self.get_one,
             methods=["GET"],
             # response_model=ItemReadPreactForUpdate,
             tags=self.tags,
-            summary="Получить детальную информацию по элементу со всеми локализациями",
+            summary="Получить детальную информацию по элементу со всеми локализациями - ДЛЯ ЗАГРУЗКИ В PREACT_UPDATE",
             openapi_extra={'x-request-schema': None}
         )
+        # 7. Обновление индекса
         self.router.add_api_route(
             "/reindexation",
             self.fill_index, methods=["GET"],
@@ -184,18 +176,13 @@ class ItemViewRouter:
     async def search_smart(self, request: Request,
                            search_str: str = Query(
                                None, description="Поисковый запрос "
-                               "(при отсутствии значения - выдает все записи)"),
-                           # page: int = Query(1, ge=1, description="Номер страницы"),
-                           # page_size: int = Query(15, ge=1, le=100, description="Размер страницы"),
+                               "(при отсутствии значения - выдает все записи?)"),
                            session: AsyncSession = Depends(get_db),
-                           boost: float = Query(
-                               15.0, description="Премия за редкое слово "
-                               "(записи с редким словом из запроса попадают наверх выборки)"),
-                           limit: int = Query(15, description='Количество записей (большое чиcло вызовет тормоза)')):
-        """ поиск по хэшам вместо триграмного  индекса ONLY FOR ITEMS_PREACT        """
+                           limit: int = Query(20, description='Количество записей (большое чиcло вызовет тормоза)')):
+        """ вроде бы нигде не используется def search_smart_keyset ONLY FOR ITEMS_PREACT        """
         # result = await self.service.search_by_trigram_index(search_str, lang, ItemRepository,
         #                                                     Item, session, page, page_size)
-        result = await self.service.execute_smart_search(request, search_str, session, boost, limit)
+        result = await self.service.execute_smart_search(request, search_str, session, limit)
         return orresponse(result)
 
     async def search_smart_keyset(self, request: Request,
