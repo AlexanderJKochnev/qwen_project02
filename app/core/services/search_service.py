@@ -47,7 +47,7 @@ class SearchService:
         if has_trailing_space:
             # Все слова превращаются в законченные токены через оператор &
             fts_query = " & ".join(f"{w}" for w in words)
-            return CleanedSearchQuery(scenario=2, fts_query=fts_query)
+            return CleanedSearchQuery(scenario=2, fts_query=fts_query, cursor=cursor)
 
         # Сценарий 3: Несколько слов без пробела на конце
         # Все слова кроме последнего уходят в FTS, последнее — фильтруется через LIKE в памяти
