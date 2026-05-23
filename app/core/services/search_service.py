@@ -9,7 +9,7 @@ from typing import NamedTuple, Optional
 from app.core.repositories.search_repository import SearchRepository
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.utils.fts_tokenizer import tokenizer
+from app.core.utils.fts_tokenizer import tokenized_string, tokenizer
 
 
 class CleanedSearchQuery(NamedTuple):
@@ -32,7 +32,7 @@ class SearchService:
 
         # Очистка: оставляем только буквы, цифры и пробелы
         # clean_text = re.sub(r"[^\w\s]", "", user_input).strip()
-        clean_text = tokenizer(user_input)
+        clean_text = tokenized_string(user_input)
         if not clean_text:
             return None
 
