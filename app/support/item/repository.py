@@ -196,93 +196,108 @@ class ItemRepository(ArrayRepository, SearchRepository, Repository):
 
     @classmethod
     async def find_items_smart_page(
-            cls, session: AsyncSession,
-            all_target_hashes: List[int],
-            last_score: Optional[Union[Decimal, str, float]] = None,
-            last_id: Optional[int] = None, boost: float = 15.0, limit: int = 20, jump_pages: int = 5
+            cls, session: AsyncSession, query_data: Optional["CleanedSearchQuery"] = None,
+            # Передаем наш query_data вместо hashes
+            last_score: Optional[Union[Decimal, str, float]] = None, last_id: Optional[int] = None, limit: int = 20,
+            jump_pages: int = 5
     ) -> Tuple[List[dict], List[dict]]:
         """
-        Универсальный поиск:
-        1. Считает веса слов внутри БД.
-        2. Реализует Keyset пагинацию (стабильно даже при коллизиях float).
+        Универсальный высокопроизводительный FTS поиск с умной пагинацией:
+        1. Извлекает релевантность через ts_rank_cd для Сценариев 2 и 3.
+        2. Реализует Keyset пагинацию по контракту Preact (Score + ID).
         3. Возвращает данные текущей страницы + якоря для быстрых прыжков.
         """
-
-        # total_needed = записи для текущей страницы + 5 якорей для будущих страниц
         ls_param = Decimal(str(last_score)) if last_score is not None else None
         total_needed = (limit * jump_pages) + 1
-        # Если хэшей нет — это режим "просмотра всех"
-        is_full_scan = not all_target_hashes
+
+        # Режим "просмотра всех" (пустая строка поиска)
+        is_full_scan = query_data is None
 
         if is_full_scan:
-            # Упрощенный SQL для пустой строки поиска
+            # Упрощенный SQL для пустой строки поиска (оставляем БЕЗ ИЗМЕНЕНИЙ)
             query_sql = text(
                 """
-                    WITH scored_items AS (
-                        SELECT i.id,
-                               1.00000000::numeric as score -- Константный score для всех
-                        FROM items i
-                    ),
-                    filtered_items AS (
-                        SELECT * FROM scored_items
-                        WHERE (CAST(:ls AS numeric) IS NULL OR (
-                            -- При score=1 пагинация идет чисто по ID
-                            score < CAST(:ls AS numeric) OR
-                            (score = CAST(:ls AS numeric) AND id >= CAST(:li AS bigint))
-                        ))
-                    ),
-                    ranked_items AS (
-                        SELECT *, row_number() OVER (ORDER BY score DESC, id) as rn
-                        FROM filtered_items
-                        LIMIT :total_needed
-                    )
-                    SELECT * FROM ranked_items WHERE rn <= :limit
-                    UNION ALL
-                    SELECT * FROM ranked_items WHERE rn % :limit = 1 AND rn > 1
-                    ORDER BY score DESC, id
-                """
+                        WITH scored_items AS (
+                            SELECT i.id,
+                                   1.00000000::numeric as score
+                            FROM items i
+                        ),
+                        filtered_items AS (
+                            SELECT * FROM scored_items
+                            WHERE (CAST(:ls AS numeric) IS NULL OR (
+                                score < CAST(:ls AS numeric) OR
+                                (score = CAST(:ls AS numeric) AND id >= CAST(:li AS bigint))
+                            ))
+                        ),
+                        ranked_items AS (
+                            SELECT *, row_number() OVER (ORDER BY score DESC, id) as rn
+                            FROM filtered_items
+                            LIMIT :total_needed
+                        )
+                        SELECT * FROM ranked_items WHERE rn <= :limit
+                        UNION ALL
+                        SELECT * FROM ranked_items WHERE rn % :limit = 1 AND rn > 1
+                        ORDER BY score DESC, id
+                    """
             )
+            params = {"limit": limit, "total_needed": total_needed, "ls": ls_param, "li": last_id}
+
         else:
+            # Не пустой запрос. В зависимости от Сценария (1, 2, 3) подставляем логику в CTE
+            # Сценарий 1 ранжируем как пустой запрос (score=1.0, сортировка по id)
+            # Сценарии 2 и 3 ранжируем по реальному ts_rank_cd
+
+            if query_data.scenario == 1:
+                score_select = "1.00000000::numeric as score"
+                where_clause = "i.search_vector @@ to_tsquery('simple', :fts_query)"
+            elif query_data.scenario == 2:
+                score_select = "ROUND(ts_rank_cd(i.search_vector, to_tsquery('simple', :fts_query))::numeric, 8) as score"
+                where_clause = "i.search_vector @@ to_tsquery('simple', :fts_query)"
+            elif query_data.scenario == 3:
+                score_select = "ROUND(ts_rank_cd(i.search_vector, to_tsquery('simple', :fts_query))::numeric, 8) as score"
+                # В Сценарии 3 добавляем фильтрацию по LIKE в памяти для последнего недописанного слова
+                where_clause = """
+                        i.search_vector @@ to_tsquery('simple', :fts_query)
+                        AND lower(i.search_content) LIKE :like_term
+                    """
+
             query_sql = text(
-                """
-                    WITH weights AS (
-                        SELECT hash, ((1.0 / log(freq + 1.5)) * :boost) as weight
-                        FROM wordhashs WHERE hash = ANY(:hashes)
-                    ),
-                    scored_items AS (
-                        SELECT i.id,
-                               ROUND((SELECT SUM(w.weight) FROM weights w
-                                      WHERE i.word_hashes @> ARRAY[w.hash])::numeric, 8) as score
-                        FROM items i
-                        WHERE i.word_hashes && :hashes
-                    ),
-                    filtered_items AS (
-                        SELECT * FROM scored_items
-                        WHERE (CAST(:ls AS numeric) IS NULL OR (
-                            score < CAST(:ls AS numeric) OR
-                            (score = CAST(:ls AS numeric) AND id <= CAST(:li AS bigint))
-                        ))
-                    ),
-                    ranked_items AS (
-                        SELECT *, row_number() OVER (ORDER BY score DESC, id DESC) as rn
-                        FROM filtered_items
+                f"""
+                        WITH scored_items AS (
+                            SELECT i.id,
+                                   {score_select}
+                            FROM items i
+                            WHERE {where_clause}
+                        ),
+                        filtered_items AS (
+                            SELECT * FROM scored_items
+                            WHERE (CAST(:ls AS numeric) IS NULL OR (
+                                score < CAST(:ls AS numeric) OR
+                                (score = CAST(:ls AS numeric) AND id <= CAST(:li AS bigint))
+                            ))
+                        ),
+                        ranked_items AS (
+                            SELECT *, row_number() OVER (ORDER BY score DESC, id DESC) as rn
+                            FROM filtered_items
+                            ORDER BY score DESC, id DESC
+                            LIMIT :total_needed
+                        )
+                        SELECT * FROM ranked_items WHERE rn <= :limit
+                        UNION ALL
+                        SELECT * FROM ranked_items WHERE rn % :limit = 1 AND rn > 1
                         ORDER BY score DESC, id DESC
-                        LIMIT :total_needed
-                    )
-                    SELECT * FROM ranked_items WHERE rn <= :limit
-                    UNION ALL
-                    SELECT * FROM ranked_items WHERE rn % :limit = 1 AND rn > 1
-                    ORDER BY score DESC, id DESC
-                """
+                    """
             )
 
-        params = {"hashes": all_target_hashes, "boost": boost, "limit": limit, "total_needed": total_needed,
-                  "ls": ls_param, "li": last_id}
+            params = {"fts_query": query_data.fts_query,
+                      "like_term": f"%{query_data.like_term.lower()}%" if query_data.like_term else None, "limit": limit,
+                      "total_needed": total_needed, "ls": ls_param, "li": last_id}
 
+        # Выполнение SQL
         result = await session.execute(query_sql, params)
         rows = result.mappings().all()
 
-        # Формируем ID для второго этапа и якоря
+        # Формируем ID для второго этапа и якоря (БЕЗ ИЗМЕНЕНИЙ — контракт сохранен)
         current_page_data = [(r['id'], float(r['score'])) for r in rows if r['rn'] <= limit]
 
         anchors = [{"page_offset": r['rn'] // limit, "last_score": str(r['score']), "last_id": r['id']} for r in rows if

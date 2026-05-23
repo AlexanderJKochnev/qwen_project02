@@ -458,9 +458,19 @@ class ItemService(ArrayService, SearchService, Service):
                                         last_id: Optional[int] = None,
                                         ) -> Dict:
         if not query:
-            return {'items': [], 'anchors': None}
+            query_data = None
+        query_data = cls.prepare_query(query)  # , cursor = cursor)
+        items, anchors = await cls.repository.find_items_smart_page(
+            session=session,
+            query_data=query_data,
+            last_score=last_score,
+            last_id=last_id,
+            limit=limit
+        )
+        """
         result: dict = await cls.search_items_keyset(query, limit, last_id, cls.repository, cls.model, session)
         ids, next_cursor = result.values()
         items: List[ModelType] = await cls.repository.get_list_view_by_ids(ids, cls.model, session)
         result = cls.convert_list_instance_to_list_view(request, items, lang)
         return {'items': result, 'anchors': next_cursor}
+        """

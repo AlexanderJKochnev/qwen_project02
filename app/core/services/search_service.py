@@ -75,7 +75,6 @@ class SearchService:
         """ поиск со смещенимем по keyset"""
 
         query_data = cls.prepare_query(search_str, cursor=cursor)
-        logger.warning(f'{query_data=}')
 
         if not query_data:
             return {"ids": [], "next_cursor": None}
