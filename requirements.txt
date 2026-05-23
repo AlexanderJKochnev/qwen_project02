@@ -70,6 +70,5 @@ pypika
 pymorphy3
 pymorphy3-dicts-ru
 # nltk
-spacy
-datasketch
+# datasketch
 numpy

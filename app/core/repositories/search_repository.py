@@ -98,10 +98,11 @@ class SearchRepository:
                 stmt = await SearchRepository._apply_rank_keyset(stmt, model, query_data.cursor, rank_expr, session)
 
             stmt = stmt.order_by(desc(rank_expr), model.id).limit(limit)
-        compiled_pg = stmt.compile(dialect=postgresql.dialect())
-        print(str(compiled_pg))
-        print("\n--- PARAMETERS ---")
-        print(compiled_pg.params)
+        """ compiled_pg = stmt.compile(dialect=postgresql.dialect())
+            print(str(compiled_pg))
+            print("\n--- PARAMETERS ---")
+            print(compiled_pg.params)
+        """
         response = await session.execute(stmt)
         return list(response.scalars().all())
 

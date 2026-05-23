@@ -51,7 +51,7 @@ from app.support.varietal.router import VarietalRouter
 from app.support.parser.router import (StatusRouter, CodeRouter, NameRouter, OrchestratorRouter,
                                        ImageRouter, RawdataRouter, RegistryRouter)
 from app.support.websearch.router import router as web_router
-from app.support.ollama.router import OllamaRouter, PromptRouter, ISOLanguageRouter, ProptionRouter, WriterRuleRouter
+from app.support.ollama.router import PromptRouter, ISOLanguageRouter, ProptionRouter, WriterRuleRouter
 from app.support.lwin.router import LwinRouter
 from app.support.producer.router import ProducerRouter, ProducerTitleRouter
 from app.support.vintage.router import VintageConfigRouter, DesignationRouter, ClassificationRouter
@@ -66,10 +66,6 @@ from app.core.repositories.clickhouse_repository import ClickHouseRepositoryFact
 from app.support.merging.router import MergingRouter
 
 logger.info('start initialisation')
-
-# SEAWEEDMANAGER INITIATE (url/port вынести в .env после внедрения
-# seaweed_manager = SeaweedFSManager(master_url="http://seaweedfs_master:9333")
-# logger.success('CLICKHOUSE MANAGER INITIATEED')
 
 _seaweeds_fids_dump: Optional[List[str]] = None
 
