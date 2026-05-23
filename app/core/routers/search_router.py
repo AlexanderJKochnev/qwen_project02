@@ -30,7 +30,7 @@ class SearchRouter:
             next_method()
 
     async def search_items(self, request: Request,
-                           q: str = Path(None, min_length=1, description="Поисковый запрос"),
+                           q: str = Path(..., min_length=1, description="Поисковый запрос"),
                            session: AsyncSession = Depends(get_db),
                            limit: int = Query(10, description="размер страницы")
                            ):
