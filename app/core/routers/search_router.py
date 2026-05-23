@@ -37,4 +37,4 @@ class SearchRouter:
         service = SearchService
         model = self.model
         query_data = await service.search_items(request, q, limit, repository, model, session)
-        
+        return query_data
