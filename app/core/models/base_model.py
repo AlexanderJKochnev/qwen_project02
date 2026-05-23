@@ -340,6 +340,7 @@ class Hash:
 class Search:
     """ поисковое поле для  """
     __abstract__ = True
+    __allow_unmapped__ = True
 
     @declared_attr
     def search_content(cls) -> Mapped[Optional[str]]:
@@ -348,8 +349,6 @@ class Search:
     @declared_attr
     def search_vector(cls):
         return mapped_column(TSVECTOR, Computed("to_tsvector('simple', coalesce(search_content, ''))", persisted=True))
-
-    search_indices: ClassVar[List[Index]]
 
     @declared_attr.directive
     def search_indices(cls) -> list:
