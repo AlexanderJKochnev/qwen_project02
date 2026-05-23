@@ -2,7 +2,6 @@
 """
     базовый класс для поиска
 """
-import re
 from loguru import logger
 from fastapi import Request
 from typing import NamedTuple, Optional
