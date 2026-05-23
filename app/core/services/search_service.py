@@ -81,7 +81,7 @@ class SearchService:
             return {"ids": [], "next_cursor": None}
 
         # Вызываем репозиторий
-        matching_ids = await repository.search_all(query_data, model, session, limit)
+        matching_ids = await repository.search_keyset(query_data, model, session, limit)
 
         # Формируем единый контракт ответа для Preact
         # Если это сценарий 1, следующим курсором будет последний ID.
