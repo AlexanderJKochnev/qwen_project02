@@ -2,14 +2,15 @@
 import asyncio
 from typing import Any, Optional, Dict
 from loguru import logger
-from sqlalchemy import inspect, select, update
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config.project_config import settings
-from app.core.hash_norm import get_word_hashes_dict
+# from app.core.hash_norm import get_word_hashes_dict
 from app.core.models.base_model import get_model_by_name
 from app.core.repositories.clickhouse_repository import ClickHouseRepository
 from app.core.utils.backgound_tasks import background_unique
+from app.core.utils.fts_tokenizer import tokenized_string
 from app.core.utils.hashes import FastImageHasher
 from app.core.utils.headers import content_type_magic, make_meta
 from app.core.utils.image_processor import ImageProcessingConfig, ImageProcessor
@@ -25,6 +26,7 @@ class Background:
                 _load_drinks_batch:     Получение данных для чанка (словарь {drink_id: drink_dict}
                 _process_chunk:         Обработка чанка
                     extract_text_optimized:     Извлечение текста из словаря
+                    tokenized_string            Нормализация текста
                 _bulk_update_items:     Сохранение результата
                 _bulk_upsert_wordhash:  Сохранение word hash
     """
@@ -40,7 +42,7 @@ class Background:
     async def run_sync_background(
             cls, start_model, start_id: int, path_str: str, session_factory, skip_keys: set
     ):
-        """ Точка входа для фоновой синхронизации
+        """ Точка входа для фоновой синхронизации поля search_content
             если start_model = None: полная реиндексация
         """
         if start_model:
@@ -110,47 +112,6 @@ class Background:
             raise ValueError(f"Модель {model_name} не найдена")
         return model
 
-    @classmethod
-    def _build_join_query(cls, start_model, target_item, target_drink, path_str: str):
-        """Строит динамический запрос с JOIN
-            УДАЛИТЬ
-        """
-
-        DrinkModel = cls._get_model('Drink')
-        ItemModel = cls._get_model('Item')
-
-        stmt = select(target_item.id, target_drink.id).select_from(start_model)
-        current = start_model
-        path_parts = path_str.split('.')
-        logger.warning(f'{current=}, {path_parts=}')
-
-        for part in path_parts:
-            # Находим relationship
-            mapper = inspect(current)
-            rel_key = cls._find_relationship(mapper, part)
-
-            if not rel_key:
-                raise AttributeError(f"Связь {part} не найдена в {current.__name__} "
-                                     f"проверяй аргументы декоратора @registers_search_update над классом модели "
-                                     f"{part} и всех в цепочке до items")
-
-            # Определяем следующий класс
-            next_model = getattr(current, rel_key).property.mapper.class_
-
-            # Выбираем алиас
-            if next_model == DrinkModel:
-                step_target = target_drink
-            elif next_model == ItemModel:
-                step_target = target_item
-            else:
-                step_target = next_model
-
-            # Добавляем JOIN
-            stmt = stmt.join(step_target, getattr(current, rel_key))
-            current = next_model
-
-        return stmt
-
     @staticmethod
     def _find_relationship(mapper, part_name: str) -> Optional[str]:
         """Ищет relationship по имени"""
@@ -174,7 +135,6 @@ class Background:
         chunk_size = 1500
         total = len(pairs)
         updated_count = 0
-        all_word_hashes = {}
 
         logger.info(f"🔄 Начало обработки {total} записей")
 
@@ -189,7 +149,7 @@ class Background:
             drinks: Dict[Any, dict] = await cls._load_drinks_batch(session, chunk)
             # {drink_id: drink_dict}
             # Обрабатываем чанк
-            chunk_updates, chunk_hashes = await cls._process_chunk(
+            chunk_updates = await cls._process_chunk(
                 chunk, drinks, skip_keys
             )
 
@@ -197,11 +157,6 @@ class Background:
             if chunk_updates:
                 await cls._bulk_update_items(session, chunk_updates)
                 updated_count += len(chunk_updates)
-
-            # Накопливаем WordHash
-            for word, hash_val in chunk_hashes.items():
-                if word not in all_word_hashes:
-                    all_word_hashes[word] = hash_val
 
             # Логируем прогресс
             current_percent = (updated_count / total) * 100
@@ -224,11 +179,6 @@ class Background:
             f"✅ Обработка завершена: {updated_count} записей за {elapsed:.1f} сек, "
             f"средняя скорость: {updated_count / elapsed:.0f} зап/сек"
         )
-
-        # Сохраняем WordHash
-        if all_word_hashes:
-            await cls._bulk_upsert_wordhash(session, all_word_hashes)
-            logger.info(f"💾 WordHash: сохранено {len(all_word_hashes)} уникальных слов")
 
         return updated_count
 
@@ -264,7 +214,6 @@ class Background:
         Возвращает (updates, word_hashes)
         """
         updates = []
-        word_hashes = {}
 
         for item_id, drink_id in chunk:
             drink_dict = drinks.get(drink_id)
@@ -276,26 +225,15 @@ class Background:
             # Извлекаем текст
             try:
                 # content = extract_text_ultra_fast(drink_dict, skip_keys)
-                content: str = extract_text_optimized(drink_dict, skip_keys)
+                content: str = tokenized_string(extract_text_optimized(drink_dict, skip_keys))
             except Exception as e:
                 logger.error(f"Ошибка извлечения текста для Drink {drink_id}: {e}")
                 content = ""
-
-            # Получаем хэши слов {word: hash}
-            word_hashes_dict: dict = get_word_hashes_dict(content)
-
             # Готовим обновление
             updates.append(
-                {'id': item_id, 'search_content': content, 'word_hashes': list(word_hashes_dict.values())}
+                {'id': item_id, 'search_content': content}
             )
-
-            # Собираем уникальные слова
-            for word, hash_val in word_hashes_dict.items():
-                if word not in word_hashes:
-                    word_hashes[word] = hash_val
-        # updated {id: , search_content: , word_hashes: }  индекс для items
-        # word_hashes {word: hash} уникальные слова в словарь
-        return updates, word_hashes
+        return updates
 
     @classmethod
     async def _bulk_update_items(cls, session: AsyncSession, updates: list):
@@ -313,47 +251,14 @@ class Background:
 
         # Обновляем поля
         updated = 0
-        for update in updates:
-            item = items.get(update['id'])
+        for upd in updates:
+            item = items.get(upd['id'])
             if item:
-                # это удалить
-                item.search_content = update['search_content']
-                # это оставить
-                item.word_hashes = update['word_hashes']
+                item.search_content = upd['search_content']
                 updated += 1
 
         await session.flush()
         logger.debug(f"✏️ Обновлено Item: {updated}/{len(updates)}")
-
-    @classmethod
-    async def _bulk_upsert_wordhash(cls, session: AsyncSession, word_hashes: dict):
-        """Добавляет новые слова и обновляет частоту существующих"""
-        if not word_hashes:
-            return
-
-        from sqlalchemy.dialects.postgresql import insert as pg_insert
-
-        WordHashModel = cls._get_model('WordHash')
-
-        # Подготавливаем данные
-        values = [{'word': word, 'hash': hash_val, 'freq': 1} for word, hash_val in word_hashes.items()]
-
-        chunk_size = 2000
-        total = 0
-        real_total = 0
-        for i in range(0, len(values), chunk_size):
-            chunk = values[i:i + chunk_size]
-            stmt = pg_insert(WordHashModel).values(chunk)
-            stmt = stmt.on_conflict_do_update(
-                index_elements=['word'], set_={'freq': WordHashModel.freq + stmt.excluded.freq}
-            )
-            tmp = await session.execute(stmt)
-            real_total += tmp.rowcount
-            total += len(chunk)
-
-        await session.flush()
-        logger.success(f"💾 WordHash: обработано {total} слов (добавлены новые, обновлена частота существующих) "
-                       f"{real_total}")
 
     def extract_text_optimized(data: Any, skip_keys: set = None) -> str:
         """

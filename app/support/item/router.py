@@ -13,6 +13,7 @@ from app.core.config.project_config import get_paging
 from app.core.enum import CliSearchMode
 from app.core.routers.base import BaseRouter
 from app.core.routers.mixin_router import ArrayRouter
+from app.core.routers.search_router import SearchRouter
 from app.core.services.seaweed_service import SeaweedsService
 # from fastapi.responses import StreamingResponse
 from app.core.utils.io_utils import ResponseStreaming

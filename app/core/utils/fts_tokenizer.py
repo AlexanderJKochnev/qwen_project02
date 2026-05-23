@@ -36,10 +36,18 @@ def is_valid_token(t: str) -> bool:
     return True
 
 
-def tokenizer(text: str, ) -> Tuple[str] | None:
+def tokenizer(text: str) -> Tuple[str] | None:
     """Превращает сырой текст в список чистых слов (удаляет/сохраняет сохранением повторов)."""
     if not text:
         return None
     return tuple({t for t in (w.strip('#') for w in text.lower().translate(_TRANS_MAP).split()) if is_valid_token(t)})
+
+
+def tokenized_string(text: str) -> str:
+    """
+    очищаем строку от мусора -> нижний регистр
+    """
+    return ' '.join(tokenizer(text))
+
 
 # print(tokenizer('а где живет белая лöощадь 74? #1039729'))

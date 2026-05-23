@@ -13,6 +13,7 @@ from app.core.exceptions import AppBaseException
 from app.core.config.project_config import settings
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.repositories.array_repository import ArrayRepository
+from app.core.repositories.search_repository import SearchRepository
 from app.core.types import ModelType
 from app.core.utils.alchemy_utils import build_search_condition, create_enum_conditions, create_search_conditions2, \
     exclude_field_list, SearchType
@@ -34,7 +35,7 @@ from app.support.subregion.model import Subregion
 
 
 # ItemRepository = RepositoryFactory.get_repository(Item)
-class ItemRepository(ArrayRepository, Repository):
+class ItemRepository(ArrayRepository, SearchRepository, Repository):
     model = Item
 
     @classmethod

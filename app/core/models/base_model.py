@@ -2,9 +2,9 @@
 
 from datetime import datetime, date
 from decimal import Decimal
-from typing import Annotated, Optional, Type, List
+from typing import Annotated, Optional
 # from sqlalchemy.dialects.postgresql import MONEY
-from sqlalchemy import DateTime, DECIMAL, func, text, Text, Computed, inspect
+from sqlalchemy import DateTime, DECIMAL, func, text, Text, Computed, inspect, Index
 from sqlalchemy.dialects.postgresql import ARRAY, BIGINT
 from sqlalchemy.dialects.postgresql import TSVECTOR
 # from sqlalchemy_serializer import SerializerMixin
@@ -341,8 +341,6 @@ class Search:
     """ поисковое поле для  """
     __abstract__ = True
 
-    word_hashes: Mapped[List[int]] = mapped_column(ARRAY(BIGINT), nullable=True)
-
     @declared_attr
     def search_content(cls) -> Mapped[Optional[str]]:
         return mapped_column(Text, deferred=True, nullable=True)
@@ -351,12 +349,13 @@ class Search:
     def search_vector(cls):
         return mapped_column(TSVECTOR, Computed("to_tsvector('simple', coalesce(search_content, ''))", persisted=True))
 
-    """
-    __table_args__ = (Index(
-        "idx_search_content_null_only",  # Название индекса
-        "id",  # Колонка, которую индексируем
-        postgresql_where=(search_content == None),  # Условие: только NULL
-    ),)"""
+    @declared_attr
+    def __table_args__(cls):
+        return (  # 1. GIN индекс для FTS поиска (слово1 & слово2 & последнее:*)
+            Index(
+                f"idx_{cls.__tablename__}_search_vector_gin", "search_vector", postgresql_using="gin"
+            )
+        )
 
 
 def plural(single: str) -> str:

@@ -267,25 +267,24 @@ class Repository(Background, metaclass=RepositoryMeta):
     async def bulk_update(cls, data: List[Dict], model: ModelType,
                           session: AsyncSession) -> bool:
         """ быстрое массовое обновление записей из словарей
+            data должны содержать id
             data = [
                     {'id': 104, 'seaweed_fids': ('20,cf5fefa821', '16,d0e133a318')},
                     {'id': 105, 'seaweed_fids': ('17,d1a8908ae6', '20,d2ad06361d')},
                     {'id': 106, 'seaweed_fids': ('21,d3f0b578f7', '20,d4cbc210a8')},
                     ]
         """
-        stmt = pg_insert(model).values(data)
-        update_stmt = stmt.on_conflict_do_update(
-            index_elements=['id'],  # по какому полю ловим конфликт
-            set_={"seaweed_fids": stmt.excluded.seaweed_fids}
-        )
-        compiled_pg = stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
-        print(compiled_pg)
-        compiled_pg = update_stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
-        print(compiled_pg)
-
-        # Один execute и один commit на все 200 записей
-        # await session.execute(update_stmt)
-        # await session.commit()
+        # 1. получить редактируемые записи одним запросом
+        data_dict: dict = {item.pop('id'): item for item in data}
+        ids = list(data_dict.keys())
+        instances = await cls.get_by_ids(ids, model, session)
+        for instance in instances:
+            datax = data_dict.get(instance.id)
+            for item in datax:
+                for k, v in item.items():
+                    if hasattr(instance, k):
+                        setattr(instance, k, v)
+        await session.flush()
 
     @classmethod
     async def patch(cls, obj: ModelType,
