@@ -64,7 +64,6 @@ class SearchService:
             main method of search by fts index
         """
         query_data: CleanedSearchQuery | None = cls.prepare_query(search_str)
-        logger.warning(f'{query_data=}')
         result = await repository.search_all(query_data, model, session, limit)
         return result
 

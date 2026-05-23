@@ -1,6 +1,6 @@
 # app.core.repository.search_repository.py
 from typing import List
-from sqlalchemy import desc, select, func
+from sqlalchemy import and_, desc, or_, select, func
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.types import ModelType
@@ -42,10 +42,7 @@ class SearchRepository:
                 # Переводим в нижний регистр для независимости от регистра (ILIKE аналог через lower)
                 func.lower(model.search_content).like(f"%{query_data.like_term.lower()}%")
             ).limit(limit)
-        compiled_pg = stmt.compile(dialect=postgresql.dialect())
-        print(str(compiled_pg))
-        print("\n--- PARAMETERS ---")
-        print(compiled_pg.params)
+
         result = await session.execute(stmt)
         return list(result.scalars().all())
 
@@ -101,24 +98,35 @@ class SearchRepository:
                 stmt = await SearchRepository._apply_rank_keyset(stmt, model, query_data.cursor, rank_expr, session)
 
             stmt = stmt.order_by(desc(rank_expr), model.id).limit(limit)
-
+        compiled_pg = stmt.compile(dialect=postgresql.dialect())
+        print(str(compiled_pg))
+        print("\n--- PARAMETERS ---")
+        print(compiled_pg.params)
         response = await session.execute(stmt)
         return list(response.scalars().all())
 
     @staticmethod
-    def _apply_rank_keyset(stmt, model, cursor_id: int, rank_expr):
+    async def _apply_rank_keyset(stmt, model, cursor_id: int, rank_expr, session: AsyncSession):
         """
-        Трюк составного Keyset пагинатора:
-        Позволяет делать «Keyset» по рангу. Выбирает записи, у которых ранг меньше
-        ранга записи с cursor_id (или ранг равен, но ID больше).
+        Применяет фильтр составного Keyset-курсора (Rank, ID).
+        Сначала находит ранг элемента-курсора, а затем отсекает всё, что было до него.
         """
-        # Получаем ранг элемента-курсора через подзапрос
-        cursor_rank_stmt = select(
-            func.ts_rank_cd(model.search_vector, func.to_tsquery('simple', model.search_content))
-        ).where(model.id == cursor_id).scalar_subquery()
+        # 1. Вычисляем ранг элемента, который фронтенд прислал в качестве last_id
+        cursor_rank_stmt = select(rank_expr).where(model.id == cursor_id)
+        cursor_rank_result = await session.execute(cursor_rank_stmt)
+        cursor_rank = cursor_rank_result.scalar()
 
-        # Эффективный аналог WHERE (rank < cursor_rank) OR (rank = cursor_rank AND id > cursor_id)
+        # Если вдруг такой ID не найден (например, товар удалили), возвращаем запрос без фильтра пагинации
+        if cursor_rank is None:
+            return stmt
+
+        # 2. Применяем математическое условие сдвига страницы по двум полям
         return stmt.where(
-            model.id > cursor_id
-            # Для простоты реализации на коротких текстах, сортировка по id внутри ранга удержит структуру
+            or_(
+                # Условие А: Ранг строго меньше, чем у курсора (записи менее релевантны)
+                rank_expr < cursor_rank,  # Условие Б: Ранг точно такой же, но физический ID больше
+                and_(
+                    rank_expr == cursor_rank, model.id > cursor_id
+                )
+            )
         )
