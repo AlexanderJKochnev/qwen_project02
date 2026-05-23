@@ -4,10 +4,9 @@ import logging
 from typing import Tuple, Optional
 from PIL import Image, ImageOps, ImageFilter
 import numpy as np
-from rembg import remove, new_session
+# from rembg import remove, new_session
 import magic
-
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 # Глобальная сессия rembg
 _REMBG_SESSION = None
@@ -24,6 +23,7 @@ def get_rembg_session():
     """Ленивая загрузка модели rembg"""
     global _REMBG_SESSION
     if _REMBG_SESSION is None:
+        from rembg import remove, new_session
         try:
             _REMBG_SESSION = new_session("u2net")
             logger.info("Модель rembg загружена")
