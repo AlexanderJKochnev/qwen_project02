@@ -459,7 +459,7 @@ class ItemService(ArrayService, SearchService, Service):
                                         ) -> Dict:
         if not query:
             return {'items': [], 'anchors': None}
-        ids, next_cursor = cls.search_items_keyset(query, limit, last_id, cls.repository, cls.model, session)
+        ids, next_cursor = await cls.search_items_keyset(query, limit, last_id, cls.repository, cls.model, session)
         items: List[ModelType] = await cls.repository.get_list_view_by_ids(ids, cls.model, session)
         result = cls.convert_list_instance_to_list_view(request, items, lang)
         return {'items': result, 'anchors': next_cursor}

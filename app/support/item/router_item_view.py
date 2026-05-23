@@ -187,7 +187,7 @@ class ItemViewRouter:
         return orresponse(result)
 
     async def search_smart_keyset(self, request: Request,
-                                  lang: str = Path(..., description="Язык локализации"),
+                                  lang: str = Path('en', description="Язык локализации"),
                                   search_str: str = Query(
                                       None, description="Поисковый запрос "
                                       "(при отсутствии значения - выдает все записи)"),
