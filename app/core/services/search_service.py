@@ -8,18 +8,19 @@ from typing import NamedTuple, Optional
 from app.core.repositories.search_repository import SearchRepository
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.utils.fts_tokenizer import tokenized_string, tokenizer
+from app.core.utils.fts_tokenizer import tokenized_string
 
 
 class CleanedSearchQuery(NamedTuple):
     scenario: int
     fts_query: Optional[str] = None
     like_term: Optional[str] = None
+    cursor: Optional[int] = None    # курсор для пагинации
 
 
 class SearchService:
     @staticmethod
-    def prepare_query(user_input: str) -> Optional[CleanedSearchQuery]:
+    def prepare_query(user_input: str, cursor: Optional[int] = None) -> Optional[CleanedSearchQuery]:
         """
         Анализирует строку ввода, очищает ее и определяет сценарий поиска.
         """
@@ -40,7 +41,7 @@ class SearchService:
         # Сценарий 1: Введено ровно одно слово (пробела на конце нет)
         if len(words) == 1 and not has_trailing_space:
             # Превращаем в префиксный FTS-запрос: 'слово':*
-            return CleanedSearchQuery(scenario=1, fts_query=f"{words[0]}:*")
+            return CleanedSearchQuery(scenario=1, fts_query=f"{words[0]}:*", cursor=cursor)
 
         # Сценарий 2: Несколько слов (или одно) с пробелом на конце
         if has_trailing_space:
@@ -53,7 +54,7 @@ class SearchService:
         fts_part = " & ".join(f"{w}" for w in words[:-1])
         like_part = words[-1]
 
-        return CleanedSearchQuery(scenario=3, fts_query=fts_part, like_term=like_part)
+        return CleanedSearchQuery(scenario=3, fts_query=fts_part, like_term=like_part, cursor=cursor)
 
     @classmethod
     async def search_items(cls, request: Request, search_str: str, limit: int,
@@ -66,3 +67,34 @@ class SearchService:
         logger.warning(f'{query_data=}')
         result = await repository.search_all(query_data, model, session, limit)
         return result
+
+    @classmethod
+    async def search_items_keyset(
+        cls, search_str: str, limit: int, cursor: Optional[int],  # Принимаем last_id от фронтенда
+        repository: SearchRepository, model, session: AsyncSession
+    ) -> dict:
+        """ поиск со смещенимем по keyset"""
+
+        query_data = cls.prepare_query(search_str, cursor=cursor)
+        logger.warning(f'{query_data=}')
+
+        if not query_data:
+            return {"ids": [], "next_cursor": None}
+
+        # Вызываем репозиторий
+        matching_ids = await repository.search_all(query_data, model, session, limit)
+
+        # Формируем единый контракт ответа для Preact
+        # Если это сценарий 1, следующим курсором будет последний ID.
+        # Если сценарии 2-3, мы имитируем курсор (например, возвращаем искусственный маркер или ID)
+        next_cursor = None
+        if matching_ids:
+            if query_data.scenario == 1:
+                next_cursor = matching_ids[-1]
+            else:
+                # Для сценариев 2-3, если выдача полная (равна лимиту),
+                # мы можем передать в качестве курсора порядковый номер элемента для имитации offset
+                # Или передать ID последней записи, а репозиторий сам посчитает смещение
+                next_cursor = matching_ids[-1]
+
+        return {"ids": matching_ids, "next_cursor": next_cursor}
