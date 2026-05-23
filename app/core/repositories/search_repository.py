@@ -1,6 +1,7 @@
 # app.core.repository.search_repository.py
 from typing import List
 from sqlalchemy import select, func
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.types import ModelType
 
@@ -41,6 +42,7 @@ class SearchRepository:
                 # Переводим в нижний регистр для независимости от регистра (ILIKE аналог через lower)
                 func.lower(model.search_content).like(f"%{query_data.like_term.lower()}%")
             ).limit(limit)
-
+        compiled_pg = stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
+        print(str(compiled_pg))
         result = await session.execute(stmt)
         return list(result.scalars().all())
