@@ -97,7 +97,6 @@ def get_filepath_from_dir_by_name(filename: str = None, upload_dir: str = None) 
 def ResponseStreaming(content: bytes, **kwargs):
     # media_type, content_type, mime_type
     headers = generate_image_headers(content, **kwargs)
-    logger.info(f'{len(content)=}')
     return StreamingResponse(
         BytesIO(content),
         media_type=headers.get("Content-Type"),
