@@ -63,6 +63,10 @@ class SeaweedsRouter:
             openapi_extra={'x-request-schema': None}
         )
         self.router.add_api_route(
+            "/png_load", self.create_img2, methods=["POST"],
+            openapi_extra={'x-request-schema': None}
+        )
+        self.router.add_api_route(
             "test", self.test_create_img, methods=["POST"], openapi_extra={'x-request-schema': None}
         )
         self.router.add_api_route(
@@ -92,6 +96,36 @@ class SeaweedsRouter:
             content = await file.read()
             # response: (meta, content | None)
             meta, content = await service.create_img2(content, description, table_name, content_type, processor_type)
+            if content:
+                kwargs = {key: val for key, val in meta.items() if key in ('fid', 'fid_thumb', 'tags')}
+                if isinstance(content, list):
+                    content = content[-1]
+                return ResponseStreaming(content, **kwargs)
+            else:
+                return meta
+        except Exception as e:
+            logger.error(e)
+            raise HTTPException(status_code=500, detail=e)
+
+    async def create_img2(self,
+                          description: str = Query(..., description='ключевые слова по которым можно найти '
+                                                   'изображение'),
+                          table_name: str = Query('items', description='имя таблицы для которой '
+                                                  'предназначено изображение. items'),
+                          content_type: int = Query(0, description='возвращает результат: 0 - ничего, '
+                                                    '1 - полное изображение, 2 - thumbnail'),
+                          file: UploadFile = File(...),
+                          service: SeaweedsService = Depends()):
+        """
+            загрзука готовых png изображений с прозрачным фоном в базу данных:
+            1. дедупликация (ищет нет ли уже похожего)
+            3. создание thumbnail
+            4. загрузка в базу данных
+        """
+        try:
+            content = await file.read()
+            # response: (meta, content | None)
+            meta, content = await service.create_img_light(content, description, table_name, content_type)
             if content:
                 kwargs = {key: val for key, val in meta.items() if key in ('fid', 'fid_thumb', 'tags')}
                 if isinstance(content, list):

@@ -32,6 +32,7 @@ from app.core.utils.headers import make_meta
 # from app.core.utils.headers import generate_image_headers
 from app.core.utils.image_processor import ImageProcessingConfig, ImageProcessor
 from app.core.utils.image_utils import image_aligning
+from app.core.utils.image_utils2 import create_thumbnail, get_mime_type
 from app.core.utils.image_webp import process_image_to_webp
 from app.core.utils.pydantic_utils import get_repo
 from app.dependencies import ClickHouseRepositoryFactory, get_clickhouse_repository_factory
@@ -106,7 +107,11 @@ class SeaweedsService:
                           content_include: int = 0, processor_type: int = 4,
                           ) -> dict | tuple:
         """
-        ntcn
+        загрзука изображения в базу данных:
+        1. дедупликация (ищет нет ли уже похожего
+        2. преобраование (удаление фона, уменьшение размера
+        3. создание thumbnail
+        4. загрузка в базу данных
         """
         # 0. get hash
         source_hash = FastImageHasher.xxhash64(content)
@@ -144,6 +149,54 @@ class SeaweedsService:
                 result = {'test': source_hash}, None
             case 1:
                 result = {'test': source_hash}, full_data
+            case _:
+                result = {'test': source_hash}, thumb_data
+        return result
+
+    async def create_img_light(self, content: bytes, description: str, table: str,
+                               content_include: int = 1
+                               ) -> dict | tuple:
+        """
+        загрзука готовых png изображений с прозрачным фоном в базу данных:
+        1. дедупликация (ищет нет ли уже похожего
+        3. создание thumbnail
+        4. загрузка в базу данных
+        """
+        # 0. get hash
+        source_hash = FastImageHasher.xxhash64(content)
+        # 1. find by hash
+        res: dict = await self.click_repo.get_by_id('data_hash', source_hash,
+                                                    ['fid', 'fid_thumb', 'tags'])
+        if res:     # изображение с этим хэшем уже есть - просто возвращаем его без создания нового
+            fid, fid_thumb, tags = res.values()
+            if content_include == 1:
+                content_data: bytes = await self.seaweed_repo.get_by_fid(fid, self.fs)
+            elif content_include == 2:
+                content_data: bytes = await self.seaweed_repo.get_by_fid(fid_thumb, self.fs)
+            else:
+                content_data = None
+            return {'tags': tags, 'fid': fid, 'fid_thumb': fid_thumb}, content_data
+        # 2. загруженное изображение новое - обрабатываем
+        thumb_data = await create_thumbnail(content)
+        if thumb_data:
+            # 3. save to seaweed
+            fid = await self.fs.upload(content)
+            fid_thumb = await self.fs.upload(thumb_data)
+            # 4. save to clickhouse
+            # 4.1. meta data generation
+            meta = make_meta(
+                fid, fid_thumb, content, thumb_data,
+                description, source_hash, table, get_mime_type(content)
+            )
+            logger.warning(f'{meta=}')
+            # 4.2. saving
+            await self.click_repo.create(meta)
+        # возврат результата
+        match content_include:
+            case 0:
+                result = {'test': source_hash}, None
+            case 1:
+                result = {'test': source_hash}, content
             case _:
                 result = {'test': source_hash}, thumb_data
         return result
