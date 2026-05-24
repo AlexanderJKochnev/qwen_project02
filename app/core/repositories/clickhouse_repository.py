@@ -221,7 +221,7 @@ class ClickHouseRepository:
         return data
 
     async def exact_search(
-            self, tag_value: str, fields: list = ['fid', 'fid_thumb'], order_by: str = 'tags'
+            self, tag_value: str, fields: list = ['fid', 'fid_thumb', 'inserted_at'], order_by: str = 'inserted_at'
     ) -> List[Dict[str, Any]]:
         """
             search by tag
@@ -240,10 +240,14 @@ class ClickHouseRepository:
                 q = q.orderby(events[order_by], order=Order.desc)
             else:
                 q = q.orderby(order_by)
-        q = q.limit(1)
+        # q = q.limit(1) ищем все
         # logger.warning(f'==={q.get_sql()}')
         result = await self.client.query(q.get_sql())
-        return result.first_item if result.row_count > 0 else None
+        if result.row_count == 0:
+            return []
+        data: List[dict] = [dict(zip(result.column_names, row)) for row in result.result_rows]
+        return data
+        # return result.first_item if result.row_count > 0 else None
 
     # ============================================================
     # UPDATE (через версионирование)

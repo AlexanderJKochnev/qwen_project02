@@ -14,6 +14,8 @@
     update
 
 """
+from typing import List
+
 import aiohttp
 from fastapi import Depends, HTTPException, BackgroundTasks
 from aiohttp.client_exceptions import ClientResponseError
@@ -250,12 +252,12 @@ class SeaweedsService:
         result: bytes = await self.get_image(fid_thumb)
         return result
 
-    async def search_fid_by_tag(self, tag_value: str) -> dict:
+    async def search_fid_by_tag(self, tag_value: str) -> List[dict]:
         """
             поиск по тэгу. возвращает пару {fid: fid_thumbnail}
         """
         # 1. получение fid: fid_thumb
-        result: dict = await self.click_repo.exact_search(tag_value)
+        result: List[dict] = await self.click_repo.exact_search(tag_value)
         return result
 
     async def search_image_by_tag(self, tag_value: str, image_type: int):

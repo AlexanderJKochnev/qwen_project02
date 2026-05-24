@@ -1,4 +1,6 @@
 # app.core.support.seaweeds.router.py
+from typing import List
+
 from fastapi import File, HTTPException, Query, UploadFile, BackgroundTasks
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -159,7 +161,7 @@ class SeaweedsRouter:
         """
         получение fid изображения по tag
         """
-        result: dict = await service.search_fid_by_tag(tag_value)
+        result: List[dict] = await service.search_fid_by_tag(tag_value)
         return result
         # return StreamingResponse(**image_data)
 
