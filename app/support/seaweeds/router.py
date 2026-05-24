@@ -84,7 +84,7 @@ class SeaweedsRouter:
                          table_name: str = Query('items', description='имя таблицы для которой '
                                                                       'предназначено изображение. items'),
                          content_type: int = Query(0, description='возвращает результат: 0 - ничего, '
-                                                             '1 - полное изображение, 2 - thumbnail'),
+                                                   '1 - полное изображение, 2 - thumbnail'),
                          processor_type: int = Query(4, description='выбор процессора'),
                          file: UploadFile = File(...),
                          service: SeaweedsService = Depends()):
