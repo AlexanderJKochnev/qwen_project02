@@ -18,7 +18,7 @@ from loguru import logger
 
 
 # Импортируем rembg на уровне модуля
-# from rembg import remove, new_session
+from rembg import remove, new_session
 
 
 @dataclass
@@ -91,7 +91,6 @@ class ImageProcessor:
     """
 
     def __init__(self, config: ImageProcessingConfig = None):
-        from rembg import remove, new_session
         self.config = config or ImageProcessingConfig()
         self._rembg_session = None
         self._executor = ThreadPoolExecutor(max_workers=self.config.max_workers)
@@ -147,7 +146,6 @@ class ImageProcessor:
         Ленивая потокобезопасная загрузка модели rembg.
         Модель загружается один раз при первом вызове.
         """
-        from rembg import remove, new_session
         if self._rembg_session is None:
             with self._rembg_lock:
                 # Double-check locking
@@ -297,7 +295,6 @@ class ImageProcessor:
 
     async def _remove_background_async(self, image: Image.Image) -> Image.Image:
         """Асинхронное удаление фона"""
-        from rembg import remove
         loop = asyncio.get_event_loop()
 
         def _remove_bg():
