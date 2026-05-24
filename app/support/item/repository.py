@@ -196,7 +196,7 @@ class ItemRepository(ArrayRepository, SearchRepository, Repository):
 
     @classmethod
     async def find_items_smart_page(
-            cls, session: AsyncSession, query_data: Optional["CleanedSearchQuery"] = None,
+            cls, session: AsyncSession, query_data=None,
             # Передаем наш query_data вместо hashes
             last_score: Optional[Union[Decimal, str, float]] = None, last_id: Optional[int] = None, limit: int = 20,
             jump_pages: int = 5
@@ -296,7 +296,7 @@ class ItemRepository(ArrayRepository, SearchRepository, Repository):
         # Выполнение SQL
         result = await session.execute(query_sql, params)
         rows = result.mappings().all()
-
+        logger.warining(f'{len(rows)=}')
         # Формируем ID для второго этапа и якоря (БЕЗ ИЗМЕНЕНИЙ — контракт сохранен)
         current_page_data = [(r['id'], float(r['score'])) for r in rows if r['rn'] <= limit]
 
