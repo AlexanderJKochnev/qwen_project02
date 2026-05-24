@@ -17,7 +17,7 @@ from app.support.item.repository import ItemRepository
 from app.support.item.model import Item
 from app.core.utils.common_utils import localized_field_with_replacement
 # from app.core.utils.converters import lang_suffix_list, lang_suffix_dict
-from app.core.utils.alchemy_utils import formatted_query, transform_api_list_view
+from app.core.utils.alchemy_utils import transform_api_list_view
 from app.core.config.project_config import settings
 from app.core.schemas.base import PaginatedResponse
 from app.support.item.schemas import (ItemApiLangNonLocalized, ItemApi,
@@ -196,7 +196,8 @@ class ApiService(ItemService):
         return result
 
     @classmethod
-    async def execute_smart_search(cls, request, Request, query: str, session: AsyncSession,
+    async def execute_smart_search(cls, request: Request, query: str, session: AsyncSession,
+                                   lang: str,  # заглушка для совместимости с родителем
                                    limit: int = 20):
         # items = await super().execute_smart_search(query, session, boost, limit)
         # raw = query
