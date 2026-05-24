@@ -12,6 +12,7 @@ from sqlalchemy import func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.config.database.seaweed_async import SeaweedFSManager
 from app.core.hash_norm import get_hashes_for_item
 from app.core.services.array_service import ArrayService
 from app.core.services.search_service import SearchService
@@ -26,6 +27,7 @@ from app.core.utils.image_utils import get_default_image
 from app.core.utils.pydantic_utils import get_field_name, inst_dict, list_dict, make_paginated_response
 from app.core.utils.reindexation import extract_text_ultra_fast
 # from app.core.schemas.base import PaginatedResponse
+from app.core.repositories.clickhouse_repository import ClickHouseRepository
 from app.mongodb.service import ThumbnailImageService
 from app.support import Drink, Item
 from app.support.drink.repository import DrinkRepository
@@ -397,3 +399,43 @@ class ItemService(ArrayService, SearchService, Service):
         )
         result = cls.convert_list_instance_to_list_view(request, items, lang)
         return {'items': result, 'anchors': anchors}
+
+    @classmethod
+    async def add_image_by_fid(
+            cls, request, id: int, fid: str,
+            action: int,
+            session: AsyncSession,
+            click_repo: ClickHouseRepository,
+            fs: SeaweedFSManager) -> bytes:
+        """
+            добавление нового изображения
+            1. поиск fid_thumb by fid
+            2. действие в зависимости от action
+            action: 0: стереть все существующие поставит первым
+                    1: поставить первым - остальные сдвинуть
+                    2: поставить в конец
+        """
+        result: dict = await click_repo.get_by_id('fid', fid, ['fid', 'fid_thumb'])
+        if result:
+            fid_thumb = result.get('fid_thumb')
+        else:
+            raise Exception(f'thumbnail not found for image {fid}')
+        new_element = [fid, fid_thumb]
+        match action:
+            case 1:
+                result: list = await cls.repository.replace_array(id, new_element,
+                                                                  cls.model,
+                                                                  'seaweed_fids', session)
+            case 2:
+                result: list = await cls.repository.add_first_to_array(
+                    id, new_element, cls.model, 'seaweed_fids', session
+                )
+            case _:
+                result: list = await cls.repository.add_to_array(
+                    id, new_element, cls.model, 'seaweed_fids', session
+                )
+        if result == new_element:
+            image_bytes = await fs.download(fid)
+            return image_bytes
+        else:
+            return None

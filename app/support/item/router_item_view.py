@@ -13,9 +13,12 @@ from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.dependencies import get_active_user_or_internal
 from app.core.config.database.db_async import get_db
+from app.core.config.database.seaweed_async import get_swfs, SeaweedFSManager
+from app.core.repositories.clickhouse_repository import ClickHouseRepositoryFactory
+from app.core.utils.io_utils import ResponseStreaming
 from app.core.utils.pydantic_utils import orresponse
 from app.core.schemas.base import PaginatedResponse
-from app.dependencies import get_translator_func
+from app.dependencies import get_clickhouse_repository_factory, get_translator_func
 from app.mongodb.service import ThumbnailImageService
 from app.support.item.model import Item
 from app.support.item.repository import ItemRepository
@@ -24,9 +27,11 @@ from app.support.item.service import ItemService
 
 
 class ItemViewRouter:
-    def __init__(self, prefix: str = '/items_view', tags: List[str] = None):
+    def __init__(self, prefix: str = '/items_view', tags: List[str] = None,
+                 click_repo_factory: ClickHouseRepositoryFactory = Depends(get_clickhouse_repository_factory)):
         from fastapi import APIRouter
         self.prefix = prefix
+        self.click_repo = click_repo_factory.for_table('images_metadata')
         self.tags = tags or ["items_view"]
         # self.router = APIRouter()
         self.router = APIRouter(dependencies=[Depends(get_active_user_or_internal)])
@@ -258,3 +263,22 @@ class ItemViewRouter:
             detail = f'{str(e)}, {data=}'
             print('3rd error', detail)
             raise HTTPException(status_code=500, detail=detail)
+
+    async def add_image_by_fid(self, request: Request,
+                               id: int = Path(..., description='id записи'),
+                               fid: str = Query(..., description='fid изображения'),
+                               action: int = Query(..., description='0: сделать основным, остальные затереть, '
+                                                                    '1: сделать основным, остальные сдвинуть,'
+                                                                    '2: записать в конец'),
+                               session: AsyncSession = Depends(get_db),
+                               fs: SeaweedFSManager = Depends(get_swfs)):
+        """
+        добавление нового изображения
+            1. поиск fid_thumb by fid
+            2. действие в зависимости от action
+            action: 0: стереть все существующие поставит первым
+                    1: поставить первым - остальные сдвинуть
+                    2: поставить в конец
+        """
+        image_data: bytes = await self.service.add_image_by_fid(request, id, fid, action, session, self.click_repo, fs)
+        return ResponseStreaming(image_data)
