@@ -329,7 +329,8 @@ class ItemRepository(ArrayRepository, SearchRepository, Repository):
 
         res = await session.execute(stmt)
         # Возвращаем уникальные объекты (если есть связи lazy=selectin, это важно)
-        return list_dict(res.unique().scalars().all())
+        return res.unique().scalars().all()
+        # return list_dict(res.unique().scalars().all())
 
     @classmethod
     async def get_list_view_by_ids(cls, ids: list, model: ModelType, session: AsyncSession):
