@@ -415,7 +415,7 @@ class Service(metaclass=ServiceMeta):
         return result
 
     @classmethod
-    async def get_list_view(cls, lang: str, repository: Type[Repository],
+    async def get_list_view(cls, request: Request, lang: str, repository: Type[Repository],
                             model: ModelType, session: AsyncSession, ) -> List[tuple]:
         # Запрос с загрузкой связей и без пагинации
         rows = await repository.get_list(model, session)

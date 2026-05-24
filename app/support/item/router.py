@@ -80,10 +80,10 @@ class ItemRouter(ArrayRouter, SearchRouter, BaseRouter):
             openapi_extra={'x-request-schema': None},
         )
 
-    async def get_list_view(self, lang: str = Path(..., description="Язык локализации"),
+    async def get_list_view(self, request: Request, lang: str = Path(..., description="Язык локализации"),
                             session: AsyncSession = Depends(get_db)):
         """Получить список элементов с локализацией"""
-        items = await self.service.get_list_view(lang, self.repo, self.model, session)
+        items = await self.service.get_list_view(request, lang, self.repo, self.model, session)
         # items = await self.service.get_list_view(lang, ItemRepository, Item, session)
         return items
 

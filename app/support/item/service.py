@@ -1,31 +1,29 @@
 # app.support.item.service.py
 import asyncio
-from functools import reduce
-from typing import Any, Dict, List, Optional, Type, Union
 from decimal import Decimal
+from typing import Any, Dict, List, Optional, Type, Union
+
 from deepdiff import DeepDiff
-from loguru import logger  # noqa: F401
 # from sqlalchemy.sql.elements import Label
 from fastapi import BackgroundTasks, HTTPException, Request
+from loguru import logger  # noqa: F401
 from pydantic import TypeAdapter, ValidationError
 from sqlalchemy import func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.core.utils.image_utils import get_default_image
-from app.core.utils.pydantic_utils import list_dict, inst_dict
-from app.core.config.project_config import settings
-from app.core.utils.backgound_tasks import background
-from app.core.hash_norm import get_cached_hash, get_hashes_for_item, tokenize
-from app.core.services.service import Service
+from app.core.hash_norm import get_hashes_for_item
 from app.core.services.array_service import ArrayService
 from app.core.services.search_service import SearchService
+from app.core.services.service import Service
 from app.core.types import ModelType
 from app.core.utils.alchemy_utils import transform, transform_list_view
+from app.core.utils.backgound_tasks import background
 from app.core.utils.common_utils import flatten_dict_with_localized_fields, jprint, \
     localized_field_with_replacement  # , delta_data
-from app.core.utils.converters import list_move, read_convert_json
-from app.core.utils.pydantic_utils import get_field_name, make_paginated_response
+from app.core.utils.converters import read_convert_json
+from app.core.utils.image_utils import get_default_image
+from app.core.utils.pydantic_utils import get_field_name, inst_dict, list_dict, make_paginated_response
 from app.core.utils.reindexation import extract_text_ultra_fast
 # from app.core.schemas.base import PaginatedResponse
 from app.mongodb.service import ThumbnailImageService
@@ -140,53 +138,6 @@ class ItemService(ArrayService, SearchService, Service):
         localized_result['image_id'] = item['image_id']
 
         return localized_result
-
-    @classmethod
-    def transform_item_for_list_view(cls, item: dict, lang: str = 'en'):
-        """
-        DELETE
-        Преобразование элемента из текущего формата в требуемый для ListView
-
-        :param item: Элемент в текущем формате (с вложенными объектами)
-        :param lang: Язык локализации ('en', 'ru', 'fr')
-        :return: Преобразованный элемент в требуемом формате
-        """
-
-        # Основные поля
-        result = {
-            'id': item['id'],
-            'vol': item['vol'],
-            'image_id': item['image_id']
-        }
-        # локализованные поля (если нужны нелокадизованные, всталяй их выше в result)
-        localized_fields = [v for v in get_field_name(ItemListView) if v not in result.keys()]
-        # задаем порядок замещения пустых полей
-        language: list = list_move(settings.LANGUAGES, lang)
-        lang_prefixes: list = cls.lang_suffix_list(language)
-        drink_dict = item.get('drink')
-        for key in localized_fields:
-            match key:
-                case 'country':
-                    keys = ['site', 'subregion', 'region', 'country']
-                    value = reduce(lambda d, k: d.get(k) if isinstance(d, dict) else None, keys, drink_dict)
-                    if isinstance(value, dict):
-                        lf = localized_field_with_replacement(value, 'name', lang_prefixes, key)
-                        result.update(lf)
-                case 'category':
-                    keys = ['subcategory', 'category']
-                    value = reduce(lambda d, k: d.get(k) if isinstance(d, dict) else None, keys, drink_dict)
-                    if isinstance(value, dict):
-                        lf = localized_field_with_replacement(value, 'name', lang_prefixes, key)
-                        if value.get('name').lower() == 'wine':
-                            value = drink_dict.get('subcategory')
-                            ls = localized_field_with_replacement(value, 'name', lang_prefixes, 'subcategory')
-                            lf['category'] = f'{ls.get('subcategory')} {lf.get('category')}'
-                        result.update(lf)
-                case _:
-                    value = drink_dict.get(key)
-                    lf = localized_field_with_replacement(drink_dict, key, lang_prefixes)
-                    result.update(lf)
-        return result
 
     @classmethod
     async def get_list_view(cls, request, lang: str,
@@ -353,29 +304,6 @@ class ItemService(ArrayService, SearchService, Service):
             print(f'{exc=}')
 
     @classmethod
-    async def search_items_orm_paginated_async(cls, query_str: str, lang: str,
-                                               repository: ItemRepository,
-                                               model: Item,
-                                               session: AsyncSession,
-                                               page: int = 1,
-                                               page_size: int = 20
-                                               ):
-        """ Получение списка элементов для ListView с пагинацией и локализацией
-            session: AsyncSession,
-            query_string: str,
-            page_size: int,
-            page: int  # Номер страницы (начиная с 1)
-        """
-        items, total = await repository.search_items_orm_paginated_async(query_str, session,
-                                                                         page_size, page)
-        result = []
-        for item in items:
-            tmp = item.to_dict()
-            localized_result = cls._process_item_localization(tmp, lang)
-            result.append(localized_result)
-        return make_paginated_response(result, total, page, page_size)
-
-    @classmethod
     async def get_one(cls,
                       id: int,
                       session: AsyncSession) -> Dict[str, Any]:
@@ -469,10 +397,3 @@ class ItemService(ArrayService, SearchService, Service):
         )
         result = cls.convert_list_instance_to_list_view(request, items, lang)
         return {'items': result, 'anchors': anchors}
-        """
-        result: dict = await cls.search_items_keyset(query, limit, last_id, cls.repository, cls.model, session)
-        ids, next_cursor = result.values()
-        items: List[ModelType] = await cls.repository.get_list_view_by_ids(ids, cls.model, session)
-        result = cls.convert_list_instance_to_list_view(request, items, lang)
-        return {'items': result, 'anchors': next_cursor}
-        """
