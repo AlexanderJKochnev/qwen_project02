@@ -296,7 +296,7 @@ class ItemRepository(ArrayRepository, SearchRepository, Repository):
         # Выполнение SQL
         result = await session.execute(query_sql, params)
         rows = result.mappings().all()
-        logger.warining(f'{len(rows)=}')
+        logger.warning(f'{len(rows)=}')
         # Формируем ID для второго этапа и якоря (БЕЗ ИЗМЕНЕНИЙ — контракт сохранен)
         current_page_data = [(r['id'], float(r['score'])) for r in rows if r['rn'] <= limit]
 
