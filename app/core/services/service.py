@@ -383,7 +383,7 @@ class Service(metaclass=ServiceMeta):
         return result
 
     @classmethod
-    async def search_all(cls,
+    async def search_all(cls, request: Request,
                          search: str,
                          repository: Type[Repository],
                          model: ModelType,

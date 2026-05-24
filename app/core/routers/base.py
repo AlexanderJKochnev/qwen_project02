@@ -331,7 +331,7 @@ class BaseRouter:
         # result = self.paginated_response(**response)
         # return result
 
-    async def search(self, search: str = Query(None, description="Поисковый запрос. "
+    async def search(self, request: Request, search: str = Query(None, description="Поисковый запрос. "
                                                "В случае пустого запроса будут "
                                                "выведены все данные "),
                      page: int = Query(1, ge=1),
@@ -346,10 +346,10 @@ class BaseRouter:
             input_valudation_chema None
             response_model PaginatedResponse[<>ReadRelation>]
         """
-        result = await self.service.search(search, page, page_size, self.repo, self.model, session)
+        result = await self.service.search(request, search, page, page_size, self.repo, self.model, session)
         return orresponse(result)
 
-    async def search_all(self,
+    async def search_all(self, request: Request,
                          search: str = Query(None, description="Поисковый запрос. "
                                              "В случае пустого запроса будут "
                                              "выведены все данные "),
@@ -359,7 +359,7 @@ class BaseRouter:
             input_valudation_chema <>CreateRelation
             response_model <>ReadRelatio
         """
-        result = await self.service.search_all(search, self.repo, self.model, session, limit)
+        result = await self.service.search_all(request, search, self.repo, self.model, session, limit)
         return orresponse(result)
 
     async def get_list_view_page(
