@@ -197,13 +197,17 @@ class ApiService(ItemService):
 
     @classmethod
     async def execute_smart_search(cls, request, Request, query: str, session: AsyncSession,
-                                   boost: float = 15.0,
-                                   limit: int = 20,
-                                   penalty: float = 0.1):
+                                   limit: int = 20):
         # items = await super().execute_smart_search(query, session, boost, limit)
         # raw = query
         default_image_id = get_default_image(request, 1)
-        query = query.replace('+', ' ')
-        items: List[dict] = await super().search_by_hash(query, Item, ItemRepository, session, limit, boost, penalty)
-        result = [transform_api_list_view(item, def_lang, cls.lang_suffix_list(language), default_image_id) for item in items]
+        # список id (поисковый запрос там же чистится
+        ids: list = await cls.search_items(request, query, limit, cls.repository, cls.model, session)
+        items: List[ModelType] = await cls.repository.get_list_view_by_ids(ids, cls.model, session)
+        result = [transform_api_list_view(item, def_lang, cls.lang_suffix_list(language), default_image_id) for item in list_dict(items)]
         return result
+        # query = query.replace('+', ' ')
+        # items: List[dict] = await super().search_by_hash(query, Item, ItemRepository, session, limit, boost, penalty)
+        # result = [transform_api_list_view(item, def_lang, cls.lang_suffix_list(
+        #     language), default_image_id) for item in items]
+        # return result

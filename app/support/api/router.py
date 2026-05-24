@@ -42,37 +42,34 @@ class ApiRouter(ItemRouter):
         # вывод записей постранично
         self.router.add_api_route("", self.get, methods=["GET"],
                                   openapi_extra={'x-request-schema': None})
-        # вывод всех записей
+        # вывод всех записей CONTRACT
         self.router.add_api_route("/all", self.get_all, methods=["GET"],
                                   response_model=List[dict],
                                   openapi_extra={'x-request-schema': None})
-        # поиск постраничный
+        # поиск постраничный REPLACE
         self.router.add_api_route("/search", self.search_geans, methods=["GET"],
                                   openapi_extra={'x-request-schema': None}
                                   )
-        # поиск api.search_geans_all -> core.repository.search_fts
-        self.router.add_api_route("/search_all", self.smart_search_all,  # self.search_geans_all,
+        # поиск CONTRACT
+        self.router.add_api_route("/search_all", self.smart_search_all,
                                   methods=["GET"],
                                   openapi_extra={'x-request-schema': None}
                                   )
-        # alternative search
-        self.router.add_api_route("/search_by_fts",
-                                  self.search_geans_all,
-                                  methods=["GET"],
-                                  # response_model=List[dict],
-                                  openapi_extra={'x-request-schema': None}
-                                  )
+        # CONTRACT
         self.router.add_api_route("/get_by_ids", self.search_by_ids,
                                   methods=["GET"],
                                   # response_model=List[dict],
                                   openapi_extra={'x-request-schema': None}
                                   )
+        # CONTRACT
         self.router.add_api_route("/{id}", self.get_api, methods=["GET"],
                                   # response_model=dict,
                                   openapi_extra={'x-request-schema': None})
+        # CONTRACT
         self.router.add_api_route("/image/{id}", self.get_image_by_id, methods=["GET"],
                                   openapi_extra={'x-request-schema': None},
                                   )
+        # NOT CONTRACT BUT JUST IN CASE
         self.router.add_api_route("/thumbnail/{id}", self.get_thumbnail_by_id, methods=["GET"],
                                   openapi_extra={'x-request-schema': None}, )
 
@@ -122,10 +119,11 @@ class ApiRouter(ItemRouter):
         return orresponse(result)
         # return result
 
-    async def get_all(self, request: Request, after_date: datetime = Query(
-        (datetime.now(timezone.utc) - relativedelta(years=2)).isoformat(),
-        description="Дата в формате ISO 8601 (например, 2024-01-01T00:00:00Z)"
-    ), session: AsyncSession = Depends(get_db)):
+    async def get_all(self, request: Request,
+                      after_date: datetime = Query((datetime.now(timezone.utc) - relativedelta(years=2)).isoformat(),
+                                                   description="Дата в формате ISO 8601 (например, 2024-01-01T00:00:00Z)"),
+                      session: AsyncSession = Depends(get_db),
+                      limit: int = 20):
         """
             Получение всех записей одним списком после указанной даты.
             Может быть очень тяжелым запросом
@@ -182,19 +180,15 @@ class ApiRouter(ItemRouter):
                                search: str = Query(None, description="Поисковый запрос"
                                                    ),
                                session: AsyncSession = Depends(get_db),
-                               # boost: float = Query(15, description="Премия за редкие слова"
-                               #                      ),
-                               # limit: int = 20
                                ):
         """
             поисковый запрос по хэш индексу
         """
         try:
-            boost = 15
             limit = 20
             service = ApiService
             # repository = ItemRepository
-            response = await service.execute_smart_search(request, search, session, boost, limit)
+            response = await service.execute_smart_search(request, search, session, limit)
             return orresponse(response)
         except Exception as e:
             raise HTTPException(status_code=500, detail=f'{e}')

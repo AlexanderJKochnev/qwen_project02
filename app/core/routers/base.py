@@ -282,7 +282,7 @@ class BaseRouter:
         response = await self.service.get_by_id(id, self.repo, self.model, session)
         return orresponse(response)
 
-    async def get(self,
+    async def get(self, request: Request,
                   after_date: datetime = Query(delta,
                                                description="Дата в формате ISO 8601 (например, 2024-01-01T00:00:00Z)"),
                   page: int = Query(1, ge=1),
@@ -305,11 +305,13 @@ class BaseRouter:
         # return response
 
     async def get_all(
-            self,
+            self, request: Request,
             after_date: datetime = Query(delta,
                                          # (datetime.now(timezone.utc) - relativedelta(years=2)).isoformat(),
                                          description="Дата в формате ISO 8601 (например, 2024-01-01T00:00:00Z)"
-                                         ), session: AsyncSession = Depends(get_db), limit: int = 20
+                                         ),
+            session: AsyncSession = Depends(get_db),
+            limit: int = 20
     ):
         """
             Получение все записей одним списком после указанной даты.
@@ -465,7 +467,7 @@ class BaseRouter:
     async def get_list_view_page(
         self,
             lang: str = Query('en', description='язык для вывода данных'),
-            search: str = Query(None, description = 'поисковый запрос'),
+            search: str = Query(None, description='поисковый запрос'),
             page: int = Query(1, ge=1),
             page_size: int = Query(paging.get('def', 20),
                                    ge=paging.get('min', 1),
