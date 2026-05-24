@@ -46,10 +46,6 @@ class ApiRouter(ItemRouter):
         self.router.add_api_route("/all", self.get_all, methods=["GET"],
                                   response_model=List[dict],
                                   openapi_extra={'x-request-schema': None})
-        # поиск постраничный REPLACE
-        self.router.add_api_route("/search", self.search_geans, methods=["GET"],
-                                  openapi_extra={'x-request-schema': None}
-                                  )
         # поиск CONTRACT
         self.router.add_api_route("/search_all", self.smart_search_all,
                                   methods=["GET"],
