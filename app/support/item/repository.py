@@ -296,14 +296,14 @@ class ItemRepository(ArrayRepository, SearchRepository, Repository):
         # Выполнение SQL
         result = await session.execute(query_sql, params)
         rows = result.mappings().all()
-        logger.warning(f'{len(rows)=}')
         # Формируем ID для второго этапа и якоря (БЕЗ ИЗМЕНЕНИЙ — контракт сохранен)
         current_page_data = [(r['id'], float(r['score'])) for r in rows if r['rn'] <= limit]
-
+        logger.warning(f'{current_page_data}')
         anchors = [{"page_offset": r['rn'] // limit, "last_score": str(r['score']), "last_id": r['id']} for r in rows if
                    r['rn'] > limit]
-
+        logger.warning(f'{anchors=}')
         items = await cls.get_full_items(session, current_page_data)
+        logger.warning(f'{items=}')
         return items, anchors
 
     @classmethod
