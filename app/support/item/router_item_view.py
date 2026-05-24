@@ -28,10 +28,9 @@ from app.support.item.service import ItemService
 
 class ItemViewRouter:
     def __init__(self, prefix: str = '/items_view', tags: List[str] = None,
-                 click_repo_factory: ClickHouseRepositoryFactory = Depends(get_clickhouse_repository_factory)):
+                 ):
         from fastapi import APIRouter
         self.prefix = prefix
-        self.click_repo = click_repo_factory.for_table('images_metadata')
         self.tags = tags or ["items_view"]
         # self.router = APIRouter()
         self.router = APIRouter(dependencies=[Depends(get_active_user_or_internal)])
@@ -278,7 +277,8 @@ class ItemViewRouter:
                                                                     '1: сделать основным, остальные сдвинуть,'
                                                                     '2: записать в конец'),
                                session: AsyncSession = Depends(get_db),
-                               fs: SeaweedFSManager = Depends(get_swfs)):
+                               fs: SeaweedFSManager = Depends(get_swfs),
+                               click_repo_factory: ClickHouseRepositoryFactory = Depends(get_clickhouse_repository_factory)):
         """
         добавление нового изображения
             1. поиск fid_thumb by fid
@@ -287,5 +287,6 @@ class ItemViewRouter:
                     1: поставить первым - остальные сдвинуть
                     2: поставить в конец
         """
-        image_data: bytes = await self.service.add_image_by_fid(request, id, fid, action, session, self.click_repo, fs)
+        click_repo = click_repo_factory.for_table('images_metadata')
+        image_data: bytes = await self.service.add_image_by_fid(request, id, fid, action, session, click_repo, fs)
         return ResponseStreaming(image_data)
