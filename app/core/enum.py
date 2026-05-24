@@ -11,9 +11,9 @@ def fetch_all_startup_data() -> dict:
     # session.query(LlmModel.name)
     with SessionLocalSync() as session:
         # Запрос 1: Модели
-        models = session.scalars(select(Ollama.model).order_by(Ollama.model.asc())).all()
+        # models = session.scalars(select(Ollama.model).order_by(Ollama.model.asc())).all()
         # models = session.execute(text("SELECT name FROM llm_models")).scalars().all()
-        data['models'] = [m for m in models] or ["qwen3:8b"]
+        # data['models'] = [m for m in models] or ["qwen3:8b"]
         # Запрос 2: Prompt
         prompts = session.scalars(select(Prompt.role).order_by(Prompt.role.asc())).all()
         data['prompts'] = [pr for pr in prompts] or ["translator"]
@@ -36,7 +36,7 @@ def fetch_all_startup_data() -> dict:
 data = fetch_all_startup_data()
 
 Preset = Enum("Preset", {v: v for v in data['presets']}, type=str)
-LLmodel = Enum("Llmodel", {v: v for v in data['models']}, type=str)
+# LLmodel = Enum("Llmodel", {v: v for v in data['models']}, type=str)
 Prompts = Enum("Prompts", {v: v for v in data['prompts']}, type=str)
 Languages = Enum("Languages", {v: v for v in data['language']}, type=str)
 Writers = Enum("writer", {v: v for v in data['writer']}, type=str)

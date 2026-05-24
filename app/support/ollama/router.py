@@ -89,7 +89,7 @@ class OllamaRouter(BaseRouter):
     async def get_translate(self, phrase: str = Body(..., description="Текст для перевода.",
                                                      title="текст для перевода",
                                                      media_type="text/plain",),
-                            llmodel: LLmodel = Query('translategemma:latest', description="Имя модели в базе данных"),
+                            llmodel: str = Query('translategemma:latest', description="Имя модели в базе данных"),
                             prompt: Prompts = Query('universal_translator', description="Имя промпта в базе данных"),
                             preset: Preset = Query(None, description="Типовые настройки качество/скорость"),
                             writer: Writers = Query(None, description="Типовые правила перевода"),

@@ -297,6 +297,7 @@ class ImageProcessor:
 
     async def _remove_background_async(self, image: Image.Image) -> Image.Image:
         """Асинхронное удаление фона"""
+        from rembg import remove
         loop = asyncio.get_event_loop()
 
         def _remove_bg():
