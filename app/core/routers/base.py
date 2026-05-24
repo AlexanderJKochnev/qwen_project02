@@ -84,87 +84,62 @@ class BaseRouter:
 
     def setup_routes(self):
         """Настраивает маршруты"""
+        # 1. create simple
         self.router.add_api_route("", self.create, methods=["POST"],
                                   # response_model=self.create_response_schema,
                                   openapi_extra={'x-request-schema': self.create_schema.__name__})
-
+        # 2. create in hierarchy
         self.router.add_api_route("/hierarchy",
                                   self.create_relation,
                                   status_code=status.HTTP_200_OK,
                                   methods=["POST"],
                                   # response_model=self.read_schema_relation,
                                   openapi_extra={'x-request-schema': self.create_schema_relation.__name__})
-        """
-        self.router.add_api_route("/batch",
-                                  self.batch_create,
-                                  status_code=status.HTTP_200_OK,
-                                  methods=['POST'],
-                                  response_model=List[self.read_schema_relation],
-                                  openapi_extra={'x-request-schema':
-                                                 f"List_{self.create_schema_relation.__name__}"})
-        """
-        # get all без паггинации
+        # 3. get all без паггинации не раньше заданной даты
         self.router.add_api_route("", self.get, methods=["GET"],
                                   # response_model=self.paginated_response,
                                   openapi_extra={'x-request-schema': None})
-        # search с пагинацией
+        # 4. search с пагинацией (по всем текстовым полям модели, во вложеннных не ищет)
         self.router.add_api_route("/search", self.search, methods=["GET"],
                                   # response_model=self.paginated_response,
                                   openapi_extra={'x-request-schema': None})
-        # search без пагинации
+        # 5. search без пагинации (по всем текстовым полям модели, во вложеннных не ищет)
         self.router.add_api_route("/search_all",
                                   self.search_all, methods=["GET"],
                                   # response_model=self.nonpaginated_response,
                                   openapi_extra={'x-request-schema': None})
-        self.router.add_api_route("/search_geans",
-                                  self.search_geans, methods=["GET"],
-                                  # response_model=self.paginated_response,
-                                  openapi_extra={'x-request-schema': None}
-                                  )
-        self.router.add_api_route("/search_geans_all",
-                                  self.search_geans_all, methods=["GET"],
-                                  # response_model=self.nonpaginated_response,
-                                  openapi_extra={'x-request-schema': None}
-                                  )
-        # get without pagination
+        # 6. get without pagination не раньше заданной даты
         self.router.add_api_route("/all",
                                   self.get_all, methods=["GET"],
                                   # response_model=self.nonpaginated_response,  # List[self.read_response])
                                   openapi_extra={'x-request-schema': None})
-        # get full
+        # 7. get full list no pagination
         self.router.add_api_route("/full",
                                   self.get_full,
                                   methods=["GET"],
                                   # response_model=self.nonpaginated_response,
                                   openapi_extra={'x-request-schema': None})
-        # get list view
+        # 8. list view
         self.router.add_api_route("/list_view",
                                   self.get_list_view_page,
                                   methods=["GET"],
                                   openapi_extra={'x-request-schema': None})
-        self.router.add_api_route("/search_by_hash",
-                                  self.api_smart_search,
-                                  methods=['GET'],
-                                  openapi_extra={'x-request-schema': None})
-        self.router.add_api_route("/search_by_hash_pagination",
-                                  self.api_smart_search,
-                                  methods=['GET'],
-                                  openapi_extra={'x-request-schema': None})
-        # get one buy id
+        # 9. get one buy id
         self.router.add_api_route("/{id}",
                                   self.get_one, methods=["GET"],
                                   # response_model=self.read_schema,
                                   openapi_extra={'x-request-schema': None})
-
+        # 10. update_or_create
         self.router.add_api_route("",
                                   self.update_or_create, methods=["PATCH"],
                                   # response_model=self.read_schema,
                                   openapi_extra={'x-request-schema': self.update_schema.__name__})
+        # 11. patch one
         self.router.add_api_route("/{id}",
                                   self.patch, methods=["PATCH"],
                                   # response_model=self.read_schema,
                                   openapi_extra={'x-request-schema': self.update_schema.__name__})
-
+        # 12. delete one
         self.router.add_api_route("/{id}",
                                   self.delete, methods=["DELETE"],
                                   # response_model=self.delete_response,
@@ -192,7 +167,7 @@ class BaseRouter:
     async def batch_create(self, data: List[TCreateSchema],
                            session: AsyncSession = Depends(get_db)) -> List[TReadSchema]:
         """
-         Создание нескольких записей без зависимостей
+         Создание нескольких записей без зависимостей DELETE?
         """
         try:
             obj = await self.service.batch_get_or_create(data, self.repo, self.model, session)
@@ -329,6 +304,9 @@ class BaseRouter:
                                 detail=f"Internal server error. {e}")
 
     async def get_full(self, session: AsyncSession = Depends(get_db), limit: int = 20) -> List[TReadSchema]:
+        """
+            то же что и get но без ограничения по дате
+        """
         try:
             response = await self.service.get_full(self.repo, self.model, session, limit)
             return orresponse(response)
@@ -344,7 +322,7 @@ class BaseRouter:
                                        session: AsyncSession = Depends(get_db)
                                        ) -> PaginatedResponse:
         """
-            Получение постранично всех записей
+            Получение постранично всех записей без ограничения по дате
         """
         # print(f"📥 GET request for {self.model.__name__} from")
         response = await self.service.get_full_with_pagination(page, page_size, self.repo, self.model, session)
@@ -384,86 +362,6 @@ class BaseRouter:
         result = await self.service.search_all(search, self.repo, self.model, session, limit)
         return orresponse(result)
 
-    async def search_geans(self, search: str = Query(None,
-                                                     min_length=3, max_length=50,
-                                                     description="Полнотекстовый поиск по слову или "
-                                                                 " части слова (с начала), "
-                                                                 " набору слов в любом порядке"),
-                           similarity_threshold: float = Query(None, ge=0, le=1.0),
-                           page: int = Query(1, ge=1),
-                           page_size: int = Query(paging.get('def', 20),
-                                                  ge=paging.get('min', 1),
-                                                  le=paging.get('max', 1000)),
-                           session: AsyncSession = Depends(get_db),
-                           ) -> PaginatedResponse:
-        """
-            Поиск по всем текстовым полям основной таблицы
-            с постраничным выводом результата
-            input_valudation_chema None
-            response_model PaginatedResponse[<>ReadRelation>]
-        """
-        try:
-            result = await self.service.search_geans(search, similarity_threshold,
-                                                     page, page_size, self.repo,
-                                                     self.model, session)
-            return orresponse(result)
-        except Exception as e:
-            logger.error(f'search_geans, {e}')
-            raise HTTPException(status_code=501, detail=f'search_geans, {self.model.__name__}, {e}')
-
-    async def search_geans_all(self,
-                               search: str = Query(None, description="Поисковый запрос. "
-                                                   "В случае пустого запроса будут "
-                                                   "выведены все данные "),
-                               session: AsyncSession = Depends(get_db),
-                               limit: int = 20  # ограничение что бы не подвесить сервер
-                               ):
-        """
-            Поиск по всем текстовым полям основной таблицы БЕЗ пагинации
-            input_valudation_chema <>CreateRelation
-            response_model <>ReadRelation
-        """
-        try:
-            result = await self.service.search_geans_all(search,
-                                                         self.repo, self.model, session, limit)
-            return orresponse(result)
-            #  content = orjson.dumps(result)
-            # return Response(content=content, media_type="application/json")
-        except Exception as e:
-            raise HTTPException(status_code=501, detail=f'search_geans_all, {self.model.__name__}, {e}')
-
-    async def api_smart_search_cursor(self, session: AsyncSession = Depends(get_db),
-                                      query: str = Query(None, description="Поисковый запрос."),
-                                      ls: Optional[float] = Query(None, description="Предыдущий range"),
-                                      # last_score
-                                      li: Optional[int] = Query(None, description="Последний id предыдущего запроса."),
-                                      limit: int = 20,
-                                      boost: float = Query(15, description="Премия за уникальность."),
-                                      penalty: float = Query(0.1, description="Штраф за неполное слово.")
-                                      ):
-        """
-            запрос на постраничный поиск по хэш индексу - работает только с моделямии с хэш индексом.
-            работает только с preact. тут только посмотреть - оценить.
-        """
-        cursor = {"score": ls, "id": li} if ls is not None else None
-        result = await self.service.search_by_hash_cursor(query, self.model, self.repo, session,
-                                                          cursor, limit, boost, penalty)
-        return orresponse(result)
-
-    async def api_smart_search(self, session: AsyncSession = Depends(get_db),
-                               query: str = Query(None, description="Поисковый запрос."),
-                               limit: int = 20,
-                               boost: float = Query(15, description="Премия за уникальность."),
-                               penalty: float = Query(0.1, description="Штраф за неполное слово.")
-                               ):
-        """
-            запрос на постраничный поиск по хэш индексу - работает только с моделямии с хэш индексом.
-            работает только с preact. тут только посмотреть - оценить.
-        """
-        result = await self.service.search_by_hash(query, self.model, self.repo, session,
-                                                   limit, boost, penalty)
-        return orresponse(result)
-
     async def get_list_view_page(
         self,
             lang: str = Query('en', description='язык для вывода данных'),
@@ -482,7 +380,7 @@ class BaseRouter:
         """
         response = await self.service.get_list_view_page(search, page, page_size, self.repo, self.model, session, lang)
         if response is None:
-            raise HTTPException(status_code=404, detail=f'Запрашиваемые данные не найдены на сервере')
+            raise HTTPException(status_code=404, detail='Запрашиваемые данные не найдены на сервере')
         return orresponse(response)
         # return response
 

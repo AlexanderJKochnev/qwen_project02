@@ -579,22 +579,6 @@ class Service(metaclass=ServiceMeta):
         logger.warning("background_tasks.add_task: status: ok")
 
     @classmethod
-    async def search_geans(cls, search: str, similarity_threshold: float,
-                           page: int, page_size: int,
-                           repository: Type[Repository], model: ModelType,
-                           session: AsyncSession,
-                           ) -> Dict[str, Any]:
-        logger.warning('this is undex is not available now. Redirection to fts search')
-        return await cls.search_fts(search, page, page_size, repository, model, session)
-
-    @classmethod
-    async def search_geans_all(cls, search: str,
-                               repository: Type[Repository],
-                               model: ModelType, session: AsyncSession, limit: int = 20) -> List[dict]:
-        logger.warning('this is undex is not available now. Redirection to fts search')
-        return await cls.search_fts_all(search, repository, model, session, limit)
-
-    @classmethod
     async def get_image_by_id(self, id: int,
                               repository: Repository,
                               model: ModelType,
@@ -634,59 +618,6 @@ class Service(metaclass=ServiceMeta):
         return image
 
     @classmethod
-    async def search_fts(cls, search: str,
-                         page: int, page_size: int,
-                         repository: Type[Repository], model: ModelType,
-                         session: AsyncSession,
-                         ) -> Dict[str, Any]:
-        try:
-            # Запрос с загрузкой связей и пагинацией
-            skip = (page - 1) * page_size
-            if not search:
-                items, total = await repository.get_full_with_pagination(skip, page_size, model, session)
-                items = list_dict(items)
-                return make_paginated_response(items, total, page, page_size)
-            # определаяем тип поиска (geans OR b-tree
-            if hasattr(model, 'search_content'):
-                if formatted_search := formatted_query(search):
-                    items, total = await repository.search_fts(formatted_search, skip, page_size, model, session)
-                else:
-                    items, total = await repository.search(search, skip, page_size, model, session)
-            else:
-                # model is not indexed by GIN
-                items, total = await repository.search(search, skip, page_size, model, session)
-            items = list_dict(items)
-            result: dict = make_paginated_response(items, total, page, page_size)
-            return result
-        except Exception as e:
-            logger.error(f'search_geans.error: {e}')
-            raise HTTPException(status_code=501, detail=f'{e}')
-
-    @classmethod
-    async def search_fts_all(cls, search: str,
-                             repository: Type[Repository],
-                             model: ModelType, session: AsyncSession,
-                             limit: int = 20) -> List[dict]:
-        try:
-            # Запрос с загрузкой связей без пагинации
-            # определаяем тип поиска (tfs OR b-tree
-            if not search:
-                response = await repository.get_full(model, session, limit)
-                return list_dict(response)
-            if hasattr(model, 'search_content'):
-                if formatted_search := formatted_query(search):
-                    items = await repository.search_fts_all(formatted_search, model, session, limit)
-                else:
-                    items = await repository.search_all(search, model, session, limit)
-            else:
-                # model is not indexed by GIN
-                items = await repository.search_all(search, model, session)
-            return list_dict(items)
-        except Exception as e:
-            logger.error(f'search_geans_all.error: {e}')
-            raise HTTPException(status_code=501, detail=f'{e}')
-
-    @classmethod
     async def clicksearch(cls, search: str, mode: str,
                           page: int, page_size: int,
                           repository: Type[Repository], model: ModelType,
@@ -704,88 +635,3 @@ class Service(metaclass=ServiceMeta):
             return result
         else:
             return []
-
-    @classmethod
-    async def search_by_hash_cursor(cls, query: str, model: ModelType, repo: Type[Repository],
-                                    session: AsyncSession, cursor: dict = None,
-                                    limit: int = 20, boost: float = 15, penalty: float = 0.1):
-        """
-            поиск по хэш индексу с пагинацией
-            ПРОБЛЕМА - ПРИ РАВНЫХ SCORE ПЕРЕНОСИТ НА СЛЕЛДУЮЩУ СТРАНИЦУ ЗАПСИИМ С ПРЕДУДЫУЩЕЙ
-        """
-        if not hasattr(model, 'word_hashes'):
-            raise HTTPException(status_code=502, detail='this model has no hash index')
-        # 1. Нормализация, сбор хэшей, взвешивание
-        # weighted_hashes: dict = await cls.smart_search_weighted(query, session, repo, boost, penalty)
-        weighted_hashes: dict = await cls.get_weighted_hashes(query, repo, session, boost, penalty)
-        if not weighted_hashes:
-            return {"items": [], "total_found": 0}
-        last_score = cursor.get("score") if cursor else None
-        last_id = cursor.get("id") if cursor else None
-        hashes_tuple = tuple(weighted_hashes.keys())
-        total_count = await repo.get_cached_total_count(model, session, hashes_tuple)
-        results: List[dict] = await repo.find_items_hybrid(model, session, weighted_hashes, last_score, last_id, limit)
-        # 5. Формирование ответа
-        if not results:
-            return {"items": [], "total": 0}
-        if len(results) <= limit:  # это последняя страница
-            next_cursor = None
-        else:
-            results = results[0:-1]
-            next_cursor = {"score": results[-1]["score"], "id": results[-1]["id"]}
-        # for n, key in enumerate(results):
-        #     logger.warning(f"{n}: id={key.get('id')}, score={key.get('score')}")
-        result = {"total_found": total_count, "items": results, "next_cursor": next_cursor,
-                  "has_more": next_cursor is not None}
-        return result
-
-    @classmethod
-    @alru_cache(maxsize=2000)
-    async def get_weighted_hashes(
-            cls, query: str, repo: Any, session: AsyncSession, boost: float = 15.0, penalty: float = 0.1
-    ):
-        tokens = tokenize(query)
-        if not tokens:
-            return {}
-
-        last_token = tokens[-1]
-        full_tokens = tokens[:-1]  # Все слова, кроме последнего
-
-        # ОДИН ЗАПРОС: частоты для hennessy + префиксы для prive
-        word_data = await repo.get_word_data_for_search(session, full_tokens, last_token)
-
-        weighted_hashes = {}
-        for item in word_data:
-            h, freq, word = item['hash'], item['freq'], item['word']
-
-            # Базовый вес TF-IDF
-            base_weight = (1.0 / math.log(freq + 1.5)) * boost
-
-            # Логика ПРЕМИИ:
-            # Если слово из БД совпадает с любым словом запроса целиком -> полный вес
-            if word in tokens:
-                weighted_hashes[h] = base_weight
-            else:
-                # Если это "хвост" от префикса (privera для prive) -> штрафуем
-                weighted_hashes[h] = base_weight * penalty
-
-        return weighted_hashes
-
-    @classmethod
-    async def search_by_hash(
-            cls, query: str, model: ModelType, repo: Type[Repository], session: AsyncSession,
-            limit: int = 20, boost: float = 15, penalty: float = 0.1
-    ):
-        """
-            поиск по хэш индексу без пагинации
-        """
-        if not hasattr(model, 'word_hashes'):
-            raise HTTPException(status_code=502, detail='this model has no hash index')
-        # 1. Нормализация, сбор хэшей, взвешивание
-        # weighted_hashes: dict = await cls.smart_search_weighted(query, session, repo, boost, penalty)
-        weighted_hashes: dict = await cls.get_weighted_hashes(query, repo, session, boost, penalty)
-        if not weighted_hashes:
-            return {"items": [], "total_found": 0}
-        results: List[dict] = await repo.find_items_hybrid(model, session, weighted_hashes,
-                                                           None, None, limit)
-        return results

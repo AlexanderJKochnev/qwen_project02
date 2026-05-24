@@ -8,15 +8,16 @@ from abc import ABCMeta
 from datetime import datetime
 from re import search as research
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
-from sqlalchemy.dialects import postgresql  # NOQA: F401
+
 from loguru import logger
-from sqlalchemy import (and_, cast, desc, func, inspect, literal, literal_column, or_, Row,
-                        RowMapping, select, Select, Text, text, update, insert)
+from sqlalchemy import (and_, cast, desc, func, insert, inspect, literal, or_, Row, RowMapping, select, Select, Text,
+                        text, update)
+from sqlalchemy.dialects import postgresql  # NOQA: F401
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased, load_only
-from sqlalchemy.sql.elements import Label
-from sqlalchemy.dialects.postgresql import insert as pg_insert
+
 from app.core.config.project_config import settings
 from app.core.exceptions import AppBaseException
 from app.core.hash_norm import get_word_hashes_dict
@@ -26,10 +27,8 @@ from app.core.types import ModelType
 # from sqlalchemy.sql.elements import ColumnElement
 from app.core.utils.alchemy_utils import (create_enum_conditions, create_search_conditions2, get_field_list,
                                           get_sql_search)
-from app.core.utils.backgound_tasks import background
 from app.core.utils.reindexation import extract_text_ultra_fast
 from app.service_registry import register_repo
-
 
 # длина списка поисковой выдачи
 search_site = min(settings.PAGE_DEFAULT, 20)
@@ -519,7 +518,9 @@ class Repository(Background, metaclass=RepositoryMeta):
                      skip: int, limit: int,
                      model: ModelType, session: AsyncSession, ) -> tuple:
         """
+            НЕ УДАЛЯТЬ !!! ИСПОЛЬЗУЕТСЯ В PREACT
             Поиск по всем заданным текстовым полям основной таблицы
+            через raw sql и limit
         """
         try:
             # query = cls.get_query(model)
@@ -544,7 +545,8 @@ class Repository(Background, metaclass=RepositoryMeta):
         limit: int = 20  # длина списка поисковой выдачи - что бы не уложить сервер
     ) -> Sequence[Row[Any] | RowMapping | Any]:
         """
-
+            НЕ УДАЛЯТЬ !!!
+            ТОЖЕ ЧТО И search above but no pagination with limit
         """
         try:
             query = cls.get_query(model)
@@ -614,53 +616,6 @@ class Repository(Background, metaclass=RepositoryMeta):
             raise AppBaseException(message=str(e), status_code=404)
 
     @classmethod
-    async def search_geans(cls, search: str, relevance: Label,
-                           skip: int, limit: int,
-                           model: ModelType, session: AsyncSession, ) -> tuple:
-        """
-            Поисковый запрос ПРОВЕРИТЬ ГДЕ ИСПОЛЬЗУЕТСЯ И ЕСЛИ ДА - ПЕРЕДЕЛАТЬ ПОДСЧЕТ TOTAL
-        """
-        try:
-            total_count = 0
-            if search:
-                # получение ранжированного списка id
-                matching = await cls.get_match(model, relevance, search, session, skip, limit)
-                if not matching:
-                    return [], 0
-                if len(matching) <= limit:
-                    total_count = len(matching)
-                else:
-                    # 2. Считаем общее количество подходящих записей
-                    count_stmt = (select(func.count())
-                                  .select_from(model)
-                                  .where(cast(literal(search), Text).op("<%")(model.search_content)))
-                    total_count = await session.scalar(count_stmt) or 0
-                # 3. load all greenlets
-                # items = await cls.get_greenlet(model, matching, session, skip, limit)
-            else:   # пустой поисковый запрос
-                count_stmt = select(func.count()).select_from(model)
-                total_count = await session.scalar(count_stmt) or 0
-                matching = []
-            items = await cls.get_greenlet(model, matching, session)
-            return items, total_count
-        except Exception as e:
-            raise AppBaseException(message=f'search_geans.error; {str(e)}', status_code=404)
-
-    @classmethod
-    async def search_geans_all(
-        cls, search: str, relevance: Label, model: ModelType,
-        session: AsyncSession,
-        limit: int = 20  # длина списка поисковой выдачи - что бы не уложить сервер
-    ) -> tuple:
-        """
-            Поисковый запрос
-        """
-        matching: list = []
-        matching: list = await cls.get_match(model, relevance, search, session, limit)
-        items = await cls.get_greenlet(model, matching, session)
-        return items
-
-    @classmethod
     async def get_image_id(cls, id: int, model: ModelType, session: AsyncSession) -> str:
         """
             получение image_id по id: для моделей основанных на
@@ -699,51 +654,6 @@ class Repository(Background, metaclass=RepositoryMeta):
             return result
         except Exception as e:
             raise AppBaseException(message=f'get_full.error; {str(e)}', status_code=404)
-
-    @classmethod
-    async def search_fts(cls, search: str, skip: int, limit: int,
-                         model: ModelType, session: AsyncSession) -> Tuple[Any, int]:
-        """ полнотекстовый поиск """
-        try:
-            condition = model.search_vector.bool_op("@@")(func.to_tsquery(literal_column("'simple'"),
-                                                                          search))
-            # ниже - ищет только целые слова
-            # condition = model.search_vector.bool_op("@@")(func.websearch_to_tsquery(
-            #     literal_column("'simple'"), formatted_query)
-            # )
-            total_query = select(model).where(condition)
-            total = await cls.get_count(total_query, session)
-            # count_stmt = select(func.count()).select_from(model).where(condition)
-            # total = await session.execute(count_stmt)
-            # total_count = total.scalar() or 0
-            stmp = cls.get_query(model).where(condition).offset(skip).limit(limit)
-            # compiled = stmp.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
-            # logger.error(f'{compiled.string=}')
-            result = await session.execute(stmp)
-            items = result.scalars().all()
-            return items, total
-        except Exception as e:
-            raise AppBaseException(message=f'search_fts.error; {str(e)}', status_code=404)
-
-    @classmethod
-    async def search_fts_all(cls, search: str, model: ModelType,
-                             session: AsyncSession,
-                             limit: int = 20  # длина списка поисковой выдачи - что бы не уложить сервер
-                             ) -> Tuple[Any, int]:
-        """ полнотекстовый поиск without pagination"""
-        try:
-            # formatted_query = " & ".join(search.split())
-            # formatted_query = " & ".join([f"{word}:*" for word in search.split()])
-            condition = model.search_vector.bool_op("@@")(func.to_tsquery(literal_column("'simple'"),
-                                                                          search))
-            stmp = cls.get_query(model).where(condition).limit(limit)
-            # compiled = stmp.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
-            # logger.error(f'{compiled=}')
-            result = await session.execute(stmp)
-            items = result.scalars().all()
-            return items
-        except Exception as e:
-            raise AppBaseException(message=f'search_fts_all.error; {str(e)}', status_code=404)
 
     @classmethod
     async def search_by_conditions(cls, filter: dict, model: ModelType, session: AsyncSession, **kwargs):
