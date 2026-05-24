@@ -467,6 +467,8 @@ class ItemService(ArrayService, SearchService, Service):
             last_id=last_id,
             limit=limit
         )
+        result = cls.convert_list_instance_to_list_view(request, items, lang)
+        return {'items': result, 'anchors': next_cursor}
         """
         result: dict = await cls.search_items_keyset(query, limit, last_id, cls.repository, cls.model, session)
         ids, next_cursor = result.values()
