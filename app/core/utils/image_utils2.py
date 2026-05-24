@@ -8,7 +8,7 @@ from app.core.config.project_config import settings
 async def create_thumbnail(image_bytes: bytes) -> bytes:
     """Thumbnail в JPEG (без прозрачности)"""
     loop = asyncio.get_event_loop()
-    thumb_width, thumb_height = settings.max_thumb_width, settings.max_thumb_height
+    thumb_width, thumb_height = settings.MAX_THUMB_WIDTH, settings.MAX_THUMB_HEIGHT
 
     def _load():
         img = Image.open(io.BytesIO(image_bytes))
