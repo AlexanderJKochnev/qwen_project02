@@ -705,8 +705,7 @@ class Repository(Background, metaclass=RepositoryMeta):
         try:            # 1. Получаем классы моделей
             ItemModel = get_model_by_name('Item')
             DrinkModel = get_model_by_name('Drink')
-            WordHashModel = get_model_by_name('WordHash')
-
+            
             # Используем алиасы, чтобы SQLAlchemy не путалась при джоинах
             target_drink = aliased(DrinkModel)
             target_item = aliased(ItemModel)
@@ -761,19 +760,6 @@ class Repository(Background, metaclass=RepositoryMeta):
                     logger.info('sync_items_by_path 2')
                     processed_drinks.append(drink_obj.id)
                     logger.info('sync_items_by_path 3')
-                    word_hashes_dict = get_word_hashes_dict(content)
-                    # word_hashes = get_hashes_for_item(content)
-                    logger.info('sync_items_by_path 4')
-                    item_obj.word_hashes = list(word_hashes_dict.values())
-                    # обновление wordhash
-                    logger.info('sync_items_by_path 5')
-                    wordhash_dict = [{'word': w, 'hash': h, 'freq': 1} for w, h in word_hashes_dict.items()]
-                    stmt = pg_insert(WordHashModel).values(wordhash_dict)
-                    stmt = stmt.on_conflict_do_update(
-                        index_elements=['word'], set_={'freq': WordHashModel.freq + stmt.excluded.freq}
-                    )
-                    logger.info('sync_items_by_path 6')
-                    # строку ниже удалить после тестирования хэш индекса
                     item_obj.search_content = content
 
             # 6. Принудительная синхронизация с БД

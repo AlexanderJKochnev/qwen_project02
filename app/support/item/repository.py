@@ -14,8 +14,6 @@ from app.core.repositories.search_repository import SearchRepository
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.types import ModelType
 from app.core.utils.alchemy_utils import exclude_field_list
-from app.core.utils.pydantic_utils import list_dict
-from app.support import WordHash
 from app.support.drink.model import Drink
 from app.support.drink.repository import DrinkRepository
 from app.support.item.model import Item
