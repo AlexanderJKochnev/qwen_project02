@@ -19,8 +19,7 @@ from app.core.utils.common_utils import localized_field_with_replacement
 # from app.core.utils.converters import lang_suffix_list, lang_suffix_dict
 from app.core.utils.alchemy_utils import transform_api_list_view
 from app.core.config.project_config import settings
-from app.core.schemas.base import PaginatedResponse
-from app.support.item.schemas import (ItemApiLangNonLocalized, ItemApi,
+from app.support.item.schemas import (ItemApiLangNonLocalized,
                                       ItemApiLangLocalizedInterim)
 
 # ItemApiAdapter: TypeAdapter = TypeAdapter(List[ItemApi])
@@ -159,28 +158,6 @@ class ApiService(ItemService):
         #     if item_dict := item.to_dict():
         #         result.append(cls.__api_view__(item_dict))
         return make_paginated_response(result, total, page, page_size)
-
-    @classmethod
-    async def search(cls, request: Request, search: str, page: int, page_size: int,
-                     repository: ItemRepository, model: Item,
-                     session: AsyncSession
-                     ) -> PaginatedResponse[ItemApi]:
-        """Поиск с пагинацией и локализацией"""
-        skip = (page - 1) * page_size
-        items, total = await repository.search(search, skip, page_size, model, session)
-        default_image_id = get_default_image(request, 1)  # заглушка для thumbnails
-        result = cls.convert_list_api_view(request, items, default_image_id)
-        return make_paginated_response(result, total, page, page_size)
-
-    @classmethod
-    async def search_all(cls, request: Request, search: str,
-                         repository: ItemRepository, model: Item,
-                         session: AsyncSession, limit: int = 20) -> PaginatedResponse[ItemApi]:
-        """Поиск с пагинацией и локализацией"""
-        items = await repository.search_all(search, model, session)
-        default_image_id = get_default_image(request, 1)  # заглушка для thumbnails
-        result = cls.convert_list_api_view(request, items, default_image_id)
-        return result
 
     @classmethod
     async def get_list_api_view_ids(cls, request: Request, ids: str, repository, model,

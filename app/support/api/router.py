@@ -192,21 +192,3 @@ class ApiRouter(ItemRouter):
             return orresponse(response)
         except Exception as e:
             raise HTTPException(status_code=500, detail=f'{e}')
-
-        async def smart_search_all_with_boost(
-                self, request: Request, search: str = Query(
-                    None, description="Поисковый запрос"
-                ), session: AsyncSession = Depends(get_db), boost: float = Query(
-                    15, description="Премия за редкие слова"
-                ), limit: int = 20
-        ):
-            """
-                поисковый запрос по хэш индексу
-            """
-            try:
-                service = ApiService
-                # repository = ItemRepository
-                response = await service.execute_smart_search(request, search, session, boost, limit)
-                return orresponse(response)
-            except Exception as e:
-                raise HTTPException(status_code=500, detail=f'{e}')
