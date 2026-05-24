@@ -3,7 +3,7 @@ from typing import List
 from loguru import logger
 from fastapi import BackgroundTasks, Depends, HTTPException, Query, Body
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.enum import Preset, Prompts, LLmodel, Languages, Writers
+from app.core.enum import Preset, Prompts, Languages, Writers
 from app.core.config.database.db_async import get_db
 from app.core.routers.base import BaseRouter
 from app.core.utils.common_utils import compare_lists_compact, jprint
@@ -115,7 +115,7 @@ class OllamaRouter(BaseRouter):
             self, phrase: str = Body(..., description="Наименование для описания.",
                                      title='введите тему для генерации текста',
                                      media_type="text/plain",),
-            llmodel: LLmodel = Query('qwen3:8b', description="Имя модели в базе данных"),
+            llmodel: str = Query('qwen3:8b', description="Имя модели в базе данных"),
             prompt: Prompts = Query(None, description="Имя промпта в базе данных"),
             preset: Preset = Query(None, description="Типовые настройки качество/скорость"),
             writer: Writers = Query(None, description="Типовые правила генерации текста"),
