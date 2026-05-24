@@ -116,6 +116,13 @@ class ItemViewRouter:
             tags=self.tags, summary="повторная индексация !",
             openapi_extra={'x-request-schema': None}
         )
+        # 8. добавление изображения в запись
+        self.router.add_api_route(
+            "/image_add/{id}",
+            self.add_image_by_fid, methods=["PATCH"], tags=self.tags,
+            summary="добавление изображения из базы данных",
+            openapi_extra={'x-request-schema': None}
+        )
 
     async def get_one(self,
                       id: int,
