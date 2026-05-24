@@ -18,7 +18,8 @@ from loguru import logger
 
 
 # Импортируем rembg на уровне модуля
-from rembg import remove, new_session
+# from rembg import remove, new_session
+from app.core.utils.rembg_import import get_remove, get_new_session
 
 
 @dataclass
@@ -151,6 +152,7 @@ class ImageProcessor:
                 # Double-check locking
                 if self._rembg_session is None:
                     try:
+                        new_session = get_new_session()
                         self._rembg_session = new_session("u2net")
                         logger.info("Модель rembg успешно загружена")
                     except Exception as e:
@@ -312,6 +314,7 @@ class ImageProcessor:
                 rgb_img = image.convert('RGB')
 
             # remove использует переданную сессию
+            remove = get_remove()
             result = remove(rgb_img, session=session)
             return result.convert('RGBA')
 
