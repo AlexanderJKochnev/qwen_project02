@@ -1,11 +1,9 @@
 # app.core.service/service.py
 import asyncio
-import math
 from abc import ABCMeta
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
-from async_lru import alru_cache
 from fastapi import BackgroundTasks, HTTPException, Request
 from loguru import logger
 from sqlalchemy import select, update
@@ -14,15 +12,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config.database.db_async import DatabaseManager
 from app.core.config.project_config import settings
-from app.core.hash_norm import tokenize
 from app.core.models.base_model import Base, get_model_by_name
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.schemas.base import BaseModel, IndexFillResponse
 from app.core.services.click_service import FullTextSearch
-from app.core.utils.converters import list_move
 from app.core.types import ModelType
-from app.core.utils.alchemy_utils import formatted_query, has_column
+from app.core.utils.alchemy_utils import has_column
 from app.core.utils.common_utils import flatten_dict_with_localized_fields, make_paging_dict
+from app.core.utils.converters import list_move
 from app.core.utils.pydantic_utils import (get_data_for_search, get_repo, inst_dict, list_dict, make_paginated_response,
                                            prepare_search_string)
 from app.core.utils.reindexation import reindex_items
