@@ -42,7 +42,7 @@ class ArrayRouter:
         self.router.add_api_route("/mixin/del-by-index/", self.del_by_index_array,
                                   methods=["DELETE"],
                                   openapi_extra={'x-request-schema': None})
-        self.router.add_api_route("/mixin/swap/", self.split_by_index_array,
+        self.router.add_api_route("/mixin/swap/", self.swap_by_index_array,
                                   methods=["POST"],
                                   openapi_extra={'x-request-schema': None})
         self.router.add_api_route("/mixin/replace-by-index/", self.replace_by_index_array,
@@ -126,6 +126,7 @@ class ArrayRouter:
     async def del_by_index_array(self,
                                  id: int = Query(..., description='id записи'),
                                  pos: int = Query(..., description='индекс удаляемого элемента'),
+                                 block: int = Query(2, description='длина удаляемого блока'),
                                  session: AsyncSession = Depends(get_db)
                                  ) -> Dict[str, Any]:
         """ Удаление элемента по индексу """
@@ -133,20 +134,21 @@ class ArrayRouter:
         repository: ArrayRepository = self.repo
         model: ModelType = self.model
         arrayName = self.arrayName
-        return await service.del_by_index_array(id, pos, model, arrayName, repository, session)
+        return await service.del_by_index_array(id, pos, model, arrayName, repository, session, block)
 
-    async def split_by_index_array(self,
-                                   id: int = Query(..., description='id записи'),
-                                   pos1: int = Query(..., description='индекс первого элемента'),
-                                   pos2: int = Query(..., description='индекс второго элемента'),
-                                   session: AsyncSession = Depends(get_db)
-                                   ) -> Dict[str, Any]:
+    async def swap_by_index_array(self,
+                                  id: int = Query(..., description='id записи'),
+                                  pos1: int = Query(..., description='индекс первого элемента'),
+                                  pos2: int = Query(..., description='индекс второго элемента'),
+                                  block: int = Query(2, description='длина удаляемого блока'),
+                                  session: AsyncSession = Depends(get_db)
+                                  ) -> Dict[str, Any]:
         """ Поменять два элемента местами """
         service: ArrayService = self.service
         repository: ArrayRepository = self.repo
         model: ModelType = self.model
         arrayName = self.arrayName
-        return await service.split_by_index_array(id, pos1, pos2, model, arrayName, repository, session)
+        return await service.swap_by_index_array(id, pos1, pos2, model, arrayName, repository, session, block)
 
     async def replace_by_index_array(self,
                                      id: int = Query(..., description='id записи'),

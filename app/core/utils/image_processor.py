@@ -147,6 +147,7 @@ class ImageProcessor:
         Ленивая потокобезопасная загрузка модели rembg.
         Модель загружается один раз при первом вызове.
         """
+        from rembg import remove, new_session
         if self._rembg_session is None:
             with self._rembg_lock:
                 # Double-check locking

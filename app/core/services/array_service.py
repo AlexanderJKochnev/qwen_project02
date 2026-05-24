@@ -84,18 +84,19 @@ class ArrayService:
     async def del_by_index_array(cls, id: int, pos: int,
                                  model: ModelType, arrayName: str,
                                  repository: ArrayRepository,
-                                 session: AsyncSession) -> Dict[str, Any]:
+                                 session: AsyncSession,
+                                 block: int = 2) -> Dict[str, Any]:
         """ Удаление элемента по индексу """
-        result = await repository.del_by_index_array(id, pos, model, arrayName, session)
+        result = await repository.del_by_index_array(id, pos, model, arrayName, session, block)
         return {'arrray': result, 'size': len(result) if result else 0}
 
     @classmethod
-    async def split_by_index_array(cls, id: int, pos1: int, pos2: int,
-                                   model: ModelType, arrayName: str,
-                                   repository: ArrayRepository,
-                                   session: AsyncSession) -> Dict[str, Any]:
+    async def swap_by_index_array(cls, id: int, pos1: int, pos2: int,
+                                  model: ModelType, arrayName: str,
+                                  repository: ArrayRepository,
+                                  session: AsyncSession, block: int = 2) -> Dict[str, Any]:
         """ Поменять два элемента местами """
-        result = await repository.split_by_index_array(id, pos1, pos2, model, arrayName, session)
+        result = await repository.swap_by_index_array(id, pos1, pos2, model, arrayName, session, block)
         return {'arrray': result, 'size': len(result) if result else 0}
 
     @classmethod

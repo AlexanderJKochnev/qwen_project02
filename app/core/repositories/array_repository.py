@@ -68,14 +68,15 @@ class ArrayRepository:
                                  model: ModelType, arrayName: str,
                                  session: AsyncSession) -> list:
         """
-            Добавление элементов в начало массива
+            Добавление элементов в начало массива - существующие элементы сдвигаются
             id:             id записи
             new_elements:   добавляемые элементы
             model:          модель
             arrayName:      имя поля
         """
         array_list: List[str] = await cls._get_array_(id, model, arrayName, session)
-        new_elements.extend(array_list)
+        if array_list:
+            new_elements.extend(array_list)
         await cls._set_array_(id, model, arrayName, new_elements, session)
         return new_elements
 
@@ -103,24 +104,25 @@ class ArrayRepository:
 
     @classmethod
     async def del_by_index_array(
-        cls, id: int, pos: int, model: ModelType, arrayName: str, session: AsyncSession
+        cls, id: int, pos: int, model: ModelType, arrayName: str, session: AsyncSession, block: int = 2
     ) -> list:
         """
             удаление элемента по индексу
             id:             id записи
-            new_elements:   добавляемые элементы
+            pos:            позиция элемента
             model:          модель
             arrayName:      имя поля
+            block:          количество удаляемых элементов (в seaweed это пара: полные изо и его thumb
         """
         array_list: List[str] = await cls._get_array_(id, model, arrayName, session)
-        if len(array_list) > 0 and pos <= len(array_list) - 1:
-            array_list.pop(pos)
+        if len(array_list) > 0 and pos <= len(array_list) - block:
+            del array_list[pos: pos + block]
             await cls._set_array_(id, model, arrayName, array_list, session)
         return array_list
 
     @classmethod
-    async def split_by_index_array(
-        cls, id: int, pos1: int, pos2: int, model: ModelType, arrayName: str, session: AsyncSession
+    async def swap_by_index_array(
+        cls, id: int, pos1: int, pos2: int, model: ModelType, arrayName: str, session: AsyncSession, block: int = 2
     ) -> list:
         """
             поменять два элемента местами
@@ -129,27 +131,33 @@ class ArrayRepository:
             model:          модель
             arrayName:      имя поля
         """
+        a, b, n = pos1, pos2, block
         array_list: List[str] = await cls._get_array_(id, model, arrayName, session)
-        if len(array_list) > 0 and pos1 <= len(array_list) - 1 and pos2 <= len(array_list) - 1:
-            array_list[pos1], array_list[pos2] = array_list[pos2], array_list[pos1]
+        if a + n <= b or b + n <= a:
+            # Самый быстрый обмен срезов
+            array_list[a: a + n], array_list[b: b + n] = (array_list[b: b + n], array_list[a: a + n],)
             await cls._set_array_(id, model, arrayName, array_list, session)
+        else:
+            logger.warning("Операция отменена: части списка пересекаются!")
         return array_list
 
     @classmethod
     async def replace_by_index_array(
-        cls, id: int, pos: int, newdata: str, model: ModelType, arrayName: str, session: AsyncSession
+        cls, id: int, pos: int, newdata: list | str, model: ModelType, arrayName: str, session: AsyncSession,
+            block: int = 2
     ) -> list:
         """
-            заменить
+            замена блока элеиментов новыми
             id:             id записи
             new_elements:   добавляемые элементы
             model:          модель
             arrayName:      имя поля
         """
         array_list: List[str] = await cls._get_array_(id, model, arrayName, session)
-        if len(array_list) > 0 and pos <= len(array_list) - 1:
-            array_list[pos] = newdata
-        else:
-            array_list.append(newdata)
+        if isinstance(newdata, str):
+            newdata = [newdata]
+        if len(newdata) < block:
+            newdata += [None] * (block - len(newdata))
+        array_list[pos: pos + block] = newdata
         await cls._set_array_(id, model, arrayName, array_list, session)
         return array_list
