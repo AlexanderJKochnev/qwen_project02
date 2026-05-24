@@ -36,8 +36,6 @@ from app.support.lwin.model import Lwin
 from app.support import Source
 from app.support.producer.model import Producer, ProducerTitle
 from app.support.parcel.model import Site, Parcel
-from app.support.wordhash.model import WordHash
-
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

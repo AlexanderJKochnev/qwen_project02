@@ -801,21 +801,6 @@ class Repository(Background, metaclass=RepositoryMeta):
         return result.all()
 
     @classmethod
-    async def get_search_metadata(cls, model: ModelType, session: AsyncSession, hashes: List[int]):
-        """
-        Получает частоты слов для расчета весов и общее кол-во записей.
-        """
-        # 1. Получаем частоты из WordHash
-        from app.support.wordhash.model import WordHash
-        stats_stmt = select(WordHash.hash, WordHash.freq).where(WordHash.hash.in_(hashes))
-        stats_res = await session.execute(stats_stmt)
-        word_stats: dict = {r.hash: r.freq for r in stats_res.all()}
-        hashes_tuple = tuple(sorted(hashes))
-        # 2. Получаем Total Count (первый раз по настоящему затем из кэша)
-        total_count = await cls.get_cached_total_count(model, session, hashes_tuple)
-        return word_stats, total_count
-
-    @classmethod
     async def find_items_hybrid(
             cls, model: ModelType,
             session: AsyncSession, word_weights: dict[int, float],  # hash -> weight
@@ -845,21 +830,3 @@ class Repository(Background, metaclass=RepositoryMeta):
         stmt = stmt.order_by(text(f"{score_sql} DESC"), model.id.desc()).limit(limit + 1)
         result = await session.execute(stmt, params)
         return [{'score': score, **item.to_dict_fast()} for item, score in result]
-
-    @classmethod
-    async def get_word_data_for_search(cls, session: AsyncSession, full_words: list[str],
-                                       last_word: str, limit: int = 50):
-        """
-        За один запрос получает:
-        - Данные для всех полных слов (hennessy)
-        - Данные по префиксу для последнего слова (prive%)
-        """
-        from app.support.wordhash.model import WordHash
-        stmt = (select(WordHash.hash, WordHash.freq, WordHash.word).where(
-                or_(
-                    WordHash.word.in_(full_words),  # Полные слова (hennessy, prive)
-                    WordHash.word.like(f"{last_word}%")  # Префиксы последнего (prive, privera)
-                )
-                ).order_by(WordHash.freq.desc()).limit(limit + len(full_words)))
-        res = await session.execute(stmt)
-        return [{"hash": r.hash, "freq": r.freq, "word": r.word} for r in res.all()]

@@ -59,7 +59,6 @@ from app.support.parcel.router import ParcelRouter, SiteRouter
 from app.support.source.router import SourceRouter
 from app.support.vllm.router import VllmRouter
 from app.core.config.database.click_async import ClickHouseManager, get_dump  # , get_ch_client
-from app.support.wordhash.router import WordHashRouter
 from app.core.config.database.seaweed_async import init_seaweed, close_seaweed
 from app.support.seaweeds.router import SeaweedsRouter
 from app.core.repositories.clickhouse_repository import ClickHouseRepositoryFactory
@@ -189,7 +188,6 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)  # минимальный 
 app.include_router(ApiRouter().router)
 app.include_router(GemmaRouter().router)
 app.include_router(web_router)
-app.include_router(WordHashRouter().router)
 app.include_router(LwinRouter().router)
 app.include_router(PromptRouter().router)
 app.include_router(ProptionRouter().router)
