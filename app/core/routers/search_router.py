@@ -40,7 +40,7 @@ class SearchRouter:
     async def search_items(self, request: Request,
                            q: str = Query(None, min_length=1, description="Поисковый запрос"),
                            session: AsyncSession = Depends(get_db),
-                           limit: int = Query(10, description="размер страницы"), **kwargs
+                           limit: int = Query(10, description="размер страницы")
                            ):
         repository = self.repo
         service = self.sevice  # SearchService
