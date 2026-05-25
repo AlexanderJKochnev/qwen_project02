@@ -2,7 +2,7 @@
 from enum import Enum
 from sqlalchemy import select
 from app.core.config.database.db_sync import SessionLocalSync
-from app.support.ollama.model import Ollama, Prompt, Proption, ISOLanguage, WriterRule
+from app.support.ollama.model import Prompt, Proption, ISOLanguage, WriterRule
 
 
 # 3. Синхронная функция для получения списка строк
@@ -78,4 +78,4 @@ COLORS = {
     "NAVY": "#000080"
 }
 
-Color = Enum('color', {color: color for color in COLORS.values()})
+Color = Enum('color', {color: color for color in COLORS.keys()})
