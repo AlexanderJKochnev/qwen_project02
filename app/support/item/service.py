@@ -436,7 +436,7 @@ class ItemService(ArrayService, SearchService, Service):
                 result: list = await cls.repository.add_to_array(
                     id, new_element, cls.model, 'seaweed_fids', session
                 )
-        logger.warning(f'test0.3 {new_element=} {new_element=}, {new_element == new_element}')
+        logger.warning(f'test0.3 {new_element=} {result=}, {new_element == result}')
         if result == new_element:
             logger.warning('test0.3')
             image_bytes = await fs.download(fid)
