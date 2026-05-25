@@ -416,11 +416,13 @@ class ItemService(ArrayService, SearchService, Service):
                     2: поставить в конец
         """
         result: dict = await click_repo.get_by_id('fid', fid, ['fid', 'fid_thumb'])
+        logger.warning(f'test0.1 {result=}')
         if result:
             fid_thumb = result.get('fid_thumb')
         else:
             raise Exception(f'thumbnail not found for image {fid}')
         new_element = [fid, fid_thumb]
+        logger.warning(f'test0.2 {new_element=}')
         match action:
             case 1:
                 result: list = await cls.repository.replace_array(id, new_element,
@@ -435,7 +437,9 @@ class ItemService(ArrayService, SearchService, Service):
                     id, new_element, cls.model, 'seaweed_fids', session
                 )
         if result == new_element:
+            logger.warning('test0.3')
             image_bytes = await fs.download(fid)
+            logger.warning(f'test0.4 {len(result)=}')
             return image_bytes
         else:
             return None

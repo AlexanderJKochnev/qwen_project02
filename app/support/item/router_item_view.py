@@ -289,4 +289,5 @@ class ItemViewRouter:
         """
         click_repo = click_repo_factory.for_table('images_metadata')
         image_data: bytes = await self.service.add_image_by_fid(request, id, fid, action, session, click_repo, fs)
+        logger.warning(f'{len(image_data)=}')
         return ResponseStreaming(image_data)
