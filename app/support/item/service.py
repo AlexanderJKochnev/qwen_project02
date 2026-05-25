@@ -437,10 +437,6 @@ class ItemService(ArrayService, SearchService, Service):
                     id, new_element, cls.model, 'seaweed_fids', session
                 )
         logger.warning(f'test0.3 {new_element=} {result=}, {new_element == result}')
-        if result == new_element:
-            logger.warning('test0.3')
-            image_bytes = await fs.download(fid)
-            logger.warning(f'test0.4 {len(result)=}')
-            return image_bytes
-        else:
-            return None
+        image_bytes = await fs.download(fid)
+        logger.warning(f'test0.4 {len(result)=}')
+        return image_bytes
