@@ -1015,6 +1015,9 @@ def transform_api_list_view(source: dict, def_lang: str, languages: Union[List, 
     трансформация для api
     languages = {'', '_ru', ...}
     """
+    from app.core.utils.common_utils import jprint
+    jprint(source)
+    logger.warning('-------------------------------')
     d = source.get("drink", {})
     subcat = d.get("subcategory", {})
     cat = subcat.get("category", {})
@@ -1075,6 +1078,8 @@ def transform_api_list_view(source: dict, def_lang: str, languages: Union[List, 
         tmp = {key: val for key, val in zip(lang_keys, lang_vals) if val}
         lng = def_lang if lang == '' else lang[1:]
         main[lng] = tmp
+        jprint(tmp)
+        logger.warning('-----------2----------')
     return main
 
 
