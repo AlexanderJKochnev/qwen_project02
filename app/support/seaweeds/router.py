@@ -259,7 +259,7 @@ class SeaweedsRouter:
                                           initial_font_size: int = Query(
                                               85, description="размер шрифта, пробуй мнять совместно с размером холста"),
                                           stroke_width: int = Query(2, description="ширина оканттовки букв"),
-                                          fill_color: str = Field(default="#FF000080",  # Красный с 50% прозрачности
+                                          fill_color: str = Query("#FF000080",  # Красный с 50% прозрачности
                                                                   examples=["#FF000080", "#00FF00FF", "#00000000"],
                                                                   description="Цвет в формате HEX8 (#RRGGBBAA), "
                                                                               "где последние 2 знака — прозрачность.",
