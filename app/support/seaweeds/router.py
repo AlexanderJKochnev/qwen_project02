@@ -83,7 +83,7 @@ class SeaweedsRouter:
             openapi_extra={'x-request-schema': None}
         )
         self.router.add_api_route(
-            "/generator/{id}", self.test_generate_image_by_text, methods=["GET"],
+            "/generator/{id}", self.test_generate_image_by_text, methods=["POST"],
             openapi_extra={'x-request-schema': None}
         )
 
