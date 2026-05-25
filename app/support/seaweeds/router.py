@@ -3,6 +3,7 @@ from typing import List
 from app.core.enum import Alignment
 from fastapi import File, HTTPException, Path, Query, UploadFile, BackgroundTasks
 from fastapi import APIRouter, Depends
+from pydantic import Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
 from app.core.utils.io_utils import ResponseJust, ResponseStreaming
@@ -258,7 +259,12 @@ class SeaweedsRouter:
                                           initial_font_size: int = Query(
                                               85, description="размер шрифта, пробуй мнять совместно с размером холста"),
                                           stroke_width: int = Query(2, description="ширина оканттовки букв"),
-                                          fill_color: str = Query("#00ff00", json_schema_extra={"format": "color"})
+                                          fill_color: str = Field(default="#FF000080",  # Красный с 50% прозрачности
+                                                                  examples=["#FF000080", "#00FF00FF", "#00000000"],
+                                                                  description="Цвет в формате HEX8 (#RRGGBBAA), "
+                                                                              "где последние 2 знака — прозрачность.",
+                                                                  pattern=r"^#[0-9a-fA-F]{8}$"
+                                                                  )
                                           ):
         """
             Генереция изображения из названия напитка
