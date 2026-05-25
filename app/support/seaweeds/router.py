@@ -1,6 +1,6 @@
 # app.core.support.seaweeds.router.py
-from typing import List
-from app.core.enum import Alignment, Color, COLORS
+from typing import List, Literal
+from app.core.enum import Alignment, COLORS
 from fastapi import File, HTTPException, Path, Query, UploadFile, BackgroundTasks
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,7 +21,7 @@ from app.mongodb.service import ThumbnailImageService
     delete
     update
 """
-
+ColorType = Literal[*COLORS.keys()]
 
 class SeaweedsRouter:
     def __init__(self):
@@ -259,9 +259,7 @@ class SeaweedsRouter:
                                           initial_font_size: int = Query(
                                               85, description="размер шрифта, пробуй мнять совместно с размером холста"),
                                           stroke_width: int = Query(2, description="ширина оканттовки букв"),
-                                          fill_color: Color = Query("#FF0000",
-                                                                    description="Цвет шрифта",
-                                                                    ),
+                                          fill_color: ColorType = Query("RED", description="Цвет шрифта"),
                                           opacity: int = Query(default=0,
                                                                ge=0, le=255,
                                                                description="Прозрачность шрифта"),
