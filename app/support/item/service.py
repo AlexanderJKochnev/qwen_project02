@@ -440,3 +440,14 @@ class ItemService(ArrayService, SearchService, Service):
         image_bytes = await fs.download(fid)
         logger.warning(f'test0.4 {len(result)=}')
         return image_bytes
+
+    @classmethod
+    async def test_generate_image_by_text(cls, request: Request, id, preset: dict, session: AsyncSession) -> bytes:
+        """
+            тестирование изображений
+        """
+        instance = await cls.repository.get_by_id(id, cls.model, session)
+        item_dict: dict = instance.to_dict_fast()
+        from app.core.utils.common_utils import jprint
+        jprint(item_dict)
+        return item_dict

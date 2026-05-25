@@ -1,7 +1,7 @@
 # app.core.support.seaweeds.router.py
 from typing import List, Literal
 from app.core.enum import Alignment, COLORS
-from fastapi import File, HTTPException, Path, Query, UploadFile, BackgroundTasks
+from fastapi import File, HTTPException, Path, Query, UploadFile, BackgroundTasks, Request
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
@@ -10,6 +10,7 @@ from app.core.utils.io_utils import get_dirpath, get_file_list, ResponseJust, Re
 from app.core.config.database.db_async import get_db
 from app.auth.dependencies import get_active_user_or_internal
 from app.core.services.seaweed_service import SeaweedsService
+from app.core.utils.pydantic_utils import get_service
 from app.mongodb.service import ThumbnailImageService
 
 """
@@ -255,7 +256,7 @@ class SeaweedsRouter:
         image_data = await service.test_create_img(content, dimension, size, type, quality, full)
         return ResponseStreaming(image_data, source_size=original_size, xxhash=source_hash)
 
-    async def test_generate_image_by_text(self, id: int = Path(..., description='id items'),
+    async def test_generate_image_by_text(self, request: Request, id: int = Path(..., description='id items'),
                                           width: int = Query(380, description="ширина холста"),
                                           height: int = Query(500, description="высота холста"),
                                           text_alignment: Alignment = Query(None, description="выравнивание "
@@ -280,7 +281,8 @@ class SeaweedsRouter:
                                           sh_opacity: int = Query(0,
                                                                   ge=0, le=255,
                                                                   description="Прозрачность тени"),
-                                          font: Fonts = Query(..., description='шрифт')
+                                          font: Fonts = Query(..., description='шрифт'),
+                                          session: AsyncSession = Depends(get_db)
                                           ):
         """
             Генереция изображения из названия напитка
@@ -293,9 +295,12 @@ class SeaweedsRouter:
             shadow_offset = (shadow_x, shadow_y)
         else:
             shadow_offset = None
-        return {"fill_color": fill_color,
-                "stroke_color": stroke_color,
-                "backgound_color": background_color,
-                "shadow_color": shadow_color,
-                "shadow_offset": shadow_offset,
-                "font": font}
+        result = {"fill_color": fill_color,
+                  "stroke_color": stroke_color,
+                  "backgound_color": background_color,
+                  "shadow_color": shadow_color,
+                  "shadow_offset": shadow_offset,
+                  "font": font}
+        service = get_service('Item')
+        response = await service.test_generate_image_by_text(request, id, result, session)
+        return response
