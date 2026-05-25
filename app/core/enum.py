@@ -55,7 +55,7 @@ Rag_category = Enum('category', {v: v for v in sorted(rag)
 Alignment = Enum('alignment', {v: v for v in ('center', 'left', 'right')}, type=str)
 
 
-class Color(str, Enum):
+class Color(Enum):
     RED = "#FF0000"
     GREEN = "#00FF00"
     BLUE = "#0000FF"
