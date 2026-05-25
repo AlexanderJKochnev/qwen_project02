@@ -83,7 +83,7 @@ class SeaweedsRouter:
             openapi_extra={'x-request-schema': None}
         )
         self.router.add_api_route(
-            "/generator/{id}", self.test_generate_image_by_text, methods=["POST"],
+            "/generator/{id}", self.test_generate_image_by_text, methods=["GET"],
             openapi_extra={'x-request-schema': None}
         )
 
@@ -263,7 +263,16 @@ class SeaweedsRouter:
                                                                   examples=["#FF000080", "#00FF00FF", "#00000000"],
                                                                   description="Цвет в формате HEX8 (#RRGGBBAA), "
                                                                               "где последние 2 знака — прозрачность.",
-                                                                  pattern=r"^#[0-9a-fA-F]{8}$"
+                                                                  openapi_examples = {"Red (50%)": Example(
+                                                                          value = "#FF000080",
+                                                                          summary = "Полупрозрачный красный"
+                                                                          ), "Green (100%)": Example(
+                                                                          value = "#00FF00FF",
+                                                                          summary = "Непрозрачный зеленый"
+                                                                          ), "Transparent": Example(
+                                                                          value = "#00000000",
+                                                                          summary = "Полностью прозрачный"
+                                                                          )},
                                                                   )
                                           ):
         """
