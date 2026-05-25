@@ -1050,7 +1050,7 @@ def transform_api_list_view(source: dict, def_lang: str, languages: Union[List, 
             category, camel_to_enum(
             country.get("name")))
     main = {key: val for key, val in zip(keys, vals) if val}
-    lang_keys = ("alc", "vol", "title", "subtitle", "desription", "region", "recommendation",
+    lang_keys = ("alc", "vol", "title", "subtitle", "description", "region", "recommendation",
                  "madeof", "producer", "type", "varietal", "pairing")
     for n, lang in enumerate(languages):
         languages1 = languages[:]
