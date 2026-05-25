@@ -53,3 +53,8 @@ rag = {"wine", "whisky", "beer", "spirits", "vodka", "gin", "schnapps",
 Rag_category = Enum('category', {v: v for v in sorted(rag)
                                  }, type=str)
 Alignment = Enum('alignment', {v: v for v in ('center', 'left', 'right')}, type=str)
+Color = Enum('color', {'RED': "#FF0000",
+                       "GREEN": "#00FF00",
+                       "BLUE": "#0000FF",
+                       "BLACK": "#000000",
+                       "WHITE": "#FFFFFF"}, type=str)

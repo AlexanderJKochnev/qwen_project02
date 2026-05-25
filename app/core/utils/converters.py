@@ -655,3 +655,20 @@ def lang_sorted(lang: str) -> tuple:
     tmp.remove(lang)
     tmp.insert(0, lang)
     return tuple('' if lang == default_lang else f'_{lang}' for lang in tmp)
+
+
+def color_converter(value: str, opacity: int, tp: int = 0):
+    hex_val = value.lstrip('#')
+    r, g, b = tuple(int(hex_val[i:i + 2], 16) for i in (0, 2, 4))
+
+    match tp:
+        case 0:     # rgba
+            # Переводим проценты (50) в коэффициент (0.5)
+            alpha_css = opacity / 100.0
+            return f"rgba({r}, {g}, {b}, {alpha_css})"
+        case 1:     # hex
+            alpha_hex_int = round((opacity / 100) * 255)
+            # Форматируем число в 2-значную HEX строку с ведущим нулем (например, '80')
+            alpha_hex_str = f"{alpha_hex_int:02X}"
+            rgba_hex_string = f"{value}{alpha_hex_str}"
+            return rgba_hex_string

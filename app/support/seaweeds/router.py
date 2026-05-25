@@ -1,11 +1,12 @@
 # app.core.support.seaweeds.router.py
 from typing import List
-from app.core.enum import Alignment
+from app.core.enum import Alignment, Color
 from fastapi import File, HTTPException, Path, Query, UploadFile, BackgroundTasks
 from fastapi import APIRouter, Depends
 from pydantic import Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
+from app.core.utils.converters import color_converter
 from app.core.utils.io_utils import ResponseJust, ResponseStreaming
 from app.core.config.database.db_async import get_db
 from app.auth.dependencies import get_active_user_or_internal
@@ -255,27 +256,21 @@ class SeaweedsRouter:
                                           width: int = Query(380, description="ширина холста"),
                                           height: int = Query(500, description="высота холста"),
                                           text_alignment: Alignment = Query(None, description="выравнивание "
-                                                                            "текста"),
+                                          "текста"),
                                           initial_font_size: int = Query(
                                               85, description="размер шрифта, пробуй мнять совместно с размером холста"),
                                           stroke_width: int = Query(2, description="ширина оканттовки букв"),
-                                          fill_color: str = Query("#FF000080",  # Красный с 50% прозрачности
-                                                                  examples=["#FF000080", "#00FF00FF", "#00000000"],
-                                                                  description="Цвет в формате HEX8 (#RRGGBBAA), "
-                                                                              "где последние 2 знака — прозрачность.",
-                                                                  openapi_examples = {"Red (50%)": Example(
-                                                                          value = "#FF000080",
-                                                                          summary = "Полупрозрачный красный"
-                                                                          ), "Green (100%)": Example(
-                                                                          value = "#00FF00FF",
-                                                                          summary = "Непрозрачный зеленый"
-                                                                          ), "Transparent": Example(
-                                                                          value = "#00000000",
-                                                                          summary = "Полностью прозрачный"
-                                                                          )},
-                                                                  )
+                                          fill_color: Color = Query("#FF0000",
+                                                                    description="Цвет шрифта",
+                                                                    ),
+                                          opacity: int = Query(default=50,
+                                                               ge=0, le=100,
+                                                               description="Прозрачность шрифта в % (0-100)"),
                                           ):
         """
             Генереция изображения из названия напитка
         """
-        return {"resukt": True}
+        color1 = color_converter(fill_color, opacity)
+        color2 = color_converter(fill_color, opacity, 1)
+        return {"result": color1,
+                "COLOR2": color2}
