@@ -1,7 +1,7 @@
 # app.core.support.seaweeds.router.py
 from typing import List
-
-from fastapi import File, HTTPException, Query, UploadFile, BackgroundTasks
+from app.core.enum import Alignment
+from fastapi import File, HTTPException, Path, Query, UploadFile, BackgroundTasks
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
@@ -79,6 +79,10 @@ class SeaweedsRouter:
         )
         self.router.add_api_route(
             "/thumb_image/{fid}", self.get_thumb_by_fid, methods=["GET"],
+            openapi_extra={'x-request-schema': None}
+        )
+        self.router.add_api_route(
+            "/generator/{id}", self.test_generate_image_by_text, methods=["GET"],
             openapi_extra={'x-request-schema': None}
         )
 
@@ -245,3 +249,18 @@ class SeaweedsRouter:
         logger.info(f'{original_size=}')
         image_data = await service.test_create_img(content, dimension, size, type, quality, full)
         return ResponseStreaming(image_data, source_size=original_size, xxhash=source_hash)
+
+    async def test_generate_image_by_text(self, id: int = Path(..., description='id items'),
+                                          width: int = Query(380, description="ширина холста"),
+                                          height: int = Query(500, description="высота холста"),
+                                          text_alignment: Alignment = Query(None, description="выравнивание "
+                                                                            "текста"),
+                                          initial_font_size: int = Query(
+                                              85, description="размер шрифта, пробуй мнять совместно с размером холста"),
+                                          stroke_width: int = Query(2, description="ширина оканттовки букв"),
+                                          fill_color: str = Query("#00ff00", json_schema_extra={"format": "color"})
+                                          ):
+        """
+            Генереция изображения из названия напитка
+        """
+        return {"resukt": True}
