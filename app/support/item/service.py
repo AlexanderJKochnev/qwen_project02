@@ -424,11 +424,11 @@ class ItemService(ArrayService, SearchService, Service):
         new_element = [fid, fid_thumb]
         logger.warning(f'test0.2 {new_element=}')
         match action:
-            case 1:
+            case 0:
                 result: list = await cls.repository.replace_array(id, new_element,
                                                                   cls.model,
                                                                   'seaweed_fids', session)
-            case 2:
+            case 1:
                 result: list = await cls.repository.add_first_to_array(
                     id, new_element, cls.model, 'seaweed_fids', session
                 )
