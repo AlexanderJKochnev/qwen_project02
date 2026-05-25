@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
 from app.core.utils.converters import color_converter
-from app.core.utils.io_utils import ResponseJust, ResponseStreaming
+from app.core.utils.io_utils import get_dirpath, get_file_list, ResponseJust, ResponseStreaming
 from app.core.config.database.db_async import get_db
 from app.auth.dependencies import get_active_user_or_internal
 from app.core.services.seaweed_service import SeaweedsService
@@ -22,6 +22,10 @@ from app.mongodb.service import ThumbnailImageService
     update
 """
 ColorType = Literal[*COLORS.keys()]
+fonts_dir = get_dirpath('fonts')
+fonts_list = get_file_list(fonts_dir)
+Fonts = Literal[*fonts_list]
+
 
 class SeaweedsRouter:
     def __init__(self):
@@ -259,17 +263,39 @@ class SeaweedsRouter:
                                           initial_font_size: int = Query(
                                               85, description="размер шрифта, пробуй мнять совместно с размером холста"),
                                           stroke_width: int = Query(2, description="ширина оканттовки букв"),
+                                          stroke_color: ColorType = Query("BLACK", description="Цвет окантовки"),
                                           fill_color: ColorType = Query("RED", description="Цвет шрифта"),
                                           opacity: int = Query(default=0,
                                                                ge=0, le=255,
                                                                description="Прозрачность шрифта"),
+                                          background_color: ColorType = Query('WHITE', description="Цвет фона"),
+                                          bg_opacity: int = Query(0,
+                                                                  ge=0, le=255,
+                                                                  description="Прозрачность фона"),
+                                          shadow_x: int = Query(0, ge=-10, le=10,
+                                                                description="Тень, смещение по оси X"),
+                                          shadow_y: int = Query(0, ge=-10, le=10,
+                                                                description="Тень, смещение по оси Y"),
+                                          shadow_color: ColorType = Query("GRAY", description="Цвет фона"),
+                                          sh_opacity: int = Query(0,
+                                                                  ge=0, le=255,
+                                                                  description="Прозрачность тени"),
+                                          font: Fonts = Query(..., description='шрифт')
                                           ):
         """
             Генереция изображения из названия напитка
         """
-        fill_color = COLORS.get(fill_color)
-        color1 = color_converter(fill_color, opacity)
-        color2 = color_converter(fill_color, opacity, 1)
-        return {"result": color1,
-                "color2": color2,
-                "fill_color": fill_color}
+        fill_color = color_converter(COLORS.get(fill_color), opacity)  # RGBA
+        background_color = color_converter(COLORS.get(background_color), bg_opacity)  # RGBA
+        stroke_color = color_converter(COLORS.get(stroke_color), 255)
+        shadow_color = color_converter(COLORS.get(shadow_color), sh_opacity)
+        if shadow_x != 0 or shadow_y != 0:
+            shadow_offset = (shadow_x, shadow_y)
+        else:
+            shadow_offset = None
+        return {"fill_color": fill_color,
+                "stroke_color": stroke_color,
+                "backgound_color": background_color,
+                "shadow_color": shadow_color,
+                "shadow_offset": shadow_offset,
+                "font": font}

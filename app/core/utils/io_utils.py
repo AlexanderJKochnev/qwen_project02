@@ -54,6 +54,22 @@ def readJson(filename: Path):
             return data
 
 
+def get_dirpath(dirname: str) -> Path:
+    """
+        получает директорию по имени
+    """
+    return get_path_to_root(dirname)
+
+
+def get_file_list(directory: Path) -> List:
+    """
+        получает список файлов в директории
+    """
+    if not directory.exists():
+        return []
+    files = [f.name for f in directory.iterdir() if f.is_file()]
+    return sorted(files)
+
 def get_filepath_from_dir(dirname: str = None,
                           ext_allowed: set = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'}) -> List[Path]:
     """

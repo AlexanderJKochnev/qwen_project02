@@ -102,6 +102,7 @@ services:
       - ${BIND_VOLUMES}/${COMPOSE_PROJECT_NAME}_migration_volume:/app/app/migration/versions
       - ${BIND_VOLUMES}/${COMPOSE_PROJECT_NAME}_upload_volume:/app/upload_volume
       - ${BIND_VOLUMES}/nltk_data:/usr/share/nltk_data:ro
+      - ${BIND_VOLUMES}/fonts/:/app/fonts:ro
       # llm models
       # - ${BIND_VOLUMES}/distill/models:/app/models
       # - ${BIND_VOLUMES}/distill/onnx:/app/onnx
