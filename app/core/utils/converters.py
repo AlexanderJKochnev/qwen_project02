@@ -665,7 +665,7 @@ def color_converter(value: str, opacity: int, tp: int = 0):
         case 0:     # rgba
             return (r, g, b, opacity)
         case 1:     # hex
-            alpha_hex_int = round((opacity / 255) * 100)
+            alpha_hex_int = round((opacity / 100) * 255)
             # Форматируем число в 2-значную HEX строку с ведущим нулем (например, '80')
             alpha_hex_str = f"{alpha_hex_int:02X}"
             rgba_hex_string = f"{value}{alpha_hex_str}"
