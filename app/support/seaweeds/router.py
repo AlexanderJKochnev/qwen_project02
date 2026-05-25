@@ -263,9 +263,9 @@ class SeaweedsRouter:
                                           fill_color: Color = Query("#FF0000",
                                                                     description="Цвет шрифта",
                                                                     ),
-                                          opacity: int = Query(default=50,
-                                                               ge=0, le=100,
-                                                               description="Прозрачность шрифта в % (0-100)"),
+                                          opacity: int = Query(default=0,
+                                                               ge=0, le=255,
+                                                               description="Прозрачность шрифта"),
                                           ):
         """
             Генереция изображения из названия напитка
