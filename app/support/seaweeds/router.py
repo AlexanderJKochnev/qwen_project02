@@ -1,6 +1,6 @@
 # app.core.support.seaweeds.router.py
 from typing import List
-from app.core.enum import Alignment, Color
+from app.core.enum import Alignment, Color, COLORS
 from fastapi import File, HTTPException, Path, Query, UploadFile, BackgroundTasks
 from fastapi import APIRouter, Depends
 from pydantic import Field
@@ -270,6 +270,7 @@ class SeaweedsRouter:
         """
             Генереция изображения из названия напитка
         """
+        fill_color - COLORS.get(fill_color)
         color1 = color_converter(fill_color, opacity)
         color2 = color_converter(fill_color, opacity, 1)
         return {"result": color1,
