@@ -78,5 +78,4 @@ COLORS = {
     "NAVY": "#000080"
 }
 
-Color = Enum('color', [color for color in COLORS.values()])
-
+Color = Enum('color', {color: color for color in COLORS.values()})
