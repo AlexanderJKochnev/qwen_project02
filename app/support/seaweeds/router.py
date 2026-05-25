@@ -273,4 +273,5 @@ class SeaweedsRouter:
         color1 = color_converter(fill_color, opacity)
         color2 = color_converter(fill_color, opacity, 1)
         return {"result": color1,
-                "COLOR2": color2}
+                "color2": color2,
+                "fill_color": fill_color}
