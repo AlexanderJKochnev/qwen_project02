@@ -375,7 +375,7 @@ class SeaweedsRouter:
         """
         # fill_color = color_converter(COLORS.get(fill_color), fill_opacity)  # RGBA
         background_color = color_converter(COLORS.get(background_color), bg_opacity)  # RGBA
-        logger.warning(f'{background_color=}, {COLORS.get(background_color)=}')
+        logger.warning(f'{background_color=}, {COLORS.get('background_color')=}')
         # stroke_color = color_converter(COLORS.get(stroke_color), 255)
         # shadow_color = color_converter(COLORS.get(shadow_color), shadow_opacity)
         if shadow_x != 0 or shadow_y != 0:
@@ -389,7 +389,7 @@ class SeaweedsRouter:
             "font_path": f'{fonts_dir}/{font}',
             "initial_font_size": initial_font_size,
             "min_word_length": 3,
-            "background_color": COLORS.get(background_color),
+            "background_color": COLORS.get('background_color'),
             # "fill_color": fill_color,
             # "stroke_color": stroke_color,
             "stroke_width": stroke_width,
