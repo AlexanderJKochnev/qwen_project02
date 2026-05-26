@@ -1,5 +1,5 @@
 import io
-import os
+# import os
 import string
 from dataclasses import dataclass
 from typing import Tuple, List, Optional
@@ -43,7 +43,8 @@ class TextConfig:
         self.fill_color = tuple([*self.fill_color[:3], self.fill_opacity])
         if self.shadow_color:
             self.shadow_color = tuple([*self.shadow_color[:3], self.shadow_opacity])
-        self.text = __import__('functools').reduce(lambda t, x: t.replace(f'{x} ', '\n'), ',.;:', self.text.rstrip('.'))
+        txt = ' '.join(self.text.replace('«', '').replace('»', '').split())
+        self.text = __import__('functools').reduce(lambda t, x: t.replace(f'{x} ', '\n'), ',.;:', txt.rstrip('.'))
 
 
 def should_allow_single_word(word: str, min_length: int) -> bool:
@@ -267,8 +268,6 @@ def generate_text_image(config: TextConfig, format: str = 'WEBP', quality: int =
         return solid_bytes
     except Exception as e:
         logger.critical(f"ПРОИЗОШЕЛ СБОЙ ПРИ ГЕНЕРАЦИИ! {e}", exc_info=True)
-
-
 
 
 if __name__ == "__main__":
