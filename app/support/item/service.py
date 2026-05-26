@@ -385,7 +385,8 @@ class ItemService(ArrayService, SearchService, Service):
     @classmethod
     async def execute_smart_search_page(cls, request, lang: str, query: str, session: AsyncSession,
                                         limit: int = 20,
-                                        last_score: Optional[Union[Decimal, str, float]] = None,  # заглушка для совместимости
+                                        last_score: Optional[Union[Decimal, str, float]
+                                                             ] = None,  # заглушка для совместимости
                                         last_id: Optional[int] = None,
                                         ) -> Dict:
         if not query:
@@ -454,5 +455,6 @@ class ItemService(ArrayService, SearchService, Service):
         if not drink_dict:
             return None
         txt = drink_dict.get("diplay_name", f"{drink_dict.get('title')}, {drink_dict.get('subtitle')}")
-        preset.text = txt
-        return preset
+        preset['text'] = txt
+        result = TextConfig(*preset)
+        return result

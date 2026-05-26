@@ -12,7 +12,7 @@ from app.auth.dependencies import get_active_user_or_internal
 from app.core.services.seaweed_service import SeaweedsService
 from app.core.utils.pydantic_utils import get_service
 from app.mongodb.service import ThumbnailImageService
-from app.core.utils.pillow_generator import TextConfig
+
 
 """
     all bellow routes for the test purpose only
@@ -299,6 +299,7 @@ class SeaweedsRouter:
         else:
             shadow_offset = None
         logger.warning(f'{fonts_dir}/{font}, {type(fonts_dir)=}')
+        """
         result = TextConfig(text='dump',  # заглушка - текст получим в service layer
                             width=width, height=height, font_path=f'{fonts_dir}/{font}',
                             initial_font_size=initial_font_size,
@@ -314,6 +315,24 @@ class SeaweedsRouter:
                             text_alignment=text_alignment,
                             padding=padding
                             )
+        """
+        result = {
+            "width": width,
+            "height": height,
+            "font_path": f'{fonts_dir}/{font}',
+            "initial_font_size": initial_font_size,
+            "min_word_length": 3,
+            "background_color": background_color,
+            "fill_color": fill_color,
+            "stroke_color": stroke_color,
+            "stroke_width": stroke_width,
+            "shadow_offset": shadow_offset,
+            "shadow_color": shadow_color,
+            "shadow_opacity": shadow_opacity,
+            "fill_opacity": fill_opacity,
+            "text_alignment": text_alignment,
+            "padding": padding
+        }
         service = get_service('Item')
         response = await service.test_generate_image_by_text(request, id, result, session)
         return response
