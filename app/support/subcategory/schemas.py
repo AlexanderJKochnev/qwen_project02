@@ -5,7 +5,7 @@ from typing import Optional
 from pydantic import computed_field, Field
 
 from app.core.schemas.base import (CreateResponse, CreateSchemaSub, ReadApiSchema, ReadSchema, UpdateSchema,
-                                   DetailView, ListView)
+                                   DetailView, ListView, ColorMixin)
 from app.support.category.schemas import CategoryCreateRelation, CategoryRead
 
 

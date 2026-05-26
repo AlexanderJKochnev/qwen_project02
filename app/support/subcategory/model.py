@@ -3,11 +3,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, Index, UniqueConstraint
+from sqlalchemy import ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.config.project_config import settings
-from app.core.models.base_model import BaseFullFree, plural
+from app.core.models.base_model import BaseFullFree, plural, ColorMixin
 from app.service_registry import registers_search_update
 
 if TYPE_CHECKING:
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 @registers_search_update("drink.item")
-class Subcategory(BaseFullFree):
+class Subcategory(ColorMixin, BaseFullFree):
 
     lazy = settings.LAZY
     cascade = settings.CASCADE

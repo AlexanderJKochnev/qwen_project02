@@ -33,7 +33,7 @@ class GetRouter(PreactRouter):
             model = self.source.get(pref)
             repo = self.get_repo(model)
             service = self.get_service(model)
-            obj = await service.get_detail_view(lang, id, repo, model, session)
+            obj = await service.get_detail_view(request, lang, id, repo, model, session)
             return obj
         except ValidationError as exc:
             ValidationError_handler(exc)

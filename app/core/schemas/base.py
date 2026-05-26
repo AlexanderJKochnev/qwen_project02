@@ -241,3 +241,10 @@ class DetailView(PkSchema):
     """
     name: str
     description: Optional[str] = None
+
+
+class ColorMixin(BaseModel):
+    """
+        color field in hex
+    """
+    color: Optional[str] = None

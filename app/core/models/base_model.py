@@ -4,7 +4,7 @@ from datetime import datetime, date
 from decimal import Decimal
 from typing import Annotated, ClassVar, List, Optional, Type
 # from sqlalchemy.dialects.postgresql import MONEY
-from sqlalchemy import DateTime, DECIMAL, func, text, Text, Computed, inspect, Index
+from sqlalchemy import DateTime, DECIMAL, func, String, text, Text, Computed, inspect, Index
 from sqlalchemy.dialects.postgresql import BIGINT
 from sqlalchemy.dialects.postgresql import TSVECTOR
 # from sqlalchemy_serializer import SerializerMixin
@@ -331,12 +331,6 @@ class BaseFullFree(Base, BaseIntFree, BaseAt, BaseLang):
         return ""
 
 
-class Hash:
-    """ поле для HASH индексирования """
-    __abstract__ = True
-    hash: Mapped[int] = mapped_column(BIGINT, nullable=False, index=True)
-
-
 class Search:
     """ поисковое поле для  """
     __abstract__ = True
@@ -357,6 +351,11 @@ class Search:
                 f"idx_{cls.__tablename__}_search_vector_gin", "search_vector", postgresql_using="gin"
             )
         ]
+
+
+class ColorMixin:
+    """ поле цвета подложки """
+    color: Mapped[str] = mapped_column(String(9), nullable=True)
 
 
 def plural(single: str) -> str:
