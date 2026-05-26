@@ -41,7 +41,8 @@ class TextConfig:
     def __post_init__(self):
         """Автоматически подмешивает прозрачность к цветам после создания объекта."""
         self.fill_color = tuple([*self.fill_color[:3], self.fill_opacity])
-        self.shadow_color = tuple([*self.shadow_color[:3], self.shadow_opacity])
+        if self.shadow_color:
+            self.shadow_color = tuple([*self.shadow_color[:3], self.shadow_opacity])
         self.text = __import__('functools').reduce(lambda t, x: t.replace(f'{x} ', '\n'), ',.;:', self.text)
 
 
