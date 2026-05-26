@@ -476,6 +476,7 @@ class ItemService(ArrayService, SearchService, Service):
             return None
         txt = drink_dict.get("diplay_name", f"{drink_dict.get('title')}, {drink_dict.get('subtitle')}")
         preset['text'] = txt
+        print(preset.get("background_color"), '==================')
         palette: GeneratedPalette = auto_match_colors(preset.get("background_color"))
         preset["fill_color"] = palette.fill_color
         preset["stroke_color"] = palette.stroke_color
