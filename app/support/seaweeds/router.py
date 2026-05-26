@@ -92,6 +92,10 @@ class SeaweedsRouter:
             "/generator/{id}", self.test_generate_image_by_text, methods=["GET"],
             openapi_extra={'x-request-schema': None}
         )
+        self.router.add_api_route(
+            "/generator2/{id}", self.test_generate_image_by_text, methods=["GET"],
+            openapi_extra={'x-request-schema': None}
+        )
 
     async def create_img(self,
                          description: str = Query(..., description='ключевые слова по которым можно найти '
