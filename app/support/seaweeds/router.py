@@ -403,22 +403,22 @@ class SeaweedsRouter:
         return ResponseStreaming(response)
 
     async def test_generate_simple(self, request: Request, id: int = Path(..., description='id items'),
-                                   fill_opacity: int = Query(default=0,
+                                   fill_opacity: int = Query(default=50,
                                                              ge=0, le=255,
                                                              description="Прозрачность шрифта"),
-                                   background_color: ColorType = Query('WHITE', description="Цвет фона"),
+                                   background_color: ColorType = Query('WHITE_WINE', description="Цвет фона"),
                                    shadow_x: int = Query(10, ge=-10, le=10,
                                                          description="Тень, смещение по оси X"),
                                    shadow_y: int = Query(10, ge=-10, le=10,
                                                          description="Тень, смещение по оси Y"),
-                                   shadow_opacity: int = Query(0,
+                                   shadow_opacity: int = Query(100,
                                                                ge=0, le=255,
                                                                description="Прозрачность тени"),
                                    font: Fonts = Query(..., description='шрифт'),
                                    session: AsyncSession = Depends(get_db)
                                    ):
         """
-            Генереция изображения из названия напитка
+            Генерaция изображения из названия напитка
         """
         if shadow_x != 0 or shadow_y != 0:
             shadow_offset = (shadow_x, shadow_y)
