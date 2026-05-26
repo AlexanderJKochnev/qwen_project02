@@ -296,6 +296,7 @@ class SeaweedsRouter:
             shadow_offset = (shadow_x, shadow_y)
         else:
             shadow_offset = None
+        logger.warning(f'{fonts_dir}/{font}, {type(fonts_dir)=}')
         result = {"fill_color": fill_color,
                   "stroke_color": stroke_color,
                   "backgound_color": background_color,

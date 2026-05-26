@@ -448,7 +448,7 @@ class ItemService(ArrayService, SearchService, Service):
         """
         instance = await cls.repository.get_by_id(id, cls.model, session)
         item_dict: dict = instance.to_dict_fast()
-        drink_dict = item_dict.get(item_dict)
+        drink_dict = item_dict.get('drink')
         if not drink_dict:
             return None
         texts = item_dict.get("diplay_name")
