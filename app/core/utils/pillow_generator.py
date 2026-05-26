@@ -43,7 +43,7 @@ class TextConfig:
         self.fill_color = tuple([*self.fill_color[:3], self.fill_opacity])
         if self.shadow_color:
             self.shadow_color = tuple([*self.shadow_color[:3], self.shadow_opacity])
-        self.text = __import__('functools').reduce(lambda t, x: t.replace(f'{x} ', '\n'), ',.;:', self.text)
+        self.text = __import__('functools').reduce(lambda t, x: t.replace(f'{x} ', '\n'), ',.;:', self.text.rstrip('.'))
 
 
 def should_allow_single_word(word: str, min_length: int) -> bool:
