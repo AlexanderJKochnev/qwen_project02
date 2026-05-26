@@ -251,7 +251,7 @@ def generate_text_image(config: TextConfig, format: str = 'WEBP', quality: int =
         save_kwargs = {'format': format}
         if format in ('JPEG', 'WEBP'):
             save_kwargs['quality'] = quality
-        img_trans.save(buffer, **save_kwargs)
+        # img_trans.save(buffer, **save_kwargs)
         # transparent_bytes = buffer.getvalue()
 
         # === ВОТ ТЕ САМЫЕ СТРОКИ ДЛЯ СОХРАНЕНИЯ ЦВЕТНОЙ КОПИИ ===
