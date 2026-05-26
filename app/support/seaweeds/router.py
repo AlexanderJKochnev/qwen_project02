@@ -146,7 +146,6 @@ class SeaweedsRouter:
             # response: (meta, content | None)
             meta, content_bytes = await service.create_img_light(content, description, table_name, content_type)
             if content_bytes:
-                logger.warning(f'{len(content_bytes)=}, {len(content)=}')
                 kwargs = {key: val for key, val in meta.items() if key in ('fid', 'fid_thumb', 'tags')}
                 if isinstance(content_bytes, list):
                     content_bytes = content[-1]
