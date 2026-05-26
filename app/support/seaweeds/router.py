@@ -96,6 +96,10 @@ class SeaweedsRouter:
             "/generator2/{id}", self.test_generate_by_background, methods=["GET"],
             openapi_extra={'x-request-schema': None}
         )
+        self.router.add_api_route(
+            "/generator3/{id}", self.test_generate_simple, methods=["GET"],
+            openapi_extra={'x-request-schema': None}
+        )
 
     async def create_img(self,
                          description: str = Query(..., description='ключевые слова по которым можно найти '
@@ -373,11 +377,6 @@ class SeaweedsRouter:
         """
             Генереция изображения из названия напитка
         """
-        # fill_color = color_converter(COLORS.get(fill_color), fill_opacity)  # RGBA
-        # background_color = color_converter(COLORS.get(background_color), bg_opacity)  # RGBA
-        logger.warning(f'{background_color=}, {COLORS.get(background_color)=}')
-        # stroke_color = color_converter(COLORS.get(stroke_color), 255)
-        # shadow_color = color_converter(COLORS.get(shadow_color), shadow_opacity)
         if shadow_x != 0 or shadow_y != 0:
             shadow_offset = (shadow_x, shadow_y)
         else:
@@ -399,6 +398,50 @@ class SeaweedsRouter:
             "fill_opacity": fill_opacity,
             "text_alignment": text_alignment,
             "padding": padding
+        }
+        service = get_service('Item')
+        response: bytes = await service.test_generate_image_by_background(request, id, result, session)
+        return ResponseStreaming(response)
+
+    async def test_generate_simple(self, request: Request, id: int = Path(..., description='id items'),
+                                   fill_opacity: int = Query(default=0,
+                                                             ge=0, le=255,
+                                                             description="Прозрачность шрифта"),
+                                   background_color: ColorType = Query('WHITE', description="Цвет фона"),
+                                   shadow_x: int = Query(10, ge=-10, le=10,
+                                                         description="Тень, смещение по оси X"),
+                                   shadow_y: int = Query(10, ge=-10, le=10,
+                                                         description="Тень, смещение по оси Y"),
+                                   shadow_opacity: int = Query(0,
+                                                               ge=0, le=255,
+                                                               description="Прозрачность тени"),
+                                   font: Fonts = Query(..., description='шрифт'),
+                                   session: AsyncSession = Depends(get_db)
+                                   ):
+        """
+            Генереция изображения из названия напитка
+        """
+        if shadow_x != 0 or shadow_y != 0:
+            shadow_offset = (shadow_x, shadow_y)
+        else:
+            shadow_offset = None, None
+
+        result = {
+            "width": 500,
+            "height": 800,
+            "font_path": f'{fonts_dir}/{font}',
+            "initial_font_size": 80,
+            "min_word_length": 3,
+            "background_color": COLORS.get(background_color),
+            # "fill_color": fill_color,
+            # "stroke_color": stroke_color,
+            "stroke_width": 1,
+            "shadow_offset": shadow_offset,
+            # "shadow_color": shadow_color,
+            "shadow_opacity": shadow_opacity,
+            "fill_opacity": fill_opacity,
+            "text_alignment": 'center',
+            "padding": 10
         }
         service = get_service('Item')
         response: bytes = await service.test_generate_image_by_background(request, id, result, session)

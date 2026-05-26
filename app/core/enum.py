@@ -60,7 +60,6 @@ COLORS = {
     "COGNAC": "#6F3729",
     "WHISKEY": "#AD802F",
     "OTHER": "#8D314A",
-    
     "WHITE": "#FFFFFF",
     "BLACK": "#000000",
     "GRAY": "#898989",
