@@ -37,6 +37,7 @@ from app.support.item.repository import ItemRepository
 from app.support.item.schemas import (ItemCreate, ItemCreatePreact, ItemCreateRelation, ItemDetailManyToManyLocalized,
                                       ItemListView, ItemRead, ItemReadRelation, ItemUpdate,
                                       ItemUpdatePreact)  # ItemApiLangNonLocalized, ItemApiLangLocalized, ItemApiLang,
+from app.core.utils.pillow_generator import TextConfig, generate_text_image
 
 _REINDEX_LOCK = asyncio.Lock()
 
@@ -442,7 +443,8 @@ class ItemService(ArrayService, SearchService, Service):
         return image_bytes
 
     @classmethod
-    async def test_generate_image_by_text(cls, request: Request, id, preset: dict, session: AsyncSession) -> bytes:
+    async def test_generate_image_by_text(cls, request: Request,
+                                          id, preset: TextConfig, session: AsyncSession) -> bytes:
         """
             тестирование изображений
         """
@@ -451,6 +453,6 @@ class ItemService(ArrayService, SearchService, Service):
         drink_dict = item_dict.get('drink')
         if not drink_dict:
             return None
-        texts = item_dict.get("diplay_name")
-        
-        return item_dict
+        txt = drink_dict.get("diplay_name", f"{drink_dict.get('title')}, {drink_dict.get('subtitle')}")
+        preset.text = txt
+        return preset

@@ -12,6 +12,7 @@ from app.auth.dependencies import get_active_user_or_internal
 from app.core.services.seaweed_service import SeaweedsService
 from app.core.utils.pydantic_utils import get_service
 from app.mongodb.service import ThumbnailImageService
+from app.core.utils.pillow_generator import TextConfig
 
 """
     all bellow routes for the test purpose only
@@ -264,12 +265,13 @@ class SeaweedsRouter:
                                           initial_font_size: int = Query(
                                               85, description="размер шрифта, пробуй менять совместно с размером "
                                                               "холста"),
+                                          padding: int = Query(10, ge=1, le=15, description="поля по краям"),
                                           stroke_width: int = Query(2, description="ширина оканттовки букв"),
                                           stroke_color: ColorType = Query("BLACK", description="Цвет окантовки"),
                                           fill_color: ColorType = Query("RED", description="Цвет шрифта"),
-                                          opacity: int = Query(default=0,
-                                                               ge=0, le=255,
-                                                               description="Прозрачность шрифта"),
+                                          fill_opacity: int = Query(default=0,
+                                                                    ge=0, le=255,
+                                                                    description="Прозрачность шрифта"),
                                           background_color: ColorType = Query('WHITE', description="Цвет фона"),
                                           bg_opacity: int = Query(0,
                                                                   ge=0, le=255,
@@ -288,7 +290,7 @@ class SeaweedsRouter:
         """
             Генереция изображения из названия напитка
         """
-        fill_color = color_converter(COLORS.get(fill_color), opacity)  # RGBA
+        fill_color = color_converter(COLORS.get(fill_color), fill_opacity)  # RGBA
         background_color = color_converter(COLORS.get(background_color), bg_opacity)  # RGBA
         stroke_color = color_converter(COLORS.get(stroke_color), 255)
         shadow_color = color_converter(COLORS.get(shadow_color), shadow_opacity)
@@ -297,12 +299,21 @@ class SeaweedsRouter:
         else:
             shadow_offset = None
         logger.warning(f'{fonts_dir}/{font}, {type(fonts_dir)=}')
-        result = {"fill_color": fill_color,
-                  "stroke_color": stroke_color,
-                  "backgound_color": background_color,
-                  "shadow_color": shadow_color,
-                  "shadow_offset": shadow_offset,
-                  "font": f'{fonts_dir}/{font}'}
+        result = TextConfig(text='dump',  # заглушка - текст получим в service layer
+                            width=width, height=height, font_path=f'{fonts_dir}/{font}',
+                            initial_font_size=initial_font_size,
+                            min_word_length=3,
+                            background_color=background_color,
+                            fill_color=fill_color,
+                            stroke_color=stroke_color,
+                            stroke_width=stroke_width,
+                            shadow_offset=shadow_offset,
+                            shadow_color=shadow_color,
+                            shadow_opacity=shadow_opacity,
+                            fill_opacity=fill_opacity,
+                            text_alignment=text_alignment,
+                            padding=padding
+                            )
         service = get_service('Item')
         response = await service.test_generate_image_by_text(request, id, result, session)
         return response
