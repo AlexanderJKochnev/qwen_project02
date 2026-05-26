@@ -460,7 +460,9 @@ class ItemService(ArrayService, SearchService, Service):
         drink_dict = item_dict.get('drink')
         if not drink_dict:
             return None
-        logger.warning(f'{drink_dict.get("diplay_name")=}')
+        logger.critical(f'{drink_dict.get("diplay_name")=}')
+        from app.core.utils.common_utils import jprint
+        jprint(drink_dict)
         txt = drink_dict.get("diplay_name", f"{drink_dict.get('title')} {drink_dict.get('subtitle')}")
         preset['text'] = txt
         palette: GeneratedPalette = auto_match_colors(preset.get("background_color"))
