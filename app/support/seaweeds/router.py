@@ -406,7 +406,7 @@ class SeaweedsRouter:
             "font_path": f'{fonts_dir}/{font}',
             "initial_font_size": initial_font_size,
             "min_word_length": 3,
-            "background_color": background_color,
+            "background_color": COLORS.get(background_color),
             # "fill_color": fill_color,
             # "stroke_color": stroke_color,
             "stroke_width": stroke_width,
