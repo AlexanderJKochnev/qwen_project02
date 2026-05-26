@@ -463,8 +463,8 @@ class ItemService(ArrayService, SearchService, Service):
 
     @classmethod
     async def test_generate_image_by_background(
-            cls, request: Request, id, preset: dict, session: AsyncSession
-            ) -> bytes:
+        cls, request: Request, id, preset: dict, session: AsyncSession
+    ) -> bytes:
         """
             тестирование изображений
             автоподбор цвета по цвету подложки
