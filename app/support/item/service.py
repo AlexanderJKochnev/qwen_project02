@@ -441,8 +441,7 @@ class ItemService(ArrayService, SearchService, Service):
         drink_dict = item_dict.get('drink')
         if not drink_dict:
             return None
-        logger.warning(f'{drink_dict.get("diplay_name")=}')
-        txt = drink_dict.get("diplay_name", f"{drink_dict.get("title")} TESTS {drink_dict.get("subtitle")}")
+        txt = drink_dict.get("diplay_name", f"{drink_dict.get("title")} {drink_dict.get("subtitle")}")
         preset['text'] = txt
         config = TextConfig(**preset)
         result: bytes = generate_text_image(config, "WEBP", 100)
@@ -461,7 +460,8 @@ class ItemService(ArrayService, SearchService, Service):
         drink_dict = item_dict.get('drink')
         if not drink_dict:
             return None
-        txt = drink_dict.get("diplay_name", f"{drink_dict.get('title')}, {drink_dict.get('subtitle')}")
+        logger.warning(f'{drink_dict.get("diplay_name")=}')
+        txt = drink_dict.get("diplay_name", f"{drink_dict.get('title')} {drink_dict.get('subtitle')}")
         preset['text'] = txt
         palette: GeneratedPalette = auto_match_colors(preset.get("background_color"))
         preset["fill_color"] = palette.fill_color
