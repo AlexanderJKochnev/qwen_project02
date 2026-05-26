@@ -456,5 +456,6 @@ class ItemService(ArrayService, SearchService, Service):
             return None
         txt = drink_dict.get("diplay_name", f"{drink_dict.get('title')}, {drink_dict.get('subtitle')}")
         preset['text'] = txt
-        result = TextConfig(**preset)
+        config = TextConfig(**preset)
+        result: bytes = generate_text_image(config, "WEBP", 100)
         return result

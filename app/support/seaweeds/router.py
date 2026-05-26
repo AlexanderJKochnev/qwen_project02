@@ -260,7 +260,7 @@ class SeaweedsRouter:
     async def test_generate_image_by_text(self, request: Request, id: int = Path(..., description='id items'),
                                           width: int = Query(380, description="ширина холста"),
                                           height: int = Query(500, description="высота холста"),
-                                          text_alignment: Alignment = Query(None, description="выравнивание "
+                                          text_alignment: Alignment = Query("center", description="выравнивание "
                                           "текста"),
                                           initial_font_size: int = Query(
                                               85, description="размер шрифта, пробуй менять совместно с размером "
@@ -297,7 +297,7 @@ class SeaweedsRouter:
         if shadow_x != 0 or shadow_y != 0:
             shadow_offset = (shadow_x, shadow_y)
         else:
-            shadow_offset = None
+            shadow_offset, shadow_color = None, None
         logger.warning(f'{fonts_dir}/{font}, {type(fonts_dir)=}')
         """
         result = TextConfig(text='dump',  # заглушка - текст получим в service layer
@@ -334,5 +334,5 @@ class SeaweedsRouter:
             "padding": padding
         }
         service = get_service('Item')
-        response = await service.test_generate_image_by_text(request, id, result, session)
-        return response
+        response: bytes = await service.test_generate_image_by_text(request, id, result, session)
+        return ResponseStreaming(response)

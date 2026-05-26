@@ -1,3 +1,4 @@
+import io
 import os
 import string
 from dataclasses import dataclass
@@ -188,12 +189,12 @@ def wrap_and_fit_text(config: TextConfig) -> Tuple[List[str], ImageFont.FreeType
     raise ValueError("Текст невозможно уместить с соблюдением всех правил даже минимальным шрифтом.")
 
 
-def generate_text_image(config: TextConfig, output_path: str) -> None:
+def generate_text_image(config: TextConfig, format: str = 'WEBP', quality: int = 100) -> bytes:
     """Генерирует изображение на основе переданного объекта TextConfig."""
     logger.info("=== СТАРТ ОТЛАДКИ (PILLOW БЕЗ ANCHOR) ===")
-    if not os.path.exists(config.font_path):
-        logger.error(f"КРИТИЧЕСКАЯ ОШИБКА: Шрифт не найден по пути: {config.font_path}")
-        return
+    # if not os.path.exists(config.font_path):
+    #     logger.error(f"КРИТИЧЕСКАЯ ОШИБКА: Шрифт не найден по пути: {config.font_path}")
+    #     return
 
     try:
         # Шаг 1: Рассчитываем перенос строк и размер шрифта
@@ -201,7 +202,7 @@ def generate_text_image(config: TextConfig, output_path: str) -> None:
         full_text = '\n'.join(lines)
 
         # Шаг 2: Создаем холст ИЗНАЧАЛЬНО полностью прозрачным
-        logger.debug(f"Шаг 2: Создание прозрачного холста...")
+        logger.debug("Шаг 2: Создание прозрачного холста...")
         img_trans = Image.new("RGBA", (config.width, config.height), (255, 255, 255, 0))
         draw = ImageDraw.Draw(img_trans)
 
@@ -238,16 +239,19 @@ def generate_text_image(config: TextConfig, output_path: str) -> None:
             align=config.text_alignment
         )
 
-        # МЕТАДАННЫЕ: Сохраняем исходный текст в структуру PNG
+        # МЕТАДАННЫЕ: Сохраняем исходный текст в структуру WEBP/PNG/JPEG
         from PIL.PngImagePlugin import PngInfo
         metadata = PngInfo()
-        metadata.add_text('comment', config.text)
-        metadata.add_text('custom:original_text', config.text)
+        metadata.add_text('comment', f'{config.text}, text_generated')
+        metadata.add_text('custom:original_text', f'{config.text}, text_generated')
 
         # Шаг 6: Сохраняем прозрачный файл (добавляем суффикс к пути)
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        path_trans = output_path.replace(".png", "_transparent.png")
-        img_trans.save(path_trans, "PNG", pnginfo=metadata)
+        buffer = io.BytesIO()
+        save_kwargs = {'format': format}
+        if format in ('JPEG', 'WEBP'):
+            save_kwargs['quality'] = quality
+        img_trans.save(buffer, **save_kwargs)
+        # transparent_bytes = buffer.getvalue()
 
         # === ВОТ ТЕ САМЫЕ СТРОКИ ДЛЯ СОХРАНЕНИЯ ЦВЕТНОЙ КОПИИ ===
         # 1. Создаем цветную подложку нужного цвета
@@ -255,11 +259,10 @@ def generate_text_image(config: TextConfig, output_path: str) -> None:
         # 2. Накладываем наш готовый прозрачный текст поверх этой подложки одной командой
         img_solid.alpha_composite(img_trans)
         # 3. Сохраняем цветной файл по оригинальному пути
-        img_solid.save(output_path, "PNG", pnginfo=metadata)
-
-        if os.path.exists(output_path):
-            logger.info("=== УСПЕХ! === Файл сохранен на диск.")
-
+        # img_solid.save(output_path, "PNG", pnginfo=metadata)
+        img_solid.save(buffer, **save_kwargs)
+        solid_bytes = buffer.getvalue()
+        return solid_bytes
     except Exception as e:
         logger.critical(f"ПРОИЗОШЕЛ СБОЙ ПРИ ГЕНЕРАЦИИ! {e}", exc_info=True)
 
