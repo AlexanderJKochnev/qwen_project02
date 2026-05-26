@@ -63,6 +63,7 @@ from app.core.config.database.seaweed_async import init_seaweed, close_seaweed
 from app.support.seaweeds.router import SeaweedsRouter
 from app.core.repositories.clickhouse_repository import ClickHouseRepositoryFactory
 from app.support.merging.router import MergingRouter
+from app.support.item.router_item_image import ItemImageRouter
 
 logger.info('start initialisation')
 
@@ -203,6 +204,7 @@ app.include_router(GetRouter().router)
 app.include_router(ReadRouter().router)
 app.include_router(DeleteRouter().router)
 app.include_router(PatchRouter().router)
+app.include_router(ItemImageRouter().router)
 app.include_router(ItemViewRouter().router)
 app.include_router(ItemRouter().router)
 app.include_router(DrinkRouter().router)
