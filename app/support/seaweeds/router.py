@@ -402,10 +402,11 @@ class SeaweedsRouter:
         response: bytes = await service.test_generate_image_by_background(request, id, result, session)
         return ResponseStreaming(response)
 
-    async def test_generate_simple(self, request: Request, id: int = Path(..., description='id items'),
+    async def test_generate_simple(self, request: Request, id: int = Path(..., description='id items - любое число'),
                                    fill_opacity: int = Query(default=50,
                                                              ge=0, le=255,
-                                                             description="Прозрачность шрифта"),
+                                                             description="Прозрачность шрифта от 0 - полностью "
+                                                                         "прозрачное до 255 - непрозрачное"),
                                    background_color: ColorType = Query('WHITE_WINE', description="Цвет фона"),
                                    shadow_x: int = Query(10, ge=-10, le=10,
                                                          description="Тень, смещение по оси X"),
@@ -413,7 +414,11 @@ class SeaweedsRouter:
                                                          description="Тень, смещение по оси Y"),
                                    shadow_opacity: int = Query(100,
                                                                ge=0, le=255,
-                                                               description="Прозрачность тени"),
+                                                               description="Прозрачность тени. Желательно меньше "
+                                                                           "прозрачности шрифта. Но при полностью "
+                                                                           "прозрачном шрифте и непрозрачной тени "
+                                                                           "тоже интересно"
+                                                                           " "),
                                    font: Fonts = Query(..., description='шрифт'),
                                    session: AsyncSession = Depends(get_db)
                                    ):
@@ -426,10 +431,10 @@ class SeaweedsRouter:
             shadow_offset = None, None
 
         result = {
-            "width": 500,
-            "height": 800,
+            "width": 380,
+            "height": 500,
             "font_path": f'{fonts_dir}/{font}',
-            "initial_font_size": 80,
+            "initial_font_size": 85,
             "min_word_length": 3,
             "background_color": COLORS.get(background_color),
             # "fill_color": fill_color,
