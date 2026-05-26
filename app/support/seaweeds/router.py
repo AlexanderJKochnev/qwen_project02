@@ -374,7 +374,7 @@ class SeaweedsRouter:
             Генереция изображения из названия напитка
         """
         # fill_color = color_converter(COLORS.get(fill_color), fill_opacity)  # RGBA
-        background_color = color_converter(COLORS.get(background_color), bg_opacity)  # RGBA
+        # background_color = color_converter(COLORS.get(background_color), bg_opacity)  # RGBA
         logger.warning(f'{background_color=}, {COLORS.get('background_color')=}')
         # stroke_color = color_converter(COLORS.get(stroke_color), 255)
         # shadow_color = color_converter(COLORS.get(shadow_color), shadow_opacity)
