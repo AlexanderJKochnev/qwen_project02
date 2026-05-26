@@ -43,5 +43,5 @@ class CategoryCreateResponseSchema(CategoryCreate, CreateResponse):
     pass
 
 
-class CategoryDetailView(DetailView):
+class CategoryDetailView(ColorMixin, DetailView):
     pass

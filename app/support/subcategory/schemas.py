@@ -9,7 +9,7 @@ from app.core.schemas.base import (CreateResponse, CreateSchemaSub, ReadApiSchem
 from app.support.category.schemas import CategoryCreateRelation, CategoryRead
 
 
-class CustomReadSchema:
+class CustomReadSchema(ColorMixin):
     category: CategoryRead
 
 
@@ -39,15 +39,15 @@ class SubcategoryReadApiSchema(ReadApiSchema):
         return self.__get_lang__('')
 
 
-class CustomCreateSchema:
+class CustomCreateSchema(ColorMixin):
     category_id: int
 
 
-class CustomCreateRelation:
+class CustomCreateRelation(ColorMixin):
     category: CategoryCreateRelation
 
 
-class CustomUpdSchema:
+class CustomUpdSchema(ColorMixin):
     # category: Optional[CategoryCreateRelation]
     category_id: Optional[int] = None
 
@@ -76,10 +76,10 @@ class SubcategoryCreateResponseSchema(SubcategoryCreate, CreateResponse):
     pass
 
 
-class SubcategoryDetailView(DetailView):
+class SubcategoryDetailView(ColorMixin, DetailView):
     category: Optional[CategoryRead] = None
 
 
-class SubcategoryListView(ListView):
+class SubcategoryListView(ColorMixin, ListView):
     # country: Optional[ListView] = None
     pass
