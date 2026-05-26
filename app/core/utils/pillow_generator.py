@@ -257,6 +257,7 @@ def generate_text_image(config: TextConfig, format: str = 'WEBP', quality: int =
         # === ВОТ ТЕ САМЫЕ СТРОКИ ДЛЯ СОХРАНЕНИЯ ЦВЕТНОЙ КОПИИ ===
         # 1. Создаем цветную подложку нужного цвета
         img_solid = Image.new("RGBA", img_trans.size, config.background_color)
+        print(config.background_color)
         # 2. Накладываем наш готовый прозрачный текст поверх этой подложки одной командой
         img_solid.alpha_composite(img_trans)
         # 3. Сохраняем цветной файл по оригинальному пути
