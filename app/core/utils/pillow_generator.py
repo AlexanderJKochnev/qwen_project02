@@ -19,25 +19,25 @@ from app.core.utils.io_utils import get_dirpath
 class TextConfig:
     """Конфигурация параметров генерации текстового изображения."""
     text: str
-    width: int = settings.TXT_WEIGHT
-    height: int = settings.TXT_HEIGHT
     font_path: str = 'glouchester.ttf'
-    initial_font_size: int = settings.TXT_FONT_SIZE
-
-    # Минимальная длина слова, которое может стоять ОДНО на строке.
-    # Если слово меньше или РАВНО этой длине, оно не может быть одно.
-    min_word_length: int = 3
-
     background_color: str | Tuple[int, int, int, int] = (255, 255, 255, 0)
     fill_color: str | Tuple[int, int, int, int] = (0, 0, 0, 0)
     stroke_color: str | Tuple[int, int, int, int] = "black"
-    stroke_width: int = 1
-    shadow_offset: Optional[Tuple[int, int]] = (settings.TXT_SHADOW_X, settings.TXT_SHADOW_Y)
     shadow_color: Optional[str | Tuple[int, int, int, int]] = "rgba(0, 0, 0, 128)"
-    text_alignment: str = 'center'
-    padding: int = 15
+
+    width: int = settings.TXT_WEIGHT
+    height: int = settings.TXT_HEIGHT
+    initial_font_size: int = settings.TXT_FONT_SIZE
+    shadow_offset: Optional[Tuple[int, int]] = (settings.TXT_SHADOW_X, settings.TXT_SHADOW_Y)
+    padding: int = settings.TXT_PADDING
     fill_opacity: int = settings.TXT_FILL_OPACITY  # По умолчанию прозрачные буквы внутри
     shadow_opacity: int = settings.TXT_SHADOW_OPACITY  # По умолчанию полупрозрачная тень
+    # Минимальная длина слова, которое может стоять ОДНО на строке.
+    # Если слово меньше или РАВНО этой длине, оно не может быть одно.
+    min_word_length: int = settings.TXT_MIN_WORD_LENGTH
+    stroke_width: int = settings.TXT_STROKE_WIDTH
+    text_alignment: str = settings.TXT_ALIGNMENT
+
 
     def __post_init__(self):
         """Автоматически подмешивает прозрачность к цветам после создания объекта."""

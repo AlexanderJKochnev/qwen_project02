@@ -265,6 +265,9 @@ class Settings(BaseSettings):
     TXT_SHADOW_OPACITY: int = 100
     TXT_FILL_OPACITY: int = 100
     TXT_PADDING: int = 10
+    TXT_MIN_WORD_LENGTH: int = 3
+    TXT_STROKE_WIDTH: int = 1
+    TXT_ALIGNMENT: str = 'center'
 
     model_config = SettingsConfigDict(env_file=get_path_to_root(),
                                       env_file_encoding='utf-8',

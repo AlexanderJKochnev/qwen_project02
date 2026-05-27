@@ -489,9 +489,10 @@ class ItemService(ArrayService, SearchService, Service):
         else:
             background_color = '"#FFFFFF"'
         palette: GeneratedPalette = auto_match_colors(background_color)
-        preset: dict = {"text": txt,
-                        "font_path": font,
-                        "background_color": background_color}
+        preset: dict = {}
+        preset["text"] = txt
+        preset["font_path"] = font
+        preset["background_color"] = background_color
         preset["fill_color"] = palette.fill_color
         preset["stroke_color"] = palette.stroke_color
         preset["shadow_color"] = palette.shadow_color
