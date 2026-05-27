@@ -226,4 +226,4 @@ class ArrayService:
         x = len(font_list)
         rx = randint(0, x - 1)
         font = font_list[rx]
-        return await cls.generate_image_by_id(id, font, session)
+        return await cls.generate_image_by_id(id, font, session, bg_opacity)
