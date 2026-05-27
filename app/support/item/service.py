@@ -471,3 +471,32 @@ class ItemService(ArrayService, SearchService, Service):
         config = TextConfig(**preset)
         result: bytes = generate_text_image(config, "WEBP", 100)
         return result
+
+    @classmethod
+    async def test_generate_by_id(
+        cls, request: Request, id: int, font: str, session: AsyncSession
+    ) -> bytes:
+        # get instance
+        instance = await cls.repository.get_by_id(id, cls.model, session)
+        item_dict: dict = instance.to_dict_fast()
+        drink_dict = item_dict.get('drink')
+        # get txt
+        if not drink_dict:
+            return None
+        txt = drink_dict.get("display_name", f"{drink_dict.get('title')} {drink_dict.get('subtitle')}")
+        # get back color
+        if subcategory := drink_dict.get('subcategory'):
+            category: dict = subcategory.get('category')
+            background_color = subcategory.get('color', category.get('color', '"#FFFFFF"'))
+        else:
+            background_color = '"#FFFFFF"'
+        palette: GeneratedPalette = auto_match_colors(background_color)
+        preset: dict = {"text": txt,
+                        "font_path": font,
+                        "background_color": background_color}
+        preset["fill_color"] = palette.fill_color
+        preset["stroke_color"] = palette.stroke_color
+        preset["shadow_color"] = palette.shadow_color
+        config = TextConfig(**preset)
+        result: bytes = generate_text_image(config, "WEBP", 100)
+        return result

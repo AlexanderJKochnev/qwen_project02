@@ -7,6 +7,7 @@ from PIL import Image, ImageDraw, ImageFont
 from loguru import logger
 
 from app.core.utils.color_palette import auto_match_colors
+from app.core.utils.io_utils import get_dirpath
 
 """
     генератор изображений из текста
@@ -18,10 +19,10 @@ from app.core.utils.color_palette import auto_match_colors
 class TextConfig:
     """Конфигурация параметров генерации текстового изображения."""
     text: str
-    width: int = 150
-    height: int = 800
-    font_path: str = '/System/Library/Fonts/Supplemental/Copperplate.ttc'
-    initial_font_size: int = 80
+    width: int = 423
+    height: int = 600
+    font_path: str = 'glouchester.ttf'
+    initial_font_size: int = 85
 
     # Минимальная длина слова, которое может стоять ОДНО на строке.
     # Если слово меньше или РАВНО этой длине, оно не может быть одно.
@@ -29,13 +30,13 @@ class TextConfig:
 
     background_color: str | Tuple[int, int, int, int] = (255, 255, 255, 0)
     fill_color: str | Tuple[int, int, int, int] = (0, 0, 0, 0)
-    stroke_color: str | Tuple[int, int, int, int] = "red"
-    stroke_width: int = 3
+    stroke_color: str | Tuple[int, int, int, int] = "black"
+    stroke_width: int = 1
     shadow_offset: Optional[Tuple[int, int]] = (4, 4)
     shadow_color: Optional[str | Tuple[int, int, int, int]] = "rgba(0, 0, 0, 128)"
     text_alignment: str = 'center'
-    padding: int = 10
-    fill_opacity: int = 0  # По умолчанию прозрачные буквы внутри
+    padding: int = 5
+    fill_opacity: int = 100  # По умолчанию прозрачные буквы внутри
     shadow_opacity: int = 128  # По умолчанию полупрозрачная тень
 
     def __post_init__(self):
@@ -45,7 +46,8 @@ class TextConfig:
             self.shadow_color = tuple([*self.shadow_color[:3], self.shadow_opacity])
         txt = ' '.join(self.text.replace('«', '').replace('»', '').split())
         self.text = __import__('functools').reduce(lambda t, x: t.replace(f'{x} ', '\n'), ',.;:', txt.rstrip('.'))
-
+        fonts_dir = get_dirpath('fonts')
+        self.font_path = f'{fonts_dir}/{self.font_path}'
 
 def should_allow_single_word(word: str, min_length: int) -> bool:
     """

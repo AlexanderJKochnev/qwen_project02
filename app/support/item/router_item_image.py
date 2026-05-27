@@ -44,6 +44,10 @@ class ItemImageRouter:
             "/generator3/{id}", self.test_generate_simple, methods=["GET"],
             openapi_extra={'x-request-schema': None}
         )
+        self.router.add_api_route(
+            "/generator4/{id}", self.test_generate_by_id, methods=["GET"],
+            openapi_extra={'x-request-schema': None}
+        )
 
     async def test_generate_image_by_text(self, request: Request, id: int = Path(..., description='id items'),
                                           width: int = Query(380, description="ширина холста"),
@@ -106,7 +110,7 @@ class ItemImageRouter:
         result = {
             "width": width,
             "height": height,
-            "font_path": f'{fonts_dir}/{font}',
+            "font_path": font,
             "initial_font_size": initial_font_size,
             "min_word_length": 3,
             "background_color": background_color,
@@ -165,7 +169,7 @@ class ItemImageRouter:
         result = {
             "width": width,
             "height": height,
-            "font_path": f'{fonts_dir}/{font}',
+            "font_path": font,
             "initial_font_size": initial_font_size,
             "min_word_length": 3,
             "background_color": COLORS.get(background_color),
@@ -214,7 +218,7 @@ class ItemImageRouter:
         result = {
             "width": 380,
             "height": 500,
-            "font_path": f'{fonts_dir}/{font}',
+            "font_path": font,
             "initial_font_size": 85,
             "min_word_length": 3,
             "background_color": COLORS.get(background_color),
@@ -230,4 +234,17 @@ class ItemImageRouter:
         }
         service = get_service('Item')
         response: bytes = await service.test_generate_image_by_background(request, id, result, session)
+        return ResponseStreaming(response)
+
+    async def test_generate_by_id(self, request: Request,
+                                  id: int = Path(..., description='id items - любое число'),
+                                  font: Fonts = Query(..., description='шрифт'),
+                                  session: AsyncSession = Depends(get_db)
+                                  ):
+        """
+            Генерaция изображения из названия напитка
+        """
+        service = get_service('Item')
+        response: bytes = await service.test_generate_by_id(request, id, font, session)
+        # return response
         return ResponseStreaming(response)
