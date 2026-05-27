@@ -129,7 +129,9 @@ class ArrayService:
         # 1. получение image_id by id
         image_id = await cls.get_item_of_array_by_id(id, model, arrayColname, repository, session, pos)
         if not image_id:
-            image_id = get_default_image(request, pos)
+            # image_id = get_default_image(request, pos)
+            image: bytes = await cls.generate_random_image_by_id(id, session, False)
+            return image
         # 2. получение image by image_id
         # image = await image_service.get_full_image(image_id)
         image: bytes = await image_service.get_image(image_id)

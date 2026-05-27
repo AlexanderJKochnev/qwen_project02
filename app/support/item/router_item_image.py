@@ -260,7 +260,6 @@ class ItemImageRouter:
             bg = 255
         else:
             bg = 0
-        print(f'==================================={bg}====================================')
         service = get_service('Item')
         response: bytes = await service.generate_random_image_by_id(id, session, bg)
         # return response
