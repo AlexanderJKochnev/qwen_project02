@@ -197,7 +197,7 @@ class ArrayService:
             category: dict = subcategory.get('category')
             background_color = subcategory.get('color', category.get('color', '"#FFFFFF"'))
         else:
-            background_color = '"#FFFFFFFF"'
+            background_color = '"#FFFFFF"'
         palette: GeneratedPalette = auto_match_colors(background_color)
         logger.warning(f'{palette=}')
         preset: dict = {}
