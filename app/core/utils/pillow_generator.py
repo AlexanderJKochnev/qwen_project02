@@ -15,12 +15,17 @@ from app.core.utils.io_utils import get_dirpath
 """
 
 
+def hex_to_rgba_byte(hex_str, alpha=255):
+    num = int(hex_str.lstrip('#'), 16)
+    return (num >> 16) & 255, (num >> 8) & 255, num & 255, int(alpha)
+
+
 @dataclass
 class TextConfig:
     """Конфигурация параметров генерации текстового изображения."""
     text: str
     font_path: str = 'glouchester.ttf'
-    background_color: Tuple[int, int, int, int] = (255, 255, 255, 0)
+    background_color: str | Tuple[int, int, int, int] = (255, 255, 255, 0)
     background_opacity: int = 255
     fill_color: str | Tuple[int, int, int, int] = (0, 0, 0, 0)
     stroke_color: str | Tuple[int, int, int, int] = "black"
@@ -48,7 +53,10 @@ class TextConfig:
         self.text = __import__('functools').reduce(lambda t, x: t.replace(f'{x} ', '\n'), ',.;:', txt.rstrip('.'))
         fonts_dir = get_dirpath('fonts')
         self.font_path = f'{fonts_dir}/{self.font_path}'    # путь к шрифту
-        self.background_color = tuple([*self.background_color[:3], self.background_opacity])
+        if isinstance(self.background_color, str) and self.background_color.startswith('#'):
+            self.background_color = hex_to_rgba_byte(self.background_color, self.background_opacity)
+        else:
+            self.background_color = tuple([*self.background_color[:3], self.background_opacity])
 
 
 def should_allow_single_word(word: str, min_length: int) -> bool:
