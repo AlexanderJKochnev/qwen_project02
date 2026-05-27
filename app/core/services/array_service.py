@@ -11,8 +11,8 @@ from app.core.services.seaweed_service import SeaweedsService
 from app.core.utils.alchemy_utils import has_column
 from app.core.utils.image_utils import get_default_image
 from app.core.utils.io_utils import get_font_list
-from app.core.utils.pillow_generator import TextConfig, generate_text_image
-from app.core.utils.color_palette import GeneratedPalette, auto_match_colors
+from app.core.utils.pillow_generator import TextConfig, generate_text_image, TextConfigAdaptive
+from app.core.utils.color_palette import auto_match_colors_old, GeneratedPalette, auto_match_colors
 
 
 class ArrayService:
@@ -183,7 +183,7 @@ class ArrayService:
             cls, id: int, font: str, session: AsyncSession, bg_opacity: int = 255
     ) -> bytes:
         """
-            генерация рисунка по тексту с адаптивной цветовой палитрой
+            генерация рисунка по тексту с адаптивной цветовой палитрой - старый метод
         """
         instance = await cls.repository.get_by_id(id, cls.model, session)
         item_dict: dict = instance.to_dict_fast()
@@ -198,7 +198,7 @@ class ArrayService:
             background_color = subcategory.get('color', category.get('color', "#FFFFFF"))
         else:
             background_color = "#FFFFFF"
-        palette: GeneratedPalette = auto_match_colors(background_color)
+        palette: GeneratedPalette = auto_match_colors_old(background_color)
         logger.warning(f'{palette=}')
         preset: dict = {}
         preset["text"] = txt
@@ -217,6 +217,35 @@ class ArrayService:
             cls, request: Request, id: int, font: str, session: AsyncSession
     ) -> bytes:
         return await cls.generate_image_by_id(id, font, session)
+
+    @classmethod
+    async def generate_image_by_id_v2(
+            cls, id: int, font: str, session: AsyncSession, bg_opacity: int = 255
+    ) -> bytes:
+        """
+            генерация рисунка по тексту с адаптивной цветовой палитрой - новый метод
+        """
+        instance = await cls.repository.get_by_id(id, cls.model, session)
+        item_dict: dict = instance.to_dict_fast()
+        drink_dict = item_dict.get('drink')
+        # get txt
+        if not drink_dict:
+            return None
+        txt = drink_dict.get("display_name", f"{drink_dict.get('title')} {drink_dict.get('subtitle')}")
+        # get back color
+        if subcategory := drink_dict.get('subcategory'):
+            category: dict = subcategory.get('category')
+            background_color = subcategory.get('color', category.get('color', "#FFFFFF"))
+        else:
+            background_color = "#FFFFFF"
+        preset: dict = {}
+        preset["text"] = txt
+        preset["font_path"] = font
+        preset["background_color"] = background_color
+        config = TextConfigAdaptive(**preset)
+        result: bytes = generate_text_image(config, "WEBP", 100)
+        return result
+
 
     @classmethod
     async def generate_random_image_by_id(cls, id: int, session: AsyncSession, bg_opacity: bool) -> bytes:

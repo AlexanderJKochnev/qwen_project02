@@ -6,8 +6,9 @@ from typing import Tuple, List, Optional
 from PIL import Image, ImageDraw, ImageFont
 from loguru import logger
 from app.core.config.project_config import settings
-from app.core.utils.color_palette import auto_match_colors
 from app.core.utils.io_utils import get_dirpath
+from app.core.utils.color_palette import auto_match_colors, GeneratedPalette
+
 
 """
     генератор изображений из текста
@@ -49,6 +50,46 @@ class TextConfig:
         self.fill_color = tuple([*self.fill_color[:3], self.fill_opacity])
         if self.shadow_color:
             self.shadow_color = tuple([*self.shadow_color[:3], self.shadow_opacity])
+        txt = ' '.join(self.text.replace('«', '').replace('»', '').split())
+        self.text = __import__('functools').reduce(lambda t, x: t.replace(f'{x} ', '\n'), ',.;:', txt.rstrip('.'))
+        fonts_dir = get_dirpath('fonts')
+        self.font_path = f'{fonts_dir}/{self.font_path}'    # путь к шрифту
+        if isinstance(self.background_color, str) and self.background_color.startswith('#'):
+            self.background_color = hex_to_rgba_byte(self.background_color, self.background_opacity)
+        else:
+            self.background_color = tuple([*self.background_color[:3], self.background_opacity])
+
+
+@dataclass
+class TextConfigAdaptive:
+    """ Конфигурация параметров генерации текстового изображения.
+        с адаптивной настройкой палитры
+    """
+    text: str
+    font_path: str = 'glouchester.ttf'
+    background_color: str | Tuple[int, int, int, int] = (255, 255, 255, 0)
+
+    background_opacity: int = 0
+    width: int = settings.TXT_WEIGHT
+    height: int = settings.TXT_HEIGHT
+    initial_font_size: int = settings.TXT_FONT_SIZE
+    shadow_offset: Optional[Tuple[int, int]] = (settings.TXT_SHADOW_X, settings.TXT_SHADOW_Y)
+    padding: int = settings.TXT_PADDING
+    fill_opacity: int = settings.TXT_FILL_OPACITY  # По умолчанию прозрачные буквы внутри
+    shadow_opacity: int = settings.TXT_SHADOW_OPACITY  # По умолчанию полупрозрачная тень
+    # Минимальная длина слова, которое может стоять ОДНО на строке.
+    # Если слово меньше или РАВНО этой длине, оно не может быть одно.
+    min_word_length: int = settings.TXT_MIN_WORD_LENGTH
+    stroke_width: int = settings.TXT_STROKE_WIDTH
+    text_alignment: str = settings.TXT_ALIGNMENT
+
+    def __post_init__(self):
+        """Автоматически подмешивает прозрачность к цветам после создания объекта."""
+        if isinstance(self.background_color, str) and self.background_color.startswith('#'):
+            self.background_color = hex_to_rgba_byte(self.background_color, alpha=self.background_opacity)
+        pallette: GeneratedPalette = auto_match_colors(self.background_color, self.fill_opacity, self.shadow_opacity)
+        self.fill_color = tuple([*pallette.fill_color[:3], self.fill_opacity])
+        self.shadow_color = tuple([*pallette.shadow_color[:3], self.shadow_opacity])
         txt = ' '.join(self.text.replace('«', '').replace('»', '').split())
         self.text = __import__('functools').reduce(lambda t, x: t.replace(f'{x} ', '\n'), ',.;:', txt.rstrip('.'))
         fonts_dir = get_dirpath('fonts')

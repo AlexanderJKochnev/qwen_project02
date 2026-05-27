@@ -13,7 +13,76 @@ class GeneratedPalette:
     shadow_color: Tuple[int, int, int, int]
 
 
-def auto_match_colors(background_color_str: str) -> GeneratedPalette:
+def auto_match_colors(
+        background_color: Tuple[int, int, int, int], fill_opacity: int = 0, shadow_opacity: int = 128
+) -> GeneratedPalette:
+    """
+    Профессиональный подбор гармоничной палитры (Аналоговый сплит + Триада).
+    Гарантирует читаемость, задействует прозрачность и избегает банального черного/белого текста.
+    """
+    r, g, b = background_color[:3]
+    # Переводим в HSV для благородного управления тоном
+    h, s, v = colorsys.rgb_to_hsv(r / 255.0, g / 255.0, b / 255.0)
+
+    # Вычисляем физическую яркость фона (YIQ)
+    brightness = (r * 299 + g * 587 + b * 114) / 1000
+    is_dark_bg = brightness < 125
+
+    # Обработка чистых монохромных фонов (серый, белый, черный), где нет цветового тона (s == 0)
+    if s < 0.05:
+        if is_dark_bg:  # Почти черный фон
+            return {"fill": (255, 255, 255, fill_opacity),  # Белая основа (высветляет при прозрачности)
+                    "stroke": (220, 160, 40, 255),  # Благородное золото / охра
+                    "shadow": (0, 0, 0, shadow_opacity)}
+        else:  # Почти белый/светло-серый фон
+            return {"fill": (20, 20, 20, fill_opacity),  # Темная основа (затемняет при прозрачности)
+                    "stroke": (40, 70, 120, 255),  # Глубокий сапфировый/чернильный синий
+                    "shadow": (150, 150, 150, shadow_opacity)}
+
+    if is_dark_bg:
+        # --- ЛОГИКА ДЛЯ ТЕМНОГО ФОНА ---
+        # 1. Тело букв: Высветляющая база. Берем чистый белый (255,255,255)
+        # При fill_opacity > 0 этот цвет будет мягко тонировать и высветлять темный фон изнутри.
+        fill_color = (255, 255, 255, fill_opacity)
+
+        # 2. Окантовка (Stroke): Мягкий аналоговый контраст.
+        # Смещаем тон на 30 градусов (0.08 по кругу), делаем его пастельно-ярким (высокая яркость, средняя насыщенность)
+        stroke_h = (h + 0.08) % 1.0
+        stroke_s = min(s * 0.5 + 0.4, 0.8)  # Не даем уйти в кислоту
+        stroke_v = max(v * 2.0, 0.95)  # Делаем контур сочно светящимся
+        s_r, s_g, s_b = tuple(int(x * 255) for x in colorsys.hsv_to_rgb(stroke_h, stroke_s, stroke_v))
+        stroke_color = (s_r, s_g, s_b, 255)
+
+        # 3. Тень: Глубокий, почти черный оттенок цвета самого фона (богатый контражур)
+        shadow_v = max(v * 0.2, 0.05)
+        sh_r, sh_g, sh_b = tuple(int(x * 255) for x in colorsys.hsv_to_rgb(h, s, shadow_v))
+        shadow_color = (sh_r, sh_g, sh_b, shadow_opacity)
+
+    else:
+        # --- ЛОГИКА ДЛЯ СВЕТЛОГО ФОНА ---
+        # 1. Тело букв: Затемняющая база. Берем глубокий монохромный тон самого фона (яркость опускаем до 15%)
+        # При fill_opacity > 0 этот цвет будет работать как темный светофильтр, глубоко насыщая и затемняя подложку.
+        f_r, f_g, f_b = tuple(int(x * 255) for x in colorsys.hsv_to_rgb(h, s, 0.15))
+        fill_color = (f_r, f_g, f_b, fill_opacity)
+
+        # 2. Окантовка (Stroke): Глубокий контрастный тон.
+        # Смещаем тон на 45 градусов (0.12 по кругу), делаем цвет очень плотным и насыщенным
+        stroke_h = (h + 0.12) % 1.0
+        stroke_s = min(s * 1.5, 0.95)
+        stroke_v = max(v * 0.3, 0.25)  # Плотный, темный, дорогой оттенок
+        s_r, s_g, s_b = tuple(int(x * 255) for x in colorsys.hsv_to_rgb(stroke_h, stroke_s, stroke_v))
+        stroke_color = (s_r, s_g, s_b, 255)
+
+        # 3. Тень: Собственная глубокая тень фона (насыщенность выкручиваем, яркость убавляем)
+        shadow_s = min(s * 1.8, 1.0)
+        shadow_v = max(v * 0.4, 0.3)
+        sh_r, sh_g, sh_b = tuple(int(x * 255) for x in colorsys.hsv_to_rgb(h, shadow_s, shadow_v))
+        shadow_color = (sh_r, sh_g, sh_b, shadow_opacity)
+        result = {"fill": fill_color, "stroke": stroke_color, "shadow": shadow_color}
+        return GeneratedPalette(**result)
+
+
+def auto_match_colors_old(background_color_str: str) -> GeneratedPalette:
     """
     Анализирует цвет фона и автоматически подбирает гармоничную,
     контрастную палитру для текста (тело, контур, тень).
