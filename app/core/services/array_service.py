@@ -8,6 +8,8 @@ from app.core.repositories.array_repository import ArrayRepository
 from app.core.services.seaweed_service import SeaweedsService
 from app.core.utils.alchemy_utils import has_column
 from app.core.utils.image_utils import get_default_image
+from app.core.utils.pillow_generator import TextConfig, generate_text_image
+from app.core.utils.color_palette import GeneratedPalette, auto_match_colors
 
 
 class ArrayService:
@@ -129,3 +131,89 @@ class ArrayService:
         # image = await image_service.get_full_image(image_id)
         image: bytes = await image_service.get_image(image_id)
         return image
+
+    @classmethod
+    async def test_generate_image_by_text(
+            cls, request: Request, id, preset: dict, session: AsyncSession
+    ) -> bytes:
+        """
+            тестирование изображений
+        """
+        instance = await cls.repository.get_by_id(id, cls.model, session)
+        item_dict: dict = instance.to_dict_fast()
+        drink_dict = item_dict.get('drink')
+        if not drink_dict:
+            return None
+        txt = drink_dict.get("diplay_name", f"{drink_dict.get("title")} {drink_dict.get("subtitle")}")
+        preset['text'] = txt
+        config = TextConfig(**preset)
+        result: bytes = generate_text_image(config, "WEBP", 100)
+        return result
+
+    @classmethod
+    async def test_generate_image_by_background(
+            cls, request: Request, id, preset: dict, session: AsyncSession
+    ) -> bytes:
+        """
+            тестирование изображений
+            автоподбор цвета по цвету подложки
+        """
+        instance = await cls.repository.get_by_id(id, cls.model, session)
+        item_dict: dict = instance.to_dict_fast()
+        drink_dict = item_dict.get('drink')
+        if not drink_dict:
+            return None
+        txt = drink_dict.get("display_name", f"{drink_dict.get('title')} {drink_dict.get('subtitle')}")
+        preset['text'] = txt
+        palette: GeneratedPalette = auto_match_colors(preset.get("background_color"))
+        preset["fill_color"] = palette.fill_color
+        preset["stroke_color"] = palette.stroke_color
+        preset["shadow_color"] = palette.shadow_color
+        config = TextConfig(**preset)
+        result: bytes = generate_text_image(config, "WEBP", 100)
+        return result
+
+    @classmethod
+    async def generate_image_by_id(
+            cls, id: int, font: str, session: AsyncSession
+    ) -> bytes:
+        """
+            генерация рисунка по тексту с адаптивной цветовой палитрой
+        """
+        instance = await cls.repository.get_by_id(id, cls.model, session)
+        item_dict: dict = instance.to_dict_fast()
+        drink_dict = item_dict.get('drink')
+        # get txt
+        if not drink_dict:
+            return None
+        txt = drink_dict.get("display_name", f"{drink_dict.get('title')} {drink_dict.get('subtitle')}")
+        # get back color
+        if subcategory := drink_dict.get('subcategory'):
+            category: dict = subcategory.get('category')
+            background_color = subcategory.get('color', category.get('color', '"#FFFFFF"'))
+        else:
+            background_color = '"#FFFFFF"'
+        palette: GeneratedPalette = auto_match_colors(background_color)
+        preset: dict = {}
+        preset["text"] = txt
+        preset["font_path"] = font
+        preset["background_color"] = background_color
+        preset["fill_color"] = palette.fill_color
+        preset["stroke_color"] = palette.stroke_color
+        preset["shadow_color"] = palette.shadow_color
+        config = TextConfig(**preset)
+        result: bytes = generate_text_image(config, "WEBP", 100)
+        return result
+
+    @classmethod
+    async def test_generate_by_id(
+            cls, request: Request, id: int, font: str, session: AsyncSession
+    ) -> bytes:
+        return await cls.generate_image_by_id(id, font, session)
+
+    @classmethod
+    async def generate_random_image_by_id(cls, request: Request, id, int, session: AsyncSession) -> bytes:
+        """
+            генерация рисунка с рандомными шрифтами и адаптивной цветовой палитрой
+        """
+        pass

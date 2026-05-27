@@ -33,3 +33,5 @@ async def get_clickhouse_repository_factory(request: Request
 
 def get_translator_func() -> Callable[[Dict[str, Any], Optional[bool]], Awaitable[Dict[str, Any]]]:
     return fill_missing_translations
+
+
