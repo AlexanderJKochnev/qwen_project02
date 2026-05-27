@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Tuple, List, Optional
 from PIL import Image, ImageDraw, ImageFont
 from loguru import logger
-
+from app.core.config.project_config import settings
 from app.core.utils.color_palette import auto_match_colors
 from app.core.utils.io_utils import get_dirpath
 
@@ -19,10 +19,10 @@ from app.core.utils.io_utils import get_dirpath
 class TextConfig:
     """Конфигурация параметров генерации текстового изображения."""
     text: str
-    width: int = 423  # ширина прямоугольника
-    height: int = 600  # высота прямоугольника
+    width: int = settings.TXT_WEIGHT
+    height: int = settings.TXT_HEIGHT
     font_path: str = 'glouchester.ttf'
-    initial_font_size: int = 160
+    initial_font_size: int = settings.TXT_FONT_SIZE
 
     # Минимальная длина слова, которое может стоять ОДНО на строке.
     # Если слово меньше или РАВНО этой длине, оно не может быть одно.
@@ -32,12 +32,12 @@ class TextConfig:
     fill_color: str | Tuple[int, int, int, int] = (0, 0, 0, 0)
     stroke_color: str | Tuple[int, int, int, int] = "black"
     stroke_width: int = 1
-    shadow_offset: Optional[Tuple[int, int]] = (4, 4)
+    shadow_offset: Optional[Tuple[int, int]] = (settings.TXT_SHADOW_X, settings.TXT_SHADOW_Y)
     shadow_color: Optional[str | Tuple[int, int, int, int]] = "rgba(0, 0, 0, 128)"
     text_alignment: str = 'center'
     padding: int = 15
-    fill_opacity: int = 100  # По умолчанию прозрачные буквы внутри
-    shadow_opacity: int = 128  # По умолчанию полупрозрачная тень
+    fill_opacity: int = settings.TXT_FILL_OPACITY  # По умолчанию прозрачные буквы внутри
+    shadow_opacity: int = settings.TXT_SHADOW_OPACITY  # По умолчанию полупрозрачная тень
 
     def __post_init__(self):
         """Автоматически подмешивает прозрачность к цветам после создания объекта."""

@@ -63,7 +63,9 @@ COLORS = {
     "COGNAC": "#6F3729",
     "WHISKEY": "#AD802F",
     "VODKA": "#D9DEE4",
-    "OTHER": "#8D314A",
+    "OTHER": "#8D314A"}
+
+EXTENDED_COLORS = {
     "WHITE": "#FFFFFF",
     "BLACK": "#000000",
     "GRAY": "#898989",

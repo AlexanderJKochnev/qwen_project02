@@ -256,6 +256,16 @@ class Settings(BaseSettings):
     REMBG_NUM_TREADS_FAST: int = 4
     REMBG_MODEL: str = "u2net"
 
+    # === TEXT IMAGE GENERATOR ===
+    TXT_FONT_SIZE: int = 160
+    TXT_HEIGHT: int = 600
+    TXT_WEIGHT: int = 400
+    TXT_SHADOW_X: int = 10
+    TXT_SHADOW_Y: int = 10
+    TXT_SHADOW_OPACITY: int = 100
+    TXT_FILL_OPACITY: int = 100
+    TXT_PADDING: int = 10
+
     model_config = SettingsConfigDict(env_file=get_path_to_root(),
                                       env_file_encoding='utf-8',
                                       extra='ignore')
@@ -366,6 +376,7 @@ class Settings(BaseSettings):
                 'rembg_num_threads_fast': self.REMBG_NUM_TREADS_FAST,
                 'rembg_model': self.REMBG_MODEL
                 }
+
 
 settings = Settings()
 

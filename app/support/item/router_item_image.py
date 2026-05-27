@@ -239,6 +239,7 @@ class ItemImageRouter:
         """
             Генерaция изображения из названия напитка
         """
+        print(f'{fonts_list=}')
         service = get_service('Item')
         response: bytes = await service.test_generate_by_id(request, id, font, session)
         # return response
