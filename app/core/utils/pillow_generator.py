@@ -294,10 +294,10 @@ def generate_text_image(config: TextConfig, format: str = 'WEBP', quality: int =
         # new_height = combined_bbox[3] - combined_bbox[1] + config.padding * 2
 
         # Обрезаем изображение
-        img_trans = img_trans.crop(
-            (combined_bbox[0] - config.padding, combined_bbox[1] - config.padding,
-             combined_bbox[2] + config.padding, combined_bbox[3] + config.padding)
-        )
+        # img_trans = img_trans.crop(
+        #     (combined_bbox[0] - config.padding, combined_bbox[1] - config.padding,
+        #      combined_bbox[2] + config.padding, combined_bbox[3] + config.padding)
+        # )
 
         # МЕТАДАННЫЕ: Сохраняем исходный текст в структуру WEBP/PNG/JPEG
         from PIL.PngImagePlugin import PngInfo
