@@ -35,7 +35,7 @@ class TextConfig:
     shadow_offset: Optional[Tuple[int, int]] = (4, 4)
     shadow_color: Optional[str | Tuple[int, int, int, int]] = "rgba(0, 0, 0, 128)"
     text_alignment: str = 'center'
-    padding: int = 5
+    padding: int = 15
     fill_opacity: int = 100  # По умолчанию прозрачные буквы внутри
     shadow_opacity: int = 128  # По умолчанию полупрозрачная тень
 
@@ -240,8 +240,8 @@ def generate_text_image(config: TextConfig, format: str = 'WEBP', quality: int =
             combined_bbox = text_bbox
 
         # Новая ширина = ширина блока + padding*2
-        new_width = combined_bbox[2] - combined_bbox[0] + config.padding * 2
-        new_height = combined_bbox[3] - combined_bbox[1] + config.padding * 2
+        # new_width = combined_bbox[2] - combined_bbox[0] + config.padding * 2
+        # new_height = combined_bbox[3] - combined_bbox[1] + config.padding * 2
 
         # Обрезаем изображение
         img_trans = img_trans.crop(
@@ -255,7 +255,7 @@ def generate_text_image(config: TextConfig, format: str = 'WEBP', quality: int =
         metadata.add_text('comment', f'{config.text}, text_generated')
         metadata.add_text('custom:original_text', f'{config.text}, text_generated')
 
-        # Шаг 6: Сохраняем прозрачный файл (добавляем суффикс к пути)
+        # Шаг 6: Сохраняем прозрачный файл
         buffer = io.BytesIO()
         save_kwargs = {'format': format}
         if format in ('JPEG', 'WEBP'):
