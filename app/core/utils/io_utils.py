@@ -1,4 +1,5 @@
 # app/core/utils/io_utils.py
+from functools import lru_cache
 from pathlib import Path
 import json
 from typing import List
@@ -69,6 +70,13 @@ def get_file_list(directory: Path) -> List:
         return []
     files = [f.name for f in directory.iterdir() if f.is_file()]
     return sorted(files)
+
+
+@lru_cache(maxsize=1)
+def get_font_list(dir_name: str = "fonts") -> list:
+    return get_file_list(get_dirpath(dir_name))
+
+
 
 def get_filepath_from_dir(dirname: str = None,
                           ext_allowed: set = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'}) -> List[Path]:

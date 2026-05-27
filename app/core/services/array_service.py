@@ -1,5 +1,6 @@
 # app.core.service.array_service.py
 from typing import Any, Dict, List
+from random import randint
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, Request
 from app.core.repositories.sqlalchemy_repository import Repository
@@ -8,6 +9,7 @@ from app.core.repositories.array_repository import ArrayRepository
 from app.core.services.seaweed_service import SeaweedsService
 from app.core.utils.alchemy_utils import has_column
 from app.core.utils.image_utils import get_default_image
+from app.core.utils.io_utils import get_font_list
 from app.core.utils.pillow_generator import TextConfig, generate_text_image
 from app.core.utils.color_palette import GeneratedPalette, auto_match_colors
 
@@ -212,8 +214,13 @@ class ArrayService:
         return await cls.generate_image_by_id(id, font, session)
 
     @classmethod
-    async def generate_random_image_by_id(cls, request: Request, id, int, session: AsyncSession) -> bytes:
+    async def generate_random_image_by_id(cls, id, int, session: AsyncSession) -> bytes:
         """
             генерация рисунка с рандомными шрифтами и адаптивной цветовой палитрой
         """
-        pass
+        # получение шрифтов
+        font_list = get_font_list('fonts')
+        x = len(font_list)
+        rx = randint(0, x - 1)
+        font = font_list[rx]
+        return await cls.generate_image_by_id(id, font, session)

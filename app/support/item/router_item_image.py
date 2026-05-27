@@ -10,15 +10,15 @@ from app.auth.dependencies import get_active_user_or_internal
 from app.core.config.database.db_async import get_db
 from app.core.enum import Alignment, COLORS
 from app.core.utils.converters import color_converter
-from app.core.utils.io_utils import get_dirpath, get_file_list, ResponseStreaming
+from app.core.utils.io_utils import get_font_list, ResponseStreaming
 from app.core.utils.pydantic_utils import get_service
 
 """
 
 """
 ColorType = Literal[*COLORS.keys()]
-fonts_dir = get_dirpath('fonts')
-fonts_list = get_file_list(fonts_dir)
+# fonts_dir = get_dirpath('fonts')
+fonts_list = get_font_list('fonts')
 Fonts = Literal[*fonts_list]
 
 
@@ -46,6 +46,10 @@ class ItemImageRouter:
         )
         self.router.add_api_route(
             "/generator4/{id}", self.test_generate_by_id, methods=["GET"],
+            openapi_extra={'x-request-schema': None}
+        )
+        self.router.add_api_route(
+            "/generator5/{id}", self.generate_random_image_by_id, methods=["GET"],
             openapi_extra={'x-request-schema': None}
         )
 
@@ -241,5 +245,17 @@ class ItemImageRouter:
         """
         service = get_service('Item')
         response: bytes = await service.test_generate_by_id(request, id, font, session)
+        # return response
+        return ResponseStreaming(response)
+
+    async def generate_random_image_by_id(self, request: Request,
+                                          id: int = Path(..., description='id items - любое число'),
+                                          session: AsyncSession = Depends(get_db)
+                                          ):
+        """
+            Генерaция изображения из названия напитка
+        """
+        service = get_service('Item')
+        response: bytes = await service.generate_random_image_by_id(id, session)
         # return response
         return ResponseStreaming(response)
