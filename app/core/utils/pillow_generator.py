@@ -20,7 +20,8 @@ class TextConfig:
     """Конфигурация параметров генерации текстового изображения."""
     text: str
     font_path: str = 'glouchester.ttf'
-    background_color: str | Tuple[int, int, int, int] = (255, 255, 255, 0)
+    background_color: Tuple[int, int, int, int] = (255, 255, 255, 0)
+    background_opacity: int = 255
     fill_color: str | Tuple[int, int, int, int] = (0, 0, 0, 0)
     stroke_color: str | Tuple[int, int, int, int] = "black"
     shadow_color: Optional[str | Tuple[int, int, int, int]] = "rgba(0, 0, 0, 128)"
@@ -38,7 +39,6 @@ class TextConfig:
     stroke_width: int = settings.TXT_STROKE_WIDTH
     text_alignment: str = settings.TXT_ALIGNMENT
 
-
     def __post_init__(self):
         """Автоматически подмешивает прозрачность к цветам после создания объекта."""
         self.fill_color = tuple([*self.fill_color[:3], self.fill_opacity])
@@ -48,6 +48,7 @@ class TextConfig:
         self.text = __import__('functools').reduce(lambda t, x: t.replace(f'{x} ', '\n'), ',.;:', txt.rstrip('.'))
         fonts_dir = get_dirpath('fonts')
         self.font_path = f'{fonts_dir}/{self.font_path}'    # путь к шрифту
+        self.background_color = tuple([*self.background_color[:3], self.background_opacity])
 
 
 def should_allow_single_word(word: str, min_length: int) -> bool:

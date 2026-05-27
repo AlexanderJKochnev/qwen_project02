@@ -177,7 +177,7 @@ class ArrayService:
 
     @classmethod
     async def generate_image_by_id(
-            cls, id: int, font: str, session: AsyncSession
+            cls, id: int, font: str, session: AsyncSession, bg_opacity: int = 255
     ) -> bytes:
         """
             генерация рисунка по тексту с адаптивной цветовой палитрой
@@ -200,6 +200,7 @@ class ArrayService:
         preset["text"] = txt
         preset["font_path"] = font
         preset["background_color"] = background_color
+        preset["background_opacity"] = bg_opacity
         preset["fill_color"] = palette.fill_color
         preset["stroke_color"] = palette.stroke_color
         preset["shadow_color"] = palette.shadow_color
@@ -214,7 +215,7 @@ class ArrayService:
         return await cls.generate_image_by_id(id, font, session)
 
     @classmethod
-    async def generate_random_image_by_id(cls, id: int, session: AsyncSession) -> bytes:
+    async def generate_random_image_by_id(cls, id: int, session: AsyncSession, bg_opacity: bool) -> bytes:
         """
             генерация рисунка с рандомными шрифтами и адаптивной цветовой палитрой
         """

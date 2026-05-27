@@ -250,12 +250,17 @@ class ItemImageRouter:
 
     async def generate_random_image_by_id(self, request: Request,
                                           id: int = Path(..., description='id items - любое число'),
-                                          session: AsyncSession = Depends(get_db)
+                                          session: AsyncSession = Depends(get_db),
+                                          bg_opacity: bool = Query(True, description="True - непрозрачный фон")
                                           ):
         """
             Генерaция изображения из названия напитка
         """
+        if bg_opacity:
+            bg = 255
+        else:
+            bg = 0
         service = get_service('Item')
-        response: bytes = await service.generate_random_image_by_id(id, session)
+        response: bytes = await service.generate_random_image_by_id(id, session, bg)
         # return response
         return ResponseStreaming(response)
