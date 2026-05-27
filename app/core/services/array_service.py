@@ -1,6 +1,7 @@
 # app.core.service.array_service.py
 from typing import Any, Dict, List
 from random import randint
+from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, Request
 from app.core.repositories.sqlalchemy_repository import Repository
@@ -196,6 +197,7 @@ class ArrayService:
         else:
             background_color = '"#FFFFFF"'
         palette: GeneratedPalette = auto_match_colors(background_color)
+        logger.warning(f'{palette=}')
         preset: dict = {}
         preset["text"] = txt
         preset["font_path"] = font
