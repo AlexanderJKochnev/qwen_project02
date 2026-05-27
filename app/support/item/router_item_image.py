@@ -86,10 +86,8 @@ class ItemImageRouter:
         background_color = color_converter(COLORS.get(background_color), bg_opacity)  # RGBA
         stroke_color = color_converter(COLORS.get(stroke_color), 255)
         shadow_color = color_converter(COLORS.get(shadow_color), shadow_opacity)
-        if shadow_x != 0 or shadow_y != 0:
-            shadow_offset = (shadow_x, shadow_y)
-        else:
-            shadow_offset, shadow_color = None, None
+        shadow_offset = (shadow_x, shadow_y)
+
         """
         result = TextConfig(text='dump',  # заглушка - текст получим в service layer
                             width=width, height=height, font_path=f'{fonts_dir}/{font}',
@@ -161,10 +159,7 @@ class ItemImageRouter:
         """
             Генереция изображения из названия напитка
         """
-        if shadow_x != 0 or shadow_y != 0:
-            shadow_offset = (shadow_x, shadow_y)
-        else:
-            shadow_offset = None, None
+        shadow_offset = (shadow_x, shadow_y)
 
         result = {
             "width": width,

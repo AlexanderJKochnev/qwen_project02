@@ -458,8 +458,6 @@ class ItemService(ArrayService, SearchService, Service):
         instance = await cls.repository.get_by_id(id, cls.model, session)
         item_dict: dict = instance.to_dict_fast()
         drink_dict = item_dict.get('drink')
-        from app.core.utils.common_utils import jprint
-        jprint(drink_dict)
         if not drink_dict:
             return None
         txt = drink_dict.get("display_name", f"{drink_dict.get('title')} {drink_dict.get('subtitle')}")

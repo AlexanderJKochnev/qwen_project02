@@ -206,9 +206,19 @@ def generate_text_image(config: TextConfig, format: str = 'WEBP', quality: int =
         img_trans = Image.new("RGBA", (config.width, config.height), (255, 255, 255, 0))
         draw = ImageDraw.Draw(img_trans)
 
-        # Шаг 3: Расчет координат (Левый верхний угол текстового блока = padding, padding)
-        start_x = config.padding
-        start_y = config.padding
+        # Шаг 3: Расчет координат (Левого верхнего угла текстового блока)
+        # Центрируем весь блок по вертикали
+        start_y = (config.height - block_h) / 2
+
+        # Вычисляем координату X для левого верхнего угла многострочного блока.
+        # Поскольку anchor убран, аргумент (X, Y) для multiline_text — это ВСЕГДА левый верхний угол описанного прямоугольника,
+        # вне зависимости от внутреннего выравнивания текста ('center'/'left'/'right').
+        if config.text_alignment == 'center':
+            start_x = (config.width - block_w) / 2
+        elif config.text_alignment == 'right':
+            start_x = config.width - config.padding - block_w - (config.shadow_offset[0] if config.shadow_offset else 0)
+        else:  # left
+            start_x = config.padding
 
         # Шаг 4: Отрисовка тени (если включена)
         if config.shadow_offset and config.shadow_color:
@@ -223,30 +233,10 @@ def generate_text_image(config: TextConfig, format: str = 'WEBP', quality: int =
         # Шаг 5: Отрисовка основного текста с контуром
         logger.debug("Шаг 5: Отрисовка основного текста с обводкой...")
         draw.multiline_text(
-            (start_x, start_y), full_text, font=font, fill=config.fill_color,
-            stroke_width=config.stroke_width, stroke_fill=config.stroke_color, align=config.text_alignment
-        )
-
-        # Шаг 5.5: Обрезаем холст по ширине текстового блока + padding
-        # Вычисляем реальную ширину текстового блока (с учётом тени)
-        text_bbox = draw.textbbox((start_x, start_y), full_text, font=font)
-        shadow_bbox = None
-        if config.shadow_offset and config.shadow_color:
-            shadow_bbox = draw.textbbox((shadow_x, shadow_y), full_text, font=font)
-            # Объединяем bounding box текста и тени
-            combined_bbox = (min(text_bbox[0], shadow_bbox[0]), min(text_bbox[1], shadow_bbox[1]),
-                             max(text_bbox[2], shadow_bbox[2]), max(text_bbox[3], shadow_bbox[3]))
-        else:
-            combined_bbox = text_bbox
-
-        # Новая ширина = ширина блока + padding*2
-        new_width = combined_bbox[2] - combined_bbox[0] + config.padding * 2
-        new_height = combined_bbox[3] - combined_bbox[1] + config.padding * 2
-
-        # Обрезаем изображение
-        img_trans = img_trans.crop(
-            (combined_bbox[0] - config.padding, combined_bbox[1] - config.padding,
-             combined_bbox[2] + config.padding, combined_bbox[3] + config.padding)
+            (start_x, start_y), full_text, font=font, fill=config.fill_color,  # Внутри букв прозрачно
+            stroke_width=config.stroke_width,  # Толщина обводки
+            stroke_fill=config.stroke_color,  # Цвет обводки
+            align=config.text_alignment
         )
 
         # МЕТАДАННЫЕ: Сохраняем исходный текст в структуру WEBP/PNG/JPEG
