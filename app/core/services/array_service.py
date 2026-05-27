@@ -214,7 +214,7 @@ class ArrayService:
         return await cls.generate_image_by_id(id, font, session)
 
     @classmethod
-    async def generate_random_image_by_id(cls, id, int, session: AsyncSession) -> bytes:
+    async def generate_random_image_by_id(cls, id: int, session: AsyncSession) -> bytes:
         """
             генерация рисунка с рандомными шрифтами и адаптивной цветовой палитрой
         """
