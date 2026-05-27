@@ -269,6 +269,7 @@ def generate_text_image(config: TextConfig, format: str = 'WEBP', quality: int =
         save_kwargs = {'format': format}
         if format in ('JPEG', 'WEBP'):
             save_kwargs['quality'] = quality
+        logger.critical(f'{config.background_opacity=}')
         if config.background_opacity == 0:
             return buffer.getvalue()
         # 1. Создаем цветную подложку нужного цвета
