@@ -22,7 +22,7 @@ class TextConfig:
     width: int = 423  # ширина прямоугольника
     height: int = 600  # высота прямоугольника
     font_path: str = 'glouchester.ttf'
-    initial_font_size: int = 85
+    initial_font_size: int = 160
 
     # Минимальная длина слова, которое может стоять ОДНО на строке.
     # Если слово меньше или РАВНО этой длине, оно не может быть одно.
