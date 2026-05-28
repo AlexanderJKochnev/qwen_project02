@@ -91,9 +91,7 @@ class TextConfigAdaptive:
         """Автоматически подмешивает прозрачность к цветам после создания объекта."""
         if isinstance(self.background_color, str) and self.background_color.startswith('#'):
             self.background_color = hex_to_rgba_byte(self.background_color, alpha=self.background_opacity)
-        logger.warning(f'{self.background_color=}')
         pallette: dict = auto_match_colors(self.background_color, self.fill_opacity, self.shadow_opacity)
-        logger.warning(f'1.0: {pallette=}')
         self.fill_color = tuple([*pallette.get("fill_color")[:3], self.fill_opacity])
         self.shadow_color = tuple([*pallette.get("shadow_color")[:3], self.shadow_opacity])
         self.stroke_color = tuple([*pallette.get("stroke_color")[:3], 255])
@@ -223,7 +221,8 @@ def wrap_and_fit_text(config: TextConfig) -> Tuple[List[str], ImageFont.FreeType
 
                     # Если слово осталось одно из-за переноса, и оно НЕ удовлетворяет правилу длины
                     if not is_originally_alone and not should_allow_single_word(single_word, config.min_word_length):
-                        logger.debug(f"Шрифт {font_size}px не подошел: слово '{single_word}' нарушает min_word_length")
+                        # logger.debug(f"Шрифт {font_size}px не подошел: слово '{single_word}' нарушает
+                        # min_word_length")
                         is_step_valid = False
                         break
 
@@ -242,7 +241,7 @@ def wrap_and_fit_text(config: TextConfig) -> Tuple[List[str], ImageFont.FreeType
 
             # Если текст уложился в рамки холста — возвращаем результат
             if block_h <= max_h and block_w <= max_w:
-                logger.info(f"Успешно подобрано! Итоговый шрифт: {font_size}px")
+                # logger.info(f"Успешно подобрано! Итоговый шрифт: {font_size}px")
                 return all_final_lines, font, block_w, block_h
 
         # Если шаг невалиден (из-за нарушения правила или габаритов), строго уменьшаем шрифт
@@ -254,13 +253,13 @@ def wrap_and_fit_text(config: TextConfig) -> Tuple[List[str], ImageFont.FreeType
 def generate_text_image(config, format: str = 'WEBP', quality: int = 100) -> bytes:
     """Генерирует изображение на основе переданного объекта TextConfig."""
     try:
-        logger.warning('-----generate_text_image------')
+        # logger.warning('-----generate_text_image------')
         # Шаг 1: Рассчитываем перенос строк и размер шрифта
         lines, font, block_w, block_h = wrap_and_fit_text(config)
         full_text = '\n'.join(lines)
 
         # Шаг 2: Создаем холст ИЗНАЧАЛЬНО полностью прозрачным
-        logger.debug("Шаг 2: Создание прозрачного холста...")
+        # logger.debug("Шаг 2: Создание прозрачного холста...")
         img_trans = Image.new("RGBA", (config.width, config.height), (255, 255, 255, 0))
         draw = ImageDraw.Draw(img_trans)
 
@@ -270,7 +269,7 @@ def generate_text_image(config, format: str = 'WEBP', quality: int = 100) -> byt
 
         # Шаг 4: Отрисовка тени (если включена)
         if config.shadow_offset and config.shadow_color:
-            logger.debug("Шаг 4: Отрисовка эффекта тени...")
+            # logger.debug("Шаг 4: Отрисовка эффекта тени...")
             shadow_x = start_x + config.shadow_offset[0]
             shadow_y = start_y + config.shadow_offset[1]
             draw.multiline_text(

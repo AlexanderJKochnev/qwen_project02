@@ -22,15 +22,11 @@ def auto_match_colors(
     """
     try:
         r, g, b = background_color[:3]
-        logger.warning(f'{r=}, {g=}, {b=}')
         # Переводим в HSV для благородного управления тоном
         h, s, v = colorsys.rgb_to_hsv(r / 255.0, g / 255.0, b / 255.0)
-        logger.warning(f'{h=}, {s=}, {v=}')
         # Вычисляем физическую яркость фона (YIQ)
         brightness = (r * 299 + g * 587 + b * 114) / 1000
-        logger.warning(f'{brightness=}')
         is_dark_bg = brightness < 125
-        logger.warning(f'{is_dark_bg=}')
         # Обработка чистых монохромных фонов (серый, белый, черный), где нет цветового тона (s == 0)
         if s < 0.05:
             if is_dark_bg:  # Почти черный фон
