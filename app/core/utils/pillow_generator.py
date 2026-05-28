@@ -278,6 +278,11 @@ def generate_text_image(config, format: str = 'WEBP', quality: int = 100) -> byt
 
         # Шаг 5: Отрисовка основного текста с контуром
         logger.debug("Шаг 5: Отрисовка основного текста с обводкой...")
+        print(f'{font=}')
+        print(f'{config.fill_color=}')
+        print(f'{config.stroke_width}')
+        print(f'{config.stroke_color}')
+        print(f'{config.text_alignment}')
         draw.multiline_text(
             (start_x, start_y), full_text, font=font, fill=config.fill_color,
             stroke_width=config.stroke_width, stroke_fill=config.stroke_color, align=config.text_alignment
