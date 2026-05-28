@@ -91,6 +91,7 @@ class TextConfigAdaptive:
         """Автоматически подмешивает прозрачность к цветам после создания объекта."""
         if isinstance(self.background_color, str) and self.background_color.startswith('#'):
             self.background_color = hex_to_rgba_byte(self.background_color, alpha=self.background_opacity)
+        logger.warning(f'{self.background_color=}')
         pallette: dict = auto_match_colors(self.background_color, self.fill_opacity, self.shadow_opacity)
         logger.warning(f'1.0: {pallette=}')
         self.fill_color = tuple([*pallette.get("fill_color")[:3], self.fill_opacity])
