@@ -6,8 +6,8 @@ from loguru import logger
 
 
 @dataclass
-class GeneratedPalette:
-    """Результат автоматического подбора цветов."""
+class GeneratedPaletteSHIT:
+    """Результат автоматического подбора цветов. ГОВНО КОД ДЛЯ СОВМЕСТИМОСТИ"""
     fill_color: Tuple[int, int, int, int]
     stroke_color: Tuple[int, int, int, int]
     shadow_color: Tuple[int, int, int, int]
@@ -15,7 +15,7 @@ class GeneratedPalette:
 
 def auto_match_colors(
         background_color: Tuple[int, int, int, int], fill_opacity: int = 0, shadow_opacity: int = 128
-) -> GeneratedPalette:
+) -> dict:
     """
     Профессиональный подбор гармоничной палитры (Аналоговый сплит + Триада).
     Гарантирует читаемость, задействует прозрачность и избегает банального черного/белого текста.
@@ -79,10 +79,10 @@ def auto_match_colors(
         sh_r, sh_g, sh_b = tuple(int(x * 255) for x in colorsys.hsv_to_rgb(h, shadow_s, shadow_v))
         shadow_color = (sh_r, sh_g, sh_b, shadow_opacity)
         result = {"fill_color": fill_color, "stroke_color": stroke_color, "shadow_color": shadow_color}
-        return GeneratedPalette(**result)
+        return result
 
 
-def auto_match_colors_old(background_color_str: str) -> GeneratedPalette:
+def auto_match_colors_old(background_color_str: str) -> dict:
     """
     Анализирует цвет фона и автоматически подбирает гармоничную,
     контрастную палитру для текста (тело, контур, тень).
@@ -144,6 +144,6 @@ def auto_match_colors_old(background_color_str: str) -> GeneratedPalette:
         else:
             stroke_color = (0, 0, 128, 255)  # На белом фоне контур будет глубоким синим
 
-    return GeneratedPalette(
-        fill_color=fill_color, stroke_color=stroke_color, shadow_color=shadow_color
-    )
+    return {"fill_color": fill_color,
+            "stroke_color": stroke_color,
+            "shadow_color": shadow_color}

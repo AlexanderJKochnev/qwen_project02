@@ -13,7 +13,7 @@ from app.core.utils.common_utils import jprint
 from app.core.utils.image_utils import get_default_image
 from app.core.utils.io_utils import get_font_list
 from app.core.utils.pillow_generator import TextConfig, generate_text_image, TextConfigAdaptive
-from app.core.utils.color_palette import auto_match_colors_old, GeneratedPalette, auto_match_colors
+from app.core.utils.color_palette import auto_match_colors_old, auto_match_colors
 
 
 class ArrayService:
@@ -171,10 +171,10 @@ class ArrayService:
             return None
         txt = drink_dict.get("display_name", f"{drink_dict.get('title')} {drink_dict.get('subtitle')}")
         preset['text'] = txt
-        palette: GeneratedPalette = auto_match_colors(preset.get("background_color"))
-        preset["fill_color"] = palette.fill_color
-        preset["stroke_color"] = palette.stroke_color
-        preset["shadow_color"] = palette.shadow_color
+        palette: dict = auto_match_colors(preset.get("background_color"))
+        preset["fill_color"] = palette.get('fill_color')
+        preset["stroke_color"] = palette.get('stroke_color')
+        preset["shadow_color"] = palette.get('shadow_color')
         config = TextConfig(**preset)
         result: bytes = generate_text_image(config, "WEBP", 100)
         return result
@@ -199,16 +199,15 @@ class ArrayService:
             background_color = subcategory.get('color', category.get('color', "#FFFFFF"))
         else:
             background_color = "#FFFFFF"
-        palette: GeneratedPalette = auto_match_colors_old(background_color)
-        logger.warning(f'{palette=}')
+        palette: dict = auto_match_colors_old(background_color)
         preset: dict = {}
         preset["text"] = txt
         preset["font_path"] = font
         preset["background_color"] = background_color
         preset["background_opacity"] = bg_opacity
-        preset["fill_color"] = palette.fill_color
-        preset["stroke_color"] = palette.stroke_color
-        preset["shadow_color"] = palette.shadow_color
+        preset["fill_color"] = palette.get('fill_color')
+        preset["stroke_color"] = palette.get("stroke_color")
+        preset["shadow_color"] = palette.get("shadow_color")
         config = TextConfig(**preset)
         result: bytes = generate_text_image(config, "WEBP", 100)
         return result

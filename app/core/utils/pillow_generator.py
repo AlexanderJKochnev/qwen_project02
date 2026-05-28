@@ -8,7 +8,7 @@ from loguru import logger
 from app.core.config.project_config import settings
 from app.core.utils.common_utils import jprint
 from app.core.utils.io_utils import get_dirpath
-from app.core.utils.color_palette import auto_match_colors, GeneratedPalette
+from app.core.utils.color_palette import auto_match_colors
 
 
 """
@@ -88,12 +88,10 @@ class TextConfigAdaptive:
         """Автоматически подмешивает прозрачность к цветам после создания объекта."""
         if isinstance(self.background_color, str) and self.background_color.startswith('#'):
             self.background_color = hex_to_rgba_byte(self.background_color, alpha=self.background_opacity)
-        print(self.background_color, self.fill_opacity, self.shadow_opacity)
-        pallette: GeneratedPalette = auto_match_colors(self.background_color, self.fill_opacity, self.shadow_opacity)
+        pallette: dict = auto_match_colors(self.background_color, self.fill_opacity, self.shadow_opacity)
         logger.warning(f'1.0: {pallette=}')
-        logger.warning(f'{pallette.fill_color[:3]=}, {pallette.stroke_color=}, {pallette.shadow_color[:3]=}')
-        self.fill_color = tuple([*pallette.fill_color[:3], self.fill_opacity])
-        self.shadow_color = tuple([*pallette.shadow_color[:3], self.shadow_opacity])
+        self.fill_color = tuple([*pallette.get("fill_color")[:3], self.fill_opacity])
+        self.shadow_color = tuple([*pallette.get("shadow_color")[:3], self.shadow_opacity])
         txt = ' '.join(self.text.replace('«', '').replace('»', '').split())
         self.text = __import__('functools').reduce(lambda t, x: t.replace(f'{x} ', '\n'), ',.;:', txt.rstrip('.'))
         fonts_dir = get_dirpath('fonts')
