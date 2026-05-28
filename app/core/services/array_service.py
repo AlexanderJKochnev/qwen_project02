@@ -246,7 +246,6 @@ class ArrayService:
         result: bytes = generate_text_image(config, "WEBP", 100)
         return result
 
-
     @classmethod
     async def generate_random_image_by_id(cls, id: int, session: AsyncSession, bg_opacity: bool) -> bytes:
         """
@@ -257,4 +256,4 @@ class ArrayService:
         x = len(font_list)
         rx = randint(0, x - 1)
         font = font_list[rx]
-        return await cls.generate_image_by_id(id, font, session, bg_opacity)
+        return await cls.generate_image_by_id_v2(id, font, session, bg_opacity)

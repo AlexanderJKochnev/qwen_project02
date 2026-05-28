@@ -39,7 +39,9 @@ def generate_image_headers(image_bytes: bytes, **kwargs) -> dict:
     headers = {
         "Content-Type": content_type,
         "Content-Length": str(file_size),
-        "Cache-Control": "public, max-age=31536000, immutable",  # Для оптимизации загрузки с 2020+
+        # "Cache-Control": "public, max-age=31536000, immutable",  # Для оптимизации загрузки с 2020+
+        "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",  # only for test
+        "Pragma": "no-cache",  # only for test
         "Accept-Ranges": "bytes",
         "X-Original-File-Size": str(file_size)
     }
