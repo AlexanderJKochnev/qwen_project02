@@ -246,8 +246,7 @@ class ArrayService:
         logger.warning(('-------1-----------'))
         jprint(preset)
         config = TextConfigAdaptive(**preset)
-        jprint(config)
-        logger.warning(('-------2------------'))
+        logger.warning(f'{config=}')
         result: bytes = generate_text_image(config, "WEBP", 100)
         return result
 
