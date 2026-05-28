@@ -220,7 +220,7 @@ class ArrayService:
 
     @classmethod
     async def generate_image_by_id_v2(
-            cls, id: int, font: str, session: AsyncSession, bg_opacity: int = 255
+            cls, id: int, font: str, session: AsyncSession, bg_opacity: int = 0
     ) -> bytes:
         """
             генерация рисунка по тексту с адаптивной цветовой палитрой - новый метод
@@ -243,8 +243,8 @@ class ArrayService:
         preset["text"] = txt
         preset["font_path"] = font
         preset["background_color"] = background_color
+        preset["background_opacity"] = bg_opacity
         config = TextConfigAdaptive(**preset)
-        logger.warning('=================================')
         result: bytes = generate_text_image(config, "WEBP", 100)
         return result
 
