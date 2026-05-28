@@ -242,8 +242,8 @@ class ArrayService:
         preset["text"] = txt
         preset["font_path"] = font
         preset["background_color"] = background_color
-        config = TextConfigAdaptive(**preset)
-        result: bytes = generate_text_image(config, "WEBP", 100)
+        # config = TextConfigAdaptive(**preset)
+        result: bytes = generate_text_image(preset, "WEBP", 100)
         return result
 
     @classmethod
