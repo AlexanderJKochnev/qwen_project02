@@ -90,7 +90,9 @@ class TextConfigAdaptive:
     def __post_init__(self):
         """Автоматически подмешивает прозрачность к цветам после создания объекта."""
         if isinstance(self.background_color, str) and self.background_color.startswith('#'):
-            self.background_color = hex_to_rgba_byte(self.background_color, alpha=self.background_opacity)
+            self.background_color = hex_to_rgba_byte(self.background_color, self.background_opacity)
+        else:
+            self.background_color = tuple([*self.background_color[:3], self.background_opacity])
         pallette: dict = auto_match_colors(self.background_color, self.fill_opacity, self.shadow_opacity)
         self.fill_color = tuple([*pallette.get("fill_color")[:3], self.fill_opacity])
         self.shadow_color = tuple([*pallette.get("shadow_color")[:3], self.shadow_opacity])
@@ -99,11 +101,7 @@ class TextConfigAdaptive:
         self.text = __import__('functools').reduce(lambda t, x: t.replace(f'{x} ', '\n'), ',.;:', txt.rstrip('.'))
         fonts_dir = get_dirpath('fonts')
         self.font_path = f'{fonts_dir}/{self.font_path}'    # путь к шрифту
-        if isinstance(self.background_color, str) and self.background_color.startswith('#'):
-            self.background_color = hex_to_rgba_byte(self.background_color, self.background_opacity)
-        else:
-            self.background_color = tuple([*self.background_color[:3], self.background_opacity])
-
+        logger.warning(f'{self.background_opacity=}, {self.background_color=}')
 
 def should_allow_single_word(word: str, min_length: int) -> bool:
     """
