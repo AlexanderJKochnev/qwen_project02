@@ -171,7 +171,7 @@ class ArrayService:
             return None
         txt = drink_dict.get("display_name", f"{drink_dict.get('title')} {drink_dict.get('subtitle')}")
         preset['text'] = txt
-        palette: dict = auto_match_colors(preset.get("background_color"))
+        palette: dict = auto_match_colors_old(preset.get("background_color"))
         preset["fill_color"] = palette.get('fill_color')
         preset["stroke_color"] = palette.get('stroke_color')
         preset["shadow_color"] = palette.get('shadow_color')
