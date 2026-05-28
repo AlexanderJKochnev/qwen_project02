@@ -246,7 +246,7 @@ def wrap_and_fit_text(config: TextConfig) -> Tuple[List[str], ImageFont.FreeType
     raise ValueError("Текст невозможно уместить с соблюдением всех правил даже минимальным шрифтом.")
 
 
-def generate_text_image(config: TextConfig, format: str = 'WEBP', quality: int = 100) -> bytes:
+def generate_text_image(config, format: str = 'WEBP', quality: int = 100) -> bytes:
     """Генерирует изображение на основе переданного объекта TextConfig."""
     try:
         logger.warning('-----generate_text_image------')
