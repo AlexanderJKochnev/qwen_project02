@@ -1,8 +1,7 @@
 # app/core/routers/search_router.py
-from decimal import Decimal
-from typing import Optional, Union
+from typing import Optional
 
-from fastapi import Depends, Query, Request, Path
+from fastapi import Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config.database.db_async import get_db
@@ -43,7 +42,7 @@ class SearchRouter:
                            limit: int = Query(10, description="размер страницы")
                            ):
         repository = self.repo
-        service = self.sevice  # SearchService
+        service = self.service  # SearchService
         model = self.model
         query_data = await service.search_items(request, q, limit, repository, model, session)
         return query_data
