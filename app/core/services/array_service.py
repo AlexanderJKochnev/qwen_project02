@@ -245,8 +245,10 @@ class ArrayService:
         preset["background_color"] = background_color
         logger.warning(('--------------------'))
         jprint(preset)
-        # config = TextConfigAdaptive(**preset)
-        result: bytes = generate_text_image(preset, "WEBP", 100)
+        config = TextConfigAdaptive(**preset)
+        jprint(config)
+        logger.warning(('--------66------------'))
+        result: bytes = generate_text_image(config, "WEBP", 100)
         return result
 
     @classmethod
