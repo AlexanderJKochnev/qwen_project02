@@ -85,6 +85,7 @@ class TextConfigAdaptive:
     text_alignment: str = settings.TXT_ALIGNMENT
     fill_color: Tuple[int, int, int, int] = (255, 255, 255, 0)
     shadow_color: Tuple[int, int, int, int] = (255, 255, 255, 0)
+    stroke_color: Tuple[int, int, int, int] = (255, 255, 255, 0)
 
     def __post_init__(self):
         """Автоматически подмешивает прозрачность к цветам после создания объекта."""
@@ -94,6 +95,7 @@ class TextConfigAdaptive:
         logger.warning(f'1.0: {pallette=}')
         self.fill_color = tuple([*pallette.get("fill_color")[:3], self.fill_opacity])
         self.shadow_color = tuple([*pallette.get("shadow_color")[:3], self.shadow_opacity])
+        self.stroke_color = tuple([*pallette.get("stroke_color")[:3], 255])
         txt = ' '.join(self.text.replace('«', '').replace('»', '').split())
         self.text = __import__('functools').reduce(lambda t, x: t.replace(f'{x} ', '\n'), ',.;:', txt.rstrip('.'))
         fonts_dir = get_dirpath('fonts')
@@ -280,9 +282,9 @@ def generate_text_image(config, format: str = 'WEBP', quality: int = 100) -> byt
         logger.debug("Шаг 5: Отрисовка основного текста с обводкой...")
         print(f'{font=}')
         print(f'{config.fill_color=}')
-        print(f'{config.stroke_width}')
-        print(f'{config.stroke_color}')
-        print(f'{config.text_alignment}')
+        print(f'{config.stroke_width=}')
+        print(f'{config.stroke_color=}')
+        print(f'{config.text_alignment=}')
         draw.multiline_text(
             (start_x, start_y), full_text, font=font, fill=config.fill_color,
             stroke_width=config.stroke_width, stroke_fill=config.stroke_color, align=config.text_alignment
