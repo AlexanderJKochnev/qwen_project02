@@ -31,13 +31,13 @@ def auto_match_colors(
     # Обработка чистых монохромных фонов (серый, белый, черный), где нет цветового тона (s == 0)
     if s < 0.05:
         if is_dark_bg:  # Почти черный фон
-            return {"fill": (255, 255, 255, fill_opacity),  # Белая основа (высветляет при прозрачности)
-                    "stroke": (220, 160, 40, 255),  # Благородное золото / охра
-                    "shadow": (0, 0, 0, shadow_opacity)}
+            return {"fill_color": (255, 255, 255, fill_opacity),  # Белая основа (высветляет при прозрачности)
+                    "stroke_color": (220, 160, 40, 255),  # Благородное золото / охра
+                    "shadow_color": (0, 0, 0, shadow_opacity)}
         else:  # Почти белый/светло-серый фон
-            return {"fill": (20, 20, 20, fill_opacity),  # Темная основа (затемняет при прозрачности)
-                    "stroke": (40, 70, 120, 255),  # Глубокий сапфировый/чернильный синий
-                    "shadow": (150, 150, 150, shadow_opacity)}
+            return {"fill_color": (20, 20, 20, fill_opacity),  # Темная основа (затемняет при прозрачности)
+                    "stroke_color": (40, 70, 120, 255),  # Глубокий сапфировый/чернильный синий
+                    "shadow_color": (150, 150, 150, shadow_opacity)}
 
     if is_dark_bg:
         # --- ЛОГИКА ДЛЯ ТЕМНОГО ФОНА ---
@@ -78,7 +78,7 @@ def auto_match_colors(
         shadow_v = max(v * 0.4, 0.3)
         sh_r, sh_g, sh_b = tuple(int(x * 255) for x in colorsys.hsv_to_rgb(h, shadow_s, shadow_v))
         shadow_color = (sh_r, sh_g, sh_b, shadow_opacity)
-        result = {"fill": fill_color, "stroke": stroke_color, "shadow": shadow_color}
+        result = {"fill_color": fill_color, "stroke_color": stroke_color, "shadow_color": shadow_color}
         return GeneratedPalette(**result)
 
 
