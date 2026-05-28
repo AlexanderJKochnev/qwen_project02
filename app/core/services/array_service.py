@@ -233,6 +233,7 @@ class ArrayService:
             return None
         txt = drink_dict.get("display_name", f"{drink_dict.get('title')} {drink_dict.get('subtitle')}")
         # get back color
+        jprint(drink_dict)
         if subcategory := drink_dict.get('subcategory'):
             category: dict = subcategory.get('category')
             background_color = subcategory.get('color', category.get('color', "#FFFFFF"))
