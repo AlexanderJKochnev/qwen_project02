@@ -255,7 +255,6 @@ def generate_text_image(config, format: str = 'WEBP', quality: int = 100) -> byt
     """Генерирует изображение на основе переданного объекта TextConfig."""
     try:
         logger.warning('-----generate_text_image------')
-        jprint(config)
         # Шаг 1: Рассчитываем перенос строк и размер шрифта
         lines, font, block_w, block_h = wrap_and_fit_text(config)
         full_text = '\n'.join(lines)
@@ -280,12 +279,6 @@ def generate_text_image(config, format: str = 'WEBP', quality: int = 100) -> byt
             )
 
         # Шаг 5: Отрисовка основного текста с контуром
-        logger.debug("Шаг 5: Отрисовка основного текста с обводкой...")
-        print(f'{font=}')
-        print(f'{config.fill_color=}')
-        print(f'{config.stroke_width=}')
-        print(f'{config.stroke_color=}')
-        print(f'{config.text_alignment=}')
         draw.multiline_text(
             (start_x, start_y), full_text, font=font, fill=config.fill_color,
             stroke_width=config.stroke_width, stroke_fill=config.stroke_color, align=config.text_alignment
@@ -330,7 +323,6 @@ def generate_text_image(config, format: str = 'WEBP', quality: int = 100) -> byt
             return trans_bytes
         # 1. Создаем цветную подложку нужного цвета
         img_solid = Image.new("RGBA", img_trans.size, config.background_color)
-        print(config.background_color)
         # 2. Накладываем наш готовый прозрачный текст поверх этой подложки одной командой
         img_solid.alpha_composite(img_trans)
         # 3. Сохраняем цветной файл
@@ -347,9 +339,6 @@ if __name__ == "__main__":
     print(type(palette.fill_color))
     fill_color, stroke_color, shadow_color = palette.fill_color, palette.stroke_color, palette.shadow_color
     print(fill_color)
-    # opacity = 125
-    # fill_color = tuple([*fill_color[:-1], opacity])
-    # print(fill_color)
     config = TextConfig(
         text="Berta\nTre Soli Tre\nGrappa del Piemonte", width=350, height=500, min_word_length=3,
         text_alignment='center', fill_opacity=50, shadow_opacity=50,
