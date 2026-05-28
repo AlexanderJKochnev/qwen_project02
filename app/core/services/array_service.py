@@ -243,11 +243,11 @@ class ArrayService:
         preset["text"] = txt
         preset["font_path"] = font
         preset["background_color"] = background_color
-        logger.warning(('--------------------'))
+        logger.warning(('-------1-----------'))
         jprint(preset)
         config = TextConfigAdaptive(**preset)
         jprint(config)
-        logger.warning(('--------66------------'))
+        logger.warning(('-------2------------'))
         result: bytes = generate_text_image(config, "WEBP", 100)
         return result
 
