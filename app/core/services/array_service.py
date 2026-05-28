@@ -238,6 +238,7 @@ class ArrayService:
             background_color = subcategory.get('color', category.get('color', "#FFFFFF"))
         else:
             background_color = "#FFFFFF"
+        logger.warning(f'{id=}, {background_color=}')
         preset: dict = {}
         preset["text"] = txt
         preset["font_path"] = font
