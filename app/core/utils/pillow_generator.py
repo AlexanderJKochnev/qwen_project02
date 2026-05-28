@@ -91,7 +91,7 @@ class TextConfigAdaptive:
         print(self.background_color, self.fill_opacity, self.shadow_opacity)
         pallette: GeneratedPalette = auto_match_colors(self.background_color, self.fill_opacity, self.shadow_opacity)
         logger.warning(f'1.0: {pallette=}')
-        logger.warning(f'{pallette.fill_color=}, {pallette.stroke_color=}, {pallette.shadow_color=}')
+        logger.warning(f'{pallette.fill_color[:3]=}, {pallette.stroke_color=}, {pallette.shadow_color[:3]=}')
         self.fill_color = tuple([*pallette.fill_color[:3], self.fill_opacity])
         self.shadow_color = tuple([*pallette.shadow_color[:3], self.shadow_opacity])
         txt = ' '.join(self.text.replace('«', '').replace('»', '').split())
