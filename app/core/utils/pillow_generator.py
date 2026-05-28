@@ -103,6 +103,7 @@ class TextConfigAdaptive:
         self.font_path = f'{fonts_dir}/{self.font_path}'    # путь к шрифту
         logger.warning(f'{self.background_opacity=}, {self.background_color=}')
 
+
 def should_allow_single_word(word: str, min_length: int) -> bool:
     """
     Проверяет, разрешено ли слову стоять в строке в одиночестве.
@@ -314,6 +315,7 @@ def generate_text_image(config, format: str = 'WEBP', quality: int = 100) -> byt
         save_kwargs = {'format': format}
         if format in ('JPEG', 'WEBP'):
             save_kwargs['quality'] = quality
+        logger.warning(f'{config.background_opacity=}')
         if config.background_opacity == 0:
             img_trans.save(buffer, **save_kwargs)
             trans_bytes = buffer.getvalue()
@@ -325,6 +327,7 @@ def generate_text_image(config, format: str = 'WEBP', quality: int = 100) -> byt
         # 3. Сохраняем цветной файл
         img_solid.save(buffer, **save_kwargs)
         solid_bytes = buffer.getvalue()
+        logger.warning(f'{config.background_opacity=} solid')
         return solid_bytes
     except Exception as e:
         logger.critical(f"ПРОИЗОШЕЛ СБОЙ ПРИ ГЕНЕРАЦИИ! {e}", exc_info=True)
