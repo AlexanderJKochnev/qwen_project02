@@ -83,6 +83,8 @@ class TextConfigAdaptive:
     min_word_length: int = settings.TXT_MIN_WORD_LENGTH
     stroke_width: int = settings.TXT_STROKE_WIDTH
     text_alignment: str = settings.TXT_ALIGNMENT
+    fill_color: Tuple[int, int, int, int] = (255, 255, 255, 0)
+    shadow_color: Tuple[int, int, int, int] = (255, 255, 255, 0)
 
     def __post_init__(self):
         """Автоматически подмешивает прозрачность к цветам после создания объекта."""
