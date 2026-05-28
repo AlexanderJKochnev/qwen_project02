@@ -323,9 +323,9 @@ def generate_text_image(config, format: str = 'WEBP', quality: int = 100) -> byt
         # 1. Создаем цветную подложку нужного цвета
         img_solid = Image.new("RGBA", img_trans.size, config.background_color)
         # 2. Накладываем наш готовый прозрачный текст поверх этой подложки одной командой
-        img_solid.alpha_composite(img_solid)
+        img_res = Image.alpha_composite(img_solid, img_trans)
         # 3. Сохраняем цветной файл
-        img_solid.save(buffer, **save_kwargs)
+        img_res.save(buffer, **save_kwargs)
         solid_bytes = buffer.getvalue()
         logger.warning(f'{config.background_opacity=} solid')
         return solid_bytes
