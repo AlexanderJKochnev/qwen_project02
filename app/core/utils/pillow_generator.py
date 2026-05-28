@@ -90,7 +90,7 @@ class TextConfigAdaptive:
             self.background_color = hex_to_rgba_byte(self.background_color, alpha=self.background_opacity)
         pallette: GeneratedPalette = auto_match_colors(self.background_color, self.fill_opacity, self.shadow_opacity)
         logger.warning('-----33------')
-        jprint(pallette)
+        print(f'{pallette=}')
         logger.warning('-----34------')
         self.fill_color = tuple([*pallette.fill_color[:3], self.fill_opacity])
         self.shadow_color = tuple([*pallette.shadow_color[:3], self.shadow_opacity])
