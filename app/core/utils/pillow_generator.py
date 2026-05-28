@@ -6,6 +6,7 @@ from typing import Tuple, List, Optional
 from PIL import Image, ImageDraw, ImageFont
 from loguru import logger
 from app.core.config.project_config import settings
+from app.core.utils.common_utils import jprint
 from app.core.utils.io_utils import get_dirpath
 from app.core.utils.color_palette import auto_match_colors, GeneratedPalette
 
@@ -247,6 +248,8 @@ def wrap_and_fit_text(config: TextConfig) -> Tuple[List[str], ImageFont.FreeType
 def generate_text_image(config: TextConfig, format: str = 'WEBP', quality: int = 100) -> bytes:
     """Генерирует изображение на основе переданного объекта TextConfig."""
     try:
+        logger.warning('-----generate_text_image------')
+        jprint(config)
         # Шаг 1: Рассчитываем перенос строк и размер шрифта
         lines, font, block_w, block_h = wrap_and_fit_text(config)
         full_text = '\n'.join(lines)

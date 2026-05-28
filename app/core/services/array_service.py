@@ -9,6 +9,7 @@ from app.core.types import ModelType
 from app.core.repositories.array_repository import ArrayRepository
 from app.core.services.seaweed_service import SeaweedsService
 from app.core.utils.alchemy_utils import has_column
+from app.core.utils.common_utils import jprint
 from app.core.utils.image_utils import get_default_image
 from app.core.utils.io_utils import get_font_list
 from app.core.utils.pillow_generator import TextConfig, generate_text_image, TextConfigAdaptive
@@ -242,6 +243,8 @@ class ArrayService:
         preset["text"] = txt
         preset["font_path"] = font
         preset["background_color"] = background_color
+        logger.warning(('--------------------'))
+        jprint(preset)
         # config = TextConfigAdaptive(**preset)
         result: bytes = generate_text_image(preset, "WEBP", 100)
         return result
