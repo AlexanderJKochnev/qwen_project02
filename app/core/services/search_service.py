@@ -12,6 +12,9 @@ from app.core.utils.fts_tokenizer import tokenized_string
 
 
 class CleanedSearchQuery(NamedTuple):
+    """
+        сценарии для поиска
+    """
     scenario: int
     fts_query: Optional[str] = None
     like_term: Optional[str] = None

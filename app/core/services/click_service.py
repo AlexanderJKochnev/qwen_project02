@@ -1,6 +1,7 @@
 # app.core.service.click_service.py
 """
     опыты без практического применения
+    так как clickhouse работает только с голым raw sql - см сразу в репозиторий
 """
 from app.core.config.project_config import settings
 
