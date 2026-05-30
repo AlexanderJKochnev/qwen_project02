@@ -84,4 +84,5 @@ async def init_db_extensions():
         # Установка расширений pg_trgm, если оно еще не установлено
         # await session.execute(text("CREATE EXTENSION IF NOT EXISTS pg_trgm;"))
         await session.execute(text("CREATE EXTENSION IF NOT EXISTS intarray;"))
+        await session.execute(text("CREATE EXTENSION IF NOT EXISTS unaccent;"))
         await session.commit()
