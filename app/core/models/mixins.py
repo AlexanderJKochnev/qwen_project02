@@ -18,18 +18,8 @@ class Search:
             Computed("to_tsvector('simple', coalesce(search_content, ''))", persisted=True)
         )
 
-    @declared_attr
+    @classmethod
     def __extra_constraints__(cls):
-        """
-        Этот атрибут подхватывается нашим системным событием event.listens_for
-        и автоматически подмешивает GIN-индекс в __table_args__ модели-потомка.
-        """
-        # Обрезаем имя до 63 символов на случай длинных названий таблиц
+        """Обычный classmethod вместо declared_attr для безопасности события"""
         index_name = f"idx_{cls.__tablename__}_search_vector_gin"[:63]
-        return [
-            Index(
-                index_name,
-                "search_vector",
-                postgresql_using="gin"
-            )
-        ]
+        return [Index(index_name, "search_vector", postgresql_using="gin")]
