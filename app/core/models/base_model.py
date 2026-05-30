@@ -10,7 +10,7 @@ from sqlalchemy import DateTime, DECIMAL, func, inspect, String, text, Text
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, declared_attr, Mapped, mapped_column
 
-from app.core.models.mixins import UniqueNormalizedNameMixin
+from app.core.models.mixins import DynamicCompositeUniqueMixin, UniqueNormalizedNameMixin
 
 # from app.core.config.project_config import settings
 
@@ -280,10 +280,10 @@ class BaseInt(UniqueNormalizedNameMixin):
     description: Mapped[descr]
 
 
-class BaseIntFree:
+class BaseIntFree(DynamicCompositeUniqueMixin):
     """ общие поля для всех таблиц на англ. языке """
     __abstract__ = True
-    name: Mapped[str_null_index]
+    # name: Mapped[str_null_index]
     description: Mapped[descr]
 
 

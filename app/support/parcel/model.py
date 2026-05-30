@@ -1,7 +1,7 @@
 # app.support.parcel.model.py
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from sqlalchemy import ForeignKey, Index
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.config.project_config import settings
 from app.core.models.base_model import plural, BaseFullFree, BaseFull
@@ -42,8 +42,10 @@ class Site(BaseFullFree):
                           cascade=cascade,
                           lazy=lazy)
 
-    # __table_args__ = (UniqueConstraint('name', 'subregion_id', name='uq_site1_name_subregion'),)
+    __composite_fk_field__ = "subregion_id"
+    """
     __table_args__ = (Index(
         "uq_  name_subregion_unique", "name", "subregion_id", unique=True, postgresql_nulls_not_distinct=True
         # Ключевой параметр
     ),)
+    """

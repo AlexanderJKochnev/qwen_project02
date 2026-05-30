@@ -4,7 +4,7 @@ from __future__ import annotations
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.config.project_config import settings
-from app.core.models.base_model import BaseFull, plural, BaseFullFree
+from app.core.models.base_model import BaseFull, plural
 from app.service_registry import registers_search_update
 
 

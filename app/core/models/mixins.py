@@ -1,6 +1,6 @@
 # app.core.model.mixins.py
 from typing import Optional
-from sqlalchemy import Column, String, Index, func, text, Text
+from sqlalchemy import String, Index, func, text, Text
 from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import declared_attr, Mapped, mapped_column
 from sqlalchemy.schema import Computed
@@ -109,6 +109,14 @@ class DynamicCompositeUniqueMixin(GeneralMixin):
     """
     Автоматически строит составной уникальный индекс по паре:
     [Динамическое поле связи] + [unaccent(lower(name))]
+    применение
+    class Drink(DynamicCompositeUniqueMixin, Base):
+        __tablename__ = 'drinks'
+        # Задаем параметр для миксина: составной индекс будет строиться с country_id
+        __composite_fk_field__ = "country_id"
+
+        country_id = Column(Integer, nullable=True) # Обычный ваш ForeignKey
+        alcohol = Column(Integer)
     """
     name: Mapped[str] = mapped_column(String, nullable=True)
 
