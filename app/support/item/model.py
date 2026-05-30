@@ -34,12 +34,11 @@ class Item(Search, Base, BaseAt, ImageMixin):
     drink_id: Mapped[int] = mapped_column(ForeignKey("drinks.id"), nullable=False, index=True)
     drink: Mapped["Drink"] = relationship(back_populates="items")
 
-    __table_args__ = ([UniqueConstraint('vol', 'drink_id', name='uq_items_unique'),
+    __table_args__ = (UniqueConstraint('vol', 'drink_id', name='uq_items_unique'),
                       Index(
                           "uq_unique", "drink_id", "vol", "price", "count", unique=True,
-                          postgresql_nulls_not_distinct=True
-    )]
-    )
+                          postgresql_nulls_not_distinct=True)
+                      )
 
     def __str__(self):
         # переоопределять в особенных формах
