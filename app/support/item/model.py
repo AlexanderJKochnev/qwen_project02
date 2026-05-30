@@ -3,19 +3,20 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from sqlalchemy import ForeignKey, Index, UniqueConstraint
-from sqlalchemy.orm import declared_attr, Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 # from sqlalchemy.engine import Connection
 # from sqlalchemy.sql import Table
 
-from app.core.models.base_model import Base, BaseAt, ion, money, volume, Search
+from app.core.models.base_model import Base, BaseAt, ion, money, volume
 from app.core.models.image_mixin import ImageMixin
-
+from app.core.models.mixins import Search
 
 if TYPE_CHECKING:
     from app.support.drink.model import Drink
 
 
-class Item(Base, BaseAt, ImageMixin, Search):
+class Item(Search, Base, BaseAt, ImageMixin):
+    """
     @declared_attr.directive
     def __table_args__(cls):
         local_args = [UniqueConstraint('vol', 'drink_id', name='uq_items_unique'),
@@ -25,13 +26,20 @@ class Item(Base, BaseAt, ImageMixin, Search):
                             unique=True, postgresql_nulls_not_distinct=True)]
         mixin_args = getattr(super(), "search_indices", [])
         return tuple(local_args + mixin_args)
-
+    """
     vol: Mapped[volume]  # объем тары
     price: Mapped[money]    # цена
     count: Mapped[ion]      # количество
 
     drink_id: Mapped[int] = mapped_column(ForeignKey("drinks.id"), nullable=False, index=True)
     drink: Mapped["Drink"] = relationship(back_populates="items")
+
+    __table_args__ = ([UniqueConstraint('vol', 'drink_id', name='uq_items_unique'),
+                      Index(
+                          "uq_unique", "drink_id", "vol", "price", "count", unique=True,
+                          postgresql_nulls_not_distinct=True
+    )]
+    )
 
     def __str__(self):
         # переоопределять в особенных формах

@@ -1,15 +1,15 @@
 # app/core/models/base_model.py
 
-from datetime import datetime, date
+from datetime import date, datetime
 from decimal import Decimal
-from typing import Annotated, ClassVar, List, Optional, Type
+from typing import Annotated, Optional, Type
+
 # from sqlalchemy.dialects.postgresql import MONEY
-from sqlalchemy import DateTime, DECIMAL, func, String, text, Text, Computed, inspect, Index
-from sqlalchemy.dialects.postgresql import BIGINT
-from sqlalchemy.dialects.postgresql import TSVECTOR
+from sqlalchemy import DateTime, DECIMAL, event, func, Index, inspect, String, text, Text
 # from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, declared_attr, Mapped, mapped_column
+
 # from app.core.config.project_config import settings
 
 langs = ['en', 'ru', 'fr']
@@ -331,28 +331,6 @@ class BaseFullFree(Base, BaseIntFree, BaseAt, BaseLang):
         return ""
 
 
-class Search:
-    """ поисковое поле для  """
-    __abstract__ = True
-    __allow_unmapped__ = True
-
-    @declared_attr
-    def search_content(cls) -> Mapped[Optional[str]]:
-        return mapped_column(Text, deferred=True, nullable=True)
-
-    @declared_attr
-    def search_vector(cls):
-        return mapped_column(TSVECTOR, Computed("to_tsvector('simple', coalesce(search_content, ''))", persisted=True))
-
-    @declared_attr.directive
-    def search_indices(cls):
-        return [  # 1. GIN индекс для FTS поиска (слово1 & слово2 & последнее:*)
-            Index(
-                f"idx_{cls.__tablename__}_search_vector_gin", "search_vector", postgresql_using="gin"
-            )
-        ]
-
-
 class ColorMixin:
     """ поле цвета подложки """
     color: Mapped[str] = mapped_column(String(9), nullable=True)
@@ -399,3 +377,40 @@ def get_model_by_name_stable(model_name):
         if mapper.class_.__name__ == model_name:
             return mapper.class_
     return None
+
+
+# ---------------------------------------------------------
+# СИСТЕМНЫЙ СБОРЩИК (Событие)
+# ---------------------------------------------------------
+@event.listens_for(Base, "instrument_class", propagate=True)
+def receive_instrument_class(mapper, cls):
+    """
+    Автоматически собирает скрытые индексы/ограничения из миксинов
+    и безопасно объединяет их с локальными __table_args__ модели.
+    """
+    extracted_args = []
+
+    for base in cls.__mro__:
+        if "__extra_constraints__" in base.__dict__:
+            constraints = base.__dict__["__extra_constraints__"]
+            if callable(constraints):
+                extracted_args.extend(constraints(cls))
+            else:
+                extracted_args.extend(constraints)
+
+    if not extracted_args:
+        return
+
+    current_args = cls.__dict__.get("__table_args__", ())
+    if isinstance(current_args, tuple):
+        current_args = list(current_args)
+    elif isinstance(current_args, dict):
+        current_args = [current_args]
+    else:
+        current_args = [current_args]
+
+    for arg in extracted_args:
+        if arg not in current_args:
+            current_args.insert(0, arg)
+
+    cls.__table_args__ = tuple(current_args)
