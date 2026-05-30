@@ -85,4 +85,16 @@ async def init_db_extensions():
         # await session.execute(text("CREATE EXTENSION IF NOT EXISTS pg_trgm;"))
         await session.execute(text("CREATE EXTENSION IF NOT EXISTS intarray;"))
         await session.execute(text("CREATE EXTENSION IF NOT EXISTS unaccent;"))
+        # 2. Создание IMMUTABLE функции-обертки для unaccent
+        # Используем стандартные теги $$ для разметки тела функции в PostgreSQL
+        await session.execute(
+            text(
+                """
+                    CREATE OR REPLACE FUNCTION public.immutable_unaccent(text)
+                    RETURNS text AS $$
+                        SELECT public.unaccent($1);
+                    $$ LANGUAGE sql IMMUTABLE PARALLEL SAFE;
+                """
+            )
+        )
         await session.commit()
