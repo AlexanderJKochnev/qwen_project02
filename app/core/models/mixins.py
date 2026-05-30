@@ -95,7 +95,8 @@ class UniqueNormalizedNameMixin(GeneralMixin):
         return [
             Index(
                 index_name,
-                func.unaccent(func.lower(text("name"))),
+                # func.unaccent(func.lower(text("name"))),
+                func.public.immutable_unaccent(func.lower(text("name"))),
                 unique=True
             )
         ]
@@ -122,7 +123,8 @@ class DynamicCompositeUniqueMixin(GeneralMixin):
             Index(
                 index_name,
                 text(fk_field_name),                          # Динамическое поле (например, country_id)
-                func.unaccent(func.lower(text("name"))),      # Нормализованное имя
+                # func.unaccent(func.lower(text("name"))),      # Нормализованное имя
+                func.public.immutable_unaccent(func.lower(text("name"))),
                 unique=True,
                 postgresql_nulls_not_distinct=True            # Обработка NULL как идентичных (PG 15+)
             )
