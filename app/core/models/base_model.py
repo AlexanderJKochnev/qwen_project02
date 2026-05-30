@@ -5,10 +5,12 @@ from decimal import Decimal
 from typing import Annotated, Optional, Type
 
 # from sqlalchemy.dialects.postgresql import MONEY
-from sqlalchemy import DateTime, DECIMAL, event, func, inspect, String, text, Text
+from sqlalchemy import DateTime, DECIMAL, func, inspect, String, text, Text
 # from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, declared_attr, Mapped, mapped_column
+
+from app.core.models.mixins import UniqueNormalizedNameMixin
 
 # from app.core.config.project_config import settings
 
@@ -271,10 +273,10 @@ class BaseAt:
     updated_at: Mapped[updated_at]
 
 
-class BaseInt:
+class BaseInt(UniqueNormalizedNameMixin):
     """ общие поля для всех таблиц на англ. языке """
     __abstract__ = True
-    name: Mapped[str_uniq]
+    # name: Mapped[str_uniq]
     description: Mapped[descr]
 
 
@@ -377,48 +379,3 @@ def get_model_by_name_stable(model_name):
         if mapper.class_.__name__ == model_name:
             return mapper.class_
     return None
-
-
-# ---------------------------------------------------------
-# ИСПРАВЛЕННЫЙ И ПРОТЕСТИРОВАННЫЙ СБОРЩИК (Event)
-# ---------------------------------------------------------
-@event.listens_for(Base, "instrument_class", propagate = True)
-def receive_instrument_class(mapper, cls):
-    """
-    Вызывает обычный @classmethod __extra_constraints__ у миксинов,
-    получает чистый список индексов и внедряет в __table_args__.
-    """
-    extracted_args = []
-    
-    # Корректно обходим MRO и ищем наш классовый метод
-    for base in cls.__mro__:
-        if "__extra_constraints__" in base.__dict__:
-            # Достаем оригинальный метод класса
-            method = base.__dict__["__extra_constraints__"]
-            # Если это classmethod, извлекаем саму функцию через __func__
-            if isinstance(method, classmethod):
-                method = method.__func__
-            
-            # Вызываем функцию, передавая текущий класс-потомок (cls)
-            if callable(method):
-                extracted_args.extend(method(cls))
-    
-    if not extracted_args:
-        return
-    
-    # Получаем или инициализируем текущие __table_args__
-    current_args = cls.__dict__.get("__table_args__", ())
-    if isinstance(current_args, tuple):
-        current_args = list(current_args)
-    elif isinstance(current_args, dict):
-        current_args = [current_args]
-    else:
-        current_args = [current_args]
-    
-    # Объединяем, избегая дубликатов
-    for arg in extracted_args:
-        if arg not in current_args:
-            current_args.insert(0, arg)
-    
-    # Перезаписываем финальный кортеж аргументов таблицы
-    cls.__table_args__ = tuple(current_args)

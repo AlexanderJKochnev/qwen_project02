@@ -1,13 +1,20 @@
 # app.core.model.mixins.py
 from typing import Optional
-from sqlalchemy import Computed, Index, Text
+from sqlalchemy import Column, String, Index, func, text, Text
 from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import declared_attr, Mapped, mapped_column
-
+from sqlalchemy.schema import Computed
 
 # ---------------------------------------------------------
 # ГЛАВНЫЙ СУПЕР-МИКСИН ДЛЯ АВТОМАТИЧЕСКОЙ СБОРКИ АРГУМЕНТОВ
+# В МОДЕЛИ ИСПОЛЬЗУЮЩЕЙ МИСКСИНЫ НА ОСНВОЕ ЭТОГО
+# ВАЖНО: Вместо __table_args__ пишем _local_table_args.
+# Сюда пишем ТОЛЬКО локальные уникальные ключи этой конкретной модели.
+# GeneralMixin сам заберет их, найдет индексы в SearchMixin и DynamicCompositeUniqueMixin,
+# склеит всё вместе и правильно отдаст в SQLAlchemy.
 # ---------------------------------------------------------
+
+
 class GeneralMixin:
     """
     Базовый миксин, который избавляет от костылей.
@@ -70,3 +77,53 @@ class Search(GeneralMixin):
         """Обычный classmethod вместо declared_attr для безопасности события"""
         index_name = f"idx_{cls.__tablename__}_search_vector_gin"[:63]
         return [Index(index_name, "search_vector", postgresql_using="gin")]
+
+
+# ---------------------------------------------------------
+# МИКСИН 1: Одиночный уникальный индекс (lower + unaccent)
+# ---------------------------------------------------------
+class UniqueNormalizedNameMixin(GeneralMixin):
+    """
+    Автоматически добавляет уникальный функциональный индекс
+    по нижнему регистру без диакритики для поля 'name'.
+    """
+    name: Mapped[str] = mapped_column(String, nullable=False)
+
+    @classmethod
+    def __extra_indices__(cls):
+        index_name = f"uq_idx_{cls.__tablename__}_norm_name"[:63]
+        return [
+            Index(
+                index_name,
+                func.unaccent(func.lower(text("name"))),
+                unique=True
+            )
+        ]
+
+
+# ---------------------------------------------------------
+# МИКСИН 2: Динамический составной индекс (FK + lower + unaccent)
+# ---------------------------------------------------------
+class DynamicCompositeUniqueMixin(GeneralMixin):
+    """
+    Автоматически строит составной уникальный индекс по паре:
+    [Динамическое поле связи] + [unaccent(lower(name))]
+    """
+    name: Mapped[str] = mapped_column(String, nullable=True)
+
+    @classmethod
+    def __extra_indices__(cls):
+        fk_field_name = getattr(cls, "__composite_fk_field__", None)
+        if not fk_field_name:
+            return []
+
+        index_name = f"uq_idx_{cls.__tablename__}_{fk_field_name}_name"[:63]
+        return [
+            Index(
+                index_name,
+                text(fk_field_name),                          # Динамическое поле (например, country_id)
+                func.unaccent(func.lower(text("name"))),      # Нормализованное имя
+                unique=True,
+                postgresql_nulls_not_distinct=True            # Обработка NULL как идентичных (PG 15+)
+            )
+        ]
