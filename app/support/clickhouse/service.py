@@ -115,6 +115,7 @@ class ClickhouseImportService:
                         AND joinGet('default.join_pg_countries_text_lookup', 'id', normalize_text(ch_c.name)) > 0
                   """
         data: List[dict] = await self.click_repo.run_raw_sql(raw_sql)
+        return data
         model = Region
         if data:
             result: List[dict] = await self.bulk_create(data, model, session)
