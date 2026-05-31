@@ -110,7 +110,7 @@ class Service(metaclass=ServiceMeta):
 
     @classmethod
     async def create(cls, data: BaseModel, repository: Repository, model: ModelType,
-                     session: AsyncSession, **kwargs) -> ModelType:
+                     session: AsyncSession, **kwargs) -> dict:
         """ create & return record """
         # удаляет пустые поля
         data_dict = data.model_dump(exclude_unset=True)

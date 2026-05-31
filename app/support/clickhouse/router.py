@@ -1,10 +1,12 @@
 # app/support/clickhouse/router.py
+from typing import List
 
 from fastapi import APIRouter, Depends, Path, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dependencies import get_active_user_or_internal
 from app.core.config.database.db_async import get_db
+from app.core.utils.pydantic_utils import get_service
 from app.support.clickhouse.service import ClickhouseImportService
 
 """
@@ -29,5 +31,5 @@ class ClickImportRouter:
 
     async def get_varietal(self, session: AsyncSession = Depends(get_db),
                            click_service: ClickhouseImportService = Depends()):
-        result = await click_service.get_varietals()
+        result: List[dict] = await click_service.get_varietals(session)
         return result
