@@ -287,6 +287,7 @@ class Repository(Background, metaclass=RepositoryMeta):
     @classmethod
     async def create(cls, obj: ModelType, model: ModelType, session: AsyncSession) -> ModelType:
         """ создание записи """
+        logger.critical('cуууууууууккааааааа')
         session.add(obj)
         await session.flush()
         await session.refresh(obj)
