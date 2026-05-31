@@ -18,7 +18,7 @@ class ClickImportRouter:
         self.router = APIRouter(
             prefix=self.prefix, tags=self.tags, dependencies=[Depends(get_active_user_or_internal)]
         )
-        self.service: ClickhouseImportService = Depends()
+        self.service = ClickhouseImportService()
         self.setup_routes()
 
     def setup_routes(self):
