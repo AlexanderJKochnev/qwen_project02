@@ -25,7 +25,7 @@ class ClickhouseImportService:
                             ON lower(trimBoth(v_ch.name)) = lower(trimBoth(v_pg.name))
                         -- Оставляем только те строки, которые не нашли совпадения в Postgres
                         WHERE (v_pg.name = '' OR v_pg.name IS NULL)
-                        AND new_varietal_name NOT LIKE '$%';
+                        AND new_varietal_name NOT LIKE '$%'
                   """
         result = await self.click_repo.run_raw_sql(raw_sql)
         return result
