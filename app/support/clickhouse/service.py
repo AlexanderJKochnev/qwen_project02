@@ -27,5 +27,5 @@ class ClickhouseImportService:
                         WHERE (v_pg.name = '' OR v_pg.name IS NULL)
                         AND new_varietal_name NOT LIKE '$%';
                   """
-        result = self.click_repo.run_raw_sql(raw_sql)
+        result = await self.click_repo.run_raw_sql(raw_sql)
         return result
