@@ -34,13 +34,12 @@ class ClickhouseImportService:
                             v_ch.name AS name
                         FROM default.pg_varietal AS v_ch
                         LEFT JOIN (
-                            -- Выбираем актуальные записи из Postgres, отсекая дубли модификатором FINAL
                             SELECT id, name
                             FROM drink_replica.varietals FINAL
                         ) AS v_pg
-                            ON lower(trimBoth(v_ch.name)) = lower(trimBoth(v_pg.name))
-                        -- Оставляем только те строки, которые не нашли совпадения в Postgres
-                        WHERE (v_pg.name = '' OR v_pg.name IS NULL)
+                            -- Применяем нормализацию текста к обеим таблицам
+                            ON normalize_text(v_ch.name) = normalize_text(v_pg.name)
+                        WHERE v_pg.name IS NULL OR v_pg.name = ''
                         AND name NOT LIKE '$%'
                   """
         data: List[dict] = await self.click_repo.run_raw_sql(raw_sql)
