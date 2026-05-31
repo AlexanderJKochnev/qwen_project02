@@ -9,7 +9,7 @@ from app.core.services.service import Service
 from app.core.types import ModelType
 from app.core.utils.pydantic_utils import get_repo, get_service
 from app.dependencies import get_clickhouse_repository_factory
-from app.support import Varietal
+from app.support import Food, Varietal
 
 
 class ClickhouseImportService:
@@ -44,6 +44,37 @@ class ClickhouseImportService:
                   """
         data: List[dict] = await self.click_repo.run_raw_sql(raw_sql)
         model = Varietal
+        if data:
+            result = await self.bulk_create(data, model, session)
+        else:
+            result = {'result': 'no data for import'}
+        return result
+
+    async def get_foods(self, session: AsyncSession) -> dict:
+        raw_sql = """
+                        SELECT
+                            -- 1. Заменяем ' - ' на одиночный пробел, а затем схлопываем множественные пробелы в один
+                            replaceRegexpAll(
+                                replaceRegexpAll(v_ch.name, ' - ', ' '),
+                                ' {2,}',
+                                ' '
+                            ) AS clean_new_food_name
+                        FROM default.pg_food AS v_ch
+                        LEFT JOIN (
+                            SELECT id, name
+                            FROM drink_replica.foods FINAL
+                        ) AS v_pg
+                            ON normalize_text(v_ch.name) = normalize_text(v_pg.name)
+                        WHERE
+                            -- 2. Обязательно берем условия соединения в скобки, чтобы фильтр по '$' отработал корректно
+                            (v_pg.name IS NULL OR v_pg.name = '')
+                            -- Фильтруем артефакты, начинающиеся со знака доллара
+                            AND v_ch.name NOT LIKE '$%'
+                            -- На всякий случай отсекаем пустые строки, если они есть в справочнике
+                            AND trimBoth(v_ch.name) != ''
+                  """
+        data: List[dict] = await self.click_repo.run_raw_sql(raw_sql)
+        model = Food
         if data:
             result = await self.bulk_create(data, model, session)
         else:
