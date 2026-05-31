@@ -1,10 +1,9 @@
 # app/support/Item/repository.py
-import math
 from decimal import Decimal
 from typing import List, Optional, Tuple, Union
 
 from loguru import logger  # NOQA: F401
-from sqlalchemy import and_, column, desc, Float, func, Integer, or_, select, text, values
+from sqlalchemy import column, Float, func, Integer, select, text, values
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import load_only, selectinload
 
@@ -30,7 +29,7 @@ class ItemRepository(ArrayRepository, SearchRepository, Repository):
     @classmethod
     def get_query(cls, model: ModelType):
         """ создание запроса со связанными полями """
-        excl = exclude_field_list(Item, ('search_vector', 'drink', 'search_content', 'word_hashes'))
+        excl = exclude_field_list(Item, ('search_vector', 'drink', 'search_content'))
         subquery = DrinkRepository.get_selectin()
         query = select(Item).options(load_only(*excl), selectinload(Item.drink).options(*subquery))
         return query
@@ -104,46 +103,6 @@ class ItemRepository(ArrayRepository, SearchRepository, Repository):
             return items, total
         except Exception as e:
             raise AppBaseException(message=f'get_list_view_page.error; {str(e)}', status_code=404)
-
-    @classmethod
-    async def find_items_keyset(cls,
-                                session: AsyncSession, word_stats: list[tuple], last_score: float = None,
-                                last_id: int = None,
-                                limit: int = 15, boost: float = 15.0
-                                ):
-        """
-            поиск с постраничным выводом based on keyset
-        """
-        if not word_stats:
-            return []
-
-        # Формируем веса для CASE
-        case_parts = [
-            (f"CASE WHEN word_hashes @> ARRAY[{d[0]}::bigint] THEN {(1.0 / math.log(d[1] + 1.5)) * boost:.4f} "
-             f"ELSE 0 END")
-            for d in word_stats]
-        score_sql = f"({' + '.join(case_parts)})"
-        hashes_list = [d[0] for d in word_stats]
-
-        # Базовый запрос
-        stmt = select(Item, text(f"{score_sql} AS score")).where(Item.word_hashes.overlap(hashes_list))
-
-        # Условие Keyset: (score < last_score) ИЛИ (score == last_score И id < last_id)
-        if last_score is not None and last_id is not None:
-            # Используем text(), так как score — это вычисляемое поле, а не колонка
-            stmt = stmt.where(
-                or_(
-                    text(f"{score_sql} < :ls"), and_(
-                        text(f"{score_sql} = :ls"), Item.id < last_id
-                    )
-                )
-            ).params(ls=last_score)
-
-        # Сортировка по score, затем по id для стабильности
-        stmt = stmt.order_by(desc(text("score")), desc(Item.id)).limit(limit)
-
-        result = await session.execute(stmt)
-        return result.all()
 
     @classmethod
     async def find_items_smart_page(

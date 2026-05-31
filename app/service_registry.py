@@ -11,7 +11,7 @@
 _SERVICE_REGISTRY: dict = {}
 _REPOSITORY_REGISTRY: dict = {}
 _PYSCHEMA_REGISTRY: dict = {}
-_SEARCH_DEPENDENCIES: dict = {}
+_SEARCH_DEPENDENCIES: dict = {}  # {"category": "subcategory.drink.item"}
 
 
 def register_pyschema(name: str, cls):
@@ -76,3 +76,18 @@ def registers_search_update(owner_path: str):
 
 def get_search_dependencies(model):
     return _SEARCH_DEPENDENCIES.get(model)
+
+
+def get_child(model, excl: tuple = ('drink', 'item')):
+    """
+        по имени модели получает ближайшую (child) зависимую модель (модели)
+        нужно для добавления заглушек: id, parent_id, name=None
+    """
+    res = _SEARCH_DEPENDENCIES.get(model)
+    if not res:
+        return None
+    child = res.split('.')[0]
+    if child not in excl:
+        return child
+    else:
+        return None

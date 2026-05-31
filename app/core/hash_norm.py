@@ -1,5 +1,8 @@
 # app.core.hash_norm.py
-"""  нормализация текста для хэширования """
+"""
+    нормализация текста для хэширования
+    проверить и удалить
+"""
 import string
 from ctypes import c_int64
 from functools import lru_cache

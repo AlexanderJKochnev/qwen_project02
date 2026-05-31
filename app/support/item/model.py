@@ -16,17 +16,6 @@ if TYPE_CHECKING:
 
 
 class Item(Search, Base, BaseAt, ImageMixin):
-    """
-    @declared_attr.directive
-    def __table_args__(cls):
-        local_args = [UniqueConstraint('vol', 'drink_id', name='uq_items_unique'),
-                      # Index('idx_items_word_hashes_gin', 'word_hashes', postgresql_using='gin'),
-                      # Index('idx_items_fts', 'search_vector', postgresql_using='gin'),
-                      Index("uq_unique", "drink_id", "vol", "price", "count",
-                            unique=True, postgresql_nulls_not_distinct=True)]
-        mixin_args = getattr(super(), "search_indices", [])
-        return tuple(local_args + mixin_args)
-    """
     vol: Mapped[volume]  # объем тары
     price: Mapped[money]    # цена
     count: Mapped[ion]      # количество

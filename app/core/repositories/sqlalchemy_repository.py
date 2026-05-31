@@ -13,14 +13,12 @@ from loguru import logger
 from sqlalchemy import (and_, cast, desc, func, insert, inspect, literal, or_, Row, RowMapping, select, Select, Text,
                         text, update)
 from sqlalchemy.dialects import postgresql  # NOQA: F401
-from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased, load_only
 
 from app.core.config.project_config import settings
 from app.core.exceptions import AppBaseException
-from app.core.hash_norm import get_word_hashes_dict
 from app.core.models.base_model import get_model_by_name
 from app.core.repositories.repo_background_tasks import Background
 from app.core.types import ModelType
@@ -243,7 +241,6 @@ class Repository(Background, metaclass=RepositoryMeta):
         session.add(obj)
         await session.flush()
         await session.refresh(obj)
-
         return obj
 
     @classmethod
@@ -400,6 +397,7 @@ class Repository(Background, metaclass=RepositoryMeta):
             Запрос с загрузкой связей и пагинацией
             return Tuple[List[instances], int]
         """
+        logger.warning(f'==============={model.__name__}=============')
         stmt = cls.get_query(model)
         if hasattr(model, 'updated_at'):
             stmt = stmt.where(model.updated_at > after_date)
@@ -705,7 +703,6 @@ class Repository(Background, metaclass=RepositoryMeta):
         try:            # 1. Получаем классы моделей
             ItemModel = get_model_by_name('Item')
             DrinkModel = get_model_by_name('Drink')
-            
             # Используем алиасы, чтобы SQLAlchemy не путалась при джоинах
             target_drink = aliased(DrinkModel)
             target_item = aliased(ItemModel)
@@ -785,34 +782,3 @@ class Repository(Background, metaclass=RepositoryMeta):
         stmt = stmt.order_by(desc(model.id)).limit(limit)
         result = await session.execute(stmt)
         return result.all()
-
-    @classmethod
-    async def find_items_hybrid(
-            cls, model: ModelType,
-            session: AsyncSession, word_weights: dict[int, float],  # hash -> weight
-            last_score: Optional[float] = None, last_id: Optional[int] = None, limit: int = 15
-    ) -> List[dict]:
-        """
-        Keyset пагинация с динамическим расчетом SCORE в БД.
-        """
-        hashes = list(word_weights.keys())
-        # Строим CASE для скоринга
-        case_parts = [f"CASE WHEN word_hashes @> ARRAY[{h}::bigint] THEN {w:.8f} ELSE 0 END" for h, w in
-                      word_weights.items()]
-        # score_sql = f"({' + '.join(case_parts)})"
-        score_sql = f"ROUND(CAST(({' + '.join(case_parts)}) AS numeric), 4)"
-        # Базовый запрос
-        query = cls.get_query(model)
-        stmt = query.add_columns(text(f"{score_sql} AS score"))  # добавляем колонку
-        stmt = stmt.where(model.word_hashes.bool_op("&&")(hashes))
-        # Keyset фильтрация (якорь)
-        if last_score is not None and last_id is not None:
-            # Используем строгое кортежное сравнение
-            stmt = stmt.where(text(f"({score_sql}, id) < (:ls, :li)"))
-            params = {"ls": last_score, "li": last_id}
-        else:
-            params = {}
-        # Сортировка: Сначала вес, потом ID (для детерминированности)
-        stmt = stmt.order_by(text(f"{score_sql} DESC"), model.id.desc()).limit(limit + 1)
-        result = await session.execute(stmt, params)
-        return [{'score': score, **item.to_dict_fast()} for item, score in result]

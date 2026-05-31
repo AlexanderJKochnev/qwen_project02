@@ -6,7 +6,6 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config.project_config import settings
-# from app.core.hash_norm import get_word_hashes_dict
 from app.core.models.base_model import get_model_by_name
 from app.core.repositories.clickhouse_repository import ClickHouseRepository
 from app.core.utils.backgound_tasks import background_unique
@@ -211,7 +210,6 @@ class Background:
     ) -> tuple[list, dict]:
         """
         Обрабатывает чанк пар
-        Возвращает (updates, word_hashes)
         """
         updates = []
 

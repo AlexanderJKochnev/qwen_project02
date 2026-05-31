@@ -332,8 +332,8 @@ class ItemService(ArrayService, SearchService, Service):
             # 1. Получаем СТРИМ всех ID и контента, которые нужно обновить
             # Это гарантирует, что мы пройдем по списку ОДИН РАЗ
             stmt = select(Item).options(selectinload(Item.drink))
-            if not force_all:
-                stmt = stmt.where(or_(Item.word_hashes == None, func.cardinality(Item.word_hashes) == 0))
+            # if not force_all:
+            #     stmt = stmt.where(or_(Item.word_hashes == None, func.cardinality(Item.word_hashes) == 0))
 
             result_stream = await session.stream(stmt)
             batch_count = 0
@@ -345,8 +345,6 @@ class ItemService(ArrayService, SearchService, Service):
 
                     # Твоя логика
                     item.search_content = content.lower()
-                    item.word_hashes = get_hashes_for_item(content)
-
                     batch_count += 1
 
                 # Коммитим каждые 1500 записей
