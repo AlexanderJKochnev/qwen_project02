@@ -109,11 +109,14 @@ class Service(metaclass=ServiceMeta):
         return instance
 
     @classmethod
-    async def create(cls, data: BaseModel, repository: Repository, model: ModelType,
+    async def create(cls, data: BaseModel | dict, repository: Repository, model: ModelType,
                      session: AsyncSession, **kwargs) -> dict:
         """ create & return record """
         # удаляет пустые поля
-        data_dict = data.model_dump(exclude_unset=True)
+        if isinstance(data, dict):
+            data_dict = data
+        else:
+            data_dict = data.model_dump(exclude_unset=True)
         obj = model(**data_dict)
         if model.__name__ == 'Item':
             drink_model = get_model_by_name('Drink')

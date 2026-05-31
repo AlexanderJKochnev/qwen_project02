@@ -23,8 +23,7 @@ class ClickhouseImportService:
         repository = get_repo(model)
         result = []
         for data_dict in data:
-            instance = model(**data_dict)
-            response: dict = await service.create(instance, repository, model, session)
+            response: dict = await service.create(data_dict, repository, model, session)
             result.append(response)
         return result
 
