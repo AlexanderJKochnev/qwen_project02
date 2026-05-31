@@ -3,7 +3,7 @@ from functools import lru_cache
 from typing import Any, Awaitable, Callable, Dict, Optional
 from app.core.repositories.clickhouse_repository import ClickHouseRepositoryFactory
 from clickhouse_connect.driver.asyncclient import AsyncClient as ClickAsyncClient
-from fastapi import Depends, Request
+from fastapi import Request
 
 
 # from app.core.repositories.clickhouse_repository import ClickHouseRepositoryFactory
@@ -33,5 +33,4 @@ async def get_clickhouse_repository_factory(request: Request
 
 def get_translator_func() -> Callable[[Dict[str, Any], Optional[bool]], Awaitable[Dict[str, Any]]]:
     return fill_missing_translations
-
 

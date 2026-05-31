@@ -64,6 +64,7 @@ from app.support.seaweeds.router import SeaweedsRouter
 from app.core.repositories.clickhouse_repository import ClickHouseRepositoryFactory
 from app.support.merging.router import MergingRouter
 from app.support.item.router_item_image import ItemImageRouter
+from app.support.clickhouse.router import ClickImportRouter
 
 logger.info('start initialisation')
 
@@ -234,6 +235,7 @@ app.include_router(RawdataRouter().router)
 app.include_router(RegistryRouter().router)
 app.include_router(OrchestratorRouter().router)
 app.include_router(MergingRouter().router)
+app.include_router(ClickImportRouter().router)
 # app.include_router(CustomerRouter().router)
 # app.include_router(WarehouseRouter().router)
 
