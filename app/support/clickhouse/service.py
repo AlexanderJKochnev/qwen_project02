@@ -58,7 +58,7 @@ class ClickhouseImportService:
                                 replaceRegexpAll(v_ch.name, ' - ', ' '),
                                 ' {2,}',
                                 ' '
-                            ) AS clean_new_food_name
+                            ) AS name
                         FROM default.pg_food AS v_ch
                         LEFT JOIN (
                             SELECT id, name
