@@ -14,8 +14,8 @@ class ClickhouseImportService:
     async def get_varietals(self) -> dict:
         raw_sql = """
                         SELECT
-                            v_ch.id AS ch_id,
-                            v_ch.name AS new_varietal_name
+                            -- v_ch.id AS ch_id,
+                            v_ch.name AS name
                         FROM default.pg_varietal AS v_ch
                         LEFT JOIN (
                             -- Выбираем актуальные записи из Postgres, отсекая дубли модификатором FINAL
@@ -27,5 +27,6 @@ class ClickhouseImportService:
                         WHERE (v_pg.name = '' OR v_pg.name IS NULL)
                         AND new_varietal_name NOT LIKE '$%'
                   """
-        result = await self.click_repo.run_raw_sql(raw_sql)
+        result: dict = await self.click_repo.run_raw_sql(raw_sql)
+        
         return result
