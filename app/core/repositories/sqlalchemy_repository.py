@@ -19,7 +19,7 @@ from sqlalchemy.orm import aliased, load_only
 
 from app.core.config.project_config import settings
 from app.core.exceptions import AppBaseException
-from app.core.models.base_model import get_model_by_name
+from app.core.models.base_model import get_model_by_name, plural
 from app.core.repositories.repo_background_tasks import Background
 from app.core.types import ModelType
 # from sqlalchemy.sql.elements import ColumnElement
@@ -351,8 +351,9 @@ class Repository(Background, metaclass=RepositoryMeta):
             get one record by id
         """
         logger.warning(f'{model.__name__.lower()}_id')
-        child_model_name = get_child(model)
-        child_model = get_model_by_name(child_model_name)
+        child_model_name: str = get_child(model)
+        logger.warning(f'{child_model_name=}, {child_model_name.capitalize()}, {plural(child_model_name.capitalize())}')
+        child_model = get_model_by_name(plural(child_model_name.capitalize()))
         logger.warning(f'{child_model=}')
         stmt = cls.get_query(model).where(model.id == id)
         result = await session.execute(stmt)
