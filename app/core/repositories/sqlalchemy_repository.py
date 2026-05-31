@@ -351,7 +351,9 @@ class Repository(Background, metaclass=RepositoryMeta):
             get one record by id
         """
         logger.warning(f'{model.__name__.lower()}_id')
-        logger.warning(f'{get_child(model)=}')
+        child_model_name = get_child(model)
+        child_model = get_model_by_name(child_model_name)
+        logger.warning(f'{child_model=}')
         stmt = cls.get_query(model).where(model.id == id)
         result = await session.execute(stmt)
         obj = result.scalar_one_or_none()
