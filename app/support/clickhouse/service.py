@@ -106,8 +106,13 @@ class ClickhouseImportService:
                             ON normalize_text(ch_reg.name) = normalize_text(pg_reg.name)
                             AND pg_c.id = pg_reg.country_id
                         WHERE
+                            -- Проверка на отсутствие дубликата в Postgres
                             (pg_reg.name IS NULL OR pg_reg.name = '')
+                            -- Исключаем пустые строки
                             AND trimBoth(ch_reg.name) != ''
+                            -- СТРОГАЯ ФИЛЬТРАЦИЯ МУСОРА (исключаем строки, начинающиеся с $)
+                            AND ch_reg.name NOT LIKE '$%'
+                            -- Гарантируем, что родительская страна уже добавлена в Postgres
                             AND pg_c.id IS NOT NULL
                   """
         data: List[dict] = await self.click_repo.run_raw_sql(raw_sql)
