@@ -19,7 +19,7 @@ from sqlalchemy.orm import aliased, load_only
 
 from app.core.config.project_config import settings
 from app.core.exceptions import AppBaseException
-from app.core.models.base_model import get_model_by_name, plural
+from app.core.models.base_model import get_model_by_name
 from app.core.repositories.repo_background_tasks import Background
 from app.core.types import ModelType
 # from sqlalchemy.sql.elements import ColumnElement
@@ -71,7 +71,7 @@ class Repository(Background, metaclass=RepositoryMeta):
         related_model = cls.get_related_model(model)
         if not related_model:
             return None
-        foreign_key = f'{model.__name__}_id'
+        foreign_key = f'{model.__name__.lower()}_id'
         kwargs = {foreign_key: id, 'name': name_value}
         stmt = select(related_model).filter_by(**kwargs)
         result = await cls.nonpagination(stmt, session)
