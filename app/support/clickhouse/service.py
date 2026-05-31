@@ -9,7 +9,7 @@ from app.core.services.service import Service
 from app.core.types import ModelType
 from app.core.utils.pydantic_utils import get_repo, get_service
 from app.dependencies import get_clickhouse_repository_factory
-from app.support import Food, Varietal
+from app.support import Food, Region, Varietal
 
 
 class ClickhouseImportService:
@@ -75,6 +75,43 @@ class ClickhouseImportService:
                   """
         data: List[dict] = await self.click_repo.run_raw_sql(raw_sql)
         model = Food
+        if data:
+            result: List[dict] = await self.bulk_create(data, model, session)
+        else:
+            result: List[dict] = [{'result': 'no data for import'}]
+        return result
+
+    async def get_regions(self, session: AsyncSession) -> List[dict]:
+        raw_sql = """
+                        SELECT
+                            ch_reg.name AS name,
+                            pg_c.id AS country_id
+                        FROM default.pg_region AS ch_reg
+                        -- 1. Связываем регион ClickHouse с его временной страной
+                        LEFT JOIN default.pg_country AS ch_c
+                            ON ch_reg.country_id = ch_c.id
+                        -- 2. Находим родной ID этой страны в реплике Postgres (с защитой от коллизии US)
+                        LEFT JOIN (
+                            SELECT
+                                id,
+                                multiIf(normalize_text(name) = 'united states', 'us', normalize_text(name)) AS norm_name
+                            FROM drink_replica.countries FINAL
+                        ) AS pg_c
+                            ON normalize_text(ch_c.name) = pg_c.norm_name
+                        -- 3. Проверяем, нет ли уже такого региона в этой стране в Postgres
+                        LEFT JOIN (
+                            SELECT id, name, country_id
+                            FROM drink_replica.regions FINAL
+                        ) AS pg_reg
+                            ON normalize_text(ch_reg.name) = normalize_text(pg_reg.name)
+                            AND pg_c.id = pg_reg.country_id
+                        WHERE
+                            (pg_reg.name IS NULL OR pg_reg.name = '')
+                            AND trimBoth(ch_reg.name) != ''
+                            AND pg_c.id IS NOT NULL
+                  """
+        data: List[dict] = await self.click_repo.run_raw_sql(raw_sql)
+        model = Region
         if data:
             result: List[dict] = await self.bulk_create(data, model, session)
         else:

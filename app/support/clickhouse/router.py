@@ -31,6 +31,10 @@ class ClickImportRouter:
             "/food", self.get_food, methods=["GET"],
             openapi_extra={'x-request-schema': None}
         )
+        self.router.add_api_route(
+            "/region", self.get_region, methods=["GET"],
+            openapi_extra={'x-request-schema': None}
+        )
 
     async def get_varietal(self, session: AsyncSession = Depends(get_db),
                            click_service: ClickhouseImportService = Depends()):
@@ -40,4 +44,9 @@ class ClickImportRouter:
     async def get_food(self, session: AsyncSession = Depends(get_db),
                        click_service: ClickhouseImportService = Depends()):
         result: List[dict] = await click_service.get_foods(session)
+        return result
+
+    async def get_region(self, session: AsyncSession = Depends(get_db),
+                         click_service: ClickhouseImportService = Depends()):
+        result: List[dict] = await click_service.get_regions(session)
         return result
