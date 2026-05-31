@@ -380,6 +380,7 @@ class Repository(Background, metaclass=RepositoryMeta):
             get one record by id
         """
         test = await cls.get_related_model_instances(id, model, session)
+        logger.critical(f'{test=}')
         for instance in test:
             logger.warning(f'{instance}=')
 
