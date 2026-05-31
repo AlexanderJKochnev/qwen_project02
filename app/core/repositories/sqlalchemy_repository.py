@@ -69,8 +69,10 @@ class Repository(Background, metaclass=RepositoryMeta):
         """
             получение связанных завписей из related model
         """
+        logger.warning(f'get_related_model_instances {model.__name__=}')
         related_model = cls.get_related_model(model)
         if not related_model:
+            logger.warning('no related model')
             return None
         related_repo: Type[Repository] = get_repo(related_model)
         foreign_key = f'{model.__name__.lower()}_id'
