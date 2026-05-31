@@ -353,7 +353,7 @@ class Repository(Background, metaclass=RepositoryMeta):
         logger.warning(f'{model.__name__.lower()}_id')
         child_model_name: str = get_child(model)
         logger.warning(f'{child_model_name=}, {child_model_name.capitalize()}, {plural(child_model_name.capitalize())}')
-        child_model = get_model_by_name(plural(child_model_name.capitalize()))
+        child_model = get_model_by_name(child_model_name.capitalize())
         logger.warning(f'{child_model=}')
         stmt = cls.get_query(model).where(model.id == id)
         result = await session.execute(stmt)
