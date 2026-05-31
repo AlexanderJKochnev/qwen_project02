@@ -11,6 +11,7 @@ from app.support.clickhouse.service import ClickhouseImportService
     импорт данных из clickhouse
 """
 
+
 class ClickImportRouter:
     def __init__(self):
         prefix = 'click_import'
@@ -18,7 +19,6 @@ class ClickImportRouter:
         self.router = APIRouter(
             prefix=self.prefix, tags=self.tags, dependencies=[Depends(get_active_user_or_internal)]
         )
-        self.service = ClickhouseImportService()
         self.setup_routes()
 
     def setup_routes(self):
@@ -27,6 +27,7 @@ class ClickImportRouter:
             openapi_extra={'x-request-schema': None}
         )
 
-    async def get_varietal(self, session: AsyncSession = Depends(get_db)):
-        result = await self.service.get_varietals()
+    async def get_varietal(self, session: AsyncSession = Depends(get_db),
+                           click_service: ClickhouseImportService = Depends()):
+        result = await click_service.get_varietals()
         return result
