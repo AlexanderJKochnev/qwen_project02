@@ -83,38 +83,36 @@ class ClickhouseImportService:
 
     async def get_regions(self, session: AsyncSession) -> List[dict]:
         raw_sql = """
-                        SELECT
-                            ch_reg.name AS name,
-                            pg_c.id AS country_id
-                        FROM default.pg_region AS ch_reg
-                        -- 1. Связываем регион ClickHouse с его временной страной
-                        LEFT JOIN default.pg_country AS ch_c
-                            ON ch_reg.country_id = ch_c.id
-                        -- 2. Находим родной ID этой страны в реплике Postgres (с защитой от коллизии US)
-                        LEFT JOIN (
-                            SELECT
-                                id,
-                                multiIf(normalize_text(name) = 'united states', 'us', normalize_text(name)) AS norm_name
-                            FROM drink_replica.countries FINAL
-                        ) AS pg_c
-                            ON normalize_text(ch_c.name) = pg_c.norm_name
-                        -- 3. Проверяем, нет ли уже такого региона в этой стране в Postgres
-                        LEFT JOIN (
-                            SELECT id, name, country_id
-                            FROM drink_replica.regions FINAL
-                        ) AS pg_reg
-                            ON normalize_text(ch_reg.name) = normalize_text(pg_reg.name)
-                            AND pg_c.id = pg_reg.country_id
-                        WHERE
-                            -- Проверка на отсутствие дубликата в Postgres
-                            (pg_reg.name IS NULL OR pg_reg.name = '')
-                            -- Исключаем пустые строки
-                            AND trimBoth(ch_reg.name) != ''
-                            -- СТРОГАЯ ФИЛЬТРАЦИЯ МУСОРА (исключаем строки, начинающиеся с $)
-                            AND ch_reg.name NOT LIKE '$%'
-                            -- Гарантируем, что родительская страна уже добавлена в Postgres
-                            AND pg_c.id IS NOT NULL
-                            AND pg_c.id > 0
+                        SELECT DISTINCT
+                        -- Очищаем имя региона от двойных пробелов и дефисов
+                        trimBoth(replaceRegexpAll(
+                            replaceRegexpAll(ch_reg.name, ' - ', ' '),
+                            ' {2,}',
+                            ' '
+                        )) AS name,
+                        -- Получаем РЕАЛЬНЫЙ country_id из Postgres по тексту имени страны
+                        joinGet('default.join_pg_countries_text_lookup', 'id', normalize_text(ch_c.name)) AS country_id
+                    FROM default.pg_region AS ch_reg
+                    -- Достаем текстовое имя страны из ClickHouse
+                    LEFT JOIN default.pg_country AS ch_c
+                        ON ch_reg.country_id = ch_c.id
+                    -- Проверяем наличие региона в Postgres строго по текстовому имени "в лоб"
+                    LEFT JOIN (
+                        SELECT name
+                        FROM postgresql('wine_host:5432', 'wine_db', 'regions', 'wine', 'wine1')
+                        WHERE name IS NOT NULL AND trimBoth(name) != ''
+                    ) AS pg_reg
+                        ON normalize_text(ch_reg.name) = normalize_text(pg_reg.name)
+                    WHERE
+                        -- Критерий дельты: текстового совпадения имени региона в Postgres ВООБЩЕ НЕТ
+                        (pg_reg.name IS NULL OR pg_reg.name = '')
+                        -- Жесткая фильтрация мусора и пустых строк
+                        --AND ch_reg.name IS NOT NULL
+                        AND trimBoth(ch_reg.name) != ''
+                        AND ch_reg.name NOT LIKE '$%'
+                        AND ch_reg.name NOT IN ('N/A', 'na', 'n/a', 'None', 'New Zealand')
+                        -- Исключаем мусорные страны (как 'Buy Now') — страна должна реально существовать в Postgres
+                        AND joinGet('default.join_pg_countries_text_lookup', 'id', normalize_text(ch_c.name)) > 0
                   """
         data: List[dict] = await self.click_repo.run_raw_sql(raw_sql)
         model = Region
