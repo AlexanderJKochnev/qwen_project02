@@ -114,6 +114,7 @@ class ClickhouseImportService:
                             AND ch_reg.name NOT LIKE '$%'
                             -- Гарантируем, что родительская страна уже добавлена в Postgres
                             AND pg_c.id IS NOT NULL
+                            AND pg_c.id > 0
                   """
         data: List[dict] = await self.click_repo.run_raw_sql(raw_sql)
         model = Region
