@@ -364,6 +364,7 @@ def get_model_by_name(model_name: str) -> Type[Base]:
     # registry._class_map содержит пары {'ИмяКласса': КлассМодели}
     # return Base.registry._class_map.get(model_name)
     for mapper in Base.registry.mappers:
+        print(f'{mapper.class_.__name__=}')
         if mapper.class_.__name__ == model_name:
             return mapper.class_
     return None
