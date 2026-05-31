@@ -72,11 +72,15 @@ class Repository(Background, metaclass=RepositoryMeta):
         if not related_model:
             return None
         foreign_key = f'{model.__name__.lower()}_id'
-        kwargs: dict = {foreign_key: id}
-        if name_value:
-            kwargs['name'] = name_value
-        logger.warning(f'{kwargs}')
-        stmt = select(related_model).filter_by(**kwargs)
+        filters: dict = {foreign_key: id, 'name': name_value}
+        conditions = []
+        for field_name, value in filters.items():
+            column = getattr(related_model, field_name)
+            if value is None:
+                conditions.append(column.is_(None))  # IS NULL
+            else:
+                conditions.append(column == value)
+        stmt = select(related_model).where(and_(*conditions))
         result = await cls.nonpagination(stmt, session)
         return result
 
