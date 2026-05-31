@@ -94,7 +94,7 @@ class Repository(Background, metaclass=RepositoryMeta):
             if result:
                 for instance in result:
                     try:
-                        await related_repo.delete(instance, related_model, session)
+                        await related_repo.delete(instance, session)
                     except Exception as e:
                         logger.error(f'ошибка удаления записи {related_model.__name__} {instance.id}, {e}')
         return result
