@@ -72,8 +72,12 @@ class Repository(Background, metaclass=RepositoryMeta):
         if not related_model:
             return None
         foreign_key = f'{model.__name__.lower()}_id'
-        kwargs = {foreign_key: id, 'name': name_value}
+        kwargs: dict = {foreign_key: id}
+        if name_value:
+            kwargs['name'] = name_value
+        logger.warning(f'{kwargs}')
         stmt = select(related_model).filter_by(**kwargs)
+        print(f'==========================================={len(stmt)=}')
         result = await cls.nonpagination(stmt, session)
         return result
 
