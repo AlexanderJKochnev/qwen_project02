@@ -69,10 +69,10 @@ class Repository(Background, metaclass=RepositoryMeta):
         """
             получение связанных завписей из related model
         """
-        logger.warning(f'get_related_model_instances {model.__name__=}')
+        logger.warning(f'get_related_model_instances {model.__name__}, {add=}')
         related_model = cls.get_related_model(model)
         if not related_model:
-            logger.warning('no related model')
+            logger.warning(f'{model.__name__} no more related model')
             return None
         related_repo: Type[Repository] = get_repo(related_model)
         foreign_key = f'{model.__name__.lower()}_id'
@@ -293,7 +293,6 @@ class Repository(Background, metaclass=RepositoryMeta):
         await session.flush()
         await session.refresh(obj)
         id = obj.id
-        logger.warning(f'ceeeeeeeeeerffrfrr {id}')
         await cls.get_related_model_instances(id, model, session)
         return obj
 
@@ -395,7 +394,6 @@ class Repository(Background, metaclass=RepositoryMeta):
         """
         # async with session.begin_nested():
         id = obj.id
-        logger.warning(f'cууууууукккккаааааа {cls.model=}')
         await cls.get_related_model_instances(id, cls.model, session, add=False)
         await session.delete(obj)
         # await session.expunge(obj)
