@@ -72,6 +72,7 @@ class Repository(Background, metaclass=RepositoryMeta):
         if not related_model:
             return None
         related_repo: Type[Repository] = get_repo(related_model)
+        logger.warning(f'{model.__name__.lower()}_id==========================')
         foreign_key = f'{model.__name__.lower()}_id'
         if add:     # если вызов из метода create - пытаемся добавить:
             try:
