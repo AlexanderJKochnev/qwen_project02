@@ -35,8 +35,9 @@ class VarietalRepository(Repository):
     @classmethod
     def get_query(cls, model: ModelType):
         # Добавляем загрузку связи с relationships
-        return select(cls.model).options(selectinload(Varietal.drink_associations).joinedload(DrinkVarietal.drink))
-
+        return select(cls.model).options(selectinload(Varietal.drink_associations).selectinload(DrinkVarietal.drink))
+        # return select(cls.model).options(selectinload(Varietal.drink_associations).joinedload(DrinkVarietal.drink))
+    
     @classmethod
     async def get_by_ids(cls, ids: Tuple[int], model: ModelType, session: AsyncSession) -> Optional[ModelType]:
         """
@@ -53,7 +54,7 @@ class VarietalRepository(Repository):
     async def get_full_with_pagination(
             cls, skip: int, limit: int, model: ModelType, session: AsyncSession, ) -> tuple:
         """
-            Запрос полного списка с загрузкой связей и пагинацией
+            Запрос полного списка без связей с пагинацией
             return Tuple[List[instances], int]
         """
         try:
