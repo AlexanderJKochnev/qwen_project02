@@ -26,7 +26,7 @@ from app.core.types import ModelType
 from app.core.utils.alchemy_utils import (create_enum_conditions, create_search_conditions2, get_field_list,
                                           get_sql_search)
 from app.core.utils.reindexation import extract_text_ultra_fast
-from app.service_registry import register_repo
+from app.service_registry import get_child, register_repo
 
 # длина списка поисковой выдачи
 search_site = min(settings.PAGE_DEFAULT, 20)
@@ -350,6 +350,8 @@ class Repository(Background, metaclass=RepositoryMeta):
         """
             get one record by id
         """
+        logger.warning(f'{model.__name__.lower()}_id')
+        logger.warning(f'{get_child(model)=}')
         stmt = cls.get_query(model).where(model.id == id)
         result = await session.execute(stmt)
         obj = result.scalar_one_or_none()
@@ -397,7 +399,6 @@ class Repository(Background, metaclass=RepositoryMeta):
             Запрос с загрузкой связей и пагинацией
             return Tuple[List[instances], int]
         """
-        logger.warning(f'==============={model.__name__}=============')
         stmt = cls.get_query(model)
         if hasattr(model, 'updated_at'):
             stmt = stmt.where(model.updated_at > after_date)
