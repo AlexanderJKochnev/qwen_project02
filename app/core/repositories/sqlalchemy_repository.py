@@ -68,10 +68,13 @@ class Repository(Background, metaclass=RepositoryMeta):
         """
             получение связанных завписей из related model
         """
+        logger.warning('ruyrtyiuriuruoriuroiuroiruoriuroiur')
         related_model = cls.get_related_model(model)
+        logger.warning(related_model)
         if not related_model:
             return None
         related_repo: Type[Repository] = get_repo(related_model)
+        logger.warning(f'{related_repo=}=====================================')
         logger.warning(f'{model.__name__.lower()}_id==========================')
         foreign_key = f'{model.__name__.lower()}_id'
         if add:     # если вызов из метода create - пытаемся добавить:
@@ -287,11 +290,11 @@ class Repository(Background, metaclass=RepositoryMeta):
     @classmethod
     async def create(cls, obj: ModelType, model: ModelType, session: AsyncSession) -> ModelType:
         """ создание записи """
-        logger.critical('cуууууууууккааааааа')
         session.add(obj)
         await session.flush()
         await session.refresh(obj)
         id = obj.id
+        logger.warning(f'ceeeeeeeeeerffrfrr {id}')
         await cls.get_related_model_instances(id, model, session)
         return obj
 
