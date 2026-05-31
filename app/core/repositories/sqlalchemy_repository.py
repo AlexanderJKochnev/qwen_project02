@@ -78,7 +78,6 @@ class Repository(Background, metaclass=RepositoryMeta):
         logger.warning(f'{kwargs}')
         stmt = select(related_model).filter_by(**kwargs)
         result = await cls.nonpagination(stmt, session)
-        print(f'==========================================={len(result)=}')
         return result
 
     @classmethod
@@ -386,7 +385,7 @@ class Repository(Background, metaclass=RepositoryMeta):
         test = await cls.get_related_model_instances(id, model, session)
         logger.critical(f'{test=}')
         for instance in test:
-            logger.warning(f'{instance}=')
+            logger.warning(f'{instance.id}=')
 
         stmt = cls.get_query(model).where(model.id == id)
         result = await session.execute(stmt)
