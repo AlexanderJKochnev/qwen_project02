@@ -25,8 +25,9 @@ from app.core.types import ModelType
 # from sqlalchemy.sql.elements import ColumnElement
 from app.core.utils.alchemy_utils import (create_enum_conditions, create_search_conditions2, get_field_list,
                                           get_sql_search)
+from app.core.utils.pydantic_utils import get_repo
 from app.core.utils.reindexation import extract_text_ultra_fast
-from app.service_registry import get_child, get_repo, register_repo
+from app.service_registry import get_child, register_repo
 
 # длина списка поисковой выдачи
 search_site = min(settings.PAGE_DEFAULT, 20)
@@ -68,14 +69,10 @@ class Repository(Background, metaclass=RepositoryMeta):
         """
             получение связанных завписей из related model
         """
-        logger.warning('ruyrtyiuriuruoriuroiuroiruoriuroiur')
         related_model = cls.get_related_model(model)
-        logger.warning(related_model)
         if not related_model:
             return None
         related_repo: Type[Repository] = get_repo(related_model)
-        logger.warning(f'{related_repo=}=====================================')
-        logger.warning(f'{model.__name__.lower()}_id==========================')
         foreign_key = f'{model.__name__.lower()}_id'
         if add:     # если вызов из метода create - пытаемся добавить:
             try:
