@@ -77,8 +77,8 @@ class Repository(Background, metaclass=RepositoryMeta):
             kwargs['name'] = name_value
         logger.warning(f'{kwargs}')
         stmt = select(related_model).filter_by(**kwargs)
-        print(f'==========================================={len(stmt)=}')
         result = await cls.nonpagination(stmt, session)
+        print(f'==========================================={len(result)=}')
         return result
 
     @classmethod
