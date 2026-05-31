@@ -62,6 +62,22 @@ class Repository(Background, metaclass=RepositoryMeta):
         return get_model_by_name(child_model_name.capitalize())
 
     @classmethod
+    async def get_related_model_instances(cls, id: int, model: ModelType,
+                                          session: AsyncSession,
+                                          name_value: str = None,) -> List[ModelType] | None:
+        """
+            получение связанных завписей из related model
+        """
+        related_model = cls.get_related_model(model)
+        if not related_model:
+            return None
+        foreign_key = f'{model.__name__}_id'
+        kwargs = {foreign_key: id, 'name': name_value}
+        stmt = select(related_model).filter_by(**kwargs)
+        result = await cls.nonpagination(stmt, session)
+        return result
+
+    @classmethod
     async def get_count(cls, query: Select, session: AsyncSession):
         """ ПОДСЧЕТ ОБЩЕГО КОЛ-ВА ЗАПИСЕЙ В СЛОЖНЫХ ЗАПРОСАХ (С ФИЛЬТРАМИ)"""
         return (await session.execute(
@@ -363,7 +379,10 @@ class Repository(Background, metaclass=RepositoryMeta):
         """
             get one record by id
         """
-        logger.warning(f'{cls.get_related_model(model)=}')
+        test = await cls.get_related_model_instances(id, model, session)
+        for instance in test:
+            logger.warning(f'{instance}=')
+
         stmt = cls.get_query(model).where(model.id == id)
         result = await session.execute(stmt)
         obj = result.scalar_one_or_none()
