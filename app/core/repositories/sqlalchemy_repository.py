@@ -48,6 +48,19 @@ class Repository(Background, metaclass=RepositoryMeta):
     __abstract__ = True
     model: ModelType
 
+    @staticmethod
+    async def get_related_model(model: ModelType):
+        """
+            получение связанной модели
+        """
+        related_model_name = get_child(model)
+        if not related_model_name:
+            return None
+        child_model_name: str = get_child(model)
+        if not child_model_name:
+            return None
+        return get_model_by_name(child_model_name.capitalize())
+
     @classmethod
     async def get_count(cls, query: Select, session: AsyncSession):
         """ ПОДСЧЕТ ОБЩЕГО КОЛ-ВА ЗАПИСЕЙ В СЛОЖНЫХ ЗАПРОСАХ (С ФИЛЬТРАМИ)"""
@@ -350,11 +363,7 @@ class Repository(Background, metaclass=RepositoryMeta):
         """
             get one record by id
         """
-        logger.warning(f'{model.__name__.lower()}_id')
-        child_model_name: str = get_child(model)
-        logger.warning(f'{child_model_name=}, {child_model_name.capitalize()}, {plural(child_model_name.capitalize())}')
-        child_model = get_model_by_name(child_model_name.capitalize())
-        logger.warning(f'{child_model=}')
+        logger.warning(f'{cls.get_related_mode(model)=}')
         stmt = cls.get_query(model).where(model.id == id)
         result = await session.execute(stmt)
         obj = result.scalar_one_or_none()
