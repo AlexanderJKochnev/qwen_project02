@@ -392,6 +392,9 @@ class Repository(Background, metaclass=RepositoryMeta):
         :param obj: instance
         """
         # async with session.begin_nested():
+        id = obj.id
+        logger.warning(f'cууууууукккккаааааа {cls.model=}')
+        # await cls.get_related_model_instances(id, model, session, add=False)
         await session.delete(obj)
         # await session.expunge(obj)
         # можно отвязать и вернуть удаленный объект и проделать с ним вские штуки - например записать заново с новым ID
