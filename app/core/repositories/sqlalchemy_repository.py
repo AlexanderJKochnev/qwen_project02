@@ -49,7 +49,7 @@ class Repository(Background, metaclass=RepositoryMeta):
     model: ModelType
 
     @staticmethod
-    async def get_related_model(model: ModelType):
+    def get_related_model(model: ModelType):
         """
             получение связанной модели
         """
