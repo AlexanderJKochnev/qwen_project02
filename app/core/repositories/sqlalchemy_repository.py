@@ -363,7 +363,7 @@ class Repository(Background, metaclass=RepositoryMeta):
         """
             get one record by id
         """
-        logger.warning(f'{cls.get_related_mode(model)=}')
+        logger.warning(f'{cls.get_related_model(model)=}')
         stmt = cls.get_query(model).where(model.id == id)
         result = await session.execute(stmt)
         obj = result.scalar_one_or_none()
