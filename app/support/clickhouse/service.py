@@ -27,7 +27,7 @@ class ClickhouseImportService:
             result.append(response)
         return result
 
-    async def get_varietals(self, session: AsyncSession) -> dict:
+    async def get_varietals(self, session: AsyncSession) -> List[dict]:
         raw_sql = """
                         SELECT
                             -- v_ch.id AS ch_id,
@@ -45,12 +45,12 @@ class ClickhouseImportService:
         data: List[dict] = await self.click_repo.run_raw_sql(raw_sql)
         model = Varietal
         if data:
-            result = await self.bulk_create(data, model, session)
+            result: List[dict] = await self.bulk_create(data, model, session)
         else:
-            result = {'result': 'no data for import'}
+            result: List[dict] = [{'result': 'no data for import'}]
         return result
 
-    async def get_foods(self, session: AsyncSession) -> dict:
+    async def get_foods(self, session: AsyncSession) -> List[dict]:
         raw_sql = """
                         SELECT
                             -- 1. Заменяем ' - ' на одиночный пробел, а затем схлопываем множественные пробелы в один
@@ -76,7 +76,7 @@ class ClickhouseImportService:
         data: List[dict] = await self.click_repo.run_raw_sql(raw_sql)
         model = Food
         if data:
-            result = await self.bulk_create(data, model, session)
+            result: List[dict] = await self.bulk_create(data, model, session)
         else:
-            result = {'result': 'no data for import'}
+            result: List[dict] = [{'result': 'no data for import'}]
         return result

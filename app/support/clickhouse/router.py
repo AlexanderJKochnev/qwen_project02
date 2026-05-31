@@ -39,5 +39,5 @@ class ClickImportRouter:
 
     async def get_food(self, session: AsyncSession = Depends(get_db),
                        click_service: ClickhouseImportService = Depends()):
-        result: List[dict] = await click_service.get_food(session)
+        result: List[dict] = await click_service.get_foods(session)
         return result
