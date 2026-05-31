@@ -26,7 +26,7 @@ from app.core.types import ModelType
 from app.core.utils.alchemy_utils import (create_enum_conditions, create_search_conditions2, get_field_list,
                                           get_sql_search)
 from app.core.utils.reindexation import extract_text_ultra_fast
-from app.service_registry import get_child, register_repo
+from app.service_registry import get_child, get_repo, register_repo
 
 # длина списка поисковой выдачи
 search_site = min(settings.PAGE_DEFAULT, 20)
@@ -64,26 +64,36 @@ class Repository(Background, metaclass=RepositoryMeta):
     @classmethod
     async def get_related_model_instances(cls, id: int, model: ModelType,
                                           session: AsyncSession,
-                                          add: bool = True,) -> List[ModelType] | None:
+                                          add: bool = True) -> List[ModelType] | None:
         """
             получение связанных завписей из related model
         """
         related_model = cls.get_related_model(model)
         if not related_model:
             return None
+        related_repo: Type[Repository] = get_repo(related_model)
         foreign_key = f'{model.__name__.lower()}_id'
-        filters: dict = {foreign_key: id}
-        if add:
-            filters['name'] = None
-        conditions = []
-        for field_name, value in filters.items():
-            column = getattr(related_model, field_name)
-            if value is None:
-                conditions.append(column.is_(None))  # IS NULL
-            else:
-                conditions.append(column == value)
-        stmt = select(related_model).where(and_(*conditions))
-        result = await cls.nonpagination(stmt, session)
+        if add:     # если вызов из метода create - пытаемся добавить:
+            try:
+                new_data_dict = {foreign_key: id, 'name': None}
+                new_data = related_model(**new_data_dict)
+                result = await related_repo.create(new_data, related_model, session)
+                if result:
+                    logger.success(f'запись {result.id} успешно добавлена в {related_model.__name__}')
+                return result
+            except Exception as e:
+                logger.error(f'запись {new_data_dict} не добалена в таблицу {related_model.__name__}. Это не ошибка, '
+                             f'{e}')
+        else:   # если вызов из метода delete - пытаемся удалить записи из связанных таблиц (а те в свою очередь из)
+            filter = {foreign_key: id}
+            stmt = select(related_model).filter_by(**filter)
+            result = await cls.nonpagination(stmt, session)
+            if result:
+                for instance in result:
+                    try:
+                        await related_repo.delete(instance, related_model, session)
+                    except Exception as e:
+                        logger.error(f'ошибка удаления записи {related_model.__name__} {instance.id}, {e}')
         return result
 
     @classmethod
@@ -279,6 +289,8 @@ class Repository(Background, metaclass=RepositoryMeta):
         session.add(obj)
         await session.flush()
         await session.refresh(obj)
+        id = obj.id
+        await cls.get_related_model_instances(id, model, session)
         return obj
 
     @classmethod
@@ -388,14 +400,6 @@ class Repository(Background, metaclass=RepositoryMeta):
         """
             get one record by id
         """
-        test = await cls.get_related_model_instances(id, model, session)
-        if not test:
-            logger.warning('===================={REC YES}')
-        else:
-            logger.warning('============add')
-        test = await cls.get_related_model_instances(id, model, session, add=False)
-        for instance in test:
-            logger.warning(f'add {instance.id=} {instance.name=}')
         stmt = cls.get_query(model).where(model.id == id)
         result = await session.execute(stmt)
         obj = result.scalar_one_or_none()
