@@ -64,7 +64,7 @@ class Repository(Background, metaclass=RepositoryMeta):
     @classmethod
     async def get_related_model_instances(cls, id: int, model: ModelType,
                                           session: AsyncSession,
-                                          name_value: str = None,) -> List[ModelType] | None:
+                                          add: bool = True,) -> List[ModelType] | None:
         """
             получение связанных завписей из related model
         """
@@ -72,7 +72,9 @@ class Repository(Background, metaclass=RepositoryMeta):
         if not related_model:
             return None
         foreign_key = f'{model.__name__.lower()}_id'
-        filters: dict = {foreign_key: id, 'name': name_value}
+        filters: dict = {foreign_key: id}
+        if add:
+            filters['name'] = None
         conditions = []
         for field_name, value in filters.items():
             column = getattr(related_model, field_name)
@@ -387,10 +389,11 @@ class Repository(Background, metaclass=RepositoryMeta):
             get one record by id
         """
         test = await cls.get_related_model_instances(id, model, session)
-        logger.critical(f'{test=}')
         for instance in test:
-            logger.warning(f'{instance.id}=')
-
+            logger.warning(f'add {instance.id=} {instance.name=}')
+        test = await cls.get_related_model_instances(id, model, session, add=False)
+        for instance in test:
+            logger.warning(f'add {instance.id=} {instance.name=}')
         stmt = cls.get_query(model).where(model.id == id)
         result = await session.execute(stmt)
         obj = result.scalar_one_or_none()
