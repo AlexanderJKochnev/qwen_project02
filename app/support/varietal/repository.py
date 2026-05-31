@@ -35,9 +35,9 @@ class VarietalRepository(Repository):
     @classmethod
     def get_query(cls, model: ModelType):
         # Добавляем загрузку связи с relationships
-        return select(cls.model).options(selectinload(Varietal.drink_associations).selectinload(DrinkVarietal.drink))
+        return select(cls.model).options(selectinload(Varietal.drink_associations))
         # return select(cls.model).options(selectinload(Varietal.drink_associations).joinedload(DrinkVarietal.drink))
-    
+
     @classmethod
     async def get_by_ids(cls, ids: Tuple[int], model: ModelType, session: AsyncSession) -> Optional[ModelType]:
         """
