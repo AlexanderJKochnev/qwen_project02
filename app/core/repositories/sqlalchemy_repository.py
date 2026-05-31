@@ -389,8 +389,10 @@ class Repository(Background, metaclass=RepositoryMeta):
             get one record by id
         """
         test = await cls.get_related_model_instances(id, model, session)
-        for instance in test:
-            logger.warning(f'add {instance.id=} {instance.name=}')
+        if not test:
+            logger.warning('===================={REC YES}')
+        else:
+            logger.warning('============add')
         test = await cls.get_related_model_instances(id, model, session, add=False)
         for instance in test:
             logger.warning(f'add {instance.id=} {instance.name=}')
