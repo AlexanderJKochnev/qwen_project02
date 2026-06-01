@@ -83,32 +83,30 @@ class ClickhouseImportService:
 
     async def get_regions(self, session: AsyncSession) -> List[dict]:
         raw_sql = """
-                        SELECT DISTINCT
-                            -- Очистка имени от двойных пробелов и дефисов
-                            trimBoth(replaceRegexpAll(
-                                replaceRegexpAll(pg.name, ' - ', ' '),
-                                ' {2,}',
-                                ' '
-                            )) AS name,
-                            -- pg.id,
-                            -- Реальный ID страны из Postgres
-                            cm.postgres_id AS country_id
-
-                        FROM default.pg_region AS pg
-                        -- Подключаем маппинг стран, чтобы получить правильный country_id
-                        INNER JOIN default.country_mapping AS cm
-                            ON pg.country_id = cm.click_id
-                        -- Ваш рабочий LEFT JOIN с маппингом регионов
-                        LEFT JOIN default.region_mapping AS rm
-                            ON pg.id = rm.click_id
-                        WHERE
-                            -- Ваше точное условие дельты
-                            rm.click_id = 0
-                            -- Ваш фильтр мусора
-                            AND pg.name NOT LIKE '$%'
-                            -- Базовая зачистка пустых строк
-                            AND pg.name IS NOT NULL
-                            AND trimBoth(pg.name) != ''
+                    SELECT DISTINCT
+                        -- Очистка имени от двойных пробелов и дефисов
+                        trimBoth(replaceRegexpAll(
+                            replaceRegexpAll(pg.name, ' - ', ' '),
+                            ' {2,}',
+                            ' '
+                        )) AS name,
+                        -- Реальный ID региона из Postgres, взятый из нашей карты маппинга
+                        rm.postgres_id AS region_id
+                    FROM default.pg_subregion AS pg
+                    -- Подключаем маппинг регионов, чтобы получить правильный region_id для Postgres
+                    INNER JOIN default.region_mapping AS rm
+                        ON pg.region_id = rm.click_id
+                    -- LEFT JOIN с только что созданным маппингом субрегионов
+                    LEFT JOIN default.subregion_mapping AS sm
+                        ON pg.id = sm.click_id
+                    WHERE
+                        -- Наше точное условие дельты
+                        sm.click_id = 0
+                        -- Фильтр мусора
+                        AND pg.name NOT LIKE '$%'
+                        -- Базовая очистка пустых строк
+                        AND pg.name IS NOT NULL
+                        AND trimBoth(pg.name) != ''
                   """
         data: List[dict] = await self.click_repo.run_raw_sql(raw_sql)
         # return data
