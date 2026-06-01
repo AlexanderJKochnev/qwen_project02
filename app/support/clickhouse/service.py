@@ -84,35 +84,31 @@ class ClickhouseImportService:
     async def get_regions(self, session: AsyncSession) -> List[dict]:
         raw_sql = """
                         SELECT DISTINCT
-                        -- Очищаем имя региона от двойных пробелов и дефисов
-                        trimBoth(replaceRegexpAll(
-                            replaceRegexpAll(ch_reg.name, ' - ', ' '),
-                            ' {2,}',
-                            ' '
-                        )) AS name,
-                        -- Получаем РЕАЛЬНЫЙ country_id из Postgres по тексту имени страны
-                        joinGet('default.join_pg_countries_text_lookup', 'id', normalize_text(ch_c.name)) AS country_id
-                    FROM default.pg_region AS ch_reg
-                    -- Достаем текстовое имя страны из ClickHouse
-                    LEFT JOIN default.pg_country AS ch_c
-                        ON ch_reg.country_id = ch_c.id
-                    -- Проверяем наличие региона в Postgres строго по текстовому имени "в лоб"
-                    LEFT JOIN (
-                        SELECT name
-                        FROM postgresql('wine_host:5432', 'wine_db', 'regions', 'wine', 'wine1')
-                        WHERE name IS NOT NULL AND trimBoth(name) != ''
-                    ) AS pg_reg
-                        ON normalize_text(ch_reg.name) = normalize_text(pg_reg.name)
-                    WHERE
-                        -- Критерий дельты: текстового совпадения имени региона в Postgres ВООБЩЕ НЕТ
-                        (pg_reg.name IS NULL OR pg_reg.name = '')
-                        -- Жесткая фильтрация мусора и пустых строк
-                        --AND ch_reg.name IS NOT NULL
-                        AND trimBoth(ch_reg.name) != ''
-                        AND ch_reg.name NOT LIKE '$%'
-                        AND ch_reg.name NOT IN ('N/A', 'na', 'n/a', 'None', 'New Zealand')
-                        -- Исключаем мусорные страны (как 'Buy Now') — страна должна реально существовать в Postgres
-                        AND joinGet('default.join_pg_countries_text_lookup', 'id', normalize_text(ch_c.name)) > 0
+                            -- Очистка имени от двойных пробелов и дефисов
+                            trimBoth(replaceRegexpAll(
+                                replaceRegexpAll(pg.name, ' - ', ' '),
+                                ' {2,}',
+                                ' '
+                            )) AS name,
+                            -- pg.id,
+                            -- Реальный ID страны из Postgres
+                            cm.postgres_id AS country_id
+
+                        FROM default.pg_region AS pg
+                        -- Подключаем маппинг стран, чтобы получить правильный country_id
+                        INNER JOIN default.country_mapping AS cm
+                            ON pg.country_id = cm.click_id
+                        -- Ваш рабочий LEFT JOIN с маппингом регионов
+                        LEFT JOIN default.region_mapping AS rm
+                            ON pg.id = rm.click_id
+                        WHERE
+                            -- Ваше точное условие дельты
+                            rm.click_id = 0
+                            -- Ваш фильтр мусора
+                            AND pg.name NOT LIKE '$%'
+                            -- Базовая зачистка пустых строк
+                            AND pg.name IS NOT NULL
+                            AND trimBoth(pg.name) != ''
                   """
         data: List[dict] = await self.click_repo.run_raw_sql(raw_sql)
         return data
