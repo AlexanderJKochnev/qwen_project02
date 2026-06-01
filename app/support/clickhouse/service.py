@@ -83,42 +83,22 @@ class ClickhouseImportService:
 
     async def get_regions(self, session: AsyncSession) -> List[dict]:
         raw_sql = """
-                    SELECT DISTINCT
-                    -- 1. Берем чистое имя субрегиона из ClickHouse (без артефактов)
-                    trimBoth(replaceRegexpAll(
-                        replaceRegexpAll(ch_s.name, ' - ', ' '),
-                        ' {2,}',
-                        ' '
-                    )) AS name,
-                    -- 2. Находим РЕАЛЬНЫЙ ID региона в Postgres по текстовой цепочке через region_mapping
-                    nullIf(rm.postgres_id, 0) AS region_id
-                FROM default.pg_subregion AS ch_s
-                -- Шаг А: Связываемся с регионами ClickHouse, чтобы узнать ТЕКСТОВОЕ имя родительского региона
-                LEFT JOIN default.pg_region AS ch_reg
-                    ON ch_s.region_id = ch_reg.id
-                -- Шаг Б: Находим ID этого региона в Postgres строго по текстовому имени региона через готовую карту
-                LEFT JOIN default.region_mapping AS rm
-                    ON ch_reg.id = rm.click_id
-                -- Шаг В: Ваш точный и надежный LEFT JOIN из вашего примера — ищем субрегион в Postgres ТУПО ПО ИМЕНИ
-                LEFT JOIN (
-                    SELECT name
-                    FROM postgresql('wine_host:5432', 'wine_db', 'subregions', 'wine', 'wine1')
-                    WHERE name IS NOT NULL AND trimBoth(name) != ''
-                ) AS pg_s
-                    ON ch_s.name = pg_s.name
-                WHERE
-                    -- Условие вашей выборки: субрегиона в Postgres вообще нет по имени
-                    pg_s.name IS NULL
-                    -- Фильтры мусора
-                    AND ch_s.name NOT LIKE '$%'
-                    AND ch_s.name IS NOT NULL
-                    AND trimBoth(ch_s.name) != ''
-                    AND ch_s.name NOT IN ('N/A', 'na', 'n/a', 'None')
-                    -- Гарантируем, что родительский регион определился в Postgres, чтобы не нарушить Foreign Key
-                    AND region_id IS NOT NULL
+                    WITH pg_r AS (
+                    SELECT id, name, country_id FROM pg_region WHERE NOT name LIKE '$%'
+                    ),r_map AS (
+                    SELECT postgres_id, click_id FROM region_mapping
+                    )
+                    
+                    SELECT pg_r.id,
+                    pg_r.name,
+                    r_map.click_id,
+                    pg_r.country_id,
+                    FROM pg_r
+                    LEFT JOIN r_map
+                    ON pg_r.id = r_map.click_id
                   """
         data: List[dict] = await self.click_repo.run_raw_sql(raw_sql)
-        # return data
+        return data
         model = Subregion
         if data:
             result: List[dict] = await self.bulk_create(data, model, session)
