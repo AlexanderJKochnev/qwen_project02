@@ -111,7 +111,7 @@ class ClickhouseImportService:
                             AND trimBoth(pg.name) != ''
                   """
         data: List[dict] = await self.click_repo.run_raw_sql(raw_sql)
-        return data
+        # return data
         model = Region
         if data:
             result: List[dict] = await self.bulk_create(data, model, session)
