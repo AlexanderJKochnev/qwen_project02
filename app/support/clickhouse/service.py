@@ -84,29 +84,38 @@ class ClickhouseImportService:
     async def get_regions(self, session: AsyncSession) -> List[dict]:
         raw_sql = """
                     SELECT DISTINCT
-                        -- Очистка имени от двойных пробелов и дефисов
-                        trimBoth(replaceRegexpAll(
-                            replaceRegexpAll(pg.name, ' - ', ' '),
-                            ' {2,}',
-                            ' '
-                        )) AS name,
-                        -- Реальный ID региона из Postgres, взятый из нашей карты маппинга
-                        rm.postgres_id AS region_id
-                    FROM default.pg_subregion AS pg
-                    -- Подключаем маппинг регионов, чтобы получить правильный region_id для Postgres
-                    INNER JOIN default.region_mapping AS rm
-                        ON pg.region_id = rm.click_id
-                    -- LEFT JOIN с только что созданным маппингом субрегионов
-                    LEFT JOIN default.subregion_mapping AS sm
-                        ON pg.id = sm.click_id
-                    WHERE
-                        -- Наше точное условие дельты
-                        sm.click_id = 0
-                        -- Фильтр мусора
-                        AND pg.name NOT LIKE '$%'
-                        -- Базовая очистка пустых строк
-                        AND pg.name IS NOT NULL
-                        AND trimBoth(pg.name) != ''
+                    -- 1. Берем чистое имя субрегиона из ClickHouse (без артефактов)
+                    trimBoth(replaceRegexpAll(
+                        replaceRegexpAll(ch_s.name, ' - ', ' '),
+                        ' {2,}',
+                        ' '
+                    )) AS name,
+                    -- 2. Находим РЕАЛЬНЫЙ ID региона в Postgres по текстовой цепочке через region_mapping
+                    nullIf(rm.postgres_id, 0) AS region_id
+                FROM default.pg_subregion AS ch_s
+                -- Шаг А: Связываемся с регионами ClickHouse, чтобы узнать ТЕКСТОВОЕ имя родительского региона
+                LEFT JOIN default.pg_region AS ch_reg
+                    ON ch_s.region_id = ch_reg.id
+                -- Шаг Б: Находим ID этого региона в Postgres строго по текстовому имени региона через готовую карту
+                LEFT JOIN default.region_mapping AS rm
+                    ON ch_reg.id = rm.click_id
+                -- Шаг В: Ваш точный и надежный LEFT JOIN из вашего примера — ищем субрегион в Postgres ТУПО ПО ИМЕНИ
+                LEFT JOIN (
+                    SELECT name
+                    FROM postgresql('wine_host:5432', 'wine_db', 'subregions', 'wine', 'wine1')
+                    WHERE name IS NOT NULL AND trimBoth(name) != ''
+                ) AS pg_s
+                    ON ch_s.name = pg_s.name
+                WHERE
+                    -- Условие вашей выборки: субрегиона в Postgres вообще нет по имени
+                    pg_s.name IS NULL
+                    -- Фильтры мусора
+                    AND ch_s.name NOT LIKE '$%'
+                    AND ch_s.name IS NOT NULL
+                    AND trimBoth(ch_s.name) != ''
+                    AND ch_s.name NOT IN ('N/A', 'na', 'n/a', 'None')
+                    -- Гарантируем, что родительский регион определился в Postgres, чтобы не нарушить Foreign Key
+                    AND region_id IS NOT NULL
                   """
         data: List[dict] = await self.click_repo.run_raw_sql(raw_sql)
         # return data
