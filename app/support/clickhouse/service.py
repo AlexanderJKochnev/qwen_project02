@@ -9,7 +9,7 @@ from app.core.services.service import Service
 from app.core.types import ModelType
 from app.core.utils.pydantic_utils import get_repo, get_service
 from app.dependencies import get_clickhouse_repository_factory
-from app.support import Food, Region, Varietal
+from app.support import Food, Region, Subregion, Varietal
 
 
 class ClickhouseImportService:
@@ -110,7 +110,7 @@ class ClickhouseImportService:
                   """
         data: List[dict] = await self.click_repo.run_raw_sql(raw_sql)
         # return data
-        model = Region
+        model = Subregion
         if data:
             result: List[dict] = await self.bulk_create(data, model, session)
         else:
