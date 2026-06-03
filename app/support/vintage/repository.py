@@ -1,6 +1,6 @@
 # app.support.vintage.repository.py
 from sqlalchemy import select
-from app.core.repositories.sqlalchemy_repository import Repository
+from app.core.repositories.sqlalchemy_repository import HandbookRepository as Repository
 from app.support.item.model import Item
 from app.support.drink.model import Drink
 from app.support.vintage.model import VintageConfig, Classification, Designation

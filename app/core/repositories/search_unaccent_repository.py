@@ -133,14 +133,13 @@ class SearchRepositoryMixin:  # (Generic[ModelType]):
             Поиск по всем заданным текстовым полям основной таблицы
             через raw sql и limit
         """
-        logger.critical('this is SearchRepositoryMixin')
         try:
             # query = cls.get_query(model)
             query = cls.get_short_query(model)
             id_query, count_query = cls.get_sql_search(query, search, limit=limit, offset=skip)
             # 1. Получаем список ID:
-            compiled = id_query.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
-            logger.warning(str(compiled))
+            # compiled = id_query.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
+            # logger.warning(str(compiled))
             response = await session.execute(id_query)
             ids = response.scalars().all()
             # 2. Получаем общее кол-во:

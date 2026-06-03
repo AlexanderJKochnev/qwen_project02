@@ -3,14 +3,13 @@
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload, load_only
 
-from app.core.repositories.search_unaccent_repository import SearchRepositoryMixin
-from app.core.repositories.sqlalchemy_repository import Repository
+from app.core.repositories.sqlalchemy_repository import HandbookRepository
 from app.core.utils.alchemy_utils import get_field_list
 from app.support.producer.model import Producer, ProducerTitle
 from app.support import Drink, Item
 
 
-class ProducerTitleRepository(SearchRepositoryMixin, Repository):
+class ProducerTitleRepository(HandbookRepository):
     model = ProducerTitle
 
     @classmethod
@@ -22,7 +21,7 @@ class ProducerTitleRepository(SearchRepositoryMixin, Repository):
         )
 
 
-class ProducerRepository(Repository):
+class ProducerRepository(HandbookRepository):
     model = Producer
 
     @classmethod

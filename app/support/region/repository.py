@@ -3,11 +3,11 @@
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload, load_only
 from app.core.utils.alchemy_utils import get_field_list
-from app.core.repositories.sqlalchemy_repository import ModelType, Repository
+from app.core.repositories.sqlalchemy_repository import ModelType, HandbookRepository
 from app.support import Site, Drink, Item, Region, Subregion, Country
 
 
-class RegionRepository(Repository):
+class RegionRepository(HandbookRepository):
     model = Region
 
     @classmethod

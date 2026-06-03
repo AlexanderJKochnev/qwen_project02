@@ -1,12 +1,12 @@
 # app.support.parcel.repository.py
 from sqlalchemy import exists, select
 from sqlalchemy.orm import selectinload, joinedload, load_only
-from app.core.repositories.sqlalchemy_repository import Repository, ModelType
+from app.core.repositories.sqlalchemy_repository import HandbookRepository, ModelType
 from app.core.utils.alchemy_utils import get_field_list
 from app.support import Country, Site, Drink, Item, Region, Subregion, Parcel
 
 
-class ParcelRepository(Repository):
+class ParcelRepository(HandbookRepository):
     model = Parcel
 
     @classmethod
@@ -17,7 +17,7 @@ class ParcelRepository(Repository):
         )
 
 
-class SiteRepository(Repository):
+class SiteRepository(HandbookRepository):
     model = Site
 
     @classmethod

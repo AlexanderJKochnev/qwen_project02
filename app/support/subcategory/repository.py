@@ -2,16 +2,15 @@
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload, load_only
 
-from app.core.repositories.search_unaccent_repository import SearchRepositoryMixin
 from app.core.utils.alchemy_utils import get_field_list
-from app.core.repositories.sqlalchemy_repository import ModelType, Repository
+from app.core.repositories.sqlalchemy_repository import ModelType, HandbookRepository
 from app.support.subcategory.model import Subcategory
 from app.support.category.model import Category
 from app.support.item.model import Item
 from app.support.drink.model import Drink
 
 
-class SubcategoryRepository(SearchRepositoryMixin, Repository):
+class SubcategoryRepository(HandbookRepository):
     model = Subcategory
 
     @classmethod

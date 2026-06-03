@@ -1,10 +1,10 @@
 # app/support/country/repository.py
 from sqlalchemy import select
-from app.core.repositories.sqlalchemy_repository import Repository
+from app.core.repositories.sqlalchemy_repository import HandbookRepository
 from app.support import Site, Drink, Item, Region, Subregion, Country
 
 
-class CountryRepository(Repository):
+class CountryRepository(HandbookRepository):
     model = Country
 
     @classmethod

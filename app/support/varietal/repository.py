@@ -7,11 +7,11 @@ from app.support.varietal.model import Varietal
 from app.support.drink.model import DrinkVarietal, Drink
 from app.support.item.model import Item
 from app.core.exceptions import AppBaseException
-from app.core.repositories.sqlalchemy_repository import Repository, ModelType
+from app.core.repositories.sqlalchemy_repository import HandbookRepository, ModelType
 
 
 # VarietalRepository = RepositoryFactory.get_repository(Varietal)
-class VarietalRepository(Repository):
+class VarietalRepository(HandbookRepository):
     model = Varietal
 
     @classmethod
