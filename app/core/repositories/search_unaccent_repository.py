@@ -119,6 +119,7 @@ class SearchRepositoryMixin:  # (Generic[ModelType]):
             return result if result else [], total
 
         except Exception as e:
+            logger.error(f'core.repository.unaccent_search.error: {str(e)}')
             raise AppBaseException(
                 message=f'core.repository.unaccent_search.error: {str(e)}', status_code=404
             )
