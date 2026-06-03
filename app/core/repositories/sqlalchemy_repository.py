@@ -6,12 +6,10 @@
 """
 from abc import ABCMeta
 from datetime import datetime
-from re import search as research
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
 
 from loguru import logger
-from sqlalchemy import (and_, cast, desc, func, insert, inspect, literal, or_, Row, RowMapping, select, Select, Text,
-                        text, update)
+from sqlalchemy import (and_, desc, func, insert, inspect, or_, Row, RowMapping, select, Select, update)
 from sqlalchemy.dialects import postgresql  # NOQA: F401
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,10 +19,10 @@ from app.core.config.project_config import settings
 from app.core.exceptions import AppBaseException
 from app.core.models.base_model import get_model_by_name
 from app.core.repositories.repo_background_tasks import Background
+from app.core.repositories.search_unaccent_repository import SearchRepositoryMixin
 from app.core.types import ModelType
 # from sqlalchemy.sql.elements import ColumnElement
-from app.core.utils.alchemy_utils import (create_enum_conditions, create_search_conditions2, get_field_list,
-                                          get_sql_search)
+from app.core.utils.alchemy_utils import (get_field_list, get_sql_search)
 from app.core.utils.pydantic_utils import get_repo
 from app.core.utils.reindexation import extract_text_ultra_fast
 from app.service_registry import get_child, register_repo
@@ -644,3 +642,11 @@ class Repository(Background, metaclass=RepositoryMeta):
         stmt = stmt.order_by(desc(model.id)).limit(limit)
         result = await session.execute(stmt)
         return result.all()
+
+
+class HandbookRepository(SearchRepositoryMixin, Repository):
+    """
+    repository для справочников:
+    стандратный репо + поиск  unaccent (включает диакретические символы)
+    """
+    pass
