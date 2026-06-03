@@ -88,7 +88,6 @@ class ClickhouseImportService:
                     ),r_map AS (
                     SELECT postgres_id, click_id FROM region_mapping
                     )
-                    
                     SELECT pg_r.id,
                     pg_r.name,
                     r_map.click_id,
