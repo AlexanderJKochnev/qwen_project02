@@ -6,12 +6,13 @@ from app.support.item.model import Item
 from app.support.drink.model import Drink
 from app.support.subcategory.model import Subcategory
 from app.support.category.model import Category
+from app.core.repositories.search_unaccent_repository import SearchRepositoryMixin
 # CategoryRepository = RepositoryFactory.get_repository(Category)
 # class CategoryRepository(Repository):
 #    model = Category
 
 
-class CategoryRepository(Repository):
+class CategoryRepository(SearchRepositoryMixin, Repository):
     model = Category
 
     @classmethod

@@ -1,13 +1,19 @@
 # доработать если поналобится
-
-from typing import List, Optional, Type, Generic
+from loguru import logger
+from typing import Any, List, Optional, Type, Generic
 from sqlalchemy import select, func, text
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.exceptions import AppBaseException
 from app.core.types import ModelType
+from app.core.utils.alchemy_utils import get_unaccent_search
+
+
 # Абстрактный тип для моделей SQLAlchemy 2.0
 
 
-class SearchRepositoryMixin(Generic[ModelType]):
+class SearchRepositoryMixin:  # (Generic[ModelType]):
     """
     Универсальный CRUD-миксин для репозиториев.
     Предоставляет высокопроизводительный поиск по нормализованному полю 'name'
@@ -73,3 +79,45 @@ class SearchRepositoryMixin(Generic[ModelType]):
 
         result = await session.execute(stmt)
         return list(result.scalars().all())
+
+    @classmethod
+    async def search(
+            cls, search: str, skip: int, limit: int, model: Any, session: AsyncSession, mode: str = "startswith"
+            # Можно передать "exact" для точного поиска
+    ) -> tuple:
+        """
+        Высокопроизводительный поиск по всем связанным текстовым полям 'Name'
+        с использованием B-tree функционального индекса unaccent.
+        """
+        try:
+            # Получаем базовый запрос (JOIN'ы и связи выгружаются из вашего get_short_query)
+            query = cls.get_short_query(model)
+
+            # Строим запросы на ID и COUNT через AST-инспекцию SQLAlchemy
+            id_query, count_query = get_unaccent_search(
+                query=query, search_str=search, mode=mode, limit=limit, offset=skip
+            )
+
+            # Логируем скомпилированный SQL для отладки индексов
+            compiled = id_query.compile(
+                dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}
+            )
+            logger.warning(f"🎰 INDEX SEARCH SQL: {str(compiled)}")
+
+            # 1. Получаем список ID по индексу
+            response = await session.execute(id_query)
+            ids = response.scalars().all()
+
+            # 2. Получаем общее количество
+            response = await session.execute(count_query)
+            total = response.scalar() or 0
+
+            # 3. Выгружаем полные объекты по списку ID
+            result = await cls.get_by_ids(ids, model, session)
+
+            return result if result else [], total
+
+        except Exception as e:
+            raise AppBaseException(
+                message=f'core.repository.unaccent_search.error: {str(e)}', status_code=404
+            )

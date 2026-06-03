@@ -1,21 +1,23 @@
 import copy
 import json
 import re
-from loguru import logger  # noqa: F401
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Type, TypeVar, Union, Set
+from typing import Any, Dict, List, Optional, Set, Tuple, Type, TypeVar, Union
+
 from fastapi import Query
-from sqlalchemy.dialects import postgresql
+from loguru import logger  # noqa: F401
 from pydantic import BaseModel, create_model, Field
-from sqlalchemy import and_, Column, ColumnElement, func, inspect, or_, String, Text, Unicode, UnicodeText, text
+from sqlalchemy import and_, Column, ColumnElement, func, inspect, or_, select, String, Text, text, Unicode, UnicodeText
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import DeclarativeBase, MapperProperty
 from sqlalchemy.orm.attributes import QueryableAttribute
-from app.core.types import ModelType
-from app.core.models.base_model import Base
-from app.core.utils.common_utils import camel_to_enum, clean_string, enum_to_camel
+
 from app.core.config.project_config import get_path_to_root
+from app.core.models.base_model import Base
+from app.core.types import ModelType
+from app.core.utils.common_utils import camel_to_enum, clean_string, enum_to_camel
 
 function = {1: or_, 2: and_}
 
@@ -1104,3 +1106,52 @@ def get_sql_from_query(stmt):
     """
     compiled = stmt.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
     return str(compiled)
+
+
+def get_unaccent_search(
+        query: Any, search_str: str, mode: str = "startswith", limit: Optional[int] = None, offset: Optional[int] = None
+) -> Tuple:
+    """
+    Программно анализирует query, находит все колонки 'name'
+    и строит строго индексируемый WHERE с использованием public.immutable_unaccent.
+    """
+    clean_search = search_str.strip()
+
+    # 1. Находим все колонки, содержащие 'name' в имени
+    name_clauses = []
+    for col in query.selected_columns:
+        if "name" in col.name.lower():
+            normalized_col = func.public.immutable_unaccent(func.lower(col))
+
+            if mode == "exact":
+                normalized_val = func.public.immutable_unaccent(func.lower(clean_search))
+                name_clauses.append(normalized_col == normalized_val)
+            else:
+                normalized_val = func.public.immutable_unaccent(func.lower(f"{clean_search}%"))
+                name_clauses.append(normalized_col.like(normalized_val))
+
+    if not name_clauses:
+        where_expression = text("1=1")
+    else:
+        where_expression = or_(*name_clauses)
+
+    # 2. Определяем главную таблицу из query для извлечения DISTINCT ID
+    # В SQLAlchemy 2.0 surface_froms возвращает сущности, берем первую
+    main_model = list(query.surface_froms)[0]
+
+    # Определяем базовый источник данных (FROM блок с учетом всех JOIN)
+    # ИСПРАВЛЕНО: синтаксически верный тернарный оператор
+    from_clause = query.from_statement if query.from_statement is not None else query.get_final_froms()[0]
+
+    # РЕЗУЛЬТАТ 1: Запрос на ID (с сохранением всех JOIN из оригинального query)
+    id_query = (select(main_model.c.id).distinct().select_from(from_clause).where(where_expression))
+
+    if limit:
+        id_query = id_query.limit(limit)
+    if offset:
+        id_query = id_query.offset(offset)
+
+    # РЕЗУЛЬТАТ 2: Запрос на Общее количество
+    count_query = (select(func.count(func.distinct(main_model.c.id))).select_from(from_clause).where(where_expression))
+
+    return id_query, count_query
