@@ -1110,28 +1110,28 @@ def get_sql_from_query(stmt):
 
 def get_unaccent_search(
         query: Any, search_str: str, mode: str = "startswith", limit: Optional[int] = None, offset: Optional[int] = None
-        ) -> Tuple:
+) -> Tuple:
     val = search_str.strip() if mode == "exact" else f"{search_str.strip()}%"
     norm_val = func.public.immutable_unaccent(func.lower(val))
-    
-    # Собираем условия для всех колонок 'name'
+
     conds = [func.public.immutable_unaccent(
         func.lower(c)
-        ) == norm_val if mode == "exact" else func.public.immutable_unaccent(
+    ) == norm_val if mode == "exact" else func.public.immutable_unaccent(
         func.lower(c)
-        ).like(norm_val) for c in query.selected_columns if "name" in c.name.lower()]
-    
-    # Источник данных и колонка ID
+    ).like(norm_val) for c in query.selected_columns if "name" in c.name.lower()]
+    where_expr = or_(*conds) if conds else text("1=1")
     f_clause = query.from_statement if query.from_statement is not None else query.froms
-    id_col = query.corresponding_column(text("id")) or query.froms[0].c.id
-    
-    # Сборка запросов
-    id_q = select(id_col).distinct().select_from(*f_clause).where(or_(*conds) if conds else text("1=1"))
-    if limit: id_q = id_q.limit(limit)
-    if offset: id_q = id_q.offset(offset)
-    
-    count_q = select(func.count(func.distinct(id_col))).select_from(*f_clause).where(
-        or_(*conds) if conds else text("1=1")
-        )
-    
+
+    # ИСПРАВЛЕНО: query.froms — это кортеж, берем первый элемент [0]
+    main_from = query.froms[0]
+    id_col = getattr(main_from, "c", main_from).id
+
+    id_q = select(id_col).distinct().select_from(*f_clause).where(where_expr)
+    if limit:
+        id_q = id_q.limit(limit)
+    if offset:
+        id_q = id_q.offset(offset)
+
+    count_q = select(func.count(func.distinct(id_col))).select_from(*f_clause).where(where_expr)
+
     return id_q, count_q
