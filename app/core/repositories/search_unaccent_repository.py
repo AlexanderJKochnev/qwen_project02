@@ -90,6 +90,7 @@ class SearchRepositoryMixin:  # (Generic[ModelType]):
         с использованием B-tree функционального индекса unaccent.
         """
         try:
+            logger.critical('this is SearchRepositoryMixin')
             # Получаем базовый запрос (JOIN'ы и связи выгружаются из вашего get_short_query)
             query = cls.get_short_query(model)
 

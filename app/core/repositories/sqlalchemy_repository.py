@@ -381,6 +381,7 @@ class Repository(Background, metaclass=RepositoryMeta):
             Поиск по всем заданным текстовым полям основной таблицы
             через raw sql и limit
         """
+        logger.critical('this is noraml Repository')
         try:
             # query = cls.get_query(model)
             query = cls.get_short_query(model)
