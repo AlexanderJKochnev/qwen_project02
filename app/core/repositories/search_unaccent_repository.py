@@ -1,6 +1,6 @@
 # доработать если поналобится
 from loguru import logger
-from typing import Any, List, Optional, Type, Generic
+from typing import Any, List, Optional, Tuple, Type, Generic
 from sqlalchemy import select, func, text
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -80,46 +80,74 @@ class SearchRepositoryMixin:  # (Generic[ModelType]):
         result = await session.execute(stmt)
         return list(result.scalars().all())
 
+    @staticmethod
+    def get_sql_search(query, search_str: str, limit: int = 100, offset: int = 0,
+                       mode: str = "startswith") -> Tuple:
+        """
+        оригинальный метод парсинга raw sql.
+        ИЗМЕНЕНИЕ: Теперь генерирует условия, которые на 100% задействуют B-tree индекс unaccent.
+        """
+        raw_sql = str(
+            query.compile(dialect=postgresql.dialect(), compile_kwargs={"render_postcompile_parameters": True})
+        )
+
+        select_part = raw_sql[len("SELECT "):raw_sql.find("FROM")].strip()
+        from_part = raw_sql[raw_sql.find("FROM"):].strip()
+
+        all_columns = [col.strip().split(" AS ")[0] for col in select_part.split(",")]
+        name_cols = [col for col in all_columns if "name" in col.lower()]
+
+        # --- ТУТ ЕДИНСТВЕННОЕ ИЗМЕНЕНИЕ ---
+        # Очищаем входящую строку от пробелов
+        clean_search = search_str.strip()
+
+        if mode == "exact":
+            # Полное совпадение: public.immutable_unaccent(lower(col)) = public.immutable_unaccent(lower('значение'))
+            search_val = f"public.immutable_unaccent(lower('{clean_search}'))"
+            where_clause = " OR ".join([f"public.immutable_unaccent(lower({col})) = {search_val}" for col in name_cols])
+        else:
+            # По префиксу (startswith): public.immutable_unaccent(lower(col)) LIKE public.immutable_unaccent(lower('значение%'))
+            search_val = f"public.immutable_unaccent(lower('{clean_search}%'))"
+            where_clause = " OR ".join(
+                [f"public.immutable_unaccent(lower({col})) LIKE {search_val}" for col in name_cols]
+            )
+        # ----------------------------------
+
+        main_table = from_part.split()[1]
+
+        id_sql = f"SELECT DISTINCT {main_table}.id {from_part} WHERE {where_clause}"
+        if limit:
+            id_sql = f"{id_sql} LIMIT {limit}"
+        if offset:
+            id_sql = f"{id_sql} OFFSET {offset}"
+
+        count_sql = f"SELECT COUNT(DISTINCT {main_table}.id) {from_part} WHERE {where_clause}"
+
+        return text(id_sql), text(count_sql)
+
     @classmethod
-    async def search(
-            cls, search: str, skip: int, limit: int, model: Any, session: AsyncSession, mode: str = "startswith"
-            # Можно передать "exact" для точного поиска
-    ) -> tuple:
+    async def search(cls, search: str,
+                     skip: int, limit: int,
+                     model: ModelType, session: AsyncSession, ) -> tuple:
         """
-        Высокопроизводительный поиск по всем связанным текстовым полям 'Name'
-        с использованием B-tree функционального индекса unaccent.
+            НЕ УДАЛЯТЬ !!! ИСПОЛЬЗУЕТСЯ В PREACT
+            Поиск по всем заданным текстовым полям основной таблицы
+            через raw sql и limit
         """
+        logger.critical('this is SearchRepositoryMixin')
         try:
-            logger.critical('this is SearchRepositoryMixin')
-            # Получаем базовый запрос (JOIN'ы и связи выгружаются из вашего get_short_query)
+            # query = cls.get_query(model)
             query = cls.get_short_query(model)
-
-            # Строим запросы на ID и COUNT через AST-инспекцию SQLAlchemy
-            id_query, count_query = get_unaccent_search(
-                query=query, search_str=search, mode=mode, limit=limit, offset=skip
-            )
-
-            # Логируем скомпилированный SQL для отладки индексов
-            compiled = id_query.compile(
-                dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}
-            )
-            logger.warning(f"🎰 INDEX SEARCH SQL: {str(compiled)}")
-
-            # 1. Получаем список ID по индексу
+            id_query, count_query = cls.get_sql_search(query, search, limit=limit, offset=skip)
+            # 1. Получаем список ID:
+            compiled = id_query.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
+            logger.warning(str(compiled))
             response = await session.execute(id_query)
             ids = response.scalars().all()
-
-            # 2. Получаем общее количество
+            # 2. Получаем общее кол-во:
             response = await session.execute(count_query)
-            total = response.scalar() or 0
-
-            # 3. Выгружаем полные объекты по списку ID
+            total = response.scalar()
             result = await cls.get_by_ids(ids, model, session)
-
             return result if result else [], total
-
         except Exception as e:
-            logger.error(f'core.repository.unaccent_search.error: {str(e)}')
-            raise AppBaseException(
-                message=f'core.repository.unaccent_search.error: {str(e)}', status_code=404
-            )
+            raise AppBaseException(message=f'core.repository.error: {str(e)}', status_code=404)
