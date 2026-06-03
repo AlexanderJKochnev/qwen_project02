@@ -1110,48 +1110,28 @@ def get_sql_from_query(stmt):
 
 def get_unaccent_search(
         query: Any, search_str: str, mode: str = "startswith", limit: Optional[int] = None, offset: Optional[int] = None
-) -> Tuple:
-    """
-    Программно анализирует query, находит все колонки 'name'
-    и строит строго индексируемый WHERE с использованием public.immutable_unaccent.
-    """
-    clean_search = search_str.strip()
-
-    # 1. Находим все колонки, содержащие 'name' в имени
-    name_clauses = []
-    for col in query.selected_columns:
-        if "name" in col.name.lower():
-            normalized_col = func.public.immutable_unaccent(func.lower(col))
-
-            if mode == "exact":
-                normalized_val = func.public.immutable_unaccent(func.lower(clean_search))
-                name_clauses.append(normalized_col == normalized_val)
-            else:
-                normalized_val = func.public.immutable_unaccent(func.lower(f"{clean_search}%"))
-                name_clauses.append(normalized_col.like(normalized_val))
-
-    if not name_clauses:
-        where_expression = text("1=1")
-    else:
-        where_expression = or_(*name_clauses)
-
-    # 2. Определяем главную таблицу из query для извлечения DISTINCT ID
-    # В SQLAlchemy 2.0 surface_froms возвращает сущности, берем первую
-    main_model = list(query.surface_froms)[0]
-
-    # Определяем базовый источник данных (FROM блок с учетом всех JOIN)
-    # ИСПРАВЛЕНО: синтаксически верный тернарный оператор
-    from_clause = query.from_statement if query.from_statement is not None else query.get_final_froms()[0]
-
-    # РЕЗУЛЬТАТ 1: Запрос на ID (с сохранением всех JOIN из оригинального query)
-    id_query = (select(main_model.c.id).distinct().select_from(from_clause).where(where_expression))
-
-    if limit:
-        id_query = id_query.limit(limit)
-    if offset:
-        id_query = id_query.offset(offset)
-
-    # РЕЗУЛЬТАТ 2: Запрос на Общее количество
-    count_query = (select(func.count(func.distinct(main_model.c.id))).select_from(from_clause).where(where_expression))
-
-    return id_query, count_query
+        ) -> Tuple:
+    val = search_str.strip() if mode == "exact" else f"{search_str.strip()}%"
+    norm_val = func.public.immutable_unaccent(func.lower(val))
+    
+    # Собираем условия для всех колонок 'name'
+    conds = [func.public.immutable_unaccent(
+        func.lower(c)
+        ) == norm_val if mode == "exact" else func.public.immutable_unaccent(
+        func.lower(c)
+        ).like(norm_val) for c in query.selected_columns if "name" in c.name.lower()]
+    
+    # Источник данных и колонка ID
+    f_clause = query.from_statement if query.from_statement is not None else query.froms
+    id_col = query.corresponding_column(text("id")) or query.froms[0].c.id
+    
+    # Сборка запросов
+    id_q = select(id_col).distinct().select_from(*f_clause).where(or_(*conds) if conds else text("1=1"))
+    if limit: id_q = id_q.limit(limit)
+    if offset: id_q = id_q.offset(offset)
+    
+    count_q = select(func.count(func.distinct(id_col))).select_from(*f_clause).where(
+        or_(*conds) if conds else text("1=1")
+        )
+    
+    return id_q, count_q
