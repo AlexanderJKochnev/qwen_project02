@@ -1,14 +1,16 @@
 # app/support/producer/repository.py
 # from sqlalchemy import select, exists
-from sqlalchemy import select, exists
+from sqlalchemy import select
 from sqlalchemy.orm import joinedload, load_only
+
+from app.core.repositories.search_unaccent_repository import SearchRepositoryMixin
 from app.core.repositories.sqlalchemy_repository import Repository
 from app.core.utils.alchemy_utils import get_field_list
 from app.support.producer.model import Producer, ProducerTitle
 from app.support import Drink, Item
 
 
-class ProducerTitleRepository(Repository):
+class ProducerTitleRepository(SearchRepositoryMixin, Repository):
     model = ProducerTitle
 
     @classmethod
@@ -44,7 +46,7 @@ class ProducerRepository(Repository):
         """
 
         fields = get_field_list(model, starts=field1)
-        subcat = get_field_list(ProducerTitle, starts=field1)
+        # subcat = get_field_list(ProducerTitle, starts=field1)
         return select(model).options(load_only(*fields))
         # return select(model).options(
         #     joinedload(model.producertitle).load_only(*subcat), load_only(*fields)
