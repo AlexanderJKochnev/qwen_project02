@@ -1,13 +1,12 @@
 # доработать если поналобится
 from loguru import logger
-from typing import Any, List, Optional, Tuple, Type, Generic
+from typing import List, Optional, Tuple, Type
 from sqlalchemy import select, func, text
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import AppBaseException
 from app.core.types import ModelType
-from app.core.utils.alchemy_utils import get_unaccent_search
 
 
 # Абстрактный тип для моделей SQLAlchemy 2.0
